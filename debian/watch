@@ -1,0 +1,45 @@
+version=3
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformruntime \
+http://git.eclipse.org/c/platform/eclipse.platform.runtime.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platform \
+http://git.eclipse.org/c/platform/eclipse.platform.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformua \
+http://git.eclipse.org/c/platform/eclipse.platform.ua.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformui \
+http://git.eclipse.org/c/platform/eclipse.platform.ui.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformresources \
+http://git.eclipse.org/c/platform/eclipse.platform.resources.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformdebug \
+http://git.eclipse.org/c/platform/eclipse.platform.debug.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformteam \
+http://git.eclipse.org/c/platform/eclipse.platform.team.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=platformtext \
+http://git.eclipse.org/c/platform/eclipse.platform.text.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=jdtui \
+http://git.eclipse.org/c/jdt/eclipse.jdt.ui.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=equinoxbundles \
+http://git.eclipse.org/c/equinox/rt.equinox.bundles.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz
+
+opts=uversionmangle=s/\.$/.0/,repacksuffix=p2 \
+http://git.eclipse.org/c/equinox/rt.equinox.p2.git/refs \
+.*/snapshot/R(\d+)_(\d+)(?:_(\d+))?.tar.xz

@@ -1,0 +1,157 @@
+From: Jakub Adam <jakub.adam@ktknet.cz>
+Date: Mon, 27 Jul 2015 20:52:18 +0200
+Subject: use-jre-javax-annotation
+
+---
+ bundles/org.eclipse.e4.core.commands/META-INF/MANIFEST.MF              | 2 +-
+ bundles/org.eclipse.e4.core.di.extensions/META-INF/MANIFEST.MF         | 2 +-
+ bundles/org.eclipse.e4.core.di/META-INF/MANIFEST.MF                    | 2 +-
+ bundles/org.eclipse.e4.core.services/META-INF/MANIFEST.MF              | 2 +-
+ bundles/org.eclipse.e4.ui.bindings/META-INF/MANIFEST.MF                | 2 +-
+ bundles/org.eclipse.e4.ui.services/META-INF/MANIFEST.MF                | 2 +-
+ bundles/org.eclipse.e4.ui.workbench.addons.swt/META-INF/MANIFEST.MF    | 2 +-
+ bundles/org.eclipse.e4.ui.workbench.renderers.swt/META-INF/MANIFEST.MF | 2 +-
+ bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF           | 2 +-
+ bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF               | 2 +-
+ bundles/org.eclipse.ui.workbench/META-INF/MANIFEST.MF                  | 2 +-
+ 11 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/bundles/org.eclipse.e4.core.commands/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.core.commands/META-INF/MANIFEST.MF
+index f4fc252..00a4284 100644
+--- a/bundles/org.eclipse.e4.core.commands/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.core.commands/META-INF/MANIFEST.MF
+@@ -8,7 +8,7 @@ Bundle-Version: 0.11.0.qualifier
+ Bundle-Activator: org.eclipse.e4.core.commands.internal.Activator
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+ Bundle-ActivationPolicy: lazy
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0",
+  org.eclipse.core.commands,
+  org.eclipse.core.commands.common,
+diff --git a/bundles/org.eclipse.e4.core.di.extensions/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.core.di.extensions/META-INF/MANIFEST.MF
+index abd063b..b99bc80 100644
+--- a/bundles/org.eclipse.e4.core.di.extensions/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.core.di.extensions/META-INF/MANIFEST.MF
+@@ -11,7 +11,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="3.6.0",
+  org.eclipse.osgi.services;bundle-version="3.2.100"
+ Bundle-ActivationPolicy: lazy
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0"
+ Service-Component: OSGI-INF/preferences.xml, OSGI-INF/events.xml,
+  OSGI-INF/osgiBundle.xml
+diff --git a/bundles/org.eclipse.e4.core.di/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.core.di/META-INF/MANIFEST.MF
+index 90c3728..483e022 100644
+--- a/bundles/org.eclipse.e4.core.di/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.core.di/META-INF/MANIFEST.MF
+@@ -19,5 +19,5 @@ Export-Package: org.eclipse.e4.core.di;
+  org.eclipse.e4.core.internal.di.shared;x-friends:="org.eclipse.e4.core.contexts,org.eclipse.e4.core.di.extensions"
+ Require-Bundle: org.eclipse.osgi;bundle-version="3.6.0";resolution:=optional,
+  org.eclipse.e4.core.di.annotations;bundle-version="[1.4.0,2.0.0)";visibility:=reexport
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0"
+diff --git a/bundles/org.eclipse.e4.core.services/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.core.services/META-INF/MANIFEST.MF
+index 3a784a7..90164f5 100644
+--- a/bundles/org.eclipse.e4.core.services/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.core.services/META-INF/MANIFEST.MF
+@@ -7,7 +7,7 @@ Bundle-Localization: plugin
+ Bundle-Version: 2.0.0.qualifier
+ Bundle-ActivationPolicy: lazy
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+-Import-Package: javax.annotation;version="1.1.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0",
+  org.eclipse.osgi.service.debug;version="1.1.0",
+  org.eclipse.osgi.service.localization;version="1.1.0",
+diff --git a/bundles/org.eclipse.e4.ui.bindings/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.bindings/META-INF/MANIFEST.MF
+index 0d423b0..531f8f1 100644
+--- a/bundles/org.eclipse.e4.ui.bindings/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.bindings/META-INF/MANIFEST.MF
+@@ -7,7 +7,7 @@ Bundle-Vendor: %providerName
+ Bundle-Localization: plugin
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+ Bundle-ActivationPolicy: lazy
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0",
+  org.eclipse.e4.core.commands,
+  org.eclipse.e4.core.commands.internal,
+diff --git a/bundles/org.eclipse.e4.ui.services/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.services/META-INF/MANIFEST.MF
+index d54bd9b..5eee4e0 100644
+--- a/bundles/org.eclipse.e4.ui.services/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.services/META-INF/MANIFEST.MF
+@@ -7,7 +7,7 @@ Bundle-Vendor: %providerName
+ Bundle-Localization: plugin
+ Bundle-ActivationPolicy: lazy
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0",
+  org.osgi.framework;version="1.3.0",
+  org.osgi.service.event;resolution:=optional,
+diff --git a/bundles/org.eclipse.e4.ui.workbench.addons.swt/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.workbench.addons.swt/META-INF/MANIFEST.MF
+index d530873..b5c67e0 100644
+--- a/bundles/org.eclipse.e4.ui.workbench.addons.swt/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.workbench.addons.swt/META-INF/MANIFEST.MF
+@@ -23,7 +23,7 @@ Require-Bundle: org.eclipse.e4.ui.model.workbench;bundle-version="1.0.0",
+  org.eclipse.emf.ecore.xmi;bundle-version="2.7.0"
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+ Bundle-ActivationPolicy: lazy
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0",
+  org.eclipse.e4.ui.internal.workbench.swt,
+  org.eclipse.osgi.util;version="1.1.0"
+diff --git a/bundles/org.eclipse.e4.ui.workbench.renderers.swt/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.workbench.renderers.swt/META-INF/MANIFEST.MF
+index e384105..b43c48d 100644
+--- a/bundles/org.eclipse.e4.ui.workbench.renderers.swt/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.workbench.renderers.swt/META-INF/MANIFEST.MF
+@@ -31,7 +31,7 @@ Require-Bundle: org.eclipse.e4.ui.workbench;bundle-version="0.9.0",
+ Export-Package: org.eclipse.e4.ui.internal.workbench.renderers.swt;x-friends:="org.eclipse.ui.workbench",
+  org.eclipse.e4.ui.workbench.renderers.swt;x-friends:="org.eclipse.e4.ui.workbench.addons.swt,org.eclipse.ui.workbench"
+ Bundle-ActivationPolicy: lazy
+-Import-Package: javax.annotation;version="1.0.0",
++Import-Package: javax.annotation,
+  javax.inject;version="1.0.0",
+  org.w3c.dom.css;version="2.0.0"
+ Bundle-Activator: org.eclipse.e4.ui.internal.workbench.renderers.swt.SWTRenderersActivator
+diff --git a/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF
+index 3a7aa33..dd4a543 100644
+--- a/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF
+@@ -43,7 +43,7 @@ Export-Package: org.eclipse.e4.ui.internal.workbench.swt;x-friends:="org.eclipse
+  org.eclipse.e4.ui.workbench.swt.internal.copy;x-friends:="org.eclipse.e4.ui.workbench.renderers.swt",
+  org.eclipse.e4.ui.workbench.swt.util;x-friends:="org.eclipse.e4.ui.workbench.renderers.swt,org.eclipse.ui.workbench"
+ Import-Package: com.ibm.icu.text;version="4.2.1",
+- javax.annotation;version="1.0.0",
++ javax.annotation,
+  javax.inject;version="1.0.0",
+  org.eclipse.osgi.service.datalocation;version="1.2.0",
+  org.eclipse.osgi.service.debug;version="1.1.0",
+diff --git a/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF
+index e7f040a..e1be26b 100644
+--- a/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF
+@@ -40,5 +40,5 @@ Bundle-Activator: org.eclipse.e4.ui.internal.workbench.Activator
+ Service-Component: OSGI-INF/progress.xml, OSGI-INF/partService.xml,
+  OSGI-INF/localechangeservice.xml
+ Import-Package: com.ibm.icu.text;version="3.8.1",
+- javax.annotation;version="1.0.0",
++ javax.annotation,
+  javax.inject;version="1.0.0"
+diff --git a/bundles/org.eclipse.ui.workbench/META-INF/MANIFEST.MF b/bundles/org.eclipse.ui.workbench/META-INF/MANIFEST.MF
+index e49d0de..f25e0e1 100644
+--- a/bundles/org.eclipse.ui.workbench/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.ui.workbench/META-INF/MANIFEST.MF
+@@ -109,7 +109,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
+  org.eclipse.e4.ui.services
+ Import-Package: com.ibm.icu.text,
+  com.ibm.icu.util,
+- javax.annotation;version="1.0.0",
++ javax.annotation,
+  javax.inject;version="1.0.0",
+  javax.xml.parsers,
+  org.eclipse.e4.core.commands,

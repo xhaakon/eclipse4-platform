@@ -1,0 +1,3 @@
+version=3
+http://git.eclipse.org/c/emf/org.eclipse.emf.git/refs \
+.*/snapshot/R(\d+)_(\d+)_(\d+).tar.xz

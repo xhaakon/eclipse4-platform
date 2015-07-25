@@ -1,0 +1,62 @@
+From: Jakub Adam <jakub.adam@ktknet.cz>
+Date: Mon, 3 Aug 2015 01:12:56 +0200
+Subject: com-ibm-icu
+
+---
+ bundles/org.eclipse.compare.core/META-INF/MANIFEST.MF        | 4 ++--
+ bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF | 2 +-
+ bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF     | 2 +-
+ org.eclipse.help/META-INF/MANIFEST.MF                        | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/bundles/org.eclipse.compare.core/META-INF/MANIFEST.MF b/bundles/org.eclipse.compare.core/META-INF/MANIFEST.MF
+index 7a177bf..58daee9 100644
+--- a/bundles/org.eclipse.compare.core/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.compare.core/META-INF/MANIFEST.MF
+@@ -12,6 +12,6 @@ Export-Package: org.eclipse.compare.internal.core;x-friends:="org.eclipse.compar
+  org.eclipse.compare.internal.core.patch;x-friends:="org.eclipse.compare",
+  org.eclipse.compare.patch,
+  org.eclipse.compare.rangedifferencer
+-Import-Package: com.ibm.icu.text;version="3.6.1",
+- com.ibm.icu.util;version="3.6.1"
++Import-Package: com.ibm.icu.text,
++ com.ibm.icu.util
+ Bundle-Localization: plugin
+diff --git a/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF
+index dd4a543..1d7e20e 100644
+--- a/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.workbench.swt/META-INF/MANIFEST.MF
+@@ -42,7 +42,7 @@ Export-Package: org.eclipse.e4.ui.internal.workbench.swt;x-friends:="org.eclipse
+  org.eclipse.e4.ui.workbench.swt.factories;x-friends:="org.eclipse.e4.ui.workbench.renderers.swt,org.eclipse.ui.workbench",
+  org.eclipse.e4.ui.workbench.swt.internal.copy;x-friends:="org.eclipse.e4.ui.workbench.renderers.swt",
+  org.eclipse.e4.ui.workbench.swt.util;x-friends:="org.eclipse.e4.ui.workbench.renderers.swt,org.eclipse.ui.workbench"
+-Import-Package: com.ibm.icu.text;version="4.2.1",
++Import-Package: com.ibm.icu.text,
+  javax.annotation,
+  javax.inject;version="1.0.0",
+  org.eclipse.osgi.service.datalocation;version="1.2.0",
+diff --git a/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF
+index e1be26b..0aa8e81 100644
+--- a/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.ui.workbench/META-INF/MANIFEST.MF
+@@ -39,6 +39,6 @@ Export-Package: org.eclipse.e4.ui.internal.workbench;
+ Bundle-Activator: org.eclipse.e4.ui.internal.workbench.Activator
+ Service-Component: OSGI-INF/progress.xml, OSGI-INF/partService.xml,
+  OSGI-INF/localechangeservice.xml
+-Import-Package: com.ibm.icu.text;version="3.8.1",
++Import-Package: com.ibm.icu.text,
+  javax.annotation,
+  javax.inject;version="1.0.0"
+diff --git a/org.eclipse.help/META-INF/MANIFEST.MF b/org.eclipse.help/META-INF/MANIFEST.MF
+index 86ef1fa..3d03e9c 100644
+--- a/org.eclipse.help/META-INF/MANIFEST.MF
++++ b/org.eclipse.help/META-INF/MANIFEST.MF
+@@ -59,7 +59,7 @@ Export-Package: org.eclipse.help,
+ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
+  org.eclipse.core.expressions;bundle-version="[3.4.200,4.0.0)";visibility:=reexport
+ Eclipse-LazyStart: true
+-Import-Package: com.ibm.icu.text;version="3.8.0",
++Import-Package: com.ibm.icu.text,
+  javax.xml.parsers,
+  javax.xml.transform,
+  javax.xml.transform.dom,

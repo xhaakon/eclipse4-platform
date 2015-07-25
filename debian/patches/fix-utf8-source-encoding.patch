@@ -1,0 +1,21 @@
+From: Jakub Adam <jakub.adam@ktknet.cz>
+Date: Mon, 3 Aug 2015 12:34:25 +0200
+Subject: fix-utf8-source-encoding
+
+---
+ .../src/org/eclipse/equinox/internal/ds/model/ServiceComponentProp.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bundles/org.eclipse.equinox.ds/src/org/eclipse/equinox/internal/ds/model/ServiceComponentProp.java b/bundles/org.eclipse.equinox.ds/src/org/eclipse/equinox/internal/ds/model/ServiceComponentProp.java
+index 0d888d5..935313d 100644
+--- a/bundles/org.eclipse.equinox.ds/src/org/eclipse/equinox/internal/ds/model/ServiceComponentProp.java
++++ b/bundles/org.eclipse.equinox.ds/src/org/eclipse/equinox/internal/ds/model/ServiceComponentProp.java
+@@ -192,7 +192,7 @@ public class ServiceComponentProp implements Component, PrivilegedExceptionActio
+ 		}
+ 
+ 		//4. if the component configuration is registered as a service, 
+-		// modify the service’s service properties 
++		// modify the service's service properties 
+ 		if (registration != null) {
+ 			registration.setProperties(getPublicServiceProperties());
+ 		}

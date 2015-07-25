@@ -1,0 +1,21 @@
+From: Jakub Adam <jakub.adam@ktknet.cz>
+Date: Wed, 5 Aug 2015 23:13:44 +0200
+Subject: build-eclipse-core-net-linux-fragment
+
+---
+ bundles/org.eclipse.core.net/build.properties | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bundles/org.eclipse.core.net/build.properties b/bundles/org.eclipse.core.net/build.properties
+index 20cb842..5aabc91 100644
+--- a/bundles/org.eclipse.core.net/build.properties
++++ b/bundles/org.eclipse.core.net/build.properties
+@@ -8,7 +8,7 @@
+ # Contributors:
+ #     IBM Corporation - initial API and implementation
+ ###############################################################################
+-source.. = src/
++source.. = src/, fragments/org.eclipse.core.net.linux.x86/src
+ output.. = bin/
+ bin.includes = META-INF/,\
+                .,\

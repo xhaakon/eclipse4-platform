@@ -1,0 +1,21 @@
+#!/bin/sh
+
+JAR_BUNDLES=`ls /usr/share/eclipse4/plugins/*.jar debian/.eclipse-build/orbitdeps/?*_?*.jar | xargs -i basename {} .jar | sort | uniq`
+DIR_BUNDLES=`ls -d /usr/share/eclipse4/plugins/*/ debian/.eclipse-build/orbitdeps/*/ | xargs -i basename {} | sort | uniq`
+
+echo "#encoding=UTF-8"
+echo "#version=1"
+
+for bundle in $JAR_BUNDLES; do
+	SYMBOLICNAME=$(echo $bundle | cut -f1 -d_)
+	VERSION=$(echo $bundle | cut -f2 -d_)
+
+	echo $SYMBOLICNAME,$VERSION,plugins/$bundle.jar,4,false
+done
+
+for bundle in $DIR_BUNDLES; do
+	SYMBOLICNAME=$(echo $bundle | cut -f1 -d_)
+	VERSION=$(echo $bundle | cut -f2 -d_)
+
+	echo $SYMBOLICNAME,$VERSION,plugins/$bundle,4,false
+done

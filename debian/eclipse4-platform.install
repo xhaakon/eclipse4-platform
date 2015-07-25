@@ -1,0 +1,12 @@
+debian/.eclipse-build/orbitdeps/javax.inject_*.jar /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/com.ibm.icu_*.jar /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.eclipse.* /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.apache.ant* /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.apache.batik.* /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.apache.commons.jxpath_* /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.apache.felix.gogo.*.jar /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.apache.lucene.*.jar /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.tukaani.xz_*.jar /usr/share/eclipse4/plugins
+debian/.eclipse-build/orbitdeps/org.w3c.css.sac_*.jar /usr/share/eclipse4/plugins
+bundles.info /usr/share/eclipse4/configuration/org.eclipse.equinox.simpleconfigurator
+config.ini /usr/share/eclipse4/configuration

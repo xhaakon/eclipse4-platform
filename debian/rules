@@ -1,0 +1,140 @@
+#!/usr/bin/make -f
+
+export JAVA_HOME=/usr/lib/jvm/default-java
+export CFLAGS=$(shell dpkg-buildflags --get CFLAGS)
+export LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS)
+export CPPFLAGS=$(shell dpkg-buildflags --get CPPFLAGS)
+
+%:
+	dh $@
+
+override_dh_auto_build-arch:
+	TARGET_ENVIRONMENT="$(CFLAGS) $(LDFLAGS) $(CPPFLAGS)" \
+	make -C bundles/org.eclipse.core.net/natives/unix/linux
+
+override_dh_auto_build-indep:
+	jh_generateorbitdir
+	dh_auto_build -i
+
+	ANT_VERSION=$$(grep Bundle-Version: debian/org.apache.ant/META-INF/MANIFEST.MF | cut -f2 -d' '); \
+	cp -r debian/org.apache.ant debian/.eclipse-build/orbitdeps/org.apache.ant_$$ANT_VERSION
+
+	build_bundle bundles/org.eclipse.equinox.common
+	build_bundle bundles/org.eclipse.core.jobs
+	build_bundle bundles/org.eclipse.equinox.registry
+	build_bundle bundles/org.eclipse.equinox.preferences
+	build_bundle bundles/org.eclipse.core.contenttype
+	build_bundle bundles/org.eclipse.equinox.app
+	build_bundle bundles/org.eclipse.core.runtime
+	build_bundle bundles/org.eclipse.equinox.simpleconfigurator
+	build_bundle bundles/org.eclipse.equinox.console
+	build_bundle bundles/org.eclipse.equinox.util
+	build_bundle bundles/org.eclipse.core.commands
+	build_bundle bundles/org.eclipse.equinox.bidi
+	build_bundle bundles/org.eclipse.jface
+	build_bundle bundles/org.eclipse.core.expressions
+	build_bundle bundles/org.eclipse.e4.ui.workbench3
+	build_bundle bundles/org.eclipse.core.databinding.observable
+	build_bundle bundles/org.eclipse.e4.core.di.annotations
+	build_bundle bundles/org.eclipse.e4.core.di
+	build_bundle bundles/org.eclipse.e4.core.contexts
+	build_bundle bundles/org.eclipse.e4.core.services
+	build_bundle bundles/org.eclipse.e4.core.commands
+	build_bundle bundles/org.eclipse.e4.ui.bindings
+	build_bundle bundles/org.eclipse.e4.core.di.extensions
+	build_bundle bundles/org.eclipse.e4.ui.di
+	build_bundle plugins/org.eclipse.emf.common
+	build_bundle bundles/org.eclipse.core.filesystem
+	build_bundle org.eclipse.core.variables
+	build_bundle ant/org.eclipse.ant.core
+	build_bundle bundles/org.eclipse.core.resources
+	build_bundle plugins/org.eclipse.emf.ecore
+	build_bundle plugins/org.eclipse.emf.ecore.change
+	build_bundle plugins/org.eclipse.emf.ecore.xmi
+	build_bundle bundles/org.eclipse.e4.emf.xpath
+	build_bundle bundles/org.eclipse.e4.ui.model.workbench
+	build_bundle bundles/org.eclipse.e4.ui.services
+	build_bundle bundles/org.eclipse.e4.ui.workbench
+	build_bundle bundles/org.eclipse.core.databinding.property
+	build_bundle bundles/org.eclipse.core.databinding
+	build_bundle bundles/org.eclipse.jface.databinding
+	build_bundle bundles/org.eclipse.e4.ui.css.core
+	build_bundle bundles/org.eclipse.e4.ui.css.swt
+	build_bundle bundles/org.eclipse.e4.ui.widgets
+	build_bundle bundles/org.eclipse.e4.ui.css.swt.theme
+	build_bundle bundles/org.eclipse.e4.ui.workbench.swt
+	build_bundle bundles/org.eclipse.e4.ui.workbench.renderers.swt
+	build_bundle bundles/org.eclipse.equinox.ds
+	build_bundle org.eclipse.help
+	build_bundle bundles/org.eclipse.e4.ui.workbench.addons.swt
+	build_bundle bundles/org.eclipse.ui.workbench
+	build_bundle bundles/org.eclipse.ui.forms
+	build_bundle bundles/org.eclipse.equinox.http.servlet
+	build_bundle bundles/org.eclipse.equinox.http.jetty9
+	build_bundle bundles/org.eclipse.equinox.security
+	build_bundle bundles/org.eclipse.core.net
+	build_bundle org.eclipse.help.base
+	build_bundle org.eclipse.ui.intro
+	build_bundle org.eclipse.help.ui
+	build_bundle org.eclipse.ui.cheatsheets
+	build_bundle platform/org.eclipse.platform
+	build_bundle bundles/org.eclipse.ui
+	build_bundle org.eclipse.text
+	build_bundle org.eclipse.jface.text
+	build_bundle bundles/org.eclipse.ui.views
+	build_bundle bundles/org.eclipse.equinox.p2.core
+	build_bundle bundles/org.eclipse.equinox.p2.metadata
+	build_bundle bundles/org.eclipse.equinox.p2.repository
+	build_bundle bundles/org.eclipse.equinox.p2.metadata.repository
+	build_bundle bundles/org.eclipse.equinox.p2.engine
+	build_bundle bundles/org.eclipse.ui.ide
+	build_bundle bundles/org.eclipse.ui.ide.application
+	build_bundle bundles/org.eclipse.ui.navigator
+	build_bundle org.eclipse.core.filebuffers
+	build_bundle org.eclipse.ltk.core.refactoring
+	build_bundle bundles/org.eclipse.compare.core
+	build_bundle bundles/org.eclipse.team.core
+	build_bundle org.eclipse.ui.workbench.texteditor
+	build_bundle org.eclipse.ui.editors
+	build_bundle bundles/org.eclipse.compare
+	build_bundle bundles/org.eclipse.team.ui
+	build_bundle org.eclipse.ltk.ui.refactoring
+	build_bundle bundles/org.eclipse.ui.views.properties.tabbed
+	build_bundle bundles/org.eclipse.ui.navigator.resources
+	build_bundle bundles/org.eclipse.equinox.event
+	build_bundle bundles/org.eclipse.equinox.http.registry
+
+	cp debian/config.ini.in config.ini
+	OSGI_BUNDLE=$$(basename $$(ls /usr/share/eclipse4/plugins/org.eclipse.osgi_*.jar)); \
+	SIMPLECONFIGURATOR_BUNDLE=$$(basename $$(ls debian/.eclipse-build/orbitdeps/org.eclipse.equinox.simpleconfigurator_*.jar)); \
+	OSGI_COMPATIBILITY_STATE_BUNDLE=$$(basename $$(ls /usr/share/eclipse4/plugins/org.eclipse.osgi_*.jar)); \
+	cp debian/config.ini.in config.ini; \
+	sed -i -e s/@OSGI_BUNDLE@/$$OSGI_BUNDLE/ \
+		-e s/@SIMPLECONFIGURATOR_BUNDLE@/$$SIMPLECONFIGURATOR_BUNDLE/ \
+		-e s/@OSGI_COMPATIBILITY_STATE_BUNDLE@/$$OSGI_COMPATIBILITY_STATE_BUNDLE/ \
+		config.ini
+
+	debian/build_bundles_info > bundles.info
+
+override_dh_clean:
+	dh_clean
+	jh_clean
+	rm -f config.ini bundles.info \
+		bundles/org.eclipse.core.net/natives/unix/linux/*o
+
+SOURCE=$(shell dpkg-parsechangelog -S Source)
+VERSION=$(shell dpkg-parsechangelog -S Version | cut -d- -f1)
+get-orig-source:
+	uscan --force-download --download-version $(VERSION) \
+		--rename --destdir=$(CURDIR) \
+		--repack --verbose
+	uscan --force-download --download-version 2.11.0 --watchfile debian/watch.emf \
+		--rename --destdir=$(CURDIR) \
+		--repack --verbose
+	mkdir debian/unpack
+	for tarball in *.orig.tar.gz; do \
+		tar xf $$tarball -C debian/unpack --strip-components=1; \
+	done
+	rm -f *.orig.tar.gz
+	cd debian && tar cJf ../$(SOURCE)_$(VERSION).orig.tar.xz unpack
+	rm -rf debian/unpack

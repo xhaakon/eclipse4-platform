@@ -30,7 +30,18 @@ Homepage: https://www.eclipse.org
 Package: eclipse4-platform
 Architecture: all
 Depends:
+ libatinject-jsr330-api-java (>= 1.0+ds1-2),
+ libbatik-java,
+ libcommons-jxpath-java (>= 1.3-7),
+ libequinox4-osgi-java,
+ libfelix-gogo-command-java,
+ libfelix-gogo-runtime-java,
+ libfelix-gogo-shell-java,
+ libicu4j-49-java,
+ liblucene3-java (>= 3.6.2+dfsg-7),
+ liblucene3-contrib-java (>= 3.6.2+dfsg-7),
  libswt-cairo-gtk-4-jni,
+ libxz-java,
  ${misc:Depends},
  ${shlibs:Depends}
 Description: Equinox blah blah

@@ -80,6 +80,7 @@ Files-Excluded: .gitattributes
  bundles/org.eclipse.ui.net/*
  bundles/org.eclipse.ui.themes/*
  platform/org.eclipse.sdk/*
+ platform/org.eclipse.platform/splashSource/Mars.1/Raleway.zip
  plugins/org.eclipse.emf/*
  plugins/org.eclipse.emf.ant/*
  plugins/org.eclipse.emf.codegen*

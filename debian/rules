@@ -120,8 +120,6 @@ override_dh_auto_build-indep: about.mappings
 		-e s/@OSGI_COMPATIBILITY_STATE_BUNDLE@/$$OSGI_COMPATIBILITY_STATE_BUNDLE/ \
 		config.ini
 
-	debian/build_bundles_info > bundles.info
-
 override_dh_clean:
 	dh_clean
 	jh_clean

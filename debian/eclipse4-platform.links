@@ -1,1 +1,2 @@
 /usr/share/eclipse4/configuration /usr/lib/eclipse4/configuration
+/var/lib/eclipse4-platform/bundles.info /usr/share/eclipse4/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info

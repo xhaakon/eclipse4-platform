@@ -1,0 +1,34 @@
+#!/bin/sh
+
+JAR_BUNDLES=`ls /usr/share/eclipse4/plugins/*.jar | xargs -i basename {} .jar | sort | uniq`
+DIR_BUNDLES=`ls -d /usr/share/eclipse4/plugins/*/ | xargs -i basename {} | sort | uniq`
+
+BUNDLES_TO_START="org.eclipse.core.runtime org.eclipse.equinox.common org.eclipse.equinox.ds org.eclipse.equinox.event org.eclipse.equinox.simpleconfigurator"
+
+bundle_start_str() {
+  for bundle in $BUNDLES_TO_START; do
+    [ "$bundle" = "$1" ] && echo "true" && return 0
+  done
+  echo "false"
+}
+
+(
+	echo "#encoding=UTF-8"
+	echo "#version=1"
+
+	for bundle in $JAR_BUNDLES; do
+		SYMBOLICNAME=$(echo $bundle | cut -f1 -d_)
+		VERSION=$(echo $bundle | cut -f2 -d_)
+
+		echo $SYMBOLICNAME,$VERSION,plugins/$bundle.jar,4,`bundle_start_str $SYMBOLICNAME`
+	done
+
+	for bundle in $DIR_BUNDLES; do
+		SYMBOLICNAME=$(echo $bundle | cut -f1 -d_)
+		VERSION=$(echo $bundle | cut -f2 -d_)
+
+		echo $SYMBOLICNAME,$VERSION,plugins/$bundle,4,false
+	done
+) > /var/lib/eclipse4-platform/bundles.info
+
+exit 0

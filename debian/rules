@@ -145,7 +145,7 @@ get-orig-source:
 	uscan --force-download --download-version $(VERSION) \
 		--rename --destdir=$(CURDIR) \
 		--repack --verbose
-	uscan --force-download --download-version 2.11.0 --watchfile debian/watch.emf \
+	uscan --force-download --download-version 2.11.1 --watchfile debian/watch.emf \
 		--rename --destdir=$(CURDIR) \
 		--repack --verbose
 	mkdir debian/unpack

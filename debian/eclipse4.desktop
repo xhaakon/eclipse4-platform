@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Eclipse 4
+Comment=Eclipse Integrated Development Environment
+Icon=eclipse4
+Exec=eclipse4
+Terminal=false
+Categories=Development;IDE;Java;

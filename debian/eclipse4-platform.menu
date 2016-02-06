@@ -1,0 +1,1 @@
+?package(eclipse4-platform):needs="X11" title="Eclipse" command="eclipse4" section="Applications/Programming"

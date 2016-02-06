@@ -5,6 +5,8 @@ export CFLAGS=$(shell dpkg-buildflags --get CFLAGS)
 export LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS)
 export CPPFLAGS=$(shell dpkg-buildflags --get CPPFLAGS)
 
+export VERSION=$(shell dpkg-parsechangelog -S Version | cut -d- -f1)
+
 ABOUT_MAPPINGS=platform/org.eclipse.platform/about.mappings
 
 RELEASE_NAME=Mars
@@ -138,7 +140,6 @@ about.mappings:
 		-e 's/$${buildId}/$(BUILD_ID)/' $(ABOUT_MAPPINGS)
 
 SOURCE=$(shell dpkg-parsechangelog -S Source)
-VERSION=$(shell dpkg-parsechangelog -S Version | cut -d- -f1)
 get-orig-source:
 	uscan --force-download --download-version $(VERSION) \
 		--rename --destdir=$(CURDIR) \

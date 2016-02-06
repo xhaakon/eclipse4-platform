@@ -198,7 +198,7 @@ public class ContextController {
 
 	private FilterRegistration doAddFilterRegistration(ServiceHolder<Filter> filterHolder, ServiceReference<Filter> filterRef) throws ServletException {
 
-		boolean legacyRegistration = ServiceProperties.parseBoolean(filterRef, Const.EQUINOX_LEGACY_REGISTRATION_PROP);
+		ClassLoader legacyTCCL = (ClassLoader)filterRef.getProperty(Const.EQUINOX_LEGACY_TCCL_PROP);
 		boolean asyncSupported = ServiceProperties.parseBoolean(
 			filterRef, HttpWhiteboardConstants.HTTP_WHITEBOARD_FILTER_ASYNC_SUPPORTED);
 
@@ -209,7 +209,7 @@ public class ContextController {
 			new String[dispatcherList.size()]);
 		Long serviceId = (Long)filterRef.getProperty(
 			Constants.SERVICE_ID);
-		if (legacyRegistration) {
+		if (legacyTCCL != null) {
 			// this is a legacy registration; use a negative id for the DTO
 			serviceId = -serviceId;
 		}
@@ -286,7 +286,7 @@ public class ContextController {
 		ServletContext servletContext = createServletContext(
 			filterHolder.getBundle(), curServletContextHelper);
 		FilterRegistration newRegistration  = new FilterRegistration(
-			filterHolder, filterDTO, filterPriority, this, legacyRegistration);
+			filterHolder, filterDTO, filterPriority, this, legacyTCCL);
 		FilterConfig filterConfig = new FilterConfigImpl(
 			name, filterInitParams, servletContext);
 
@@ -369,7 +369,7 @@ public class ContextController {
 
 		checkShutdown();
 
-		boolean legacyRegistration = ServiceProperties.parseBoolean(resourceRef, Const.EQUINOX_LEGACY_REGISTRATION_PROP);
+		ClassLoader legacyTCCL = (ClassLoader)resourceRef.getProperty(Const.EQUINOX_LEGACY_TCCL_PROP);
 		Integer rankProp = (Integer) resourceRef.getProperty(Constants.SERVICE_RANKING);
 		int serviceRanking = rankProp == null ? 0 : rankProp.intValue();
 		List<String> patternList = StringPlus.from(
@@ -378,7 +378,7 @@ public class ContextController {
 		String[] patterns = patternList.toArray(new String[patternList.size()]);
 		Long serviceId = (Long)resourceRef.getProperty(
 			Constants.SERVICE_ID);
-		if (legacyRegistration) {
+		if (legacyTCCL != null) {
 			// this is a legacy registration; use a negative id for the DTO
 			serviceId = -serviceId;
 		}
@@ -413,7 +413,7 @@ public class ContextController {
 			bundle, curServletContextHelper);
 		ResourceRegistration resourceRegistration = new ResourceRegistration(
 			new ServiceHolder<Servlet>(servlet, bundle, serviceId, serviceRanking),
-			resourceDTO, curServletContextHelper, this, legacyRegistration);
+			resourceDTO, curServletContextHelper, this, legacyTCCL);
 		ServletConfig servletConfig = new ServletConfigImpl(
 			resourceRegistration.getName(), new HashMap<String, String>(),
 			servletContext);
@@ -461,7 +461,7 @@ public class ContextController {
 
 		boolean asyncSupported = ServiceProperties.parseBoolean(
 			servletRef,	HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ASYNC_SUPPORTED);
-		boolean legacyRegistration = ServiceProperties.parseBoolean(servletRef, Const.EQUINOX_LEGACY_REGISTRATION_PROP);
+		ClassLoader legacyTCCL = (ClassLoader)servletRef.getProperty(Const.EQUINOX_LEGACY_TCCL_PROP);
 		List<String> errorPageList = StringPlus.from(
 			servletRef.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_ERROR_PAGE));
 		String[] errorPages = errorPageList.toArray(new String[errorPageList.size()]);
@@ -471,7 +471,7 @@ public class ContextController {
 			servletRef.getProperty(HttpWhiteboardConstants.HTTP_WHITEBOARD_SERVLET_PATTERN));
 		String[] patterns = patternList.toArray(new String[patternList.size()]);
 		Long serviceId = (Long)servletRef.getProperty(Constants.SERVICE_ID);
-		if (legacyRegistration) {
+		if (legacyTCCL != null) {
 			// this is a legacy registration; use a negative id for the DTO
 			serviceId = -serviceId;
 		}
@@ -553,7 +553,8 @@ public class ContextController {
 		ServletContext servletContext = createServletContext(
 			servletHolder.getBundle(), curServletContextHelper);
 		ServletRegistration servletRegistration = new ServletRegistration(
-			servletHolder, servletDTO, errorPageDTO, curServletContextHelper, this, legacyRegistration);
+			servletHolder, servletDTO, errorPageDTO, curServletContextHelper, this,
+			legacyTCCL);
 		ServletConfig servletConfig = new ServletConfigImpl(
 			servletName, servletInitParams, servletContext);
 
@@ -593,21 +594,93 @@ public class ContextController {
 	}
 
 	public DispatchTargets getDispatchTargets(
-		HttpServletRequest request, String servletName, String requestURI,
-		String servletPath, String pathInfo, String extension, Match match,
+		String path, RequestInfoDTO requestInfoDTO) {
+
+		String queryString = Path.findQueryString(path);
+		String requestURI = Path.stripQueryString(path);
+
+		// perfect match
+		DispatchTargets dispatchTargets = getDispatchTargets(
+			requestURI, null, queryString, Match.EXACT, requestInfoDTO);
+
+		if (dispatchTargets == null) {
+			// extension match
+			String extension = Path.findExtension(requestURI);
+
+			dispatchTargets = getDispatchTargets(
+				requestURI, extension, queryString, Match.EXTENSION,
+				requestInfoDTO);
+		}
+
+		if (dispatchTargets == null) {
+			// regex match
+			dispatchTargets = getDispatchTargets(
+				requestURI, null, queryString, Match.REGEX, requestInfoDTO);
+		}
+
+		if (dispatchTargets == null) {
+			// handle '/' aliases
+			dispatchTargets = getDispatchTargets(
+				requestURI, null, queryString, Match.DEFAULT_SERVLET,
+				requestInfoDTO);
+		}
+
+		return dispatchTargets;
+	}
+
+	private DispatchTargets getDispatchTargets(
+		String requestURI, String extension, String queryString, Match match,
+		RequestInfoDTO requestInfoDTO) {
+
+		int pos = requestURI.lastIndexOf('/');
+
+		String servletPath = requestURI;
+		String pathInfo = null;
+
+		if (match == Match.DEFAULT_SERVLET) {
+			pathInfo = servletPath;
+			servletPath = Const.SLASH;
+		}
+
+		do {
+			DispatchTargets dispatchTargets = getDispatchTargets(
+				null, requestURI, servletPath, pathInfo,
+				extension, queryString, match, requestInfoDTO);
+
+			if (dispatchTargets != null) {
+				return dispatchTargets;
+			}
+
+			if (match == Match.EXACT) {
+				break;
+			}
+
+			if (pos > -1) {
+				String newServletPath = requestURI.substring(0, pos);
+				pathInfo = requestURI.substring(pos);
+				servletPath = newServletPath;
+				pos = servletPath.lastIndexOf('/');
+
+				continue;
+			}
+
+			break;
+		}
+		while (true);
+
+		return null;
+	}
+
+	public DispatchTargets getDispatchTargets(
+		String servletName, String requestURI, String servletPath,
+		String pathInfo, String extension, String queryString, Match match,
 		RequestInfoDTO requestInfoDTO) {
 
 		checkShutdown();
 
-		getProxyContext().initializeServletPath(request);
-
 		EndpointRegistration<?> endpointRegistration = null;
-		String pattern = null;
-
 		for (EndpointRegistration<?> curEndpointRegistration : endpointRegistrations) {
-			if ((pattern = curEndpointRegistration.match(
-					servletName, servletPath, pathInfo, extension, match)) != null) {
-
+			if (curEndpointRegistration.match(servletName, servletPath, pathInfo, extension, match) != null) {
 				endpointRegistration = curEndpointRegistration;
 
 				break;
@@ -618,14 +691,17 @@ public class ContextController {
 			return null;
 		}
 
-		endpointRegistration.addReference();
+		if (match == Match.EXTENSION) {
+			servletPath = servletPath + pathInfo;
+			pathInfo = null;
+		}
 
 		addEnpointRegistrationsToRequestInfo(
 			endpointRegistration, requestInfoDTO);
 
 		if (filterRegistrations.isEmpty()) {
 			return new DispatchTargets(
-				this, endpointRegistration, servletPath, pathInfo, pattern);
+				this, endpointRegistration, requestURI, servletPath, pathInfo, queryString);
 		}
 
 		if (requestURI != null) {
@@ -647,8 +723,8 @@ public class ContextController {
 			matchingFilterRegistrations, requestInfoDTO);
 
 		return new DispatchTargets(
-			this, endpointRegistration, matchingFilterRegistrations, servletPath,
-			pathInfo, pattern);
+			this, endpointRegistration, matchingFilterRegistrations, requestURI, servletPath,
+			pathInfo, queryString);
 	}
 
 	private void collectFilters(
@@ -657,12 +733,10 @@ public class ContextController {
 
 		for (FilterRegistration filterRegistration : filterRegistrations) {
 			if ((filterRegistration.match(
-					servletName, servletPath, pathInfo, extension, null) != null) &&
+					servletName, requestURI, extension, null) != null) &&
 				!matchingFilterRegistrations.contains(filterRegistration)) {
 
 				matchingFilterRegistrations.add(filterRegistration);
-
-				filterRegistration.addReference();
 			}
 		}
 	}

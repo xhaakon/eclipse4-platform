@@ -31,7 +31,7 @@ Package: eclipse4-platform
 Architecture: all
 Depends:
  libatinject-jsr330-api-java (>= 1.0+ds1-2),
- libbatik-java,
+ libbatik-java (>= 1.8-4),
  libcommons-jxpath-java (>= 1.3-7),
  libequinox4-osgi-java,
  libfelix-gogo-command-java,

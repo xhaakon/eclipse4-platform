@@ -104,7 +104,7 @@ Files-Excluded: .gitattributes
  org.eclipse.equinox.p2.releng*
  org.eclipse.help.webapp/*
  org.eclipse.jdt*
- org.eclipse.search/*
+ org.eclipse.search.tests/*
  org.eclipse.ua.*
  org.eclipse.ui.examples.*
  org.eclipse.ui.intro.universal/*

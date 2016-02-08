@@ -113,6 +113,8 @@ override_dh_auto_build-indep: about.mappings
 	build_bundle bundles/org.eclipse.equinox.http.registry
 	build_bundle org.eclipse.ui.console
 	build_bundle org.eclipse.search
+	build_bundle org.eclipse.debug.core
+	build_bundle org.eclipse.debug.ui
 
 	cp debian/config.ini.in config.ini
 	OSGI_BUNDLE=$$(basename $$(ls /usr/share/eclipse4/plugins/org.eclipse.osgi_*.jar)); \

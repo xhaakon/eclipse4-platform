@@ -100,7 +100,8 @@ Files-Excluded: .gitattributes
  plugins/org.eclipse.emf.rap*
  features/org.eclipse.equinox.server.servletbridge/*
  update/*
- org.eclipse.debug.*
+ org.eclipse.debug.examples.*
+ org.eclipse.debug.tests
  org.eclipse.equinox.p2.releng*
  org.eclipse.help.webapp/*
  org.eclipse.jdt*

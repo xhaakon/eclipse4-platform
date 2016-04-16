@@ -108,7 +108,6 @@ Files-Excluded: .gitattributes
  org.eclipse.search.tests/*
  org.eclipse.ua.*
  org.eclipse.ui.examples.*
- org.eclipse.ui.intro.universal/*
  CONTRIBUTING*
  pom.xml
  README.md

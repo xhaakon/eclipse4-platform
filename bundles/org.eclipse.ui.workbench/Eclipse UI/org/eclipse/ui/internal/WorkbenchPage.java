@@ -51,6 +51,7 @@ import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.internal.workbench.ModelServiceImpl;
 import org.eclipse.e4.ui.internal.workbench.PartServiceImpl;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.descriptor.basic.MPartDescriptor;
@@ -2718,7 +2719,24 @@ public class WorkbenchPage implements IWorkbenchPage {
 		}
 		restoreWorkingSets();
 		restoreShowInMruPartIdsList();
+		configureExistingWindows();
     }
+
+	/*
+	 * Perform any configuration required for an existing MWindow. The
+	 * association of an MWindow to the WorkbenchWindow/WorkbenchPage can occur
+	 * at different times (see Bug 454056 for details).
+	 */
+	private void configureExistingWindows() {
+		List<MArea> elements = modelService.findElements(window, null, MArea.class, null);
+		for (MArea area : elements) {
+			Object widget = area.getWidget();
+			if (widget instanceof Control) {
+				installAreaDropSupport((Control) widget);
+				break;
+			}
+		}
+	}
 
 	public void restoreWorkingSets() {
 		String workingSetName = getWindowModel().getPersistedState().get(
@@ -3996,6 +4014,12 @@ public class WorkbenchPage implements IWorkbenchPage {
 		IPerspectiveDescriptor lastPerspective = getPerspective();
 		if (lastPerspective != null && lastPerspective.getId().equals(perspective.getId())) {
 			// no change
+			MPerspectiveStack perspectives = getPerspectiveStack();
+			for (MPerspective mperspective : perspectives.getChildren()) {
+				if (mperspective.getElementId().equals(perspective.getId())) {
+					((ModelServiceImpl) modelService).handleNullRefPlaceHolders(mperspective, window);
+				}
+			}
 			return;
 		}
 
@@ -4009,6 +4033,7 @@ public class WorkbenchPage implements IWorkbenchPage {
 				// this perspective already exists, switch to this one
 				perspectives.setSelectedElement(mperspective);
 				mperspective.getContext().activate();
+				((ModelServiceImpl) modelService).handleNullRefPlaceHolders(mperspective, window);
 				return;
 			}
 		}
@@ -4033,6 +4058,8 @@ public class WorkbenchPage implements IWorkbenchPage {
 			PerspectiveExtensionReader reader = new PerspectiveExtensionReader();
 			reader.extendLayout(getExtensionTracker(), perspective.getId(), modelLayout);
 		}
+
+		((ModelServiceImpl) modelService).handleNullRefPlaceHolders(modelPerspective, window);
 
 		modelPerspective.setLabel(perspective.getLabel());
 

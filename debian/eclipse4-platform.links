@@ -2,6 +2,7 @@
 
 /usr/lib/eclipse4/eclipse /usr/bin/eclipse4
 /var/lib/eclipse4-platform/bundles.info /usr/share/eclipse4/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info
+/var/lib/eclipse4-platform/config.ini /usr/share/eclipse4/configuration/config.ini
 /usr/share/eclipse4/configuration /usr/lib/eclipse4/configuration
 /usr/lib/eclipse4/plugins/org.eclipse.platform_${VERSION}.qualifier/eclipse16.png /usr/share/icons/hicolor/16x16/apps/eclipse4.png
 /usr/lib/eclipse4/plugins/org.eclipse.platform_${VERSION}.qualifier/eclipse22.png /usr/share/icons/hicolor/22x22/apps/eclipse4.png
@@ -12,4 +13,3 @@
 /usr/lib/eclipse4/plugins/org.eclipse.platform_${VERSION}.qualifier/eclipse128.png /usr/share/icons/hicolor/128x128/apps/eclipse4.png
 /usr/lib/eclipse4/plugins/org.eclipse.platform_${VERSION}.qualifier/eclipse256.png /usr/share/icons/hicolor/256x256/apps/eclipse4.png
 /usr/lib/eclipse4/plugins/org.eclipse.platform_${VERSION}.qualifier/eclipse512.png /usr/share/icons/hicolor/512x512/apps/eclipse4.png
-

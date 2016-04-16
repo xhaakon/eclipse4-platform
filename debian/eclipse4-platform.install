@@ -10,4 +10,3 @@ debian/.eclipse-build/orbitdeps/org.tukaani.xz_*.jar /usr/share/eclipse4/plugins
 debian/.eclipse-build/orbitdeps/org.w3c.css.sac_*.jar /usr/share/eclipse4/plugins
 debian/eclipse4.desktop /usr/share/applications
 debian/update-eclipse4 /usr/sbin
-config.ini /usr/share/eclipse4/configuration

@@ -116,21 +116,10 @@ override_dh_auto_build-indep: about.mappings
 	build_bundle org.eclipse.debug.core
 	build_bundle org.eclipse.debug.ui
 
-	cp debian/config.ini.in config.ini
-	OSGI_BUNDLE=$$(basename $$(ls /usr/share/eclipse4/plugins/org.eclipse.osgi_*.jar)); \
-	SIMPLECONFIGURATOR_BUNDLE=$$(basename $$(ls debian/.eclipse-build/orbitdeps/org.eclipse.equinox.simpleconfigurator_*.jar)); \
-	OSGI_COMPATIBILITY_STATE_BUNDLE=$$(basename $$(ls /usr/share/eclipse4/plugins/org.eclipse.osgi_*.jar)); \
-	cp debian/config.ini.in config.ini; \
-	sed -i -e s/@OSGI_BUNDLE@/$$OSGI_BUNDLE/ \
-		-e s/@SIMPLECONFIGURATOR_BUNDLE@/$$SIMPLECONFIGURATOR_BUNDLE/ \
-		-e s/@OSGI_COMPATIBILITY_STATE_BUNDLE@/$$OSGI_COMPATIBILITY_STATE_BUNDLE/ \
-		config.ini
-
 override_dh_clean:
 	dh_clean
 	jh_clean
-	rm -f config.ini bundles.info \
-		bundles/org.eclipse.core.net/natives/unix/linux/*o
+	rm -f bundles/org.eclipse.core.net/natives/unix/linux/*o
 	if [ -f about.mappings ]; then \
 		mv about.mappings $(ABOUT_MAPPINGS); \
 	fi

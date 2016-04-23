@@ -117,6 +117,8 @@ override_dh_auto_build-indep: about.mappings
 	build_bundle org.eclipse.search
 	build_bundle org.eclipse.debug.core
 	build_bundle org.eclipse.debug.ui
+	build_bundle bundles/org.eclipse.jsch.core
+	build_bundle bundles/org.eclipse.jsch.ui
 
 override_dh_clean:
 	dh_clean

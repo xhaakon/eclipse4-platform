@@ -12,6 +12,7 @@ jetty9-security
 jetty9-server
 jetty9-servlet
 jetty9-util
+jsch
 lucene3-analyzers
 lucene3-core
 org.apache.felix.gogo.command

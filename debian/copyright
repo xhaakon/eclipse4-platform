@@ -72,7 +72,6 @@ Files-Excluded: .gitattributes
  bundles/org.eclipse.equinox.wireadmin/*
  bundles/org.eclipse.*.test/*
  bundles/org.eclipse.*.tests/*
- bundles/org.eclipse.jsch.*
  bundles/org.eclipse.ui.browser/*
  bundles/org.eclipse.ui.cocoa/*
  bundles/org.eclipse.ui.images*

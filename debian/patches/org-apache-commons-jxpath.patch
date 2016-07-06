@@ -1,0 +1,21 @@
+From: Jakub Adam <jakub.adam@ktknet.cz>
+Date: Wed, 6 Jul 2016 22:25:43 +0200
+Subject: org-apache-commons-jxpath
+
+---
+ bundles/org.eclipse.e4.emf.xpath/META-INF/MANIFEST.MF | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bundles/org.eclipse.e4.emf.xpath/META-INF/MANIFEST.MF b/bundles/org.eclipse.e4.emf.xpath/META-INF/MANIFEST.MF
+index e0623db..7d98dee 100644
+--- a/bundles/org.eclipse.e4.emf.xpath/META-INF/MANIFEST.MF
++++ b/bundles/org.eclipse.e4.emf.xpath/META-INF/MANIFEST.MF
+@@ -4,7 +4,7 @@ Bundle-Name: %Bundle-Name
+ Bundle-SymbolicName: org.eclipse.e4.emf.xpath
+ Bundle-Version: 0.1.200.qualifier
+ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+-Require-Bundle: org.apache.commons.jxpath;bundle-version="1.2.0",
++Require-Bundle: org.apache.commons.jxpath,
+  org.eclipse.emf.ecore;bundle-version="2.6.0"
+ Export-Package: org.eclipse.e4.emf.internal.xpath;x-internal:=true,
+  org.eclipse.e4.emf.internal.xpath.helper;x-internal:=true,

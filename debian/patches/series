@@ -1,5 +1,4 @@
 build-eclipse-core-net-linux-fragment.patch
-use-jre-javax-annotation.patch
 com-ibm-icu.patch
 org-w3c-dom-css.patch
 fix-utf8-source-encoding.patch

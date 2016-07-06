@@ -1,0 +1,21 @@
+From: Jakub Adam <jakub.adam@ktknet.cz>
+Date: Wed, 6 Jul 2016 22:49:23 +0200
+Subject: add-missing-backslash
+
+---
+ platform/org.eclipse.platform/build.properties | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/platform/org.eclipse.platform/build.properties b/platform/org.eclipse.platform/build.properties
+index 269881f..14a665c 100644
+--- a/platform/org.eclipse.platform/build.properties
++++ b/platform/org.eclipse.platform/build.properties
+@@ -43,7 +43,7 @@ bin.includes = about.html,\
+                eclipse512.png,\
+                eclipse24.png,\
+                eclipse22.png,\
+-               eclipse1024.png,
++               eclipse1024.png,\
+                org.eclipse.ui.intro.universal.solstice/
+ src.includes = about.html
+ source.platform.jar = src-intro/

@@ -3,3 +3,4 @@ com-ibm-icu.patch
 org-w3c-dom-css.patch
 fix-utf8-source-encoding.patch
 org-apache-commons-jxpath.patch
+add-missing-backslash.patch

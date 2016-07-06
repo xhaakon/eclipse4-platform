@@ -12,6 +12,7 @@ Files-Excluded: .gitattributes
  ant/org.eclipse.ant.launching/*
  ant/org.eclipse.ant.ui/*
  ant/org.eclipse.ant.tests*
+ bundles/archived/*
  bundles/ie.wombat.jbdiff*
  bundles/org.eclipse.core.databinding.beans/*
  bundles/org.eclipse.core.filesystem.hpux*

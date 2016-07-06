@@ -20,5 +20,5 @@ org.apache.felix.gogo.runtime
 org.apache.felix.gogo.shell
 osgi.annotation
 sac
-swt-gtk-4.5
+swt4
 xz

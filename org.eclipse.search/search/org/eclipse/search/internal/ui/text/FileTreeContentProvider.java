@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,13 +36,14 @@ public class FileTreeContentProvider implements ITreeContentProvider, IFileSearc
 	private AbstractTextSearchResult fResult;
 	private FileSearchPage fPage;
 	private AbstractTreeViewer fTreeViewer;
-	private Map fChildrenMap;
+	private Map<Object, Set<Object>> fChildrenMap;
 	
 	FileTreeContentProvider(FileSearchPage page, AbstractTreeViewer viewer) {
 		fPage= page;
 		fTreeViewer= viewer;
 	}
 	
+	@Override
 	public Object[] getElements(Object inputElement) {
 		Object[] children= getChildren(inputElement);
 		int elementLimit= getElementLimit();
@@ -58,10 +59,12 @@ public class FileTreeContentProvider implements ITreeContentProvider, IFileSearc
 		return fPage.getElementLimit().intValue();
 	}
 	
+	@Override
 	public void dispose() {
 		// nothing to do
 	}
 	
+	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		if (newInput instanceof FileSearchResult) {
 			initialize((FileSearchResult) newInput);
@@ -70,7 +73,7 @@ public class FileTreeContentProvider implements ITreeContentProvider, IFileSearc
 	
 	private synchronized void initialize(AbstractTextSearchResult result) {
 		fResult= result;
-		fChildrenMap= new HashMap();
+		fChildrenMap= new HashMap<>();
 		boolean showLineMatches= !((FileSearchQuery) fResult.getQuery()).isFileNameSearch();
 		
 		if (result != null) {
@@ -117,16 +120,16 @@ public class FileTreeContentProvider implements ITreeContentProvider, IFileSearc
 
 	 */
 	private boolean insertChild(Object parent, Object child) {
-		Set children= (Set) fChildrenMap.get(parent);
+		Set<Object> children= fChildrenMap.get(parent);
 		if (children == null) {
-			children= new HashSet();
+			children= new HashSet<>();
 			fChildrenMap.put(parent, children);
 		}
 		return children.add(child);
 	}
 	
 	private boolean hasChild(Object parent, Object child) {
-		Set children= (Set) fChildrenMap.get(parent);
+		Set<Object> children= fChildrenMap.get(parent);
 		return children != null && children.contains(child);
 	}
 	
@@ -167,27 +170,26 @@ public class FileTreeContentProvider implements ITreeContentProvider, IFileSearc
 	
 	
 	private void removeFromSiblings(Object element, Object parent) {
-		Set siblings= (Set) fChildrenMap.get(parent);
+		Set<Object> siblings= fChildrenMap.get(parent);
 		if (siblings != null) {
 			siblings.remove(element);
 		}
 	}
 
+	@Override
 	public Object[] getChildren(Object parentElement) {
-		Set children= (Set) fChildrenMap.get(parentElement);
+		Set<Object> children= fChildrenMap.get(parentElement);
 		if (children == null)
 			return EMPTY_ARR;
 		return children.toArray();
 	}
 
+	@Override
 	public boolean hasChildren(Object element) {
 		return getChildren(element).length > 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.search.internal.ui.text.IFileSearchContentProvider#elementsChanged(java.lang.Object[])
-	 */
+	@Override
 	public synchronized void elementsChanged(Object[] updatedElements) {
 		for (int i= 0; i < updatedElements.length; i++) {
 			if (!(updatedElements[i] instanceof LineElement)) {
@@ -213,11 +215,13 @@ public class FileTreeContentProvider implements ITreeContentProvider, IFileSearc
 		}
 	}
 
+	@Override
 	public void clear() {
 		initialize(fResult);
 		fTreeViewer.refresh();
 	}
 
+	@Override
 	public Object getParent(Object element) {
 		if (element instanceof IProject)
 			return null;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -131,11 +131,6 @@ public final class SplashHandlerFactory {
 		final AbstractSplashHandler[] handler = new AbstractSplashHandler[1];
 		SafeRunner.run(new SafeRunnable() {
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.ISafeRunnable#run()
-			 */
 			@Override
 			public void run() throws Exception {
 				handler[0] = (AbstractSplashHandler) WorkbenchPlugin
@@ -143,11 +138,6 @@ public final class SplashHandlerFactory {
 								IWorkbenchRegistryConstants.ATT_CLASS);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.jface.util.SafeRunnable#handleException(java.lang.Throwable)
-			 */
 			@Override
 			public void handleException(Throwable e) {
 				WorkbenchPlugin

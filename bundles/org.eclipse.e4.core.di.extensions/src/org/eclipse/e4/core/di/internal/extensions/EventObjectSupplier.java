@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     ARTAL Technologies <simon.chemouil@artal.fr> - Allow wildcards in topic names
+ *     Lars.Vogel <Lars.Vogel@vogella.com> - Bug 472654
+ *     Alex Blewitt <alex.blewitt@gmail.com> - Bug 476364
  *******************************************************************************/
 package org.eclipse.e4.core.di.internal.extensions;
 
@@ -28,37 +30,31 @@ import org.eclipse.e4.core.di.extensions.EventUtils;
 import org.eclipse.e4.core.di.suppliers.ExtendedObjectSupplier;
 import org.eclipse.e4.core.di.suppliers.IObjectDescriptor;
 import org.eclipse.e4.core.di.suppliers.IRequestor;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 
+/**
+ * This class is instantiated and wired by declarative services, in
+ * OSGI-INF/events.xml
+ */
 public class EventObjectSupplier extends ExtendedObjectSupplier {
 
-	// This is a temporary code to ensure that bundle containing
-	// EventAdmin implementation is started. This code it to be removed once
-	// the proper method to start EventAdmin is added.
-	static {
-		if (getEventAdmin() == null) {
-			Bundle[] bundles = DIEActivator.getDefault().getBundleContext().getBundles();
-			for (Bundle bundle : bundles) {
-				if (!"org.eclipse.equinox.event".equals(bundle.getSymbolicName())) //$NON-NLS-1$
-					continue;
-				try {
-					bundle.start(Bundle.START_TRANSIENT);
-				} catch (BundleException e) {
-					e.printStackTrace();
-				}
-				break;
-			}
-		}
+	private EventAdmin eventAdmin;
+
+	public EventAdmin getEventAdmin() {
+		return eventAdmin;
 	}
 
-	protected Map<String, Event> currentEvents = new HashMap<String, Event>();
+	public void setEventAdmin(EventAdmin eventAdmin) {
+		this.eventAdmin = eventAdmin;
+	}
+
+	protected Map<String, Event> currentEvents = new HashMap<>();
 
 	class DIEventHandler implements EventHandler {
 
@@ -70,6 +66,7 @@ public class EventObjectSupplier extends ExtendedObjectSupplier {
 			this.requestor = requestor;
 		}
 
+		@Override
 		public void handleEvent(Event event) {
 			if (!requestor.isValid()) {
 				unsubscribe(requestor);
@@ -132,7 +129,7 @@ public class EventObjectSupplier extends ExtendedObjectSupplier {
 
 	}
 
-	private Map<Subscriber, ServiceRegistration<EventHandler>> registrations = new HashMap<Subscriber, ServiceRegistration<EventHandler>>();
+	private Map<Subscriber, ServiceRegistration<EventHandler>> registrations = new HashMap<>();
 
 	protected void addCurrentEvent(String topic, Event event) {
 		synchronized (currentEvents) {
@@ -151,12 +148,11 @@ public class EventObjectSupplier extends ExtendedObjectSupplier {
 		if (descriptor == null)
 			return null;
 		String topic = getTopic(descriptor);
-		EventAdmin eventAdmin = getEventAdmin();
 		if (topic == null || eventAdmin == null || topic.length() == 0)
 			return IInjector.NOT_A_VALUE;
 
 		if (track)
-			subscribe(topic, eventAdmin, requestor);
+			subscribe(topic, requestor);
 		else
 			unsubscribe(requestor);
 
@@ -170,22 +166,25 @@ public class EventObjectSupplier extends ExtendedObjectSupplier {
 		return currentEvents.get(topic).getProperty(EventUtils.DATA);
 	}
 
-	private void subscribe(String topic, EventAdmin eventAdmin, IRequestor requestor) {
+	private void subscribe(String topic, IRequestor requestor) {
 		Subscriber subscriber = new Subscriber(requestor, topic);
 		synchronized (registrations) {
 			if (registrations.containsKey(subscriber))
 				return;
 		}
-		BundleContext bundleContext = DIEActivator.getDefault().getBundleContext();
+		BundleContext bundleContext = FrameworkUtil.getBundle(EventObjectSupplier.class).getBundleContext();
 		if (bundleContext == null)
-			throw new InjectionException("Unable to subscribe to events: org.eclipse.e4.core.di.extensions bundle is not activated"); //$NON-NLS-1$
+			throw new InjectionException(
+					"Unable to subscribe to events: org.eclipse.e4.core.di.extensions bundle is not activated"); //$NON-NLS-1$
 
-		String[] topics = new String[] {topic};
-		Dictionary<String, Object> d = new Hashtable<String, Object>();
+		String[] topics = new String[] { topic };
+		Dictionary<String, Object> d = new Hashtable<>();
 		d.put(EventConstants.EVENT_TOPIC, topics);
 		EventHandler wrappedHandler = makeHandler(topic, requestor);
-		ServiceRegistration<EventHandler> registration = bundleContext.registerService(EventHandler.class, wrappedHandler, d);
-		// due to the way requestors are constructed this limited synch should be OK
+		ServiceRegistration<EventHandler> registration = bundleContext.registerService(EventHandler.class,
+				wrappedHandler, d);
+		// due to the way requestors are constructed this limited synch should
+		// be OK
 		synchronized (registrations) {
 			registrations.put(subscriber, registration);
 		}
@@ -200,10 +199,6 @@ public class EventObjectSupplier extends ExtendedObjectSupplier {
 			return null;
 		EventTopic qualifier = descriptor.getQualifier(EventTopic.class);
 		return qualifier.value();
-	}
-
-	static private EventAdmin getEventAdmin() {
-		return DIEActivator.getDefault().getEventAdmin();
 	}
 
 	protected void unsubscribe(IRequestor requestor) {

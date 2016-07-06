@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2012 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -495,9 +495,6 @@ public final class ActionDelegateHandlerProxy implements ISelectionListener,
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.commands.IHandler2#setEnabled(java.lang.Object)
-	 */
 	@Override
 	public void setEnabled(Object evaluationContext) {
 		if (!(evaluationContext instanceof IEvaluationContext)) {
@@ -716,6 +713,8 @@ public final class ActionDelegateHandlerProxy implements ISelectionListener,
 				final String className = element
 						.getAttribute(delegateAttributeName);
 				buffer.append(className);
+				final String namespaceId = element.getNamespaceIdentifier();
+				buffer.append(" in ").append(namespaceId); //$NON-NLS-1$
 			} catch (InvalidRegistryObjectException e) {
 				buffer.append(actionId);
 			}
@@ -724,23 +723,14 @@ public final class ActionDelegateHandlerProxy implements ISelectionListener,
 		return buffer.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partActivated(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partActivated(IWorkbenchPartReference partRef) {
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partBroughtToTop(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partBroughtToTop(IWorkbenchPartReference partRef) {
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partClosed(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partClosed(IWorkbenchPartReference partRef) {
 		if (currentPart != null && partRef.getPart(false) == currentPart) {
@@ -748,37 +738,22 @@ public final class ActionDelegateHandlerProxy implements ISelectionListener,
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partDeactivated(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partDeactivated(IWorkbenchPartReference partRef) {
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partHidden(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partHidden(IWorkbenchPartReference partRef) {
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partInputChanged(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partInputChanged(IWorkbenchPartReference partRef) {
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partOpened(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partOpened(IWorkbenchPartReference partRef) {
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPartListener2#partVisible(org.eclipse.ui.IWorkbenchPartReference)
-	 */
 	@Override
 	public void partVisible(IWorkbenchPartReference partRef) {
 	}

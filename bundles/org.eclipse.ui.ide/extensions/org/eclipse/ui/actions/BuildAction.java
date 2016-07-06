@@ -28,9 +28,8 @@ import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -239,12 +238,11 @@ public class BuildAction extends WorkspaceAction {
         return store.getBoolean(IDEInternalPreferences.SAVE_ALL_BEFORE_BUILD);
     }
 
-    /* (non-Javadoc)
-     * Method declared on IAction; overrides method on WorkspaceAction.
-     * This override allows the user to save the contents of selected
-     * open editors so that the updated contents will be used for building.
-     * The build is run as a background job.
-     */
+	/*
+	 * This override allows the user to save the contents of selected open
+	 * editors so that the updated contents will be used for building. The build
+	 * is run as a background job.
+	 */
     @Override
 	public void run() {
 		final List<?> buildConfigurations = getBuildConfigurationsToBuild();
@@ -279,19 +277,16 @@ public class BuildAction extends WorkspaceAction {
 			@Override
 			public IStatus runInWorkspace(IProgressMonitor monitor) {
 				IStatus status = null;
-				monitor.beginTask("", 10000); //$NON-NLS-1$
-				monitor.setTaskName(getOperationMessage());
+				SubMonitor progress = SubMonitor.convert(monitor, 1);
+				progress.setTaskName(getOperationMessage());
 				try {
 					// Backwards compatibility: check shouldPerformResourcePruning().
 					// Previously if this returned true, the full reference graph is built, otherwise just build the selected configurations
-					ResourcesPlugin.getWorkspace().build(configs, kind, shouldPerformResourcePruning(), new SubProgressMonitor(monitor, 10000));
+					ResourcesPlugin.getWorkspace().build(configs, kind, shouldPerformResourcePruning(),
+							progress.split(1));
 				} catch (CoreException e) {
 					status = e.getStatus();
 				}
-				if (monitor.isCanceled()) {
-					throw new OperationCanceledException();
-				}
-				monitor.done();
 				return status == null ? Status.OK_STATUS : status;
 			}
 		};

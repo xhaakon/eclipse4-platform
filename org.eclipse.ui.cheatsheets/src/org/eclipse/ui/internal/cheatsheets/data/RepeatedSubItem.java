@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 public class RepeatedSubItem extends AbstractSubItem implements ISubItemItem {
 	private String values;
-	private ArrayList subItems;
+	private ArrayList<AbstractSubItem> subItems;
 
 	/**
 	 * Constructor for RepeatedSubItem.
@@ -22,12 +22,12 @@ public class RepeatedSubItem extends AbstractSubItem implements ISubItemItem {
 	public RepeatedSubItem() {
 		super();
 	}
-	
+
 	public RepeatedSubItem(String values) {
 		super();
 		this.values = values;
 	}
-	
+
 	/**
 	 * Returns the values.
 	 * @return String
@@ -47,9 +47,10 @@ public class RepeatedSubItem extends AbstractSubItem implements ISubItemItem {
 	/**
 	 * @param subItem the SubItem to add.
 	 */
+	@Override
 	public void addSubItem(AbstractSubItem subItem) {
 		if(subItems == null) {
-			subItems = new ArrayList();
+			subItems = new ArrayList<>();
 		}
 		subItems.add(subItem);
 	}
@@ -58,7 +59,8 @@ public class RepeatedSubItem extends AbstractSubItem implements ISubItemItem {
 	 * Returns a list which will always only contain at most 1 entry.
 	 * @return Returns the subItems.
 	 */
-	public ArrayList getSubItems() {
+	@Override
+	public ArrayList<AbstractSubItem> getSubItems() {
 		return subItems;
 	}
 }

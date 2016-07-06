@@ -20,7 +20,7 @@ import org.eclipse.help.internal.toc.TocFileParser;
 import org.xml.sax.SAXException;
 
 /*******************************************************************************
- * Copyright (c) 2007, 2011 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,6 +55,7 @@ public class TocValidator {
 	}
 
 	public static class PassThroughFilter extends Filter {
+		@Override
 		public boolean isIncluded(String href) {
 			return true;
 		}
@@ -78,14 +79,14 @@ public class TocValidator {
 
 	public static ArrayList<BrokenLink> filteredValidate (String[] hrefs, Filter filter) throws IOException, SAXException, ParserConfigurationException{
 		TocValidator v = new TocValidator();
-		ArrayList<BrokenLink> result = new ArrayList<BrokenLink>();
+		ArrayList<BrokenLink> result = new ArrayList<>();
 		for (int i = 0; i < hrefs.length; i++)
 			v.processToc(hrefs[i], null, result, filter);
 		return result;
 	}
 
 	private TocValidator() {
-		processedTocs = new HashMap<String, Object>();
+		processedTocs = new HashMap<>();
 		parser = new TocFileParser();
 	}
 

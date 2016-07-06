@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,7 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 	private IPreferenceStore fStore;
 
 	/** Action for handling menu item selection. */
-	private static class NavigationEnablementAction extends Action implements Comparable {
+	private static class NavigationEnablementAction extends Action implements Comparable<NavigationEnablementAction> {
 
 		/** The preference store. */
 		private IPreferenceStore fStore;
@@ -76,24 +76,14 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 			setChecked(fStore.getBoolean(fKey));
 		}
 
-		/*
-		 * @see IAction#run()
-		 */
+		@Override
 		public void run() {
 			fStore.setValue(fKey, isChecked());
 		}
 
-		/*
-		 * @see java.lang.Comparable#compareTo(java.lang.Object)
-		 * @since 3.2
-		 */
-		public int compareTo(Object o) {
-			if (!(o instanceof NavigationEnablementAction))
-				return -1;
-
-			String otherName= ((NavigationEnablementAction)o).fName;
-
-			return Collator.getInstance().compare(fName, otherName);
+		@Override
+		public int compareTo(NavigationEnablementAction o) {
+			return Collator.getInstance().compare(fName, o.fName);
 		}
 	}
 
@@ -106,9 +96,7 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 	 */
 	public abstract String getPreferenceKey(AnnotationPreference annotationPreference);
 
-	/*
-	 * @see org.eclipse.jface.action.IMenuCreator#getMenu(org.eclipse.swt.widgets.Control)
-	 */
+	@Override
 	public Menu getMenu(Control parent) {
 		if (fMenu != null)
 			fMenu.dispose();
@@ -126,9 +114,7 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 		fStore= EditorsPlugin.getDefault().getPreferenceStore();
 	}
 
-	/*
-	 * @see org.eclipse.jface.action.IMenuCreator#getMenu(org.eclipse.swt.widgets.Menu)
-	 */
+	@Override
 	public Menu getMenu(Menu parent) {
 		if (fMenu == null) {
 			fMenu= new Menu(parent);
@@ -138,9 +124,7 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 		return fMenu;
 	}
 
-	/*
-	 * @see org.eclipse.jface.action.IMenuCreator#dispose()
-	 */
+	@Override
 	public void dispose() {
 		if (fMenu != null) {
 			fMenu.dispose();
@@ -171,11 +155,11 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 	 */
 	private IAction[] getActionsFromDescriptors() {
 		MarkerAnnotationPreferences fMarkerAnnotationPreferences= EditorsPlugin.getDefault().getMarkerAnnotationPreferences();
-		SortedSet containers= new TreeSet();
+		SortedSet<NavigationEnablementAction> containers= new TreeSet<>();
 
-		Iterator iter= fMarkerAnnotationPreferences.getAnnotationPreferences().iterator();
+		Iterator<AnnotationPreference> iter= fMarkerAnnotationPreferences.getAnnotationPreferences().iterator();
 		while (iter.hasNext()) {
-			AnnotationPreference preference= (AnnotationPreference)iter.next();
+			AnnotationPreference preference= iter.next();
 			String key= preference.getShowInNextPrevDropdownToolbarActionKey();
 			if (key != null && fStore.getBoolean(key)) {
 				String preferenceKey= getPreferenceKey(preference);
@@ -193,24 +177,18 @@ public abstract class NextPreviousPulldownActionDelegate extends Action implemen
 			}
 		}
 
-		return (IAction[]) containers.toArray(new Action[containers.size()]);
+		return containers.toArray(new Action[containers.size()]);
 	}
 
-	/*
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
-	 */
+	@Override
 	public void init(IWorkbenchWindow window) {
 	}
 
-	/*
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+	@Override
 	public void run(IAction action) {
 	}
 
-	/*
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+	@Override
 	public void selectionChanged(IAction action, ISelection selection) {
 	}
 }

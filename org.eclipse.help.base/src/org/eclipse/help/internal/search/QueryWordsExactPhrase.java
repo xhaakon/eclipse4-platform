@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,7 @@ public class QueryWordsExactPhrase extends QueryWordsToken {
 	private List<String> words;
 	public QueryWordsExactPhrase() {
 		super(QueryWordsToken.EXACT_PHRASE, ""); //$NON-NLS-1$
-		words = new ArrayList<String>();
+		words = new ArrayList<>();
 	}
 	public void addWord(String word) {
 		words.add(word);
@@ -37,6 +37,7 @@ public class QueryWordsExactPhrase extends QueryWordsToken {
 	/**
 	 * Creates a lucene query for a field
 	 */
+	@Override
 	public Query createLuceneQuery(String field, float boost) {
 		PhraseQuery q = new PhraseQuery();
 		for (Iterator<String> it = getWords().iterator(); it.hasNext();) {

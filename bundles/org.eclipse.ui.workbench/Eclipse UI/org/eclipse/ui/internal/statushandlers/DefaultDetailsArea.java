@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2014 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -92,14 +92,6 @@ public class DefaultDetailsArea extends AbstractStatusAreaProvider {
 				.intValue();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.statushandlers.AbstractStatusAreaProvider#createSupportArea
-	 * (org.eclipse.swt.widgets.Composite,
-	 * org.eclipse.ui.statushandlers.StatusAdapter)
-	 */
 	@Override
 	public Control createSupportArea(Composite parent,
 			StatusAdapter statusAdapter) {
@@ -279,13 +271,6 @@ public class DefaultDetailsArea extends AbstractStatusAreaProvider {
 		copyAction.setText(JFaceResources.getString("copy")); //$NON-NLS-1$
 		copyAction.addSelectionListener(new SelectionAdapter() {
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see
-			 * org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse
-			 * .swt.events.SelectionEvent)
-			 */
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				copyToClipboard();

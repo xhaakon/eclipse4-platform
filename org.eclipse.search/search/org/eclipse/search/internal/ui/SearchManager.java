@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,6 +47,7 @@ import org.eclipse.search.ui.SearchUI;
  * Manage search results
  * 	@deprecated old search
  */
+@Deprecated
 public class SearchManager implements IResourceChangeListener {
 
 	static SearchManager fgDefault;
@@ -57,8 +58,8 @@ public class SearchManager implements IResourceChangeListener {
 		SearchPlugin.getWorkspace().addResourceChangeListener(this);
 	}
 
-	private HashSet fListeners= new HashSet();
-	private LinkedList fPreviousSearches= new LinkedList();
+	private HashSet<SearchResultViewer> fListeners= new HashSet<>();
+	private LinkedList<Search> fPreviousSearches= new LinkedList<>();
 	private boolean fIsRemoveAll= false;
 
 	public static synchronized SearchManager getDefault() {
@@ -75,17 +76,17 @@ public class SearchManager implements IResourceChangeListener {
 	 * Returns the list with previous searches (ISearch).
 	 * @return previous searches
 	 */
-	LinkedList getPreviousSearches() {
+	LinkedList<Search> getPreviousSearches() {
 		return fPreviousSearches;
 	}
 	/**
 	 * Returns the list with current (last) results
 	 * @return the current results
 	 */
-	ArrayList getCurrentResults() {
+	ArrayList<SearchResultViewEntry> getCurrentResults() {
 		if (fCurrentSearch == null)
-			return new ArrayList(0);
-		return (ArrayList)fCurrentSearch.getResults();
+			return new ArrayList<>(0);
+		return (ArrayList<SearchResultViewEntry>)fCurrentSearch.getResults();
 	}
 
 	public Search getCurrentSearch() {
@@ -95,6 +96,7 @@ public class SearchManager implements IResourceChangeListener {
 	void removeAllSearches() {
 		SearchPlugin.getWorkspace().removeResourceChangeListener(this);
 		WorkspaceModifyOperation op= new WorkspaceModifyOperation(null) {
+			@Override
 			protected void execute(IProgressMonitor monitor) throws CoreException {
 				monitor.beginTask(SearchMessages.SearchManager_updating, 100);
 				SearchPlugin.getWorkspace().getRoot().deleteMarkers(SearchUI.SEARCH_MARKER, true, IResource.DEPTH_INFINITE);
@@ -116,13 +118,13 @@ public class SearchManager implements IResourceChangeListener {
 		}
 
 		// clear searches
-		fPreviousSearches= new LinkedList();
+		fPreviousSearches= new LinkedList<>();
 		fCurrentSearch= null;
 
 		// update viewers
-		Iterator iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter= fListeners.iterator();
 		while (iter.hasNext()) {
-			SearchResultViewer viewer= (SearchResultViewer)iter.next();
+			SearchResultViewer viewer= iter.next();
 			handleAllSearchesRemoved(viewer);
 		}
 	}
@@ -137,6 +139,7 @@ public class SearchManager implements IResourceChangeListener {
 
 		SearchPlugin.getWorkspace().removeResourceChangeListener(this);
 		WorkspaceModifyOperation op= new WorkspaceModifyOperation(null) {
+			@Override
 			protected void execute(IProgressMonitor monitor) throws CoreException {
 				internalSetCurrentSearch(search, monitor);
 			}
@@ -174,15 +177,15 @@ public class SearchManager implements IResourceChangeListener {
 		monitor.worked(10);
 
 		// add search markers
-		Iterator iter= getCurrentResults().iterator();
-		ArrayList emptyEntries= new ArrayList(10);
+		Iterator<SearchResultViewEntry> iter= getCurrentResults().iterator();
+		ArrayList<SearchResultViewEntry> emptyEntries= new ArrayList<>(10);
 		boolean filesChanged= false;
 		boolean filesDeleted= false;
 		IGroupByKeyComputer groupByKeyComputer= getCurrentSearch().getGroupByKeyComputer();
 		while (iter.hasNext()) {
 			monitor.worked(1);
-			SearchResultViewEntry entry= (SearchResultViewEntry)iter.next();
-			Iterator attrPerMarkerIter= entry.getAttributesPerMarker().iterator();
+			SearchResultViewEntry entry= iter.next();
+			Iterator<Map<String, Object>> attrPerMarkerIter= entry.getAttributesPerMarker().iterator();
 			entry.clearMarkerList();
 			if (entry.getResource() == null || !entry.getResource().exists()) {
 				emptyEntries.add(entry);
@@ -198,7 +201,7 @@ public class SearchManager implements IResourceChangeListener {
 					continue;
 				}
 				try {
-					newMarker.setAttributes((Map)attrPerMarkerIter.next());
+					newMarker.setAttributes(attrPerMarkerIter.next());
 					if (groupByKeyComputer !=null && groupByKeyComputer.computeGroupByKey(newMarker) == null) {
 						filesDeleted= true;
 						newMarker.delete();
@@ -234,6 +237,7 @@ public class SearchManager implements IResourceChangeListener {
 				final String warningTitle= SearchMessages.SearchManager_resourceChangedWarning;
 				final String warningMsg= warningMessage;
 				display.syncExec(new Runnable() {
+					@Override
 					public void run() {
 						MessageDialog.openWarning(getShell(), warningTitle, warningMsg);
 					}
@@ -242,12 +246,13 @@ public class SearchManager implements IResourceChangeListener {
 		}
 
 		// update viewers
-		iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter2= fListeners.iterator();
 		if (display != null && !display.isDisposed()) {
 			final Viewer visibleViewer= ((SearchResultView)SearchUI.getSearchResultView()).getViewer();
-			while (iter.hasNext()) {
-				final SearchResultViewer viewer= (SearchResultViewer)iter.next();
+			while (iter2.hasNext()) {
+				final SearchResultViewer viewer= iter2.next();
 				display.syncExec(new Runnable() {
+					@Override
 					public void run() {
 						if (previousSearch != null && viewer == visibleViewer)
 							previousSearch.setSelection(viewer.getSelection());
@@ -291,13 +296,14 @@ public class SearchManager implements IResourceChangeListener {
 		SearchPlugin.getWorkspace().removeResourceChangeListener(this);
 
 		// Clear the viewers
-		Iterator iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter= fListeners.iterator();
 		Display display= getDisplay();
 		if (display != null && !display.isDisposed()) {
 			final Viewer visibleViewer= ((SearchResultView)SearchUI.getSearchResultView()).getViewer();
 			while (iter.hasNext()) {
-				final SearchResultViewer viewer= (SearchResultViewer)iter.next();
+				final SearchResultViewer viewer= iter.next();
 				display.syncExec(new Runnable() {
+					@Override
 					public void run() {
 						if (fCurrentSearch != null && viewer == visibleViewer)
 							fCurrentSearch.setSelection(viewer.getSelection());
@@ -324,7 +330,7 @@ public class SearchManager implements IResourceChangeListener {
 		}
 	}
 
-	void searchFinished(ArrayList results) {
+	void searchFinished(ArrayList<SearchResultViewEntry> results) {
 		Assert.isNotNull(results);
 		getCurrentSearch().setResults(results);
 
@@ -336,6 +342,7 @@ public class SearchManager implements IResourceChangeListener {
 			handleNewSearchResult();
 		else {
 			display.syncExec(new Runnable() {
+				@Override
 				public void run() {
 					handleNewSearchResult();
 				}
@@ -362,9 +369,9 @@ public class SearchManager implements IResourceChangeListener {
 			return;
 		}
 
-		Iterator iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter= fListeners.iterator();
 		while (iter.hasNext())
-			((SearchResultViewer)iter.next()).getControl().setRedraw(false);
+			iter.next().getControl().setRedraw(false);
 
 		for (int i=0; i < markerDeltas.length; i++) {
 			handleSearchMarkerChanged(markerDeltas[i]);
@@ -372,7 +379,7 @@ public class SearchManager implements IResourceChangeListener {
 
 		iter= fListeners.iterator();
 		while (iter.hasNext())
-			((SearchResultViewer)iter.next()).getControl().setRedraw(true);
+			iter.next().getControl().setRedraw(true);
 
 	}
 
@@ -388,15 +395,15 @@ public class SearchManager implements IResourceChangeListener {
 	private void handleRemoveAll() {
 		if (fCurrentSearch != null)
 			fCurrentSearch.removeResults();
-		Iterator iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter= fListeners.iterator();
 		while (iter.hasNext())
-			((SearchResultViewer)iter.next()).handleRemoveAll();
+			iter.next().handleRemoveAll();
 	}
 
 	private void handleNewSearchResult() {
-		Iterator iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter= fListeners.iterator();
 		while (iter.hasNext()) {
-			SearchResultViewer viewer= (SearchResultViewer)iter.next();
+			SearchResultViewer viewer= iter.next();
 			viewer.setInput(getCurrentResults());
 		}
 	}
@@ -416,14 +423,14 @@ public class SearchManager implements IResourceChangeListener {
 			entry.remove(marker);
 			if (entry.getMatchCount() == 0) {
 				getCurrentResults().remove(entry);
-				Iterator iter= fListeners.iterator();
+				Iterator<SearchResultViewer> iter= fListeners.iterator();
 				while (iter.hasNext())
-					((SearchResultViewer)iter.next()).handleRemoveMatch(entry);
+					iter.next().handleRemoveMatch(entry);
 			}
 			else {
-				Iterator iter= fListeners.iterator();
+				Iterator<SearchResultViewer> iter= fListeners.iterator();
 				while (iter.hasNext())
-					((SearchResultViewer)iter.next()).handleUpdateMatch(entry, true);
+					iter.next().handleUpdateMatch(entry, true);
 			}
 		}
 	}
@@ -431,16 +438,16 @@ public class SearchManager implements IResourceChangeListener {
 	private void handleUpdateMatch(IMarker marker) {
 		SearchResultViewEntry entry= findEntry(marker);
 		if (entry != null) {
-			Iterator iter= fListeners.iterator();
+			Iterator<SearchResultViewer> iter= fListeners.iterator();
 			while (iter.hasNext())
-				((SearchResultViewer)iter.next()).handleUpdateMatch(entry, false);
+				iter.next().handleUpdateMatch(entry, false);
 		}
 	}
 
 	private SearchResultViewEntry findEntry(IMarker marker) {
-		Iterator entries= getCurrentResults().iterator();
+		Iterator<SearchResultViewEntry> entries= getCurrentResults().iterator();
 		while (entries.hasNext()) {
-			SearchResultViewEntry entry= (SearchResultViewEntry)entries.next();
+			SearchResultViewEntry entry= entries.next();
 			if (entry.contains(marker))
 				return entry;
 		}
@@ -453,6 +460,7 @@ public class SearchManager implements IResourceChangeListener {
 	 * display thread.
 	 * @param event the event
 	 */
+	@Override
 	public final void resourceChanged(final IResourceChangeEvent event) {
 		if (event == null)
 			return;
@@ -466,13 +474,14 @@ public class SearchManager implements IResourceChangeListener {
 			return;
 
 		Runnable runnable= new Runnable() {
+			@Override
 			public void run() {
 				if (getCurrentSearch() != null) {
 					handleSearchMarkersChanged(markerDeltas);
 					// update title and actions
-					Iterator iter= fListeners.iterator();
+					Iterator<SearchResultViewer> iter= fListeners.iterator();
 					while (iter.hasNext()) {
-						SearchResultViewer viewer= (SearchResultViewer)iter.next();
+						SearchResultViewer viewer= iter.next();
 						viewer.enableActions();
 						viewer.updateTitle();
 					}
@@ -486,7 +495,7 @@ public class SearchManager implements IResourceChangeListener {
 	 * @return the display
 	 */
 	private Display getDisplay() {
-		Iterator iter= fListeners.iterator();
+		Iterator<SearchResultViewer> iter= fListeners.iterator();
 		while (iter.hasNext()) {
 			Control control= ((Viewer)iter.next()).getControl();
 			if (control != null && !control.isDisposed()) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
@@ -146,19 +145,11 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		setDialogSettings(section);
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWizard.
-	 */
 	@Override
 	public void addPages() {
 		super.addPages();
 
 		mainPage = new WizardNewProjectCreationPage("basicNewProjectPage") { //$NON-NLS-1$
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.ui.dialogs.WizardNewProjectCreationPage#createControl(org.eclipse.swt.widgets.Composite)
-			 */
 			@Override
 			public void createControl(Composite parent) {
 				super.createControl(parent);
@@ -228,24 +219,20 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		}
 
 		// create the new project operation
-		IRunnableWithProgress op = new IRunnableWithProgress() {
-			@Override
-			public void run(IProgressMonitor monitor)
-					throws InvocationTargetException {
-				CreateProjectOperation op = new CreateProjectOperation(
-						description, ResourceMessages.NewProject_windowTitle);
-				try {
-					// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=219901
-					// directly execute the operation so that the undo state is
-					// not preserved.  Making this undoable resulted in too many
-					// accidental file deletions.
-					op.execute(monitor, WorkspaceUndoUtil
-						.getUIInfoAdapter(getShell()));
-				} catch (ExecutionException e) {
-					throw new InvocationTargetException(e);
-				}
-			}
-		};
+		IRunnableWithProgress op = monitor -> {
+CreateProjectOperation op1 = new CreateProjectOperation(
+			description, ResourceMessages.NewProject_windowTitle);
+try {
+		// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=219901
+		// directly execute the operation so that the undo state is
+		// not preserved.  Making this undoable resulted in too many
+		// accidental file deletions.
+		op1.execute(monitor, WorkspaceUndoUtil
+			.getUIInfoAdapter(getShell()));
+} catch (ExecutionException e) {
+		throw new InvocationTargetException(e);
+}
+};
 
 		// run the new project creation operation
 		try {
@@ -305,9 +292,6 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		return newProject;
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWorkbenchWizard.
-	 */
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection currentSelection) {
 		super.init(workbench, currentSelection);
@@ -315,9 +299,6 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		setWindowTitle(ResourceMessages.NewProject_windowTitle);
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on BasicNewResourceWizard.
-	 */
 	@Override
 	protected void initializeDefaultPageImageDescriptor() {
 		ImageDescriptor desc = IDEWorkbenchPlugin
@@ -325,9 +306,6 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		setDefaultPageImageDescriptor(desc);
 	}
 
-	/*
-	 * (non-Javadoc) Opens a new window with a particular perspective and input.
-	 */
 	private static void openInNewWindow(IPerspectiveDescriptor desc) {
 
 		// Open the page.
@@ -344,9 +322,6 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		}
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWizard.
-	 */
 	@Override
 	public boolean performFinish() {
 		createNewProject();
@@ -365,9 +340,6 @@ public class BasicNewProjectResourceWizard extends BasicNewResourceWizard
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc) Replaces the current perspective with the new one.
-	 */
 	private static void replaceCurrentPerspective(IPerspectiveDescriptor persp) {
 
 		// Get the active page.

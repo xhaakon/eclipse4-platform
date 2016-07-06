@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2006 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -102,7 +102,7 @@ public class ExtensionStateModel extends EventManager implements
 	@Override
 	public void setIntProperty(String aPropertyName, int aPropertyValue) {
 		Integer oldValue = (Integer) values.get(aPropertyName);
-		Integer newValue = new Integer(aPropertyValue);
+		Integer newValue = Integer.valueOf(aPropertyValue);
 		if (hasPropertyChanged(oldValue, newValue)) {
 			values.put(aPropertyName, newValue);
 			firePropertyChangeEvent(new PropertyChangeEvent(this,

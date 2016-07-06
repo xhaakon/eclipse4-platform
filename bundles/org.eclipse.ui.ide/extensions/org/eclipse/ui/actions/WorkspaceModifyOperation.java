@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ICoreRunnable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
@@ -47,7 +48,7 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
  * operation.
  * </p>
  * @see ISchedulingRule
- * @see org.eclipse.core.resources.IWorkspace#run(IWorkspaceRunnable, IProgressMonitor)
+ * @see org.eclipse.core.resources.IWorkspace#run(ICoreRunnable, IProgressMonitor)
  *  */
 public abstract class WorkspaceModifyOperation implements IRunnableWithProgress, IThreadListener {
     private ISchedulingRule rule;
@@ -101,22 +102,19 @@ public abstract class WorkspaceModifyOperation implements IRunnableWithProgress,
             throws InvocationTargetException, InterruptedException {
         final InvocationTargetException[] iteHolder = new InvocationTargetException[1];
         try {
-            IWorkspaceRunnable workspaceRunnable = new IWorkspaceRunnable() {
-                @Override
-				public void run(IProgressMonitor pm) throws CoreException {
-                    try {
-                        execute(pm);
-                    } catch (InvocationTargetException e) {
-                        // Pass it outside the workspace runnable
-                        iteHolder[0] = e;
-                    } catch (InterruptedException e) {
-                        // Re-throw as OperationCanceledException, which will be
-                        // caught and re-thrown as InterruptedException below.
-                        throw new OperationCanceledException(e.getMessage());
-                    }
-                    // CoreException and OperationCanceledException are propagated
-                }
-            };
+            IWorkspaceRunnable workspaceRunnable = pm -> {
+			    try {
+			        execute(pm);
+			    } catch (InvocationTargetException e1) {
+			        // Pass it outside the workspace runnable
+			        iteHolder[0] = e1;
+			    } catch (InterruptedException e2) {
+			        // Re-throw as OperationCanceledException, which will be
+			        // caught and re-thrown as InterruptedException below.
+			        throw new OperationCanceledException(e2.getMessage());
+			    }
+			    // CoreException and OperationCanceledException are propagated
+			};
 			// if we are in the UI thread, make sure we use progress monitor
 			// that spins event loop to allow processing of pending asyncExecs
 			if (monitor != null && PlatformUI.isWorkbenchRunning()
@@ -139,10 +137,6 @@ public abstract class WorkspaceModifyOperation implements IRunnableWithProgress,
             throw iteHolder[0];
         }
     }
-	/* (non-Javadoc)
-	 * @see IThreadListener#threadChange(Thread);
-	 * @since 3.2
-	 */
 	@Override
 	public void threadChange(Thread thread) {
 		//we must make sure we aren't transferring control away from a thread that

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2012 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.ide;
 
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -167,11 +167,10 @@ public class LineDelimiterEditor {
 	}
 
 	private String getKeyForValue(String value) {
-		Map knownValues = Platform.knownPlatformLineSeparators();
-		Set keys = knownValues.keySet();
-		for (Iterator iter = keys.iterator(); iter.hasNext();) {
-			String key = (String) iter.next();
-			if (knownValues.get(key).equals(value)) {
+		Map<String, String> knownValues = Platform.knownPlatformLineSeparators();
+		for (Entry<String, String> entry : knownValues.entrySet()) {
+			String key = entry.getKey();
+			if (entry.getValue().equals(value)) {
 				return key;
 			}
 		}

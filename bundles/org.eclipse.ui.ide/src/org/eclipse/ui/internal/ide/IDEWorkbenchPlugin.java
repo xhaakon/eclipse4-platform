@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,7 +20,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IBundleGroup;
 import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -59,10 +58,6 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
     // Default instance of the receiver
     private static IDEWorkbenchPlugin inst;
 
-    // Global workbench ui plugin flag. Only workbench implementation is allowed to use this flag
-    // All other plugins, examples, or test cases must *not* use this flag.
-    public static boolean DEBUG = false;
-
     /**
      * The IDE workbench plugin ID.
      */
@@ -81,8 +76,6 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
 
     public static final String PL_MARKER_RESOLUTION = "markerResolution"; //$NON-NLS-1$
 
-    public static final String PL_CAPABILITIES = "capabilities"; //$NON-NLS-1$
-
     public static final String PL_PROJECT_NATURE_IMAGES = "projectNatureImages"; //$NON-NLS-1$
 
 	private final static String ICONS_PATH = "$nl$/icons/full/";//$NON-NLS-1$
@@ -98,6 +91,11 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
      * Marker image registry; lazily initialized.
      */
     private MarkerImageProviderRegistry markerImageProviderRegistry = null;
+
+	/**
+	 * Unassociated file/editor strategy registry; lazily initialized
+	 */
+	private UnassociatedEditorStrategyRegistry unassociatedEditorStrategyRegistry = null;
 
 	private ResourceManager resourceManager;
 
@@ -128,14 +126,11 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
 		}
 		final Object[] ret = new Object[1];
 		final CoreException[] exc = new CoreException[1];
-		BusyIndicator.showWhile(null, new Runnable() {
-			@Override
-			public void run() {
-				try {
-					ret[0] = element.createExecutableExtension(classAttribute);
-				} catch (CoreException e) {
-					exc[0] = e;
-				}
+		BusyIndicator.showWhile(null, () -> {
+			try {
+				ret[0] = element.createExecutableExtension(classAttribute);
+			} catch (CoreException e) {
+				exc[0] = e;
 			}
 		});
 		if (exc[0] != null) {
@@ -243,9 +238,6 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
         getDefault().getLog().log(status);
     }
 
-    /* (non-javadoc)
-     * Method declared on AbstractUIPlugin
-     */
     @Override
 	protected void refreshPluginActions() {
         // do nothing
@@ -275,6 +267,17 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
         return markerImageProviderRegistry;
     }
 
+	/**
+	 * Returns the unassociated file/editor strategy registry for the workbench.
+	 *
+	 * @return the unassociated file/editor strategy registry
+	 */
+	public synchronized UnassociatedEditorStrategyRegistry getUnassociatedEditorStrategyRegistry() {
+		if (unassociatedEditorStrategyRegistry == null) {
+			unassociatedEditorStrategyRegistry = new UnassociatedEditorStrategyRegistry();
+		}
+		return unassociatedEditorStrategyRegistry;
+	}
 
     /**
      * Returns the about information of all known features,
@@ -299,18 +302,6 @@ public class IDEWorkbenchPlugin extends AbstractUIPlugin {
 
         return (AboutInfo[]) infos.toArray(new AboutInfo[infos.size()]);
     }
-
-    /**
-     * Returns the about information of the primary feature.
-     *
-     * @return info about the primary feature, or <code>null</code> if there
-     * is no primary feature or if this information is unavailable
-     */
-    public AboutInfo getPrimaryInfo() {
-        IProduct product = Platform.getProduct();
-        return product == null ? null : new AboutInfo(product);
-    }
-
 	/**
 	 * Get the workbench image with the given path relative to
 	 * ICON_PATH.

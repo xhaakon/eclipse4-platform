@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultPositionUpdater;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.TextUtilities;
@@ -64,9 +65,7 @@ public class MultiPassContentFormatter implements IContentFormatter, IContentFor
 			super(category);
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.DefaultPositionUpdater#notDeleted()
-		 */
+		@Override
 		protected final boolean notDeleted() {
 
 			if (fOffset < fPosition.offset && (fPosition.offset + fPosition.length < fOffset + fLength)) {
@@ -105,7 +104,7 @@ public class MultiPassContentFormatter implements IContentFormatter, IContentFor
 	/** The partitioning of this content formatter */
 	private final String fPartitioning;
 	/** The slave formatting strategies */
-	private final Map fSlaves= new HashMap();
+	private final Map<String, IFormattingStrategy> fSlaves= new HashMap<>();
 	/** The default content type */
 	private final String fType;
 
@@ -120,9 +119,7 @@ public class MultiPassContentFormatter implements IContentFormatter, IContentFor
 		fType= type;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IContentFormatterExtension#format(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.formatter.IFormattingContext)
-	 */
+	@Override
 	public final void format(final IDocument medium, final IFormattingContext context) {
 
 		context.setProperty(FormattingContextProperties.CONTEXT_MEDIUM, medium);
@@ -147,9 +144,7 @@ public class MultiPassContentFormatter implements IContentFormatter, IContentFor
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IContentFormatter#format(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.IRegion)
-	 */
+	@Override
 	public final void format(final IDocument medium, final IRegion region) {
 
 		final FormattingContext context= new FormattingContext();
@@ -246,7 +241,7 @@ public class MultiPassContentFormatter implements IContentFormatter, IContentFor
 	 */
 	protected void formatSlaves(final IFormattingContext context, final IDocument document, final int offset, final int length) {
 
-		Map partitioners= new HashMap(0);
+		Map<String, IDocumentPartitioner> partitioners= new HashMap<>(0);
 		try {
 
 			final ITypedRegion[] partitions= TextUtilities.computePartitioning(document, fPartitioning, offset, length, false);
@@ -281,9 +276,7 @@ public class MultiPassContentFormatter implements IContentFormatter, IContentFor
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IContentFormatter#getFormattingStrategy(java.lang.String)
-	 */
+	@Override
 	public final IFormattingStrategy getFormattingStrategy(final String type) {
 		return null;
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2009 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,7 @@
 package org.eclipse.ui.internal.cheatsheets.data;
 
 public class SubItem extends AbstractSubItem implements IExecutableItem, IPerformWhenItem {
-	
+
 	private String label;
 	private boolean skip = false;
 	private String when;
@@ -75,27 +75,31 @@ public class SubItem extends AbstractSubItem implements IExecutableItem, IPerfor
 	/**
 	 * @return Returns the action.
 	 */
+	@Override
 	public AbstractExecutable getExecutable() {
 		return executable;
 	}
-	
+
 	/**
 	 * @param Executable The Executable to set.
 	 */
+	@Override
 	public void setExecutable(AbstractExecutable executable) {
 		this.executable = executable;
 	}
-	
+
 	/**
 	 * @return Returns the performWhen.
 	 */
+	@Override
 	public PerformWhen getPerformWhen() {
 		return performWhen;
 	}
-	
+
 	/**
 	 * @param performWhen The performWhen to set.
 	 */
+	@Override
 	public void setPerformWhen(PerformWhen performWhen) {
 		this.performWhen = performWhen;
 	}

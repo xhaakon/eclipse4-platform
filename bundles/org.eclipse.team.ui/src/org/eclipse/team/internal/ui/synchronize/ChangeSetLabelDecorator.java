@@ -31,28 +31,31 @@ public class ChangeSetLabelDecorator extends LabelProvider implements ILabelDeco
 
     public ChangeSetLabelDecorator(ISynchronizePageConfiguration configuration) {
         ISynchronizeParticipant participant = configuration.getParticipant();
-        if (participant instanceof IChangeSetProvider) {  
+        if (participant instanceof IChangeSetProvider) {
             this.collector = ((IChangeSetProvider)participant).getChangeSetCapability().getActiveChangeSetManager();
         }
     }
-    
-    public String decorateText(String input, Object element) {
+
+    @Override
+	public String decorateText(String input, Object element) {
 		String text = input;
 		if (element instanceof ChangeSetDiffNode) {
 		    ChangeSet set = ((ChangeSetDiffNode)element).getSet();
 		    if (set instanceof ActiveChangeSet && isDefaultActiveSet((ActiveChangeSet)set)) {
-		        text = NLS.bind(TeamUIMessages.CommitSetDiffNode_0, new String[] { text }); 
+		        text = NLS.bind(TeamUIMessages.CommitSetDiffNode_0, new String[] { text });
 		    }
 		}
 		return text;
 	}
 
+	@Override
 	public void dispose() {
 		if(boldFont != null) {
 			boldFont.dispose();
 		}
 	}
 
+	@Override
 	public Font decorateFont(Object element) {
 		if (element instanceof ChangeSetDiffNode) {
 		    ChangeSet set = ((ChangeSetDiffNode)element).getSet();
@@ -62,7 +65,7 @@ public class ChangeSetLabelDecorator extends LabelProvider implements ILabelDeco
 					FontData[] data = defaultFont.getFontData();
 					for (int i = 0; i < data.length; i++) {
 						data[i].setStyle(SWT.BOLD);
-					}				
+					}
 					boldFont = new Font(TeamUIPlugin.getStandardDisplay(), data);
 				}
 				return boldFont;
@@ -78,8 +81,9 @@ public class ChangeSetLabelDecorator extends LabelProvider implements ILabelDeco
     /* (non-Javadoc)
      * @see org.eclipse.jface.viewers.ILabelDecorator#decorateImage(org.eclipse.swt.graphics.Image, java.lang.Object)
      */
-    public Image decorateImage(Image image, Object element) {
+    @Override
+	public Image decorateImage(Image image, Object element) {
         return image;
     }
-	
+
 }

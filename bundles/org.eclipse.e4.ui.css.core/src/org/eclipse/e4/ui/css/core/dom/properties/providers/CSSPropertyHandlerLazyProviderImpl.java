@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2013 Angelo Zerr and others.
+ * Copyright (c) 2008, 2015 Angelo Zerr and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -144,12 +144,6 @@ public class CSSPropertyHandlerLazyProviderImpl extends
 		return handlerClassName.toString();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.e4.ui.css.core.dom.properties.providers.AbstractCSSPropertyHandlerProvider#getDefaultCSSStyleDeclaration(org.eclipse.e4.ui.css.core.engine.CSSEngine,
-	 *      org.eclipse.e4.ui.css.core.dom.CSSStylableElement,
-     *      org.w3c.dom.css.CSSStyleDeclaration)
-	 */
 	@Override
 	protected CSSStyleDeclaration getDefaultCSSStyleDeclaration(
 			CSSEngine engine, CSSStylableElement stylableElement,

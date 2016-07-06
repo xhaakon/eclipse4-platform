@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,27 +27,31 @@ public class CheatSheetCommand extends AbstractExecutable {
 	private String serialization;
 	private String returns;
 	private boolean serializationFound;
-	
+
 	public void setSerialization(String serialization) {
-		this.serialization = serialization;	
+		this.serialization = serialization;
 	}
-	
+
 	public String getSerialization() {
 		return serialization;
 	}
 
+	@Override
 	public boolean isCheatSheetManagerUsed() {
 		return true;
 	}
 
+	@Override
 	public IStatus execute(CheatSheetManager csm) {
 		return new CommandRunner().executeCommand(this, csm);
 	}
 
+	@Override
 	public boolean hasParams() {
 		return false;
 	}
 
+	@Override
 	public boolean handleAttribute(Node attribute) {
 		if (IParserTags.SERIALIZATION.equals(attribute.getNodeName())) {
 		    setSerialization(attribute.getNodeValue());
@@ -60,6 +64,7 @@ public class CheatSheetCommand extends AbstractExecutable {
 		return false;
 	}
 
+	@Override
 	public String checkAttributes(Node node) {
 		if(!serializationFound) {
 			return NLS.bind(Messages.ERROR_PARSING_NO_SERIALIZATION, (new Object[] {node.getNodeName()}));

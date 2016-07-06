@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM - Initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.refresh;
 
@@ -24,14 +25,14 @@ import org.osgi.framework.Bundle;
 /**
  * The <code>PollingMonitor</code> is an <code>IRefreshMonitor</code> that
  * polls the file system rather than registering natively for call-backs.
- * 
+ *
  * The polling monitor operates in iterations that span multiple invocations
- * of the job's run method.  At the beginning of an iteration, a set of 
+ * of the job's run method.  At the beginning of an iteration, a set of
  * all resource roots is collected.  Each time the job runs, it removes items
  * from the set and searches for changes for a fixed period of time.
  * This ensures that the refresh job is broken into very small discrete
  * operations that do not interrupt the user's main-line activity.
- * 
+ *
  * @since 3.0
  */
 public class PollingMonitor extends Job implements IRefreshMonitor {
@@ -78,8 +79,8 @@ public class PollingMonitor extends Job implements IRefreshMonitor {
 		this.refreshManager = manager;
 		setPriority(Job.DECORATE);
 		setSystem(true);
-		resourceRoots = new ArrayList<IResource>();
-		toRefresh = new ArrayList<IResource>();
+		resourceRoots = new ArrayList<>();
+		toRefresh = new ArrayList<>();
 	}
 
 	/**
@@ -185,9 +186,6 @@ public class PollingMonitor extends Job implements IRefreshMonitor {
 			Policy.debug(RefreshManager.DEBUG_PREFIX + "new hot root: " + resource); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see Job#shouldRun
-	 */
 	@Override
 	public boolean shouldRun() {
 		//only run if there is something to refresh

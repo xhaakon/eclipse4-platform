@@ -20,7 +20,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 public class PropertyChangeHandler {
 
 	private ListenerList fListeners = new ListenerList(ListenerList.IDENTITY);
-	
+
 	/**
 	 * Notifies listeners of property changes, handling any exceptions
 	 */
@@ -32,20 +32,22 @@ public class PropertyChangeHandler {
 		/**
 		 * @see org.eclipse.core.runtime.ISafeRunnable#handleException(java.lang.Throwable)
 		 */
+		@Override
 		public void handleException(Throwable exception) {
-			TeamUIPlugin.log(IStatus.ERROR, TeamUIMessages.AbstractSynchronizeParticipant_5, exception); 
+			TeamUIPlugin.log(IStatus.ERROR, TeamUIMessages.AbstractSynchronizeParticipant_5, exception);
 		}
 
 		/**
 		 * @see org.eclipse.core.runtime.ISafeRunnable#run()
 		 */
+		@Override
 		public void run() throws Exception {
 			fListener.propertyChange(fEvent);
 		}
 
 		/**
 		 * Notifies listeners of the property change
-		 * 
+		 *
 		 * @param event
 		 *            the property change event
 		 */
@@ -62,7 +64,7 @@ public class PropertyChangeHandler {
 			fListener = null;
 		}
 	}
-	
+
 	public void addPropertyChangeListener(IPropertyChangeListener listener) {
 		fListeners.add(listener);
 	}
@@ -70,10 +72,10 @@ public class PropertyChangeHandler {
 	public void removePropertyChangeListener(IPropertyChangeListener listener) {
 		fListeners.remove(listener);
 	}
-	
+
 	public void firePropertyChange(Object source, String property, Object oldValue, Object newValue) {
 		PropertyNotifier notifier = new PropertyNotifier();
 		notifier.notify(new PropertyChangeEvent(source, property, oldValue, newValue));
 	}
-	
+
 }

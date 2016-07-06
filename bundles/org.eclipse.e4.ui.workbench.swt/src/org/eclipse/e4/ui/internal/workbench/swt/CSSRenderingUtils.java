@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2014 IBM Corporation and others.
+ * Copyright (c) 2012, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,15 +7,22 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Sopot Cela <scela@redhat.com> - Bug 472761
  *******************************************************************************/
 package org.eclipse.e4.ui.internal.workbench.swt;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
 import org.eclipse.e4.ui.css.swt.dom.ControlElement;
 import org.eclipse.e4.ui.css.swt.dom.WidgetElement;
 import org.eclipse.e4.ui.widgets.ImageBasedFrame;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -31,12 +38,16 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.osgi.framework.Bundle;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSStyleDeclaration;
 import org.w3c.dom.css.CSSValue;
 import org.w3c.dom.css.CSSValueList;
 
 public class CSSRenderingUtils {
+
+	private static final String DRAG_HANDLE = "org.eclipse.e4.ui.workbench.swt.DRAG_HANDLE";
+
 	private final static String FRAME_IMAGE_PROP = "frame-image";
 
 	private final static String HANDLE_IMAGE_PROP = "handle-image";
@@ -56,6 +67,17 @@ public class CSSRenderingUtils {
 
 		Image handleImage = createImage(toFrame, classId, HANDLE_IMAGE_PROP,
 				null);
+
+		if ((handleImage == null) && (draggable)) {
+			// need to feed default image otherwise the toolbar DnD won't work
+			// see bug 472761
+			handleImage = JFaceResources.getImage(DRAG_HANDLE);
+			if (handleImage == null) {
+				handleImage = initDragHandleResource();
+			}
+
+		}
+
 		if (vertical && handleImage != null)
 			handleImage = rotateImage(toFrame.getDisplay(), handleImage, null);
 
@@ -74,6 +96,16 @@ public class CSSRenderingUtils {
 		}
 
 		return toFrame;
+	}
+
+	private Image initDragHandleResource() {
+		Bundle bundle = org.eclipse.e4.ui.internal.workbench.swt.WorkbenchSWTActivator.getDefault().getBundle();
+		IPath path = new Path("$ws$/images/dragHandle.png");
+		URL url = FileLocator.find(bundle, path, null);
+		ImageDescriptor desc = ImageDescriptor.createFromURL(url);
+		if (desc != null)
+			JFaceResources.getImageRegistry().put(DRAG_HANDLE, desc);
+		return JFaceResources.getImage(DRAG_HANDLE);
 	}
 
 	private Image rotateImage(Display display, Image image, Integer[] frameInts) {

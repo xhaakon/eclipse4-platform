@@ -18,12 +18,13 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 
 public class SyncViewerShowPreferencesAction extends Action {
     private final ISynchronizePageConfiguration configuration;
-	
+
 	public SyncViewerShowPreferencesAction(ISynchronizePageConfiguration configuration) {
 		this.configuration = configuration;
 		Utils.initAction(this, "action.syncViewPreferences."); //$NON-NLS-1$
 	}
 
+	@Override
 	public void run() {
 	    PreferencePage[] pages = configuration.getParticipant().getPreferencePages();
         PreferencePageContainerDialog dialog = new PreferencePageContainerDialog(configuration.getSite().getShell(), pages);

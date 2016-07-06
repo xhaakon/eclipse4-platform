@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,8 +20,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -111,18 +111,12 @@ public class WorkspaceActionGroup extends ResourceNavigatorActionGroup {
         boolean hasOpenProjects = false;
         boolean hasClosedProjects = false;
         boolean hasBuilder = true; // false if any project is closed or does not have builder
-        Iterator resources = selection.iterator();
+		Iterator<?> resources = selection.iterator();
 
         while (resources.hasNext()
                 && (!hasOpenProjects || !hasClosedProjects || hasBuilder || isProjectSelection)) {
             Object next = resources.next();
-            IProject project = null;
-
-            if (next instanceof IProject) {
-				project = (IProject) next;
-			} else if (next instanceof IAdaptable) {
-				project = ((IAdaptable) next).getAdapter(IProject.class);
-			}
+			IProject project = Adapters.adapt(next, IProject.class);
 
             if (project == null) {
                 isProjectSelection = false;
@@ -218,17 +212,14 @@ public class WorkspaceActionGroup extends ResourceNavigatorActionGroup {
         					op.run(monitor);
         					Shell shell = provider.getShell();
 							if (shell != null && !shell.isDisposed()) {
-								shell.getDisplay().asyncExec(new Runnable() {
-									@Override
-									public void run() {
-										TreeViewer viewer = navigator
-												.getViewer();
-										if (viewer != null
-												&& viewer.getControl() != null
-												&& !viewer.getControl()
-														.isDisposed()) {
-											viewer.refresh();
-										}
+								shell.getDisplay().asyncExec(() -> {
+									TreeViewer viewer = navigator
+											.getViewer();
+									if (viewer != null
+											&& viewer.getControl() != null
+											&& !viewer.getControl()
+													.isDisposed()) {
+										viewer.refresh();
 									}
 								});
 							}

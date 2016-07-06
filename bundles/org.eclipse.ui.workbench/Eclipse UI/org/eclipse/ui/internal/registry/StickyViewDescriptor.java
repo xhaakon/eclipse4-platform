@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -73,9 +73,6 @@ public class StickyViewDescriptor implements IStickyViewDescriptor,
 		return configurationElement;
 	}
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.views.IStickyViewDescriptor#getLocation()
-     */
     @Override
 	public int getLocation() {
     	int direction = IPageLayout.RIGHT;
@@ -94,9 +91,6 @@ public class StickyViewDescriptor implements IStickyViewDescriptor,
         return direction;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.registry.IStickyViewDescriptor#getId()
-     */
     @Override
 	public String getId() {
         return id;
@@ -113,9 +107,6 @@ public class StickyViewDescriptor implements IStickyViewDescriptor,
     }
 
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.registry.IStickyViewDescriptor#isFixed()
-     */
     @Override
 	public boolean isCloseable() {
     	boolean closeable = true;
@@ -126,9 +117,6 @@ public class StickyViewDescriptor implements IStickyViewDescriptor,
         return closeable;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.registry.IStickyViewDescriptor#isMoveable()
-     */
     @Override
 	public boolean isMoveable() {
     	boolean moveable = true;

@@ -39,7 +39,7 @@ abstract public class DetailsDialog extends TrayDialog {
 	 * The title of the dialog.
 	 */
 	private String title;
-	
+
 	/**
 	 * The error message
 	 */
@@ -54,12 +54,12 @@ abstract public class DetailsDialog extends TrayDialog {
 	 * Indicates whether the error details viewer is currently created.
 	 */
 	private boolean detailsCreated = false;
-	
+
 	/**
 	 * The key for the image to be displayed (one of the image constants on Dialog)
 	 */
 	private String imageKey = null;
-	
+
 	/**
 	 * Creates a details pane dialog.
 	 * Note that the dialog will have no visual representation (no widgets)
@@ -87,17 +87,19 @@ abstract public class DetailsDialog extends TrayDialog {
 	 * Note that the Details button will only be visible if the error being
 	 * displayed specifies child details.
 	 */
+	@Override
 	protected void buttonPressed(int id) {
 		if (id == IDialogConstants.DETAILS_ID) {  // was the details button pressed?
 			toggleDetailsArea();
 		} else {
 			super.buttonPressed(id);
-		} 
+		}
 	}
 
 	/* (non-Javadoc)
 	 * Method declared in Window.
 	 */
+	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
 		shell.setText(title);
@@ -110,6 +112,7 @@ abstract public class DetailsDialog extends TrayDialog {
 	/* (non-Javadoc)
 	 * Method declared on Dialog.
 	 */
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		// create OK and Details buttons
 		if(includeOkButton()) {
@@ -127,32 +130,33 @@ abstract public class DetailsDialog extends TrayDialog {
 	protected String getDetailsButtonLabelShow() {
 		return IDialogConstants.SHOW_DETAILS_LABEL;
 	}
-	
+
 	protected String getDetailsButtonLabelHide() {
 		return IDialogConstants.HIDE_DETAILS_LABEL;
 	}
-	
+
 	/* (non-Javadoc)
 	 * Method declared on Dialog.
-	 * Creates and returns the contents of the upper part 
+	 * Creates and returns the contents of the upper part
 	 * of the dialog (above the button bar).
 	 */
+	@Override
 	final protected Control createDialogArea(Composite parent) {
-		
+
 		applyDialogFont(parent);
 		initializeDialogUnits(parent);
-		
+
 		// create composite
 		Composite composite = (Composite)super.createDialogArea(parent);
 		if (!isMainGrabVertical()) {
 		    composite.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		}
-		
+
         String helpContextId = getHelpContextId();
         if (helpContextId != null) {
             PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, helpContextId);
         }
-            
+
 		// create image
 		String key = getImageKey();
 		Image image = null;
@@ -170,7 +174,7 @@ abstract public class DetailsDialog extends TrayDialog {
 			layout.numColumns = 2;
 			top.setLayout(layout);
 			top.setLayoutData(new GridData(GridData.FILL_BOTH));
-		
+
 			// add the image to the left of the composite
 			Label label = new Label(top, 0);
 			image.setBackground(label.getBackground());
@@ -178,7 +182,7 @@ abstract public class DetailsDialog extends TrayDialog {
 			label.setLayoutData(new GridData(
 				GridData.HORIZONTAL_ALIGN_CENTER |
 				GridData.VERTICAL_ALIGN_BEGINNING));
-				
+
 			// add a composite to the right to contain the custom components
 			Composite right = new Composite(top, SWT.NONE);
 			layout = new GridLayout();
@@ -192,7 +196,7 @@ abstract public class DetailsDialog extends TrayDialog {
 		} else {
 		    createMainDialogArea(composite);
 		}
-		
+
 		if(includeErrorMessage()) {
 			errorMessageLabel = new Label(composite, SWT.NONE);
 			errorMessageLabel.setLayoutData(new GridData(
@@ -200,11 +204,11 @@ abstract public class DetailsDialog extends TrayDialog {
 				GridData.HORIZONTAL_ALIGN_FILL));
 			errorMessageLabel.setForeground(getShell().getDisplay().getSystemColor(SWT.COLOR_RED));
 		}
-		
+
         Dialog.applyDialogFont(parent);
 		return composite;
 	}
-	
+
     /**
      * Return the help context id to be used for the dialog.
      * This context Id will be registered by this class.
@@ -228,7 +232,7 @@ abstract public class DetailsDialog extends TrayDialog {
 
     /**
 	 * Creates the dialog's top composite
-	 * 
+	 *
 	 * @param parent the parent composite
 	 */
 	abstract protected void createMainDialogArea(Composite parent);
@@ -240,7 +244,7 @@ abstract public class DetailsDialog extends TrayDialog {
 	 * @return the drop-down list component
 	 */
 	abstract protected Composite createDropDownDialogArea(Composite parent);
-	
+
 	/**
 	 * Toggles the unfolding of the details area.  This is triggered by
 	 * the user pressing the details button.
@@ -248,7 +252,7 @@ abstract public class DetailsDialog extends TrayDialog {
 	private void toggleDetailsArea() {
 		Point windowSize = getShell().getSize();
 		Point oldSize = getContents().computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		
+
 		if (detailsCreated) {
 			detailsComposite.dispose();
 			detailsCreated = false;
@@ -260,10 +264,10 @@ abstract public class DetailsDialog extends TrayDialog {
 		}
         Dialog.applyDialogFont(getContents());
 		Point newSize = getContents().computeSize(SWT.DEFAULT, SWT.DEFAULT);
-	
+
 		getShell().setSize(new Point(windowSize.x, windowSize.y + (newSize.y - oldSize.y)));
 	}
-	
+
 	final protected void setErrorMessage(String error) {
 		if(errorMessageLabel != null) {
 			if(error == null || error.length() == 0) {
@@ -274,23 +278,23 @@ abstract public class DetailsDialog extends TrayDialog {
 			errorMessageLabel.update();
 		}
 	}
-	
+
 	final protected void setPageComplete(boolean complete) {
 		if(okButton != null ) {
 			okButton.setEnabled(complete);
 		}
 	}
-	
+
 	abstract protected void updateEnablements();
-	
+
 	protected boolean includeCancelButton() {
 		return true;
 	}
-	
+
 	protected boolean includeOkButton() {
 		return true;
 	}
-	
+
 	/**
 	 * Returns the imageKey.
 	 * @return String
@@ -321,7 +325,7 @@ abstract public class DetailsDialog extends TrayDialog {
 		label.setFont(parent.getFont());
 		return label;
 	}
-	
+
 	protected Composite createComposite(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -330,15 +334,15 @@ abstract public class DetailsDialog extends TrayDialog {
 		composite.setFont(parent.getFont());
 		return composite;
 	}
-	
+
 	protected boolean isDetailsVisible() {
 		return detailsCreated;
 	}
-	
+
 	protected boolean includeErrorMessage() {
 		return true;
 	}
-	
+
 	protected boolean includeDetailsButton() {
 		return true;
 	}

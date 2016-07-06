@@ -40,7 +40,7 @@ import org.eclipse.ui.navigator.*;
 import org.eclipse.ui.views.navigator.ResourceComparator;
 
 public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage implements INavigatorContentServiceListener {
-	
+
 	private INavigatorContentService service;
 	private ISynchronizationScopeManager manager;
 	private ContainerCheckedTreeViewer fViewer;
@@ -48,17 +48,18 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 
 	public ModelElementSelectionPage(IResource[] roots) {
 		super("elementSelection"); //$NON-NLS-1$
-		setDescription(TeamUIMessages.GlobalRefreshResourceSelectionPage_2); 
+		setDescription(TeamUIMessages.GlobalRefreshResourceSelectionPage_2);
 		setTitle(TeamUIMessages.GlobalRefreshResourceSelectionPage_3);
 		List result = new ArrayList();
 		for (int i = 0; i < roots.length; i++) {
 			IResource resource = roots[i];
 			result.add(Utils.getResourceMapping(resource));
 		}
-		manager = new SynchronizationScopeManager(TeamUIMessages.ModelElementSelectionPage_0, (ResourceMapping[]) result.toArray(new ResourceMapping[result.size()]), 
+		manager = new SynchronizationScopeManager(TeamUIMessages.ModelElementSelectionPage_0, (ResourceMapping[]) result.toArray(new ResourceMapping[result.size()]),
 						ResourceMappingContext.LOCAL_CONTEXT, true);
 	}
 
+	@Override
 	protected ContainerCheckedTreeViewer createViewer(Composite top) {
 		GridData data;
 		fViewer = new ContainerCheckedTreeViewer(top, SWT.BORDER);
@@ -73,6 +74,7 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 		fViewer.setContentProvider(service.createCommonContentProvider());
 		fViewer.setLabelProvider(new DecoratingLabelProvider(service.createCommonLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator()));
 		fViewer.addCheckStateListener(new ICheckStateListener() {
+			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				Object element = event.getElement();
 				//If the workspace model has been checked, switch the scope to workspace
@@ -94,10 +96,12 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 		});
 		fViewer.getTree().addTreeListener(new TreeListener(){
 
+			@Override
 			public void treeCollapsed(TreeEvent e) {
 				//no-op
 			}
 
+			@Override
 			public void treeExpanded(TreeEvent e) {
 				if (isWorkingSetSelected())
 					checkWorkingSetElements();
@@ -106,7 +110,7 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 		fViewer.setComparator(new ResourceComparator(ResourceComparator.NAME));
 		return fViewer;
 	}
-	
+
 	public ResourceMapping[] getSelectedMappings() {
 		if (isWorkingSetSelected()) {
 			List result = new ArrayList();
@@ -142,16 +146,19 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 		}
 		return (ResourceMapping[]) result.toArray(new ResourceMapping[result.size()]);
 	}
-	
+
+	@Override
 	public void dispose() {
 		service.dispose();
 		super.dispose();
 	}
 
+	@Override
 	protected void checkAll() {
 		getViewer().setCheckedElements(manager.getScope().getModelProviders());
 	}
 
+	@Override
 	protected boolean checkWorkingSetElements() {
 		List allWorkingSetElements = new ArrayList();
 		IWorkingSet[] workingSets = getWorkingSets();
@@ -186,10 +193,12 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 		return false;
 	}
 
+	@Override
 	public void onLoad(INavigatorContentExtension anExtension) {
 		anExtension.getStateModel().setProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_SCOPE, manager.getScope());
 	}
-	
+
+	@Override
 	public void setVisible(boolean visible) {
 		super.setVisible(visible);
 		if (visible && !initialized) {
@@ -205,13 +214,13 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 						break;
 					}
 				}
-				
+
 				if (!foundEnabledModelProvider){
 					if (MessageDialog.openConfirm(getShell(), TeamUIMessages.ModelElementSelectionPage_AllModelsDisabledTitle, TeamUIMessages.ModelElementSelectionPage_AllModelsDisabledMessage)) {
 						ArrayList teamProviderDescriptors = new ArrayList();
 						for (int i = 0; i < providers.length; i++)
 							teamProviderDescriptors.add(TeamUI.getTeamContentProviderManager().getDescriptor(providers[i].getId()));
-						
+
 						ITeamContentProviderDescriptor[] desc = (ITeamContentProviderDescriptor[]) teamProviderDescriptors.toArray(new ITeamContentProviderDescriptor[teamProviderDescriptors.size()]);
 						TeamUI.getTeamContentProviderManager().setEnabledDescriptors(desc);
 					}
@@ -227,6 +236,7 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 	private void initialize() {
 		try {
 			getContainer().run(true, true, new IRunnableWithProgress() {
+				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
 						InterruptedException {
 					try {
@@ -236,7 +246,7 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 						throw new InvocationTargetException(e);
 					}
 				}
-			
+
 			});
 		} catch (InvocationTargetException e) {
 			Utils.handleError(getShell(), e, null, null);
@@ -244,14 +254,14 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 			// ignore
 		}
 	}
-	
+
 	private boolean isEnabled(ModelProvider provider) {
 		ITeamContentProviderDescriptor desc = TeamUI.getTeamContentProviderManager().getDescriptor(provider.getId());
 		return (desc != null && desc.isEnabled());
 	}
-	
+
 	private void uncheckOtherModels(String modelProviderId) {
-		
+
 		if (!isSelectedResourcesSelected()) {
 			ModelProvider[] providers = manager.getScope().getModelProviders();
 			ArrayList disabledProviders = new ArrayList();
@@ -266,8 +276,8 @@ public class ModelElementSelectionPage extends GlobalRefreshElementSelectionPage
 				fViewer.setChecked(disable, false);
 			}
 		}
-			
-		
+
+
 	}
 
 }

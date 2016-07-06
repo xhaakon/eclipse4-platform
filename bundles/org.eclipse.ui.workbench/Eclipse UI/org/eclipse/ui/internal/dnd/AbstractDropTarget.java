@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,21 +16,12 @@ import org.eclipse.swt.graphics.Rectangle;
 /**
  */
 public abstract class AbstractDropTarget implements IDropTarget {
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.dnd.IDropTarget#drop()
-     */
     @Override
 	public abstract void drop();
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.dnd.IDropTarget#getCursor()
-     */
     @Override
 	public abstract Cursor getCursor();
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.dnd.IDropTarget#getSnapRectangle()
-     */
     @Override
 	public Rectangle getSnapRectangle() {
         return null;

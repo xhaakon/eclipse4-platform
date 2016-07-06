@@ -21,15 +21,16 @@ import org.w3c.dom.Element;
 
 
 public class IntroTheme extends AbstractIntroIdElement {
+	private static final String ATT_NAME = "name"; //$NON-NLS-1$
 	private static final String ATT_PATH = "path"; //$NON-NLS-1$
 	private String name;
 	private String path;
-	private Hashtable properties; 
+	private Hashtable<String, String> properties;
 	private boolean scalable;
 	
 	public IntroTheme(IConfigurationElement element) {
 		super(element);
-		name = element.getAttribute(name);
+		name = element.getAttribute(ATT_NAME);
 		path = element.getAttribute(ATT_PATH);
 		path = BundleUtil.getResolvedResourceLocation(path, getBundle());
 		scalable = "true".equals(element.getAttribute(FontSelection.ATT_SCALABLE)); //$NON-NLS-1$
@@ -56,7 +57,7 @@ public class IntroTheme extends AbstractIntroIdElement {
 		return THEME;
 	}
 	
-	public Map getProperties() {
+	public Map<String, String> getProperties() {
 		return properties;
 	}
 	
@@ -68,7 +69,7 @@ public class IntroTheme extends AbstractIntroIdElement {
 		IConfigurationElement [] children = element.getChildren("property"); //$NON-NLS-1$
 		if (children.length==0)
 			return;
-		properties = new Hashtable();
+		properties = new Hashtable<>();
 		for (int i=0; i<children.length; i++) {
 			IConfigurationElement property = children[i];
 			String name = property.getAttribute("name"); //$NON-NLS-1$
@@ -76,5 +77,7 @@ public class IntroTheme extends AbstractIntroIdElement {
 			if (name!=null && value!=null)
 				properties.put(name, value);
 		}
+		// Put the theme id in the properties too
+		properties.put(ATT_ID, getId());
 	}
 }

@@ -31,12 +31,13 @@ public class OpenRevisionAction extends BaseSelectionListenerAction {
 
 	private IStructuredSelection selection;
 	private HistoryPage page;
-	
+
 	public OpenRevisionAction(String text, HistoryPage page) {
 		super(text);
 		this.page = page;
 	}
 
+	@Override
 	public void run() {
 		IStructuredSelection structSel = selection;
 
@@ -56,6 +57,7 @@ public class OpenRevisionAction extends BaseSelectionListenerAction {
 				MessageDialog.openError(page.getSite().getShell(), TeamUIMessages.OpenRevisionAction_DeletedRevTitle, TeamUIMessages.OpenRevisionAction_DeletedRevMessage);
 			} else {
 				IRunnableWithProgress runnable = new IRunnableWithProgress() {
+					@Override
 					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 						try {
 							Utils.openEditor(page.getSite().getPage(), revision, monitor);
@@ -77,30 +79,31 @@ public class OpenRevisionAction extends BaseSelectionListenerAction {
 
 		}
 	}
-	
+
+	@Override
 	protected boolean updateSelection(IStructuredSelection selection) {
 		this.selection = selection;
 		return shouldShow();
 	}
-	
+
 	private boolean shouldShow() {
 		IStructuredSelection structSel = selection;
 		Object[] objArray = structSel.toArray();
-		
+
 		if (objArray.length == 0)
 			return false;
-		
+
 		for (int i = 0; i < objArray.length; i++) {
 			//Don't bother showing if this a category
 			if (objArray[i] instanceof AbstractHistoryCategory)
 				return false;
-			
+
 			IFileRevision revision = (IFileRevision) objArray[i];
 			//check to see if any of the selected revisions are deleted revisions
 			if (revision != null && !revision.exists())
 				return false;
 		}
-		
+
 		return true;
 	}
 

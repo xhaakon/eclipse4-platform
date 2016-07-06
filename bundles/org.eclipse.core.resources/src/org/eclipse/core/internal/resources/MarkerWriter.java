@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -41,8 +43,8 @@ public class MarkerWriter {
 	}
 
 	/**
-	 * Returns an Object array of length 2. The first element is an Integer which is the number 
-	 * of persistent markers found. The second element is an array of boolean values, with a 
+	 * Returns an Object array of length 2. The first element is an Integer which is the number
+	 * of persistent markers found. The second element is an array of boolean values, with a
 	 * value of true meaning that the marker at that index is to be persisted.
 	 */
 	private Object[] filterMarkers(IMarkerSetElement[] markers) {
@@ -56,7 +58,7 @@ public class MarkerWriter {
 				count++;
 			}
 		}
-		result[0] = new Integer(count);
+		result[0] = count;
 		result[1] = isPersistent;
 		return result;
 	}
@@ -81,7 +83,7 @@ public class MarkerWriter {
 	 * STRING_VALUE -> byte String
 	 * NULL_VALUE -> byte
 	 * CREATION_TIME -> long
-	 * 	
+	 *
 	 */
 	public void save(ResourceInfo info, IPathRequestor requestor, DataOutputStream output, List<String> writtenTypes) throws IOException {
 		// phantom resources don't have markers
@@ -110,7 +112,7 @@ public class MarkerWriter {
 
 	/**
 	 * Snapshot the markers for the specified resource to the given output stream.
-	 * 
+	 *
 	 * SNAP_FILE -> [VERSION_ID RESOURCE]*
 	 * VERSION_ID -> int (used for backwards compatibiliy)
 	 * RESOURCE -> RESOURCE_PATH MARKER_SIZE MARKER+
@@ -151,14 +153,14 @@ public class MarkerWriter {
 		// always write out the count...even if its zero. this will help
 		// use pick up marker deletions from our snapshot.
 		output.writeInt(count);
-		List<String> writtenTypes = new ArrayList<String>();
+		List<String> writtenTypes = new ArrayList<>();
 		for (int i = 0; i < elements.length; i++)
 			if (isPersistent[i])
 				write((MarkerInfo) elements[i], output, writtenTypes);
 		info.clear(ICoreConstants.M_MARKERS_SNAP_DIRTY);
 	}
 
-	/* 
+	/*
 	 * Write out the given marker attributes to the given output stream.
 	 */
 	private void write(Map<String, Object> attributes, DataOutputStream output) throws IOException {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ public class PrebuiltIndexes {
 	/**
 	 * Set of PluginIndex
 	 */
-	private Set<PluginIndex> set = new HashSet<PluginIndex>();
+	private Set<PluginIndex> set = new HashSet<>();
 
 	PrebuiltIndexes(SearchIndex targetIndex) {
 		super();
@@ -40,7 +40,7 @@ public class PrebuiltIndexes {
 	 * Removes Plugin indexes with no index
 	 */
 	private void trim() {
-		List<PluginIndex> indexes = new ArrayList<PluginIndex>(set);
+		List<PluginIndex> indexes = new ArrayList<>(set);
 		for (int i = 0; i < indexes.size();) {
 			PluginIndex index = indexes.get(i);
 			if (index.getPaths().size() == 0) {

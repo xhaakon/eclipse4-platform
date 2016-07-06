@@ -17,15 +17,16 @@ import org.eclipse.ui.IWorkbenchPart;
 
 /**
  * A saveable workbench part is a visual component that can be shown within
- * different contexts (e.g a dialog, workbench page). 
- * 
+ * different contexts (e.g a dialog, workbench page).
+ *
  * @see SaveablePartDialog
  * @since 3.0
  * @deprecated Clients should use a subclass of {@link CompareEditorInput}
  *      and {@link CompareUI#openCompareDialog(org.eclipse.compare.CompareEditorInput)}
  */
+@Deprecated
 public interface ISaveableWorkbenchPart extends ISaveablePart, IWorkbenchPart {
-	
+
 	/**
 	 * The property id for <code>isDirty</code>.
 	 */

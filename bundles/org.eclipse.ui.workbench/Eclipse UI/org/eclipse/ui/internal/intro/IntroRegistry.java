@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2007 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,21 +38,11 @@ public class IntroRegistry implements IIntroRegistry {
 
 	private static final String ATT_PRODUCTID = "productId"; //$NON-NLS-1$
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.intro.IIntroRegistry#getIntroCount()
-	 */
 	@Override
 	public int getIntroCount() {
 		return getIntros().length;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.intro.IIntroRegistry#getIntros()
-	 */
 	@Override
 	public IIntroDescriptor[] getIntros() {
 		IExtensionPoint point = Platform.getExtensionRegistry()
@@ -89,11 +79,6 @@ public class IntroRegistry implements IIntroRegistry {
 				.size()]);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.intro.IIntroRegistry#getIntroForProduct(java.lang.String)
-	 */
 	@Override
 	public IIntroDescriptor getIntroForProduct(String targetProductId) {
 		IExtensionPoint point = Platform.getExtensionRegistry()
@@ -159,11 +144,6 @@ public class IntroRegistry implements IIntroRegistry {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.intro.IIntroRegistry#getIntro(java.lang.String)
-	 */
 	@Override
 	public IIntroDescriptor getIntro(String id) {
 		IIntroDescriptor[] intros = getIntros();

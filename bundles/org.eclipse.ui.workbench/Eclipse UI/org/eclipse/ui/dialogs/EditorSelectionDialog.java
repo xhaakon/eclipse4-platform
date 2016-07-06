@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,10 +7,10 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Benjamin Muskalla -	Bug 29633 [EditorMgmt] "Open" menu should
- *     						have Open With-->Other
- *     Helena Halperin - Bug 298747 [EditorMgmt] Bidi Incorrect file type direction in mirrored "Editor Selection" dialog
+ *     Benjamin Muskalla -Bug 29633
+ *     Helena Halperin - Bug 298747
  *     Andrey Loskutov <loskutov@gmx.de> - Bug 378485, 460555, 463262
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 472654
  *******************************************************************************/
 package org.eclipse.ui.dialogs;
 
@@ -43,6 +43,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -53,6 +54,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IEditorDescriptor;
+import org.eclipse.ui.IEditorRegistry;
 import org.eclipse.ui.IFileEditorMapping;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.IWorkbenchHelpContextIds;
@@ -141,6 +143,8 @@ public class EditorSelectionDialog extends Dialog {
 	protected static final String STORE_ID_INTERNAL_EXTERNAL = "EditorSelectionDialog.STORE_ID_INTERNAL_EXTERNAL";//$NON-NLS-1$
 
 	private static final String STORE_ID_DESCR = "EditorSelectionDialog.STORE_ID_DESCR";//$NON-NLS-1$
+
+	private static final String STORE_ID_FILE_EXTENSION = "EditorSelectionDialog.STORE_ID_FILE_EXTENSION";//$NON-NLS-1$
 
 	private String message = WorkbenchMessages.EditorSelection_chooseAnEditor;
 
@@ -331,6 +335,7 @@ public class EditorSelectionDialog extends Dialog {
 			}
 		}
 
+		initializeSuggestion();
 		restoreWidgetValues(); // Place buttons to the appropriate state
 
 		// Run async to restore selection on *visible* dialog - otherwise three won't scroll
@@ -353,7 +358,7 @@ public class EditorSelectionDialog extends Dialog {
 			return ""; //$NON-NLS-1$
 		}
 		int lastDot = fileName.lastIndexOf('.');
-		if (lastDot == -1 || lastDot >= fileName.length() - 2) {
+		if (lastDot == -1 || lastDot >= fileName.length() - 1) {
 			return ""; //$NON-NLS-1$
 		}
 		return fileName.substring(lastDot + 1, fileName.length());
@@ -378,19 +383,41 @@ public class EditorSelectionDialog extends Dialog {
 
 		editorTableViewer.setInput(showInternal ? getInternalEditors() : getExternalEditors());
 
+		if (fileName != null && newSelection == null) {
+			if (!showInternal) {
+				newSelection = findBestExternalEditor();
+			} else {
+				newSelection = PlatformUI.getWorkbench().getEditorRegistry().getDefaultEditor(fileName);
+			}
+		}
 		if (newSelection != null) {
 			editorTableViewer.setSelection(new StructuredSelection(newSelection), true);
-		} else {
+		}
+
+		if (editorTableViewer.getSelection().isEmpty()) {
 			// set focus to first element, but don't select it:
-			editorTableViewer.getTree().showItem(editorTableViewer.getTree().getItem(0));
+			Tree tree = editorTableViewer.getTree();
+			if (tree.getItemCount() > 0) {
+				tree.showItem(tree.getItem(0));
+			}
 		}
 		editorTable.setFocus();
+	}
+
+	private static String getFileExtension(String fileName) {
+		if (fileName == null) {
+			return null;
+		}
+		int index = fileName.lastIndexOf('.');
+		if (index != -1) {
+			return fileName.substring(index);
+		}
+		return fileName;
 	}
 
 	/**
 	 * Return the dialog store to cache values into
 	 */
-
 	protected IDialogSettings getDialogSettings() {
 		IDialogSettings workbenchSettings = WorkbenchPlugin.getDefault()
 				.getDialogSettings();
@@ -456,7 +483,7 @@ public class EditorSelectionDialog extends Dialog {
 			return editors;
 		}
 
-		List<IEditorDescriptor> filteredList = new ArrayList<IEditorDescriptor>();
+		List<IEditorDescriptor> filteredList = new ArrayList<>();
 		for (int i = 0; i < editors.length; i++) {
 			boolean add = true;
 			for (int j = 0; j < editorsToFilter.length; j++) {
@@ -525,30 +552,66 @@ public class EditorSelectionDialog extends Dialog {
 		buttonPressed(IDialogConstants.OK_ID);
 	}
 
-	/**
-	 * Use the dialog store to restore widget values to the values that they
-	 * held last time this wizard was used to completion
-	 */
-	protected void restoreWidgetValues() {
-		IDialogSettings settings = getDialogSettings();
-		boolean wasExternal = settings.getBoolean(STORE_ID_INTERNAL_EXTERNAL);
-		internalButton.setSelection(!wasExternal);
-		externalButton.setSelection(wasExternal);
-		String id = settings.get(STORE_ID_DESCR);
-		if (id != null) {
-			IEditorDescriptor[] editors;
-			if (wasExternal) {
-				editors = getExternalEditors();
-			} else {
-				editors = getInternalEditors();
-			}
-			for (IEditorDescriptor desc : editors) {
-				if (id.equals(desc.getId())) {
-					selectedEditor = desc;
+	private void initializeSuggestion() {
+		if (fileName == null) {
+			return;
+		}
+		IEditorRegistry editorRegistry = PlatformUI.getWorkbench().getEditorRegistry();
+		IEditorDescriptor suggestion = editorRegistry.getDefaultEditor(fileName);
+		if (suggestion != null && suggestion.isInternal()) {
+			selectedEditor = suggestion;
+		} else {
+			selectedEditor = findBestExternalEditor();
+		}
+		boolean enableInternalList = selectedEditor == null || selectedEditor.isInternal();
+		internalButton.setSelection(enableInternalList);
+		externalButton.setSelection(!enableInternalList);
+	}
+
+	private IEditorDescriptor findBestExternalEditor() {
+		if (fileName == null) {
+			return null;
+		}
+		String extension = getFileExtension(fileName);
+		Program program = Program.findProgram(extension);
+		if (program != null) {
+			for (IEditorDescriptor descriptor : getExternalEditors()) {
+				if (descriptor instanceof EditorDescriptor
+						&& program.equals(((EditorDescriptor) descriptor).getProgram())) {
+					return descriptor;
 				}
 			}
 		}
+		return null;
+	}
 
+	/**
+	 * Use the dialog store to restore widget values to the values that they
+	 * held last time this wizard was used to completion, if the previous file
+	 * has same extension.
+	 */
+	protected void restoreWidgetValues() {
+		IDialogSettings settings = getDialogSettings();
+		if (fileName == null || selectedEditor == null
+				|| getFileExtension(fileName).equals(settings.get(STORE_ID_FILE_EXTENSION))) {
+			boolean wasExternal = settings.getBoolean(STORE_ID_INTERNAL_EXTERNAL);
+			internalButton.setSelection(!wasExternal);
+			externalButton.setSelection(wasExternal);
+			String id = settings.get(STORE_ID_DESCR);
+			if (id != null) {
+				IEditorDescriptor[] editors;
+				if (wasExternal) {
+					editors = getExternalEditors();
+				} else {
+					editors = getInternalEditors();
+				}
+				for (IEditorDescriptor desc : editors) {
+					if (id.equals(desc.getId())) {
+						selectedEditor = desc;
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -558,6 +621,7 @@ public class EditorSelectionDialog extends Dialog {
 	protected void saveWidgetValues() {
 		IDialogSettings settings = getDialogSettings();
 		// record whether use was viewing internal or external editors
+		settings.put(STORE_ID_FILE_EXTENSION, getFileExtension(fileName));
 		settings.put(STORE_ID_INTERNAL_EXTERNAL, !internalButton.getSelection());
 		settings.put(STORE_ID_DESCR, selectedEditor.getId());
 		String editorId = selectedEditor.getId();
@@ -575,7 +639,7 @@ public class EditorSelectionDialog extends Dialog {
 		}
 		// bug 468906: always re-set editor mappings: this is needed to rebuild
 		// internal editors map after setting the default editor
-		List<IFileEditorMapping> newMappings = new ArrayList<IFileEditorMapping>();
+		List<IFileEditorMapping> newMappings = new ArrayList<>();
 		newMappings.addAll(Arrays.asList(reg.getFileEditorMappings()));
 		reg.setFileEditorMappings(newMappings.toArray(new FileEditorMapping[newMappings.size()]));
 		reg.saveAssociations();
@@ -611,7 +675,7 @@ public class EditorSelectionDialog extends Dialog {
 		} else {
 			mapping = new FileEditorMapping(null, fileType);
 		}
-		List<IFileEditorMapping> newMappings = new ArrayList<IFileEditorMapping>();
+		List<IFileEditorMapping> newMappings = new ArrayList<>();
 		newMappings.addAll(Arrays.asList(mappings));
 		newMappings.add(mapping);
 		FileEditorMapping[] array = newMappings.toArray(new FileEditorMapping[newMappings.size()]);

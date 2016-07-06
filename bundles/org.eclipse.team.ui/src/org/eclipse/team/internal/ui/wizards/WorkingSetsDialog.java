@@ -35,14 +35,15 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 	protected Image dlgTitleImage;
 
 	private String selectedWorkingSet;
-	
+
 	public static final String resourceWorkingSetId = "org.eclipse.ui.resourceWorkingSetPage"; //$NON-NLS-1$
-	
+
 	public WorkingSetsDialog(Shell shell) {
 		super(shell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		setTitle(TeamUIMessages.WorkingSetsDialog_Title);
 		setMessage(TeamUIMessages.WorkingSetsDialog_Message);
@@ -86,6 +87,7 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 		return parent;
 	}
 
+	@Override
 	protected void okPressed() {
 		selectedWorkingSet = wsNameText.getText();
 
@@ -97,10 +99,12 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 		super.okPressed();
 	}
 
+	@Override
 	protected void cancelPressed() {
 		super.cancelPressed();
 	}
 
+	@Override
 	public boolean close() {
 		if (dlgTitleImage != null)
 			dlgTitleImage.dispose();
@@ -109,6 +113,7 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 
 	void setupListeners() {
 		wsTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				IStructuredSelection s = (IStructuredSelection) event.getSelection();
 				Object obj = s.getFirstElement();
@@ -118,20 +123,22 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 		});
 
 		wsNameText.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				setErrorMessage(null);
 			}
 		});
 	}
-	
+
 	class WorkingSetLabelProvider extends LabelProvider {
 		  private Map icons;
-		  
+
 		    public WorkingSetLabelProvider() {
 		        icons = new Hashtable();
 		    }
 
-		    public void dispose() {
+		    @Override
+			public void dispose() {
 		        Iterator iterator = icons.values().iterator();
 
 		        while (iterator.hasNext()) {
@@ -141,7 +148,8 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 		        super.dispose();
 		    }
 
-		    public Image getImage(Object object) {
+		    @Override
+			public Image getImage(Object object) {
 		        Assert.isTrue(object instanceof IWorkingSet);
 		        IWorkingSet workingSet = (IWorkingSet) object;
 		        ImageDescriptor imageDescriptor = workingSet.getImageDescriptor();
@@ -157,14 +165,15 @@ public class WorkingSetsDialog extends TitleAreaDialog {
 		        }
 		        return icon;
 		    }
-			    
-		    public String getText(Object object) {
+
+		    @Override
+			public String getText(Object object) {
 		        Assert.isTrue(object instanceof IWorkingSet);
 		        IWorkingSet workingSet = (IWorkingSet) object;
 		        return workingSet.getLabel();
 		    }
 		}
-	
+
 	public String getSelectedWorkingSet(){
 		return selectedWorkingSet;
 	}

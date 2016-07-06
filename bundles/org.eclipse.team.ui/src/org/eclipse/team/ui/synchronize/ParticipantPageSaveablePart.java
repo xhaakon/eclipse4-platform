@@ -35,11 +35,12 @@ import org.eclipse.ui.part.IPageBookViewPage;
  * Displays a synchronize participant page combined with the compare/merge infrastructure. This only works if the
  * synchronize page viewer provides selections that are of the following types: ITypedElement and ICompareInput
  * or if the participant is a {@link ModelSynchronizeParticipant}.
- * 
+ *
  * @since 3.0
  * @deprecated Clients should use a subclass of {@link PageCompareEditorInput}
  *      and {@link CompareUI#openCompareDialog(org.eclipse.compare.CompareEditorInput)}
  */
+@Deprecated
 public class ParticipantPageSaveablePart extends PageSaveablePart implements IContentChangeListener {
 
 	private ISynchronizeParticipant participant;
@@ -48,7 +49,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 
 	private IPageBookViewPage page;
 	private DialogSynchronizePageSite site;
-	
+
 	private IPropertyChangeListener listener;
 	private Viewer viewer;
 
@@ -57,7 +58,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	 * compare/merge panes will be configured with the provided compare configuration.
 	 * <p>
 	 * For example, clients can decide if the user can edit the compare panes by calling {@link CompareConfiguration#setLeftEditable(boolean)}
-	 * or {@link CompareConfiguration#setRightEditable(boolean)}. 
+	 * or {@link CompareConfiguration#setRightEditable(boolean)}.
 	 * </p>
 	 * @param shell the parent shell for this part
 	 * @param cc the compare configuration that will be used to create the compare panes
@@ -69,25 +70,27 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 		this.participant = participant;
 		this.pageConfiguration = pageConfiguration;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.SaveablePartAdapter#dispose()
 	 */
+	@Override
 	public void dispose() {
 		if(titleImage != null) {
 			titleImage.dispose();
 		}
-		if (page != null) 
+		if (page != null)
 			page.dispose();
 		if (site != null)
 			site.dispose();
 		pageConfiguration.removePropertyChangeListener(listener);
 		super.dispose();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPart#getTitleImage()
 	 */
+	@Override
 	public Image getTitleImage() {
 		if(titleImage == null) {
 			titleImage = participant.getImageDescriptor().createImage();
@@ -98,6 +101,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPart#getTitle()
 	 */
+	@Override
 	public String getTitle() {
 		return Utils.shortenText(SynchronizeView.MAX_NAME_LENGTH, participant.getName());
 	}
@@ -105,9 +109,10 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.ISaveablePart#isDirty()
 	 */
+	@Override
 	public boolean isDirty() {
 		if (participant instanceof ModelSynchronizeParticipant) {
-			ModelSynchronizeParticipant msp = (ModelSynchronizeParticipant) participant;		
+			ModelSynchronizeParticipant msp = (ModelSynchronizeParticipant) participant;
 			SaveableComparison currentBuffer = msp.getActiveSaveable();
 			if (currentBuffer != null) {
 				return currentBuffer.isDirty();
@@ -115,10 +120,11 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 		}
 		return super.isDirty();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.IContentChangeListener#contentChanged(org.eclipse.compare.IContentChangeNotifier)
 	 */
+	@Override
 	public void contentChanged(IContentChangeNotifier source) {
 		try {
 			if (source instanceof DiffNode) {
@@ -130,10 +136,11 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 			Utils.handle(e);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	public void doSave(IProgressMonitor pm) {
 		// TODO needs to work for models
 		super.doSave(pm);
@@ -151,12 +158,14 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 			}
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#createPage(org.eclipse.swt.widgets.Composite, org.eclipse.jface.action.ToolBarManager)
 	 */
+	@Override
 	protected Control createPage(Composite parent, ToolBarManager toolBarManager) {
 		listener = new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				if (event.getProperty().equals(ISynchronizePageConfiguration.P_PAGE_DESCRIPTION)) {
 					updateDescription();
@@ -176,13 +185,13 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 		}
 
 		page.createControl(parent);
-		
+
 		initializeDiffViewer(((ISynchronizePage)page).getViewer());
-		
+
 		page.setActionBars(site.getActionBars());
 		toolBarManager.update(true);
 		viewer = ((ISynchronizePage)page).getViewer();
-		
+
 		setNavigator(pageConfiguration);
 		return page.getControl();
 	}
@@ -190,17 +199,18 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#getPageSelectionProvider()
 	 */
+	@Override
 	protected final ISelectionProvider getSelectionProvider() {
 		return ((ISynchronizePage)page).getViewer();
 	}
-	
+
 	private void updateDescription() {
 		String description = (String)pageConfiguration.getProperty(ISynchronizePageConfiguration.P_PAGE_DESCRIPTION);
 		if (description != null) {
 			setPageDescription(description);
 		}
 	}
-	
+
 	/**
 	 * Initialize the diff viewer created for this compare input. If a subclass
 	 * overrides the <code>createDiffViewer(Composite)</code> method, it should
@@ -211,6 +221,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	private void initializeDiffViewer(Viewer viewer) {
 		if (viewer instanceof StructuredViewer) {
 			((StructuredViewer) viewer).addOpenListener(new IOpenListener() {
+				@Override
 				public void open(OpenEvent event) {
 					ISelection s = event.getSelection();
 					final SyncInfoModelElement node = getElement(s);
@@ -226,11 +237,12 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 			});
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * @since 3.2
 	 */
+	@Override
 	protected void prepareInput(final ICompareInput input, CompareConfiguration configuration, IProgressMonitor monitor) throws InvocationTargetException {
 		monitor.beginTask(TeamUIMessages.SyncInfoCompareInput_3, 100);
         monitor.setTaskName(TeamUIMessages.SyncInfoCompareInput_3);
@@ -270,7 +282,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	private ISynchronizationCompareInput asModelCompareInput(ICompareInput input) {
 		return (ISynchronizationCompareInput)Utils.getAdapter(input, ISynchronizationCompareInput.class);
 	}
-	
+
 	private SyncInfoModelElement getElement(ISelection selection) {
 		ICompareInput input = getCompareInput(selection);
 		if(input instanceof SyncInfoModelElement) {
@@ -278,7 +290,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 		}
 		return null;
 	}
-	
+
 	private static void commit(IProgressMonitor pm, DiffNode node) throws CoreException {
 		ITypedElement left = node.getLeft();
 		if (left instanceof LocalResourceTypedElement)
@@ -287,25 +299,25 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 		ITypedElement right = node.getRight();
 		if (right instanceof LocalResourceTypedElement)
 			 ((LocalResourceTypedElement) right).commit(pm);
-		
+
 		IDiffElement[] children = node.getChildren();
 		for (int i = 0; i < children.length; i++) {
-			commit(pm, (DiffNode)children[i]);			
+			commit(pm, (DiffNode)children[i]);
 		}
 	}
-	
+
 	/**
 	 * Return the synchronize page configuration for this part
-	 * 
+	 *
 	 * @return Returns the pageConfiguration.
 	 */
 	public ISynchronizePageConfiguration getPageConfiguration() {
 		return pageConfiguration;
 	}
-	
+
 	/**
 	 * Return the Synchronize participant for this part
-	 * 
+	 *
 	 * @return Returns the participant.
 	 */
 	public ISynchronizeParticipant getParticipant() {
@@ -316,11 +328,12 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 	 * {@inheritDoc}
 	 * @since 3.2
 	 */
+	@Override
 	protected ICompareInput getCompareInput(ISelection selection) {
 		ICompareInput compareInput = super.getCompareInput(selection);
 		if (compareInput != null)
 			return compareInput;
-		
+
 		if (selection != null && selection instanceof IStructuredSelection) {
 			IStructuredSelection ss= (IStructuredSelection) selection;
 			if (ss.size() == 1) {
@@ -333,7 +346,7 @@ public class ParticipantPageSaveablePart extends PageSaveablePart implements ICo
 		}
 		return null;
 	}
-	
-	
+
+
 
 }

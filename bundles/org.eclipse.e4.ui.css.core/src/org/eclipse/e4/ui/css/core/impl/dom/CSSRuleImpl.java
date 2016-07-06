@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,45 +32,25 @@ public abstract class CSSRuleImpl extends AbstractCSSNode implements CSSRule {
 
 	// W3C CSSRule API methods
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSRule#getCssText()
-	 */
 	@Override
 	public String getCssText() {
 		// TODO Auto-generated constructor stub
 		throw new UnsupportedOperationException("NOT YET IMPLEMENTED");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSRule#getParentStyleSheet()
-	 */
 	@Override
 	public CSSStyleSheet getParentStyleSheet() {
 		return parentStyleSheet;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSRule#getParentRule()
-	 */
 	@Override
 	public CSSRule getParentRule() {
 		return parentRule;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSRule#getType()
-	 */
 	@Override
 	abstract public short getType();
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSRule#setCssText(java.lang.String)
-	 */
 	@Override
 	public void setCssText(String cssText) throws DOMException {
 		if(readOnly)

@@ -36,7 +36,7 @@ import org.eclipse.ui.part.ResourceTransfer;
 /**
  * A <code>TreeViewerAdvisor</code> that works with TreeViewers. Two default
  * tree viewers are provided that support navigation: <code>NavigableTreeViewer</code>
- * and <code>NavigableCheckboxTreeViewer</code>. 
+ * and <code>NavigableCheckboxTreeViewer</code>.
  * <p>
  * Note that this advisor can be used with any tree viewer. By default it provides an
  * expand all action, double click behavior on containers, and navigation support for
@@ -49,17 +49,17 @@ import org.eclipse.ui.part.ResourceTransfer;
  * @since 3.0
  */
 public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
-	
+
 	// Special actions that could not be contributed using an ActionGroup
 	private StatusLineContributionGroup statusLine;
-	
+
 	/**
 	 * Style bit that indicates that a checkbox viewer is desired.
 	 */
 	public static final int CHECKBOX = 1;
-	
+
 	private SynchronizeModelManager modelManager;
-	
+
 	/**
 	 * A navigable checkbox tree viewer that will work with the <code>navigate</code> method of
 	 * this advisor.
@@ -70,15 +70,17 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 			setUseHashlookup(true);
 		}
 
-		public void createChildren(TreeItem item) {	
+		@Override
+		public void createChildren(TreeItem item) {
 			super.createChildren(item);
 		}
 
+		@Override
 		public void openSelection() {
 			fireOpen(new OpenEvent(this, getSelection()));
 		}
 	}
-	
+
 	/**
 	 * A navigable tree viewer that will work with the <code>navigate</code> method of
 	 * this advisor.
@@ -89,15 +91,17 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 			setUseHashlookup(true);
 		}
 
-		public void createChildren(TreeItem item) {	
+		@Override
+		public void createChildren(TreeItem item) {
 			super.createChildren(item);
 		}
 
+		@Override
 		public void openSelection() {
 			fireOpen(new OpenEvent(this, getSelection()));
 		}
 	}
-	
+
 	public static StructuredViewer createViewer(Composite parent, ISynchronizePageConfiguration configuration) {
 		int style = ((SynchronizePageConfiguration)configuration).getViewerStyle();
 		if ((style & CHECKBOX) > 0) {
@@ -115,13 +119,13 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 	 * Create an advisor that will allow viewer contributions with the given <code>targetID</code>. This
 	 * advisor will provide a presentation model based on the given sync info set. Note that it's important
 	 * to call {@link #dispose()} when finished with an advisor.
-	 * 
+	 *
 	 * @param parent
 	 * @param configuration
 	 */
 	public TreeViewerAdvisor(Composite parent, ISynchronizePageConfiguration configuration) {
 		super(configuration);
-		
+
 		// Allow the configuration to provide it's own model manager but if one isn't initialized, then
 		// simply use the default provided by the advisor.
 		modelManager = (SynchronizeModelManager)configuration.getProperty(SynchronizePageConfiguration.P_MODEL_MANAGER);
@@ -131,13 +135,14 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 		}
 		Assert.isNotNull(modelManager, "model manager must be set"); //$NON-NLS-1$
 		modelManager.setViewerAdvisor(this);
-		
+
 		StructuredViewer viewer = TreeViewerAdvisor.createViewer(parent, configuration);
 		GridData data = new GridData(GridData.FILL_BOTH);
 		viewer.getControl().setLayoutData(data);
-		initializeViewer(viewer);		
+		initializeViewer(viewer);
 	}
-	
+
+	@Override
 	public void setInitialInput() {
 		// The input will be set later
 	}
@@ -159,7 +164,7 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
         }
 		return new HierarchicalModelManager(configuration);
 	}
-	
+
 	/*
 	 * For use by test cases only
 	 * @return Returns the modelManager.
@@ -167,26 +172,29 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 	public SynchronizeModelManager getModelManager() {
 		return modelManager;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.viewers.StructuredViewerAdvisor#initializeViewer(org.eclipse.jface.viewers.StructuredViewer)
 	 */
+	@Override
 	public boolean validateViewer(StructuredViewer viewer) {
 		return viewer instanceof AbstractTreeViewer;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.viewers.StructuredViewerAdvisor#initializeListeners(org.eclipse.jface.viewers.StructuredViewer)
 	 */
+	@Override
 	protected void initializeListeners(final StructuredViewer viewer) {
 		super.initializeListeners(viewer);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateStatusLine((IStructuredSelection) event.getSelection());
 			}
 		});
 	}
-	
+
 	/* private */ void updateStatusLine(IStructuredSelection selection) {
 		IWorkbenchSite ws = getConfiguration().getSite().getWorkbenchSite();
 		if (ws != null && ws instanceof IViewSite) {
@@ -194,7 +202,7 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 			((IViewSite)ws).getActionBars().getStatusLineManager().setMessage(msg);
 		}
 	}
-	
+
 	private String getStatusLineMessage(IStructuredSelection selection) {
 		if (selection.size() == 1) {
 			Object first = selection.getFirstElement();
@@ -209,21 +217,22 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 			}
 		}
 		if (selection.size() > 1) {
-			return selection.size() + TeamUIMessages.SynchronizeView_13; 
+			return selection.size() + TeamUIMessages.SynchronizeView_13;
 		}
 		return ""; //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Called to set the input to a viewer. The input to a viewer is always the model created
 	 * by the model provider.
-	 * 
+	 *
 	 * @param modelProvider
 	 */
 	public final void setInput(final ISynchronizeModelProvider modelProvider) {
 		final ISynchronizeModelElement modelRoot = modelProvider.getModelRoot();
 		getActionGroup().modelChanged(modelRoot);
 		modelRoot.addCompareInputChangeListener(new ICompareInputChangeListener() {
+			@Override
 			public void compareInputChanged(ICompareInput source) {
 				getActionGroup().modelChanged(modelRoot);
 			}
@@ -233,11 +242,13 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 			viewer.setSorter(modelProvider.getViewerSorter());
 			viewer.setInput(modelRoot);
 			modelProvider.addPropertyChangeListener(new IPropertyChangeListener() {
-                public void propertyChange(PropertyChangeEvent event) {
+                @Override
+				public void propertyChange(PropertyChangeEvent event) {
                     if (event.getProperty() == ISynchronizeModelProvider.P_VIEWER_SORTER) {
                         if (viewer != null && !viewer.getControl().isDisposed()) {
                             viewer.getControl().getDisplay().syncExec(new Runnable() {
-                                public void run() {
+                                @Override
+								public void run() {
         	                        if (viewer != null && !viewer.getControl().isDisposed()) {
         	                            ViewerSorter newSorter = modelProvider.getViewerSorter();
                                         ViewerSorter oldSorter = viewer.getSorter();
@@ -255,26 +266,29 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
             });
 		}
 	}
-	
+
 	/**
 	 * Install a viewer to be configured with this advisor. An advisor can only be installed with
 	 * one viewer at a time. When this method completes the viewer is considered initialized and
-	 * can be shown to the user. 
+	 * can be shown to the user.
 	 * @param viewer the viewer being installed
 	 */
+	@Override
 	public final void initializeViewer(final StructuredViewer viewer) {
 		super.initializeViewer(viewer);
-		
+
 		final DragSourceListener listener = new DragSourceListener() {
 
-            public void dragStart(DragSourceEvent event) {
+            @Override
+			public void dragStart(DragSourceEvent event) {
 				final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
                 final Object [] array= selection.toArray();
                 event.doit= Utils.getResources(array).length > 0;
 			}
 
-            public void dragSetData(DragSourceEvent event) {
-                
+            @Override
+			public void dragSetData(DragSourceEvent event) {
+
                 if (ResourceTransfer.getInstance().isSupportedType(event.dataType)) {
                     final IStructuredSelection selection= (IStructuredSelection)viewer.getSelection();
                     final Object [] array= selection.toArray();
@@ -282,25 +296,26 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
                 }
             }
 
-            public void dragFinished(DragSourceEvent event) {}
+            @Override
+			public void dragFinished(DragSourceEvent event) {}
 		};
-		
+
 		final int ops = DND.DROP_COPY | DND.DROP_LINK;
 		viewer.addDragSupport(ops, new Transfer[] { ResourceTransfer.getInstance() }, listener);
-	
+
 		viewer.setLabelProvider(getLabelProvider());
 		viewer.setContentProvider(getContentProvider());
 	}
-	
+
 	/**
 	 * Returns the content provider for the viewer.
-	 * 
+	 *
 	 * @return the content provider for the viewer.
 	 */
 	protected IStructuredContentProvider getContentProvider() {
 		return new BaseWorkbenchContentProvider();
 	}
-	
+
 	/**
 	 * Get the label provider that will be assigned to the viewer initialized
 	 * by this configuration. Subclass may override but should either wrap the
@@ -318,23 +333,25 @@ public class TreeViewerAdvisor extends AbstractTreeViewerAdvisor {
 		}
 		return new DecoratingColorLabelProvider(provider, decorators);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#dispose()
 	 */
+	@Override
 	public void dispose() {
 		if (statusLine != null) {
 			statusLine.dispose();
 		}
 		super.dispose();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#initializeStatusLine(org.eclipse.ui.IActionBars)
 	 */
+	@Override
 	protected void initializeStatusLine(IActionBars actionBars) {
 		statusLine = new SyncInfoSetStatusLineContributionGroup(
-				getConfiguration().getSite().getShell(), 
+				getConfiguration().getSite().getShell(),
 				getConfiguration());
 		IStatusLineManager statusLineMgr = actionBars.getStatusLineManager();
 		if (statusLineMgr != null && statusLine != null) {

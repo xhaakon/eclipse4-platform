@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
+import org.eclipse.ui.internal.editors.text.OverlayPreferenceStore.OverlayKey;
 import org.eclipse.ui.internal.editors.text.TextEditorDefaultsPreferencePage.EnumeratedDomain.EnumValue;
 
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants;
@@ -102,6 +103,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				super(preference);
 				fText= control;
 			}
+			@Override
 			public void initialize() {
 				String value= fPreferenceStore.getString(fPreference.getKey());
 				fText.setText(value);
@@ -115,6 +117,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				super(preference);
 				fControl= control;
 			}
+			@Override
 			public void initialize() {
 				boolean value= fPreferenceStore.getBoolean(fPreference.getKey());
 				fControl.setSelection(value);
@@ -130,6 +133,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				fControl= control;
 				fDomain= domain;
 			}
+			@Override
 			public void initialize() {
 				int value= fPreferenceStore.getInt(fPreference.getKey());
 				EnumValue enumValue= fDomain.getValueByInteger(value);
@@ -150,6 +154,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				fControl= control;
 				fDomain= domain;
 			}
+			@Override
 			public void initialize() {
 				int value= fPreferenceStore.getInt(fPreference.getKey());
 				EnumValue enumValue= fDomain.getValueByInteger(value);
@@ -199,6 +204,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 			fMin= min;
 		}
 
+		@Override
 		public IStatus validate(Object value) {
 			StatusInfo status= new StatusInfo();
 			if (value instanceof String && ((String)value).length() == 0) {
@@ -238,9 +244,11 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 			public int getIntValue() {
 				return fValue;
 			}
+			@Override
 			public final int hashCode() {
 				return getIntValue();
 			}
+			@Override
 			public boolean equals(Object obj) {
 				if (obj instanceof EnumValue) {
 					return ((EnumValue) obj).getIntValue() == fValue;
@@ -249,8 +257,8 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 			}
 		}
 
-		private final java.util.List fItems= new ArrayList();
-		private final Set fValueSet= new HashSet();
+		private final java.util.List<EnumValue> fItems= new ArrayList<>();
+		private final Set<EnumValue> fValueSet= new HashSet<>();
 
 		public void addValue(EnumValue val) {
 			if (fValueSet.contains(val))
@@ -261,8 +269,8 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 
 		public int getIndex(EnumValue enumValue) {
 			int i= 0;
-			for (Iterator it= fItems.iterator(); it.hasNext();) {
-				EnumValue ev= (EnumValue) it.next();
+			for (Iterator<EnumValue> it= fItems.iterator(); it.hasNext();) {
+				EnumValue ev= it.next();
 				if (ev.equals(enumValue))
 					return i;
 				i++;
@@ -272,13 +280,13 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 
 		public EnumValue getValueByIndex (int index) {
 			if (index >= 0 && fItems.size() > index)
-				return (EnumValue) fItems.get(index);
+				return fItems.get(index);
 			return null;
 		}
 
 		public EnumValue getValueByInteger(int intValue) {
-			for (Iterator it= fItems.iterator(); it.hasNext();) {
-				EnumValue e= (EnumValue) it.next();
+			for (Iterator<EnumValue> it= fItems.iterator(); it.hasNext();) {
+				EnumValue e= it.next();
 				if (e.getIntValue() == intValue)
 					return e;
 			}
@@ -294,6 +302,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				addValue(from++);
 		}
 
+		@Override
 		public IStatus validate(Object value) {
 			StatusInfo status= new StatusInfo();
 			if (value instanceof String && ((String)value).length() == 0) {
@@ -328,6 +337,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 	}
 
 	static class BooleanDomain extends Domain {
+		@Override
 		public IStatus validate(Object value) {
 			StatusInfo status= new StatusInfo();
 			if (value instanceof String && ((String)value).length() == 0) {
@@ -383,7 +393,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 
 	private static class WhitespaceCharacterPainterOptionsDialog extends Dialog {
 
-		private java.util.List fDialogInitializers= new ArrayList();
+		private java.util.List<Initializer> fDialogInitializers= new ArrayList<>();
 
 		private OverlayPreferenceStore fDialogOverlayStore;
 
@@ -401,7 +411,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		}
 
 		private OverlayPreferenceStore createDialogOverlayStore() {
-			ArrayList overlayKeys= new ArrayList();
+			ArrayList<OverlayKey> overlayKeys= new ArrayList<>();
 
 			overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.BOOLEAN, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_SHOW_LEADING_SPACES));
 			overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.BOOLEAN, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_SHOW_ENCLOSED_SPACES));
@@ -421,11 +431,13 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 			return new OverlayPreferenceStore(fParentPreferenceStore, keys);
 		}
 
+		@Override
 		protected void configureShell(Shell newShell) {
 			super.configureShell(newShell);
 			newShell.setText(TextEditorMessages.TextEditorDefaultsPreferencePage_showWhitespaceCharactersDialogTitle);
 		}
 
+		@Override
 		protected Control createContents(Composite parent) {
 			Control contents= super.createContents(parent);
 			Dialog.applyDialogFont(contents);
@@ -436,12 +448,13 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		}
 
 		private void initializeShowWhitespaceCharactersPreferences() {
-			for (Iterator it= fDialogInitializers.iterator(); it.hasNext();) {
-				Initializer initializer= (Initializer)it.next();
+			for (Iterator<Initializer> it= fDialogInitializers.iterator(); it.hasNext();) {
+				Initializer initializer= it.next();
 				initializer.initialize();
 			}
 		}
 
+		@Override
 		protected Control createDialogArea(Composite parent) {
 			Composite composite= (Composite)super.createDialogArea(parent);
 
@@ -579,6 +592,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 			gd.horizontalIndent= indentation;
 			checkBox.setLayoutData(gd);
 			checkBox.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					boolean value= checkBox.getSelection();
 					IStatus status= domain.validate(Boolean.valueOf(value));
@@ -607,6 +621,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 
 			if (domain != null) {
 				textControl.addModifyListener(new ModifyListener() {
+					@Override
 					public void modifyText(ModifyEvent e) {
 						String value= textControl.getText();
 						IStatus status= domain.validate(value);
@@ -626,6 +641,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 			return new Control[] { labelControl, textControl };
 		}
 
+		@Override
 		protected void okPressed() {
 			super.okPressed();
 			fDialogOverlayStore.propagate();
@@ -655,13 +671,13 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 	 */
 	private boolean fFieldsInitialized= false;
 
-	private ArrayList fMasterSlaveListeners= new ArrayList();
+	private ArrayList<SelectionListener> fMasterSlaveListeners= new ArrayList<>();
 
-	private java.util.List fInitializers= new ArrayList();
+	private java.util.List<Initializer> fInitializers= new ArrayList<>();
 
 	private InitializerFactory fInitializerFactory;
 
-	private Map fDomains= new HashMap();
+	private Map<Domain, Text> fDomains= new HashMap<>();
 
 
 	public TextEditorDefaultsPreferencePage() {
@@ -673,7 +689,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 
 	private OverlayPreferenceStore createOverlayStore() {
 
-		ArrayList overlayKeys= new ArrayList();
+		ArrayList<OverlayKey> overlayKeys= new ArrayList<>();
 
 		overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.STRING, AbstractTextEditor.PREFERENCE_COLOR_FIND_SCOPE));
 
@@ -681,6 +697,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.BOOLEAN, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_CURRENT_LINE));
 
 		overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.INT, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_TAB_WIDTH));
+		overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.BOOLEAN, AbstractTextEditor.PREFERENCE_WORD_WRAP_ENABLED));
 		overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.BOOLEAN, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_SPACES_FOR_TABS));
 
 		overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.STRING, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_PRINT_MARGIN_COLOR));
@@ -734,15 +751,11 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		return new OverlayPreferenceStore(getPreferenceStore(), keys);
 	}
 
-	/*
-	 * @see IWorkbenchPreferencePage#init()
-	 */
+	@Override
 	public void init(IWorkbench workbench) {
 	}
 
-	/*
-	 * @see PreferencePage#createControl(Composite)
-	 */
+	@Override
 	public void createControl(Composite parent) {
 		super.createControl(parent);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), ITextEditorHelpContextIds.TEXT_EDITOR_PREFERENCE_PAGE);
@@ -785,6 +798,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		Link fontLink= new Link(appearanceComposite, SWT.NONE);
 		fontLink.setText(TextEditorMessages.TextEditorPreferencePage_Font_link);
 		fontLink.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				PreferencesUtil.createPreferenceDialogOn(getShell(), "org.eclipse.ui.preferencePages.ColorsAndFonts", null, "selectFont:" + JFaceResources.TEXT_FONT); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -804,6 +818,12 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		Preference tabWidth= new Preference(AbstractDecoratedTextEditorPreferenceConstants.EDITOR_TAB_WIDTH, label, null);
 		IntegerDomain tabWidthDomain= new IntegerDomain(1, 16);
 		addTextField(appearanceComposite, tabWidth, tabWidthDomain, 15, 0);
+
+		if(isWordWrapPreferenceAllowed()){
+			label= TextEditorMessages.TextEditorPreferencePage_enableWordWrap;
+			Preference enableWordWrap= new Preference(AbstractTextEditor.PREFERENCE_WORD_WRAP_ENABLED, label, null);
+			addCheckBox(appearanceComposite, enableWordWrap, new BooleanDomain(), 0);
+		}
 
 		label= TextEditorMessages.TextEditorPreferencePage_convertTabsToSpaces;
 		Preference spacesForTabs= new Preference(AbstractDecoratedTextEditorPreferenceConstants.EDITOR_SPACES_FOR_TABS, label, null);
@@ -826,6 +846,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		createDependency(showPrintMarginButton, showPrintMargin, printMarginControls);
 
 		showPrintMarginButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateStatus(printMarginDomain);
 			}
@@ -843,6 +864,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		String linkText= TextEditorMessages.TextEditorDefaultsPreferencePage_showWhitespaceCharactersLinkText;
 		Preference showWhitespaceCharacters= new Preference(AbstractDecoratedTextEditorPreferenceConstants.EDITOR_SHOW_WHITESPACE_CHARACTERS, label, null);
 		addCheckBoxWithLink(appearanceComposite, showWhitespaceCharacters, linkText, new BooleanDomain(), 0, new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Dialog dialog= new WhitespaceCharacterPainterOptionsDialog(Display.getDefault().getActiveShell(), fOverlayStore);
 				dialog.open();
@@ -918,6 +940,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		foregroundColorButton.setLayoutData(gd);
 
 		SelectionListener colorDefaultSelectionListener= new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				boolean systemDefault= fAppearanceColorDefault.getSelection();
 				fAppearanceColorEditor.getButton().setEnabled(!systemDefault);
@@ -930,6 +953,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				if (key != null)
 					fOverlayStore.setValue(key, systemDefault);
 			}
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 
@@ -943,17 +967,21 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		fAppearanceColorDefault.addSelectionListener(colorDefaultSelectionListener);
 
 		fAppearanceColorList.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				handleAppearanceColorListSelection();
 			}
 		});
 		foregroundColorButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int i= fAppearanceColorList.getSelectionIndex();
 				if (i == -1)
@@ -967,6 +995,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		Link link= new Link(appearanceComposite, SWT.NONE);
 		link.setText(TextEditorMessages.TextEditorPreferencePage_colorsAndFonts_link);
 		link.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				PreferencesUtil.createPreferenceDialogOn(getShell(), "org.eclipse.ui.preferencePages.ColorsAndFonts", null, "selectCategory:org.eclipse.ui.workbenchMisc"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -984,9 +1013,11 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		return appearanceComposite;
 	}
 
-	/*
-	 * @see PreferencePage#createContents(Composite)
-	 */
+	private boolean isWordWrapPreferenceAllowed() {
+		return Boolean.getBoolean("eclipse.show.wrapByDefaultPreference"); //$NON-NLS-1$
+	}
+
+	@Override
 	protected Control createContents(Composite parent) {
 
 		initializeDefaultColors();
@@ -1008,6 +1039,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		for (int i= 0; i < fAppearanceColorListModel.length; i++)
 			fAppearanceColorList.add(fAppearanceColorListModel[i][0]);
 		fAppearanceColorList.getDisplay().asyncExec(new Runnable() {
+			@Override
 			public void run() {
 				if (fAppearanceColorList != null && !fAppearanceColorList.isDisposed()) {
 					fAppearanceColorList.select(0);
@@ -1018,8 +1050,8 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 	}
 
 	private void initializeFields() {
-		for (Iterator it= fInitializers.iterator(); it.hasNext();) {
-			Initializer initializer= (Initializer) it.next();
+		for (Iterator<Initializer> it= fInitializers.iterator(); it.hasNext();) {
+			Initializer initializer= it.next();
 			initializer.initialize();
 		}
 
@@ -1027,9 +1059,9 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		updateStatus(new StatusInfo());
 
         // Update slaves
-        Iterator iter= fMasterSlaveListeners.iterator();
+        Iterator<SelectionListener> iter= fMasterSlaveListeners.iterator();
         while (iter.hasNext()) {
-            SelectionListener listener= (SelectionListener)iter.next();
+            SelectionListener listener= iter.next();
             listener.widgetSelected(null);
         }
 
@@ -1058,17 +1090,13 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		}
 	}
 
-	/*
-	 * @see PreferencePage#performOk()
-	 */
+	@Override
 	public boolean performOk() {
 		fOverlayStore.propagate();
 		return true;
 	}
 
-	/*
-	 * @see PreferencePage#performDefaults()
-	 */
+	@Override
 	protected void performDefaults() {
 
 		fOverlayStore.loadDefaults();
@@ -1080,9 +1108,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		super.performDefaults();
 	}
 
-	/*
-	 * @see DialogPage#dispose()
-	 */
+	@Override
 	public void dispose() {
 
 		if (fOverlayStore != null) {
@@ -1120,6 +1146,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		gd.horizontalSpan= 2;
 		checkBox.setLayoutData(gd);
 		checkBox.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				checkboxControlChanged(preference, domain, checkBox);
 			}
@@ -1150,6 +1177,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		gd= new GridData(GridData.FILL, GridData.CENTER, false, false);
 		checkBox.setLayoutData(gd);
 		checkBox.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				checkboxControlChanged(preference, domain, checkBox);
 			}
@@ -1161,6 +1189,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		link.setLayoutData(gd);
 		if (listener != null) {
 			link.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					listener.widgetSelected(e);
 				}
@@ -1183,12 +1212,13 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		gd= new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
 		combo.setLayoutData(gd);
 		combo.setToolTipText(preference.getDescription());
-		for (Iterator it= domain.fItems.iterator(); it.hasNext();) {
-			EnumValue value= (EnumValue) it.next();
+		for (Iterator<EnumValue> it= domain.fItems.iterator(); it.hasNext();) {
+			EnumValue value= it.next();
 			combo.add(value.getLabel());
 		}
 
 		combo.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int index= combo.getSelectionIndex();
 				EnumValue value= domain.getValueByIndex(index);
@@ -1234,6 +1264,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		spinner.setPageIncrement(4);
 
 		spinner.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int index= spinner.getSelection();
 				EnumValue value= domain.getValueByInteger(index);
@@ -1265,6 +1296,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 
 		if (domain != null) {
 			textControl.addModifyListener(new ModifyListener() {
+				@Override
 				public void modifyText(ModifyEvent e) {
 					String value= textControl.getText();
 					IStatus status= domain.validate(value);
@@ -1291,6 +1323,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		}
 
 		SelectionListener listener= new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				boolean state= master.getSelection();
 				for (int i= 0; i < slaves.length; i++) {
@@ -1298,6 +1331,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		};
 		master.addSelectionListener(listener);
@@ -1324,9 +1358,9 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 		if (updateStatusOnError(checkedDomain))
 			return;
 
-		Iterator iter= fDomains.keySet().iterator();
+		Iterator<Domain> iter= fDomains.keySet().iterator();
 		while (iter.hasNext()) {
-			Domain domain= (Domain)iter.next();
+			Domain domain= iter.next();
 			if (domain.equals(checkedDomain))
 				continue;
 			if (updateStatusOnError(domain))
@@ -1336,7 +1370,7 @@ public class TextEditorDefaultsPreferencePage extends PreferencePage implements 
 	}
 
 	private boolean updateStatusOnError(Domain domain) {
-		Text textWidget= (Text)fDomains.get(domain);
+		Text textWidget= fDomains.get(domain);
 		if (textWidget.isEnabled()) {
 			IStatus status= domain.validate(textWidget.getText());
 			if (status.matches(IStatus.ERROR)) {

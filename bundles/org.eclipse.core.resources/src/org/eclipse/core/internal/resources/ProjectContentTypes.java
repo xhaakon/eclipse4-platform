@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -25,7 +26,7 @@ import org.osgi.service.prefs.Preferences;
 
 /**
  * Manages project-specific content type behavior.
- * 
+ *
  * @see ContentDescriptionManager
  * @see org.eclipse.core.runtime.content.IContentTypeManager.ISelectionPolicy
  * @since 3.1
@@ -34,9 +35,9 @@ public class ProjectContentTypes {
 
 	/**
 	 * A project-aware content type selection policy.
-	 * This class is also a dynamic scope context that will delegate to either 
+	 * This class is also a dynamic scope context that will delegate to either
 	 * project or instance scope depending on whether project specific settings were enabled
-	 * for the project in question.    
+	 * for the project in question.
 	 */
 	private class ProjectContentTypeSelectionPolicy implements ISelectionPolicy, IScopeContext {
 		// corresponding project
@@ -49,9 +50,6 @@ public class ProjectContentTypes {
 			this.projectScope = new ProjectScope(project);
 		}
 
-		/* (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj)
@@ -86,9 +84,6 @@ public class ProjectContentTypes {
 			return getDelegate().getNode(qualifier);
 		}
 
-		/* (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			return getName().hashCode();
@@ -142,7 +137,7 @@ public class ProjectContentTypes {
 		String[] enabledNatures = workspace.getNatureManager().getEnabledNatures(project);
 		if (enabledNatures.length == 0)
 			return Collections.EMPTY_SET;
-		Set<String> related = new HashSet<String>(enabledNatures.length);
+		Set<String> related = new HashSet<>(enabledNatures.length);
 		for (int i = 0; i < enabledNatures.length; i++) {
 			ProjectNatureDescriptor descriptor = (ProjectNatureDescriptor) workspace.getNatureDescriptor(enabledNatures[i]);
 			if (descriptor == null)
@@ -184,7 +179,7 @@ public class ProjectContentTypes {
 				if (entry.getTimestamp() == info.getContentId())
 					// ...and it is not stale, so just return it
 					return (Set<String>) entry.getCached();
-			// no cached information found, have to collect associated content types  
+			// no cached information found, have to collect associated content types
 			Set<String> result = collectAssociatedContentTypes(project);
 			if (entry == null)
 				// there was no entry before - create one
@@ -213,13 +208,13 @@ public class ProjectContentTypes {
 
 	/**
 	 * Implements project specific, nature-based selection policy. No content types are vetoed.
-	 * 
+	 *
 	 * The criteria for this policy is as follows:
 	 * <ol>
 	 * <li>associated content types should appear before non-associated content types</li>
 	 * <li>otherwise, relative ordering should be preserved.</li>
 	 * </ol>
-	 * 
+	 *
 	 *  @see org.eclipse.core.runtime.content.IContentTypeManager.ISelectionPolicy
 	 */
 	final IContentType[] select(Project project, IContentType[] candidates, boolean fileName, boolean content) {

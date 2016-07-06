@@ -30,10 +30,10 @@ import org.eclipse.ui.IWorkbenchPart;
  * associated with a synchronization or merge context.
  * <p>
  * This class may be subclasses by clients.
- * 
+ *
  * @see ISynchronizationContext
  * @see IMergeContext
- * 
+ *
  * @since 3.2
  */
 public abstract class SynchronizationOperation extends TeamOperation {
@@ -53,7 +53,7 @@ public abstract class SynchronizationOperation extends TeamOperation {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Create a synchronize operation that operations on the given elements
 	 * @param configuration the configuration for the page the operation is associated with
@@ -82,7 +82,7 @@ public abstract class SynchronizationOperation extends TeamOperation {
 	protected ISynchronizationContext getContext() {
 		return (ISynchronizationContext)getConfiguration().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_CONTEXT);
 	}
-	
+
 	/**
 	 * Return the model elements that are the target of this operation.
 	 * @return the model elements that are the target of this operation
@@ -90,19 +90,20 @@ public abstract class SynchronizationOperation extends TeamOperation {
 	public Object[] getElements() {
 		return elements;
 	}
-	
+
 	/**
 	 * Make <code>shouldRun</code> public so the result
 	 * can be used to provide handler enablement
 	 */
+	@Override
 	public boolean shouldRun() {
 		return super.shouldRun();
 	}
-	
+
 	/**
 	 * Return the saveable that this operation will write its results
 	 * to or <code>null</code> if the operation does not buffer
-	 * its results. By default, <code>null</code> is returned but 
+	 * its results. By default, <code>null</code> is returned but
 	 * subclasses may override.
 	 * @return the saveable that this operation will write its results
 	 * to or <code>null</code>
@@ -110,10 +111,11 @@ public abstract class SynchronizationOperation extends TeamOperation {
 	public SaveableComparison getSaveable() {
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	public final void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 		try {
 			monitor.beginTask(null, 100);
@@ -130,6 +132,7 @@ public abstract class SynchronizationOperation extends TeamOperation {
 		// when there are no more jobs related to the context running
 		final IJobManager jobManager = Job.getJobManager();
 		final IJobChangeListener listener = new JobChangeAdapter() {
+			@Override
 			public void done(IJobChangeEvent event) {
 				Job[] jobs = jobManager.find(getContext());
 				if (jobs.length == 0) {

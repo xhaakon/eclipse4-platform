@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -111,16 +111,12 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 		fPositionUpdater= new DefaultPositionUpdater(fPositionCategory);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentPartitionerExtension2#getManagingPositionCategories()
-	 */
+	@Override
 	public String[] getManagingPositionCategories() {
 		return new String[] { fPositionCategory };
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentPartitioner#connect(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public final void connect(IDocument document) {
 		connect(document, false);
 	}
@@ -131,6 +127,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public void connect(IDocument document, boolean delayInitialization) {
 		Assert.isNotNull(document);
 		Assert.isTrue(!document.containsPositionCategory(fPositionCategory));
@@ -188,6 +185,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public void disconnect() {
 
 		Assert.isTrue(fDocument.containsPositionCategory(fPositionCategory));
@@ -205,6 +203,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public void documentAboutToBeChanged(DocumentEvent e) {
 		if (fIsInitialized) {
 
@@ -217,9 +216,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 		}
 	}
 
-	/*
-	 * @see IDocumentPartitioner#documentChanged(DocumentEvent)
-	 */
+	@Override
 	public final boolean documentChanged(DocumentEvent e) {
 		if (fIsInitialized) {
 			IRegion region= documentChanged2(e);
@@ -287,6 +284,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public IRegion documentChanged2(DocumentEvent e) {
 
 		if (!fIsInitialized)
@@ -308,8 +306,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 				if (partition.includes(reparseStart)) {
 					partitionStart= partition.getOffset();
 					contentType= partition.getType();
-					if (e.getOffset() == partition.getOffset() + partition.getLength())
-						reparseStart= partitionStart;
+					reparseStart= partitionStart;
 					-- first;
 				} else if (reparseStart == e.getOffset() && reparseStart == partition.getOffset() + partition.getLength()) {
 					partitionStart= partition.getOffset();
@@ -320,6 +317,9 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 					partitionStart= partition.getOffset() + partition.getLength();
 					contentType= IDocument.DEFAULT_CONTENT_TYPE;
 				}
+			} else {
+				partitionStart= 0;
+				reparseStart= 0;
 			}
 
 			fPositionUpdater.update(e);
@@ -455,6 +455,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be replaced or extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public String getContentType(int offset) {
 		checkInitialization();
 
@@ -471,6 +472,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be replaced or extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public ITypedRegion getPartition(int offset) {
 		checkInitialization();
 
@@ -515,9 +517,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 		return new TypedRegion(0, fDocument.getLength(), IDocument.DEFAULT_CONTENT_TYPE);
 	}
 
-	/*
-	 * @see IDocumentPartitioner#computePartitioning(int, int)
-	 */
+	@Override
 	public final ITypedRegion[] computePartitioning(int offset, int length) {
 		return computePartitioning(offset, length, false);
 	}
@@ -528,6 +528,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be replaced or extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public String[] getLegalContentTypes() {
 		return TextUtilities.copy(fLegalContentTypes);
 	}
@@ -578,6 +579,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be replaced or extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public String getContentType(int offset, boolean preferOpenPartitions) {
 		return getPartition(offset, preferOpenPartitions).getType();
 	}
@@ -588,6 +590,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be replaced or extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public ITypedRegion getPartition(int offset, boolean preferOpenPartitions) {
 		ITypedRegion region= getPartition(offset);
 		if (preferOpenPartitions) {
@@ -609,9 +612,10 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be replaced or extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public ITypedRegion[] computePartitioning(int offset, int length, boolean includeZeroLengthPartitions) {
 		checkInitialization();
-		List list= new ArrayList();
+		List<TypedRegion> list= new ArrayList<>();
 
 		try {
 
@@ -729,9 +733,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 		return j;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentPartitionerExtension3#startRewriteSession(org.eclipse.jface.text.DocumentRewriteSession)
-	 */
+	@Override
 	public void startRewriteSession(DocumentRewriteSession session) throws IllegalStateException {
 		if (fActiveRewriteSession != null)
 			throw new IllegalStateException();
@@ -744,6 +746,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public void stopRewriteSession(DocumentRewriteSession session) {
 		if (fActiveRewriteSession == session)
 			flushRewriteSession();
@@ -755,6 +758,7 @@ public class FastPartitioner implements IDocumentPartitioner, IDocumentPartition
 	 * May be extended by subclasses.
 	 * </p>
 	 */
+	@Override
 	public DocumentRewriteSession getActiveRewriteSession() {
 		return fActiveRewriteSession;
 	}

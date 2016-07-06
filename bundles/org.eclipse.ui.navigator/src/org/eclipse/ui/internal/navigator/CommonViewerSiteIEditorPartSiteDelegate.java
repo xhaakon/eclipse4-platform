@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.navigator;
 
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.widgets.Shell;
@@ -50,8 +51,8 @@ public class CommonViewerSiteIEditorPartSiteDelegate implements
 	}
 
 	@Override
-	public Object getAdapter(Class adapter) {
-		return editorSite.getAdapter(adapter);
+	public <T> T getAdapter(Class<T> adapter) {
+		return Adapters.adapt(editorSite, adapter);
 	}
 
 	@Override

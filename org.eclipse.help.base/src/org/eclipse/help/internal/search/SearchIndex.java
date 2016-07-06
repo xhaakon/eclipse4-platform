@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,7 +130,7 @@ public class SearchIndex implements IHelpSearchIndex {
 	private volatile boolean closed = false;
 
 	// Collection of searches occuring now
-	private Collection<Thread> searches = new ArrayList<Thread>();
+	private Collection<Thread> searches = new ArrayList<>();
 
 	private FileLock lock;
 	private RandomAccessFile raf =  null;
@@ -454,8 +454,8 @@ public class SearchIndex implements IHelpSearchIndex {
 	 *         or String[] of indexIds with duplicates of the document
 	 */
 	public Map<String, String[]> merge(PluginIndex[] pluginIndexes, IProgressMonitor monitor) {
-		ArrayList<NIOFSDirectory> dirList = new ArrayList<NIOFSDirectory>(pluginIndexes.length);
-		Map<String, String[]> mergedDocs = new HashMap<String, String[]>();
+		ArrayList<NIOFSDirectory> dirList = new ArrayList<>(pluginIndexes.length);
+		Map<String, String[]> mergedDocs = new HashMap<>();
 		// Create directories to merge and calculate all documents added
 		// and which are duplicates (to delete later)
 		for (int p = 0; p < pluginIndexes.length; p++) {
@@ -519,7 +519,7 @@ public class SearchIndex implements IHelpSearchIndex {
 			iw.forceMerge(1, true);
 		} catch (IOException ioe) {
 			HelpBasePlugin.logError("Merging search indexes failed.", ioe); //$NON-NLS-1$
-			return new HashMap<String, String[]>();
+			return new HashMap<>();
 		}
 		return mergedDocs;
 	}
@@ -649,6 +649,7 @@ public class SearchIndex implements IHelpSearchIndex {
 		}
 	}
 
+	@Override
 	public String getLocale() {
 		return locale;
 	}
@@ -658,7 +659,7 @@ public class SearchIndex implements IHelpSearchIndex {
 	 */
 	public PluginVersionInfo getDocPlugins() {
 		if (docPlugins == null) {
-			Set<String> totalIds = new HashSet<String>();
+			Set<String> totalIds = new HashSet<>();
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
 			IExtensionPoint extensionPoint = registry.getExtensionPoint(TocFileProvider.EXTENSION_POINT_ID_TOC);
 			IExtension[] extensions = extensionPoint.getExtensions();
@@ -788,11 +789,9 @@ public class SearchIndex implements IHelpSearchIndex {
 	 */
 	public void setInconsistent(boolean inconsistent) {
 		if (inconsistent) {
-			try {
+			try (FileOutputStream fos = new FileOutputStream(inconsistencyFile)) {
 				// parent directory already created by beginAddBatch on new
 				// index
-				FileOutputStream fos = new FileOutputStream(inconsistencyFile);
-				fos.close();
 			} catch (IOException ioe) {
 			}
 		} else
@@ -850,9 +849,9 @@ public class SearchIndex implements IHelpSearchIndex {
 		cleanOldIndex();
 		byte[] buf = new byte[8192];
 		File destDir = indexDir;
-		ZipInputStream zis = new ZipInputStream(zipIn);
+
 		FileOutputStream fos = null;
-		try {
+		try (ZipInputStream zis = new ZipInputStream(zipIn)) {
 			ZipEntry zEntry;
 			while ((zEntry = zis.getNextEntry()) != null) {
 				// if it is empty directory, create it
@@ -889,8 +888,6 @@ public class SearchIndex implements IHelpSearchIndex {
 		} finally {
 			try {
 				zipIn.close();
-				if (zis != null)
-					zis.close();
 			} catch (IOException ioe) {
 			}
 		}
@@ -900,18 +897,12 @@ public class SearchIndex implements IHelpSearchIndex {
 	 * Cleans any old index and Lucene lock files by initializing a new index.
 	 */
 	private void cleanOldIndex() {
-		IndexWriter cleaner = null;
-		LimitTokenCountAnalyzer analyzer = new LimitTokenCountAnalyzer(analyzerDescriptor.getAnalyzer(), 10000);
-		try {
-			cleaner = new IndexWriter(luceneDirectory, new IndexWriterConfig(org.apache.lucene.util.Version.LUCENE_31, analyzer).setOpenMode(
-			        OpenMode.CREATE));
+		try (LimitTokenCountAnalyzer analyzer = new LimitTokenCountAnalyzer(analyzerDescriptor.getAnalyzer(), 10000);
+				IndexWriter cleaner = new IndexWriter(luceneDirectory,
+						new IndexWriterConfig(org.apache.lucene.util.Version.LUCENE_31, analyzer)
+								.setOpenMode(OpenMode.CREATE))) {
+
 		} catch (IOException ioe) {
-		} finally {
-			try {
-				if (cleaner != null)
-					cleaner.close();
-			} catch (IOException ioe) {
-			}
 		}
 	}
 
@@ -1116,6 +1107,7 @@ public class SearchIndex implements IHelpSearchIndex {
 		return htmlSearchParticipant.addDocument(this, pluginId, name, url, id, new LuceneSearchDocument(doc));
 	}
 
+	@Override
 	public IStatus addSearchableDocument(String pluginId, String name, URL url, String id, ISearchDocument doc) {
 		// In the help system the only class that implements ISearchDocument is LuceneSearchDocument
 		LuceneSearchDocument luceneDoc = (LuceneSearchDocument)doc;

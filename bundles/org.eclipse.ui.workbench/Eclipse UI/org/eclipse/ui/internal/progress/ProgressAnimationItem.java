@@ -47,6 +47,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.WorkbenchImages;
+import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.progress.IProgressConstants;
 import org.eclipse.ui.progress.IProgressConstants2;
 import org.eclipse.ui.statushandlers.StatusAdapter;
@@ -88,7 +89,7 @@ public class ProgressAnimationItem extends AnimationItem implements
 	 *            flags to use for creation of the progress bar
 	 */
 	ProgressAnimationItem(ProgressRegion region, int flags) {
-		super(region.workbenchWindow);
+		super((WorkbenchWindow) region.workbenchWindow);
 		this.flags = flags;
 		FinishedJobs.getInstance().addListener(this);
 
@@ -278,11 +279,6 @@ public class ProgressAnimationItem extends AnimationItem implements
 		toolbar.getAccessible().addAccessibleListener(currentAccessibleListener);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.AnimationItem#createAnimationItem(org.eclipse.swt.widgets.Composite)
-	 */
 	@Override
 	protected Control createAnimationItem(Composite parent) {
 
@@ -365,21 +361,11 @@ public class ProgressAnimationItem extends AnimationItem implements
 		return (flags & SWT.HORIZONTAL) != 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.AnimationItem#getControl()
-	 */
 	@Override
 	public Control getControl() {
 		return top;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.AnimationItem#animationDone()
-	 */
 	@Override
 	void animationDone() {
 		super.animationDone();
@@ -398,11 +384,6 @@ public class ProgressAnimationItem extends AnimationItem implements
 		return animationRunning;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.AnimationItem#animationStart()
-	 */
 	@Override
 	void animationStart() {
 		super.animationStart();

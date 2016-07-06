@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.ui.ide.dialogs.UIResourceFilterDescription;
 import org.eclipse.ui.ide.undo.ResourceDescription;
 
@@ -176,54 +176,42 @@ public abstract class ContainerDescription extends AbstractResourceDescription {
 	 *            the handle of the created parent
 	 * @param monitor
 	 *            the progress monitor to be used
-	 * @param ticks
-	 *            the number of ticks allocated for creating children
 	 * @throws CoreException
 	 */
-	protected void createChildResources(IContainer parentHandle,
-			IProgressMonitor monitor, int ticks) throws CoreException {
-
+	protected final void createChildResources(IContainer parentHandle,
+			IProgressMonitor monitor) throws CoreException {
 		// restore any children
 		if (members != null && members.length > 0) {
+			SubMonitor subMonitor = SubMonitor.convert(monitor, members.length);
 			for (int i = 0; i < members.length; i++) {
 				members[i].parent = parentHandle;
-				members[i].createResource(new SubProgressMonitor(monitor, ticks
-						/ members.length));
+				members[i].createResource(subMonitor.split(1));
 			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#recordStateFromHistory(org.eclipse.core.resources.IResource,
-	 *      org.eclipse.core.runtime.IProgressMonitor)
-	 */
 	@Override
-	public void recordStateFromHistory(IResource resource,
-			IProgressMonitor monitor) throws CoreException {
-		monitor.beginTask(
-				UndoMessages.FolderDescription_SavingUndoInfoProgress, 100);
+	public void recordStateFromHistory(IResource resource, IProgressMonitor mon) throws CoreException {
 		if (members != null) {
+			SubMonitor subMonitor = SubMonitor.convert(mon, UndoMessages.FolderDescription_SavingUndoInfoProgress,
+					members.length);
 			for (int i = 0; i < members.length; i++) {
+				SubMonitor iterationMonitor = subMonitor.split(1);
 				if (members[i] instanceof FileDescription) {
 					IPath path = resource.getFullPath().append(
 							((FileDescription) members[i]).name);
 					IFile fileHandle = resource.getWorkspace().getRoot().getFile(
 							path);
-					members[i].recordStateFromHistory(fileHandle,
-							new SubProgressMonitor(monitor, 100 / members.length));
+					members[i].recordStateFromHistory(fileHandle, iterationMonitor);
 				} else if (members[i] instanceof FolderDescription) {
 					IPath path = resource.getFullPath().append(
 							((FolderDescription) members[i]).name);
 					IFolder folderHandle = resource.getWorkspace().getRoot()
 							.getFolder(path);
-					members[i].recordStateFromHistory(folderHandle,
-							new SubProgressMonitor(monitor, 100 / members.length));
+					members[i].recordStateFromHistory(folderHandle, iterationMonitor);
 				}
 			}
 		}
-		monitor.done();
 	}
 
 	/**
@@ -276,11 +264,6 @@ public abstract class ContainerDescription extends AbstractResourceDescription {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#restoreResourceAttributes(org.eclipse.core.resources.IResource)
-	 */
 	@Override
 	protected void restoreResourceAttributes(IResource resource)
 			throws CoreException {
@@ -312,11 +295,6 @@ public abstract class ContainerDescription extends AbstractResourceDescription {
 		this.filters = filters;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#verifyExistence(boolean)
-	 */
 	@Override
 	public boolean verifyExistence(boolean checkMembers) {
 		boolean existence = super.verifyExistence(checkMembers);

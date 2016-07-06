@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -75,8 +75,7 @@ public abstract class AbstractElementListSelectionDialog extends SelectionStatus
      * @param parent The parent for the list.
      * @param renderer ILabelProvider for the list
      */
-    protected AbstractElementListSelectionDialog(Shell parent,
-            ILabelProvider renderer) {
+	protected AbstractElementListSelectionDialog(Shell parent, ILabelProvider renderer) {
         super(parent);
         fRenderer = renderer;
     }

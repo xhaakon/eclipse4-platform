@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -50,9 +50,7 @@ public final class DiffPainter {
 	 * Internal listener class that will update the ruler when the underlying model changes.
 	 */
 	private class AnnotationListener implements IAnnotationModelListener {
-		/*
-		 * @see org.eclipse.jface.text.source.IAnnotationModelListener#modelChanged(org.eclipse.jface.text.source.IAnnotationModel)
-		 */
+		@Override
 		public void modelChanged(IAnnotationModel model) {
 			postRedraw();
 		}
@@ -180,9 +178,7 @@ public final class DiffPainter {
 			return;
 
 		fControl.addDisposeListener(new DisposeListener() {
-			/*
-			 * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
-			 */
+			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				handleDispose();
 			}
@@ -225,7 +221,7 @@ public final class DiffPainter {
 
 		if (info != null) {
 			int y= fWidget.getLinePixel(widgetLine);
-			int lineHeight= fWidget.getLineHeight(fWidget.getOffsetAtLine(widgetLine));
+			int lineHeight = JFaceTextUtil.computeLineHeight(fWidget, widgetLine);
 
 			// draw background color if special
 			if (hasSpecialColor(info)) {
@@ -367,6 +363,7 @@ public final class DiffPainter {
 			Display d= fControl.getDisplay();
 			if (d != null) {
 				d.asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						redraw();
 					}

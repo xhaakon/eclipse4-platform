@@ -4,11 +4,12 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - Custom trigger builder #equals
  *     Broadcom Corporation - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.events;
 
@@ -48,7 +49,7 @@ public class BuildCommand extends ModelObject implements ICommand {
 
 	private static final int ALL_TRIGGERS = MASK_AUTO | MASK_CLEAN | MASK_FULL | MASK_INCREMENTAL;
 
-	protected HashMap<String, String> arguments = new HashMap<String, String>(0);
+	protected HashMap<String, String> arguments = new HashMap<>(0);
 
 	/** Have we checked the supports configurations flag */
 	private boolean supportsConfigurationsCalculated;
@@ -60,13 +61,13 @@ public class BuildCommand extends ModelObject implements ICommand {
 	 */
 	private IncrementalProjectBuilder builder;
 	/**
-	 * The builders for this command if the builder supports multiple configurations 
+	 * The builders for this command if the builder supports multiple configurations
 	 */
 	private HashMap<IBuildConfiguration, IncrementalProjectBuilder> builders;
 
 	/**
-	 * The triggers that this builder will respond to.  Since build triggers are not 
-	 * bit-maskable, we use internal bit masks to represent each 
+	 * The triggers that this builder will respond to.  Since build triggers are not
+	 * bit-maskable, we use internal bit masks to represent each
 	 * trigger (MASK_* constants). By default, a command responds to all
 	 * build triggers.
 	 */
@@ -121,9 +122,6 @@ public class BuildCommand extends ModelObject implements ICommand {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * Method declared on Object
-	 */
 	@Override
 	public boolean equals(Object object) {
 		if (this == object)
@@ -135,9 +133,6 @@ public class BuildCommand extends ModelObject implements ICommand {
 		return getBuilderName().equals(command.getBuilderName()) && getArguments(false).equals(command.getArguments(false)) && (triggers & ALL_TRIGGERS) == (command.triggers & ALL_TRIGGERS);
 	}
 
-	/**
-	 * @see ICommand#getArguments()
-	 */
 	@Override
 	public Map<String, String> getArguments() {
 		return getArguments(true);
@@ -172,26 +167,17 @@ public class BuildCommand extends ModelObject implements ICommand {
 		return builder;
 	}
 
-	/**
-	 * @see ICommand#getBuilderName()
-	 */
 	@Override
 	public String getBuilderName() {
 		return getName();
 	}
 
-	/* (non-Javadoc)
-	 * Method declared on Object
-	 */
 	@Override
 	public int hashCode() {
 		// hash on name and trigger
 		return 37 * getName().hashCode() + (ALL_TRIGGERS & triggers);
 	}
 
-	/**
-	 * @see ICommand#isBuilding(int)
-	 */
 	@Override
 	public boolean isBuilding(int trigger) {
 		return (triggers & maskForTrigger(trigger)) != 0;
@@ -219,13 +205,10 @@ public class BuildCommand extends ModelObject implements ICommand {
 		return supportsConfigurations;
 	}
 
-	/**
-	 * @see ICommand#setArguments(Map)
-	 */
 	@Override
 	public void setArguments(Map<String, String> value) {
 		// copy parameter for safety's sake
-		arguments = value == null ? null : new HashMap<String, String>(value);
+		arguments = value == null ? null : new HashMap<>(value);
 	}
 
 	/**
@@ -241,7 +224,7 @@ public class BuildCommand extends ModelObject implements ICommand {
 			if (value instanceof IncrementalProjectBuilder)
 				builder = (IncrementalProjectBuilder) value;
 			else
-				builders = new HashMap<IBuildConfiguration, IncrementalProjectBuilder>((Map<IBuildConfiguration, IncrementalProjectBuilder>) value);
+				builders = new HashMap<>((Map<IBuildConfiguration, IncrementalProjectBuilder>) value);
 		}
 	}
 
@@ -262,24 +245,18 @@ public class BuildCommand extends ModelObject implements ICommand {
 
 		if (supportsConfigs()) {
 			if (builders == null)
-				builders = new HashMap<IBuildConfiguration, IncrementalProjectBuilder>(1);
+				builders = new HashMap<>(1);
 			builders.put(config, newBuilder);
 		} else
 			builder = newBuilder;
 	}
 
-	/**
-	 * @see ICommand#setBuilderName(String)
-	 */
 	@Override
 	public void setBuilderName(String value) {
 		//don't allow builder name to be null
 		setName(value == null ? "" : value); //$NON-NLS-1$
 	}
 
-	/**
-	 * @see ICommand#setBuilding(int, boolean)
-	 */
 	@Override
 	public void setBuilding(int trigger, boolean value) {
 		if (!isConfigurable())

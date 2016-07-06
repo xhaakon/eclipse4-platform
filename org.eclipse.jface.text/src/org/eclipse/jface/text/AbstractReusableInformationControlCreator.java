@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Shell;
  */
 public abstract class AbstractReusableInformationControlCreator implements IInformationControlCreator, IInformationControlCreatorExtension, DisposeListener {
 
-	private Map fInformationControls= new HashMap();
+	private Map<Shell, IInformationControl> fInformationControls= new HashMap<>();
 
 	/**
 	 * Creates the control.
@@ -36,11 +36,9 @@ public abstract class AbstractReusableInformationControlCreator implements IInfo
 	 */
 	protected abstract IInformationControl doCreateInformationControl(Shell parent);
 
-	/*
-	 * @see org.eclipse.jface.text.IInformationControlCreator#createInformationControl(org.eclipse.swt.widgets.Shell)
-	 */
+	@Override
 	public IInformationControl createInformationControl(Shell parent) {
-		IInformationControl control= (IInformationControl)fInformationControls.get(parent);
+		IInformationControl control= fInformationControls.get(parent);
 		if (control == null) {
 			control= doCreateInformationControl(parent);
 			control.addDisposeListener(this);
@@ -49,9 +47,7 @@ public abstract class AbstractReusableInformationControlCreator implements IInfo
 		return control;
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
-	 */
+	@Override
 	public void widgetDisposed(DisposeEvent e) {
 		Composite parent= null;
 		if (e.widget instanceof Shell)
@@ -61,16 +57,12 @@ public abstract class AbstractReusableInformationControlCreator implements IInfo
 	}
 
 
-	/*
-	 * @see org.eclipse.jface.text.IInformationControlCreatorExtension#canReuse(org.eclipse.jface.text.IInformationControl)
-	 */
+	@Override
 	public boolean canReuse(IInformationControl control) {
 		return fInformationControls.containsValue(control);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IInformationControlCreatorExtension#canReplace(org.eclipse.jface.text.IInformationControlCreator)
-	 */
+	@Override
 	public boolean canReplace(IInformationControlCreator creator) {
 		return creator.getClass() == getClass();
 	}

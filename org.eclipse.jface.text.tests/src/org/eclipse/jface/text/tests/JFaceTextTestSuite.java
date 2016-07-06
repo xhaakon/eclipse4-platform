@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,11 +10,16 @@
  *******************************************************************************/
 package org.eclipse.jface.text.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
 
-import org.eclipse.jface.text.tests.reconciler.ReconcilerTestSuite;
-import org.eclipse.jface.text.tests.rules.RulesTestSuite;
+import org.eclipse.jface.text.tests.reconciler.AbstractReconcilerTest;
+import org.eclipse.jface.text.tests.rules.DefaultPartitionerTest;
+import org.eclipse.jface.text.tests.rules.DefaultPartitionerZeroLengthTest;
+import org.eclipse.jface.text.tests.rules.FastPartitionerTest;
+import org.eclipse.jface.text.tests.rules.ScannerColumnTest;
+import org.eclipse.jface.text.tests.rules.WordRuleTest;
 
 
 /**
@@ -22,21 +27,25 @@ import org.eclipse.jface.text.tests.rules.RulesTestSuite;
  *
  * @since 3.0
  */
-public class JFaceTextTestSuite extends TestSuite {
+@RunWith(Suite.class)
+@SuiteClasses({
+		HTML2TextReaderTest.class,
+		TextHoverPopupTest.class,
+		TextPresentationTest.class,
+		DefaultUndoManagerTest.class,
+		TextViewerTest.class,
+		TextViewerUndoManagerTest.class,
+		DefaultPairMatcherTest.class,
+		DefaultPairMatcherTest2.class,
 
-	public static Test suite() {
-		TestSuite suite= new TestSuite("Test Suite for org.eclipse.jface.text"); //$NON-NLS-1$
-		suite.addTest(HTML2TextReaderTest.suite());
-		suite.addTest(TextHoverPopupTest.suite());
-		suite.addTest(TextPresentationTest.suite());
-		suite.addTest(DefaultUndoManagerTest.suite());
-		suite.addTest(TextViewerTest.suite());
-		suite.addTest(TextViewerUndoManagerTest.suite());
-		suite.addTest(RulesTestSuite.suite());
-		suite.addTest(ReconcilerTestSuite.suite());
-		suite.addTest(DefaultPairMatcherTest.suite());
-		suite.addTest(DefaultPairMatcherTest2.suite());
+		AbstractReconcilerTest.class,
 
-		return suite;
-	}
+		DefaultPartitionerTest.class,
+		DefaultPartitionerZeroLengthTest.class,
+		FastPartitionerTest.class,
+		ScannerColumnTest.class,
+		WordRuleTest.class
+})
+public class JFaceTextTestSuite {
+	// see @SuiteClasses
 }

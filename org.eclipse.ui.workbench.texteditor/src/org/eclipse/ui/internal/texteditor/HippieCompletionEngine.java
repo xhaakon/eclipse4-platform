@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -148,10 +148,10 @@ public final class HippieCompletionEngine {
 	 * @throws BadLocationException if there is some error scanning the
 	 *         document.
 	 */
-	public List getCompletionsForward(IDocument document, CharSequence prefix,
+	public List<String> getCompletionsForward(IDocument document, CharSequence prefix,
 			int firstPosition, boolean currentWordLast) throws BadLocationException {
-		ArrayList res= new ArrayList();
-		for (Iterator it= getForwardIterator(document, prefix, firstPosition, currentWordLast); it.hasNext();) {
+		ArrayList<String> res= new ArrayList<>();
+		for (Iterator<String> it= getForwardIterator(document, prefix, firstPosition, currentWordLast); it.hasNext();) {
 			res.add(it.next());
 		}
 		return res;
@@ -170,9 +170,9 @@ public final class HippieCompletionEngine {
      *         The empty suggestion is not included in the results.
 	 * @throws BadLocationException if any error occurs
 	 */
-	public List getCompletionsBackwards(IDocument document, CharSequence prefix, int firstPosition) throws BadLocationException {
-		ArrayList res= new ArrayList();
-		for (Iterator it= getBackwardIterator(document, prefix, firstPosition); it.hasNext();) {
+	public List<String> getCompletionsBackwards(IDocument document, CharSequence prefix, int firstPosition) throws BadLocationException {
+		ArrayList<String> res= new ArrayList<>();
+		for (Iterator<String> it= getBackwardIterator(document, prefix, firstPosition); it.hasNext();) {
 			res.add(it.next());
 		}
 		return res;
@@ -210,12 +210,12 @@ public final class HippieCompletionEngine {
 	 * @param suggestions a list of suggestions ({@link String}).
 	 * @return a list of unique completion suggestions.
 	 */
-	public List makeUnique(List suggestions) {
-		HashSet seenAlready= new HashSet();
-		ArrayList uniqueSuggestions= new ArrayList();
+	public List<String> makeUnique(List<String> suggestions) {
+		HashSet<String> seenAlready= new HashSet<>();
+		ArrayList<String> uniqueSuggestions= new ArrayList<>();
 
-		for (Iterator i= suggestions.iterator(); i.hasNext();) {
-			String suggestion= (String) i.next();
+		for (Iterator<String> i= suggestions.iterator(); i.hasNext();) {
+			String suggestion= i.next();
 			if (!seenAlready.contains(suggestion)) {
 				seenAlready.add(suggestion);
 				uniqueSuggestions.add(suggestion);
@@ -236,8 +236,8 @@ public final class HippieCompletionEngine {
 	 *         is always the current document.
 	 * @since 3.6
 	 */
-	public static List computeDocuments(ITextEditor currentTextEditor) {
-		ArrayList documentsForSearch= new ArrayList();
+	public static List<IDocument> computeDocuments(ITextEditor currentTextEditor) {
+		ArrayList<IDocument> documentsForSearch= new ArrayList<>();
 		if (currentTextEditor == null) {
 			return documentsForSearch;
 		}
@@ -252,7 +252,7 @@ public final class HippieCompletionEngine {
 			return documentsForSearch;
 		}
 
-		List computedDocuments= new ArrayList();
+		List<IDocument> computedDocuments= new ArrayList<>();
 		IWorkbenchWindow window= currentTextEditor.getSite().getWorkbenchWindow();
 		IEditorReference editorsArray[]= window.getActivePage().getEditorReferences();
 
@@ -295,7 +295,7 @@ public final class HippieCompletionEngine {
 	 * 
 	 * @since 3.6
 	 */
-	public Iterator getForwardIterator(IDocument document, CharSequence prefix, int firstPosition, boolean currentWordLast) {
+	public Iterator<String> getForwardIterator(IDocument document, CharSequence prefix, int firstPosition, boolean currentWordLast) {
 		return new HippieCompletionForwardIterator(document, prefix, firstPosition, currentWordLast);
 	}
 
@@ -312,7 +312,7 @@ public final class HippieCompletionEngine {
 	 * 
 	 * @since 3.6
 	 */
-	public Iterator getBackwardIterator(IDocument document, CharSequence prefix, int firstPosition) {
+	public Iterator<String> getBackwardIterator(IDocument document, CharSequence prefix, int firstPosition) {
 		return new HippieCompletionBackwardIterator(document, prefix, firstPosition);
 	}
 
@@ -331,7 +331,7 @@ public final class HippieCompletionEngine {
 	 * 
 	 * @since 3.6
 	 */
-	public Iterator getMultipleDocumentsIterator(IDocument document, List otherDocuments, CharSequence prefix, int firstPosition) {
+	public Iterator<String> getMultipleDocumentsIterator(IDocument document, List<IDocument> otherDocuments, CharSequence prefix, int firstPosition) {
 		return new MultipleDocumentsIterator(document, otherDocuments, prefix, firstPosition);
 	}
 
@@ -342,7 +342,7 @@ public final class HippieCompletionEngine {
 	 * 
 	 * @since 3.6
 	 */
-	private final class MultipleDocumentsIterator implements Iterator {
+	private final class MultipleDocumentsIterator implements Iterator<String> {
 
 		/**
 		 * This is the next token to be returned (when null, no more tokens should be returned)
@@ -356,7 +356,7 @@ public final class HippieCompletionEngine {
 		private int fCurrLocation= -1;
 
 		/** These are the suggestions which we already loaded. */
-		private final List fSuggestions;
+		private final List<String> fSuggestions;
 
 		/** This marks the current suggestion to be returned */
 		private int fCurrSuggestion= 0;
@@ -365,7 +365,7 @@ public final class HippieCompletionEngine {
 		private final CharSequence fPrefix;
 
 		/** The list of IDocuments that we should search */
-		private final List fOtherDocuments;
+		private final List<IDocument> fOtherDocuments;
 
 		/**
 		 * The document that's currently opened (that's the 1st we should look and we should 1st
@@ -380,19 +380,15 @@ public final class HippieCompletionEngine {
 		private boolean fAddedEmpty= false;
 
 		/** The 'current' forward iterator. */
-		private Iterator fCompletionsForwardIterator;
+		private Iterator<String> fCompletionsForwardIterator;
 
 		/** The 'current' backward iterator. */
-		private Iterator fCompletionsBackwardIterator;
+		private Iterator<String> fCompletionsBackwardIterator;
 
-		/*
-		 * (non-Javadoc)
-		 * @see HippieCompletionEngine#getMultipleDocumentsIterator(IDocument, List, CharSequence, int)
-		 */
-		private MultipleDocumentsIterator(IDocument openDocument, List otherDocuments,
+		private MultipleDocumentsIterator(IDocument openDocument, List<IDocument> otherDocuments,
 				CharSequence prefix, int selectionOffset) {
 			this.fPrefix= prefix;
-			this.fSuggestions= new ArrayList();
+			this.fSuggestions= new ArrayList<>();
 			this.fOtherDocuments= otherDocuments;
 			this.fSelectionOffset= selectionOffset;
 			this.fOpenDocument= openDocument;
@@ -427,7 +423,7 @@ public final class HippieCompletionEngine {
 
 			while (fCurrLocation < this.fOtherDocuments.size()) {
 				fCompletionsForwardIterator= getForwardIterator(
-						((IDocument)this.fOtherDocuments.get(fCurrLocation)), fPrefix, 0, false);
+						(this.fOtherDocuments.get(fCurrLocation)), fPrefix, 0, false);
 				fCurrLocation++;
 				if (checkNext()) {
 					return;
@@ -462,7 +458,7 @@ public final class HippieCompletionEngine {
 			}
 
 			if (fSuggestions.size() > fCurrSuggestion) {
-				fNext= (String)fSuggestions.get(fCurrSuggestion);
+				fNext= fSuggestions.get(fCurrSuggestion);
 				fCurrSuggestion++;
 				return true;
 			}
@@ -476,6 +472,7 @@ public final class HippieCompletionEngine {
 		 * @return <code>true</code> if the next token to be returned is not null (we always
 		 *         pre-calculate things)
 		 */
+		@Override
 		public boolean hasNext() {
 			return fNext != null;
 		}
@@ -484,11 +481,12 @@ public final class HippieCompletionEngine {
 		/**
 		 * @return the next suggestion
 		 */
-		public Object next() {
+		@Override
+		public String next() {
 			if (fNext == null) {
 				throw new NoSuchElementException("No more elements to iterate"); //$NON-NLS-1$
 			}
-			Object ret= fNext;
+			String ret= fNext;
 			calculateNext();
 			return ret;
 		}
@@ -498,6 +496,7 @@ public final class HippieCompletionEngine {
 		 * 
 		 * @throws UnsupportedOperationException always.
 		 */
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException("Not supported"); //$NON-NLS-1$
 
@@ -511,7 +510,7 @@ public final class HippieCompletionEngine {
 	 * 
 	 * @since 3.6
 	 */
-	private abstract class HippieCompletionIterator implements Iterator {
+	private abstract class HippieCompletionIterator implements Iterator<String> {
 
 		/** The document to be scanned */
 		protected IDocument fDocument;
@@ -573,19 +572,13 @@ public final class HippieCompletionEngine {
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#hasNext()
-		 */
+		@Override
 		public boolean hasNext() {
 			return fHasNext;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#next()
-		 */
-		public Object next() {
+		@Override
+		public String next() {
 			if (!fHasNext) {
 				throw new NoSuchElementException();
 			}
@@ -600,10 +593,7 @@ public final class HippieCompletionEngine {
 			return ret;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#remove()
-		 */
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
@@ -639,20 +629,13 @@ public final class HippieCompletionEngine {
 		private String fCurrentWordCompletion= null;
 
 
-		/*
-		 * (non-Javadoc)
-		 * @see HippieCompletionEngine#getForwardIterator(IDocument, CharSequence, int, boolean)
-		 */
 		private HippieCompletionForwardIterator(IDocument document, CharSequence prefix, int firstPosition, boolean currentWordLast) {
 			super(document, prefix, firstPosition);
 			this.fCurrentWordLast= currentWordLast;
 			calculateFirst();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see HippieCompletionIterator#calculateNext()
-		 */
+		@Override
 		protected void calculateNext() throws BadLocationException {
 			if (fCurrentState == 0) {
 				if (fFirstPosition == fDocument.getLength()) {
@@ -755,19 +738,12 @@ public final class HippieCompletionEngine {
 		/** Last position searched **/
 		private int fLastSearchPos= -1;
 
-		/*
-		 * (non-Javadoc)
-		 * @see HippieCompletionEngine#getBackwardIterator(IDocument, CharSequence, int)
-		 */
 		private HippieCompletionBackwardIterator(IDocument document, CharSequence prefix, int firstPosition) {
 			super(document, prefix, firstPosition);
 			calculateFirst();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see HippieCompletionIterator#calculateNext()
-		 */
+		@Override
 		protected void calculateNext() throws BadLocationException {
 			if (fCurrentState == 0) {
 				fCurrentState= 1;

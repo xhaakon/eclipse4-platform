@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,25 +35,25 @@ import org.osgi.framework.Bundle;
 public class TaskExplorerManager {
 private static TaskExplorerManager instance;
 
-    private Map images;
-	
+	private Map<String, Image> images;
+
 	private TaskExplorerManager() {
-	
+
 	}
-	
+
 	public static TaskExplorerManager getInstance() {
 		if (instance == null) {
 			instance = new TaskExplorerManager();
 		}
 		return instance;
 	}
-	
+
 	public TaskExplorer getExplorer(String explorerKind) {
 		CheatSheetRegistryReader.TaskExplorerNode explorerInfo =
 			CheatSheetRegistryReader.getInstance().findTaskExplorer(explorerKind);
 		if (explorerInfo != null) {
 			TaskExplorer explorerInstance = null;
-			Class extClass = null;
+			Class<?> extClass = null;
 			String className = explorerInfo.getClassName();
 			try {
 				Bundle bundle = Platform.getBundle(explorerInfo.getPluginId());
@@ -65,16 +65,15 @@ private static TaskExplorerManager instance;
 			}
 			try {
 				if (extClass != null) {
-					Constructor c = extClass.getConstructor(new Class[0]);
-					Object[] parameters = new Object[0];
-					explorerInstance = (TaskExplorer) c.newInstance(parameters);
+					Constructor c = extClass.getConstructor();
+					explorerInstance = (TaskExplorer) c.newInstance();
 				}
 			} catch (Exception e) {
 				String message = NLS.bind(Messages.ERROR_CREATING_CLASS, (new Object[] {className}));
 				IStatus status = new Status(IStatus.ERROR, ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID, IStatus.OK, message, e);
 				CheatSheetPlugin.getPlugin().getLog().log(status);
 			}
-			
+
 			return explorerInstance;
 		}
 
@@ -98,20 +97,20 @@ private static TaskExplorerManager instance;
 			return ImageDescriptor.createFromURL(url);
 		} catch (IOException e) {
 			return null;
-		}		
+		}
 	}
-	
-	private Map getImages() {
+
+	private Map<String, Image> getImages() {
 		if (images == null) {
 			initImages();
 		}
 		return images;
 	}
-	
-	
+
+
 	private void initImages() {
 		if (images == null) {
-			images = new HashMap();
+			images = new HashMap<>();
 			String[] ids = CheatSheetRegistryReader.getInstance().getExplorerIds();
 			for (int i = 0; i < ids.length; i++) {
 				ImageDescriptor descriptor = getImageDescriptor(ids[i]);
@@ -119,7 +118,7 @@ private static TaskExplorerManager instance;
 					images.put(ids[i], descriptor.createImage());
 				}
 			}
-		}	
+		}
 	}
 
 	public String getName(String explorerKind) {
@@ -132,7 +131,7 @@ private static TaskExplorerManager instance;
 	}
 
 	public Image getImage(String id) {
-		return (Image)getImages().get(id);
+		return getImages().get(id);
 	}
 
 }

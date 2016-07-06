@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,6 @@ package org.eclipse.ui.internal.dnd;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.eclipse.jface.util.Geometry;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -259,7 +258,7 @@ public class DragUtil {
 
                             if (!(currentRectangles.length == 1 && currentRectangles[0]
                                     .equals(snapTarget))) {
-                                tracker.setRectangles(new Rectangle[] { snapTarget });
+								tracker.setRectangles(new Rectangle[] { Geometry.copy(snapTarget) });
                             }
                         }
                     }

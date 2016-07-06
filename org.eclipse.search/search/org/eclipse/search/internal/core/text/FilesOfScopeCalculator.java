@@ -26,13 +26,14 @@ public class FilesOfScopeCalculator implements IResourceProxyVisitor {
 
 	private final TextSearchScope fScope;
 	private final MultiStatus fStatus;
-	private ArrayList fFiles;
+	private ArrayList<IResource> fFiles;
 
 	public FilesOfScopeCalculator(TextSearchScope scope, MultiStatus status) {
 		fScope= scope;
 		fStatus= status;
 	}
 
+	@Override
 	public boolean visit(IResourceProxy proxy) {
 		boolean inScope= fScope.contains(proxy);
 
@@ -43,7 +44,7 @@ public class FilesOfScopeCalculator implements IResourceProxyVisitor {
 	}
 
 	public IFile[] process() {
-		fFiles= new ArrayList();
+		fFiles= new ArrayList<>();
 		try {
 			IResource[] roots= fScope.getRoots();
 			for (int i= 0; i < roots.length; i++) {
@@ -57,7 +58,7 @@ public class FilesOfScopeCalculator implements IResourceProxyVisitor {
 					fStatus.add(ex.getStatus());
 				}
 			}
-			return (IFile[]) fFiles.toArray(new IFile[fFiles.size()]);
+			return fFiles.toArray(new IFile[fFiles.size()]);
 		} finally {
 			fFiles= null;
 		}

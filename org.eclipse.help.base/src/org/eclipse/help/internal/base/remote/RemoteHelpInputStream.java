@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 IBM Corporation and others.
+ * Copyright (c) 2011, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,38 +34,47 @@ public class RemoteHelpInputStream extends InputStream{
 		return this.is;
 	}
 
+	@Override
 	public int read() throws IOException {
 		return is.read();
 	}
 
+	@Override
 	public int available() throws IOException {
 		return is.available();
 	}
 
+	@Override
 	public void close() throws IOException {
 		is.close();
 	}
 
+	@Override
 	public synchronized void mark(int arg0) {
 		is.mark(arg0);
 	}
 
+	@Override
 	public boolean markSupported() {
 		return is.markSupported();
 	}
 
+	@Override
 	public int read(byte[] b) throws IOException {
 		return is.read(b);
 	}
 
+	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
 		return is.read(b, off, len);
 	}
 
+	@Override
 	public synchronized void reset() throws IOException {
 		is.reset();
 	}
 
+	@Override
 	public long skip(long n) throws IOException {
 		return is.skip(n);
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,9 +21,6 @@ public abstract class PropertyMapAdapter implements IDynamicPropertyMap {
     private int ignoreCount = 0;
     private ArrayList queuedEvents = new ArrayList();
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IDynamicPropertyMap#addListener(org.eclipse.ui.internal.preferences.IPropertyMapListener)
-     */
     @Override
 	public final void addListener(IPropertyMapListener listener) {
         if (listeners == null) {
@@ -33,9 +30,6 @@ public abstract class PropertyMapAdapter implements IDynamicPropertyMap {
         listeners.add(listener);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IDynamicPropertyMap#removeListener(org.eclipse.ui.internal.preferences.IPropertyMapListener)
-     */
     @Override
 	public final void removeListener(IPropertyMapListener listener) {
         if (listeners != null) {
@@ -47,9 +41,6 @@ public abstract class PropertyMapAdapter implements IDynamicPropertyMap {
         }
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#isCommonProperty(java.lang.String)
-     */
     @Override
 	public final boolean isCommonProperty(String propertyId) {
         return true;

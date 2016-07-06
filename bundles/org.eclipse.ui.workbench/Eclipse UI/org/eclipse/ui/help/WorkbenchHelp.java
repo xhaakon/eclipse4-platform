@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,8 +24,7 @@ import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 /**
  * Provides methods for accessing the help UI.
  * <p>
- * The help UI is optional, to allow applications to be configured
- * without one.
+ * The help UI is optional, to allow applications to be configured without one.
  * </p>
  * <p>
  * The various <code>setHelp</code> methods allow context help to be hooked in
@@ -41,11 +40,12 @@ import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
  * <code>IContext</code>.
  * </p>
  * <p>
- * This class provides static methods only; it is not intended to be instantiated
- * or subclassed.
+ * This class provides static methods only; it is not intended to be
+ * instantiated or subclassed.
  * </p>
  *
- * @deprecated clients should use <code>IWorkbenchHelpSystem</code> instead
+ * @deprecated marked for deletion, see Bug 442959, clients should use
+ *             <code>IWorkbenchHelpSystem</code> instead
  *
  * @see org.eclipse.help.HelpSystem
  * @see org.eclipse.ui.help.IWorkbenchHelpSystem

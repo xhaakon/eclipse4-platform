@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2009 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,11 +32,9 @@ public class IndexFileProvider extends AbstractIndexProvider {
 	public static final String ELEMENT_NAME_INDEX = "index"; //$NON-NLS-1$
 	public static final String ATTRIBUTE_NAME_FILE = "file"; //$NON-NLS-1$
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.help.AbstractIndexProvider#getIndexContributions(java.lang.String)
-	 */
+	@Override
 	public IIndexContribution[] getIndexContributions(String locale) {
-		List contributions = new ArrayList();
+		List<IIndexContribution> contributions = new ArrayList<>();
 		IndexFile[] indexFiles = getIndexFiles(locale);
 		IndexFileParser parser = new IndexFileParser();
 		for (int i=0;i<indexFiles.length;++i) {
@@ -49,7 +47,7 @@ public class IndexFileProvider extends AbstractIndexProvider {
 				buffer.append(getIndexFilePath(indexFile));
 				buffer.append("\" at line "); //$NON-NLS-1$
 			    buffer.append(spe.getLineNumber());
-			    buffer.append(". "); //$NON-NLS-1$   
+			    buffer.append(". "); //$NON-NLS-1$
 	            buffer.append(spe.getMessage());
 
 	            // Use the contained exception.
@@ -58,18 +56,18 @@ public class IndexFileProvider extends AbstractIndexProvider {
 	                x = spe.getException();
 	            HelpPlugin.logError(buffer.toString(), x);
 
-	        } 
+	        }
 			catch (Throwable t) {
 				String msg = ERROR_READING_HELP_KEYWORD_INDEX_FILE + getIndexFilePath(indexFile) + "\" (skipping file)"; //$NON-NLS-1$
 				HelpPlugin.logError(msg, t);
 			}
 		}
-		return (IIndexContribution[])contributions.toArray(new IIndexContribution[contributions.size()]);
+		return contributions.toArray(new IIndexContribution[contributions.size()]);
 	}
 
 	private String getIndexFilePath(IndexFile indexFile) {
 		String pluginId = indexFile.getPluginId();
-		String file = indexFile.getFile();		
+		String file = indexFile.getFile();
 		return ResourceLocator.getErrorPath(pluginId, file, indexFile.getLocale());
 	}
 
@@ -77,7 +75,7 @@ public class IndexFileProvider extends AbstractIndexProvider {
 	 * Returns all available IndexFiles for the given locale.
 	 */
 	private IndexFile[] getIndexFiles(String locale) {
-		List indexFiles = new ArrayList();
+		List<IndexFile> indexFiles = new ArrayList<>();
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor(EXTENSION_POINT_ID_INDEX);
 		for (int i=0;i<elements.length;++i) {
@@ -89,6 +87,6 @@ public class IndexFileProvider extends AbstractIndexProvider {
 				indexFiles.add(indexFile);
 			}
 		}
-		return (IndexFile[])indexFiles.toArray(new IndexFile[indexFiles.size()]);
+		return indexFiles.toArray(new IndexFile[indexFiles.size()]);
 	}
 }

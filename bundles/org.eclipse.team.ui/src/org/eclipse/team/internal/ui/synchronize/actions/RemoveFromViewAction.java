@@ -29,7 +29,7 @@ import org.eclipse.team.ui.synchronize.*;
  * Remove the selected elements from the page
  */
 public class RemoveFromViewAction extends SynchronizeModelAction {
-	
+
 	public RemoveFromViewAction(ISynchronizePageConfiguration configuration) {
 		super(null, configuration);
 		Utils.initAction(this, "action.removeFromView."); //$NON-NLS-1$
@@ -39,6 +39,7 @@ public class RemoveFromViewAction extends SynchronizeModelAction {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#run()
 	 */
+	@Override
 	public void run() {
 		if (confirmRemove()) {
 			super.run();
@@ -48,12 +49,15 @@ public class RemoveFromViewAction extends SynchronizeModelAction {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#getSubscriberOperation(org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration, org.eclipse.compare.structuremergeviewer.IDiffElement[])
 	 */
+	@Override
 	protected SynchronizeModelOperation getSubscriberOperation(ISynchronizePageConfiguration configuration, IDiffElement[] elements) {
 		return new SynchronizeModelOperation(configuration, elements) {
+			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				SyncInfoSet set = getSyncInfoSet();
 				removeFromView(set);
 			}
+			@Override
 			protected boolean canRunAsJob() {
 				return false;
 			}
@@ -66,6 +70,7 @@ public class RemoveFromViewAction extends SynchronizeModelAction {
 				if (page instanceof SubscriberParticipantPage) {
 					final WorkingSetFilteredSyncInfoCollector collector = ((SubscriberParticipantPage)page).getCollector();
 					collector.run(new IWorkspaceRunnable() {
+						@Override
 						public void run(IProgressMonitor monitor) throws CoreException {
 							collector.getWorkingSetSyncInfoSet().removeAll(set.getResources());
 						}
@@ -78,10 +83,11 @@ public class RemoveFromViewAction extends SynchronizeModelAction {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#needsToSaveDirtyEditors()
 	 */
+	@Override
 	protected boolean needsToSaveDirtyEditors() {
 		return false;
 	}
-	
+
 	private boolean confirmRemove() {
 		IPreferenceStore store = TeamUIPlugin.getPlugin().getPreferenceStore();
 		if (store.getBoolean(IPreferenceIds.SYNCVIEW_REMOVE_FROM_VIEW_NO_PROMPT)) {
@@ -89,9 +95,9 @@ public class RemoveFromViewAction extends SynchronizeModelAction {
 		} else {
 			MessageDialogWithToggle dialog = MessageDialogWithToggle.openOkCancelConfirm(
 					getConfiguration().getSite().getShell(),
-					TeamUIMessages.RemoveFromView_warningTitle, 
-					TeamUIMessages.RemoveFromView_warningMessage, 
-					TeamUIMessages.RemoveFromView_warningDontShow, 
+					TeamUIMessages.RemoveFromView_warningTitle,
+					TeamUIMessages.RemoveFromView_warningMessage,
+					TeamUIMessages.RemoveFromView_warningDontShow,
 					false,
 					null,
 					null);

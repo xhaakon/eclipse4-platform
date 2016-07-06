@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2011 IBM Corporation and others.
+ * Copyright (c) 2004, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,11 +12,11 @@ package org.eclipse.help.search;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -100,9 +100,9 @@ public class HelpIndexBuilder {
 
 	private File destination;
 
-	private ArrayList<TocFile> tocFiles = new ArrayList<TocFile>();
+	private ArrayList<TocFile> tocFiles = new ArrayList<>();
 
-	private ArrayList<LocaleDir> localeDirs = new ArrayList<LocaleDir>();
+	private ArrayList<LocaleDir> localeDirs = new ArrayList<>();
 
 	private static final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory
 			.newInstance();
@@ -127,7 +127,7 @@ public class HelpIndexBuilder {
 	class LocaleDir {
 		String locale;
 		String relativePath;
-		ArrayList<File> dirs = new ArrayList<File>();
+		ArrayList<File> dirs = new ArrayList<>();
 
 		public LocaleDir(String locale, String relativePath) {
 			this.locale = locale;
@@ -168,6 +168,7 @@ public class HelpIndexBuilder {
 			createInfo(id, fid);
 		}
 
+		@Override
 		protected void createTable(Collection<String> docBundleIds) {
 			// do nothing
 		}
@@ -367,7 +368,7 @@ public class HelpIndexBuilder {
 		if (!nl.exists() || !nl.isDirectory())
 			return;
 		File [] languages = nl.listFiles();
-		HashSet<String> locales = new HashSet<String>();
+		HashSet<String> locales = new HashSet<>();
 		for (int i=0; i<languages.length; i++) {
 			File language = languages[i];
 			if (!language.isDirectory())
@@ -441,7 +442,7 @@ public class HelpIndexBuilder {
 
 	private boolean isValidLanguage(String language) {
 		if (legalLanguages==null) {
-			legalLanguages = new HashSet<String>();
+			legalLanguages = new HashSet<>();
 			String [] choices = Locale.getISOLanguages();
 			for (int i=0; i<choices.length; i++) {
 				legalLanguages.add(choices[i]);
@@ -452,7 +453,7 @@ public class HelpIndexBuilder {
 
 	private boolean isValidCountry(String country) {
 		if (legalCountries==null) {
-			legalCountries = new HashSet<String>();
+			legalCountries = new HashSet<>();
 			String [] choices = Locale.getISOCountries();
 			for (int i=0; i<choices.length; i++) {
 				legalCountries.add(choices[i]);
@@ -500,7 +501,7 @@ public class HelpIndexBuilder {
 
 	private Collection<String> collectDocs(LocaleDir localeDir)
 			throws CoreException {
-		HashSet<String> docs = new HashSet<String>();
+		HashSet<String> docs = new HashSet<>();
 		for (int i = 0; i < tocFiles.size(); i++) {
 			TocFile tocFile = tocFiles.get(i);
 			collectDocs(docs, getTocFile(localeDir, tocFile.href));
@@ -726,11 +727,9 @@ public class HelpIndexBuilder {
 	}
 
 	private Document readXMLFile(File file) throws CoreException {
-		InputStream stream = null;
 		Document d = null;
-		try {
-			stream = new FileInputStream(file);
-			InputStreamReader reader = new InputStreamReader(stream, "utf-8"); //$NON-NLS-1$
+		try (InputStream stream = new FileInputStream(file);
+				InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
 			InputSource inputSource = new InputSource(reader);
 			inputSource.setSystemId(manifest.toString());
 
@@ -741,20 +740,12 @@ public class HelpIndexBuilder {
 		} catch (Exception e) {
 			String message = NLS.bind(HelpBaseResources.HelpIndexBuilder_errorParsing, file.getName());
 			throwCoreException(message, e);
-		} finally {
-			if (stream != null) {
-				try {
-					stream.close();
-				} catch (IOException e) {
-				}
-				stream = null;
-			}
 		}
 		return d;
 	}
 
 	private Element[] getTocExtensions(Document doc) {
-		ArrayList<Node> list = new ArrayList<Node>();
+		ArrayList<Node> list = new ArrayList<>();
 		//Node root = doc.getDocumentElement();
 		NodeList children = doc.getElementsByTagName("extension"); //$NON-NLS-1$
 		for (int i = 0; i < children.getLength(); i++) {

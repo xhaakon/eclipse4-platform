@@ -25,6 +25,7 @@ import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.mapping.IResourceChangeDescriptionFactory;
 import org.eclipse.core.resources.mapping.ResourceChangeValidator;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SafeRunner;
@@ -45,8 +46,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.IIDEHelpContextIds;
-import org.eclipse.ui.internal.util.Util;
-import org.eclipse.ui.part.FileEditorInput;
 
 /**
  * Standard action for closing the currently selected project(s).
@@ -297,24 +296,19 @@ public class CloseResourceAction extends WorkspaceAction implements IResourceCha
 		if (resourceRoots.isEmpty()) {
 			return;
 		}
-		Runnable runnable = new Runnable() {
+		Runnable runnable = () -> SafeRunner.run(new SafeRunnable(IDEWorkbenchMessages.ErrorOnCloseEditors) {
 			@Override
 			public void run() {
-				SafeRunner.run(new SafeRunnable(IDEWorkbenchMessages.ErrorOnCloseEditors) {
-					@Override
-					public void run() {
-						IWorkbenchWindow w = getActiveWindow();
-						if (w != null) {
-							List<IEditorReference> toClose = getMatchingEditors(resourceRoots, w, deletedOnly);
-							if (toClose.isEmpty()) {
-								return;
-							}
-							closeEditors(toClose, w);
-						}
+				IWorkbenchWindow w = getActiveWindow();
+				if (w != null) {
+					List<IEditorReference> toClose = getMatchingEditors(resourceRoots, w, deletedOnly);
+					if (toClose.isEmpty()) {
+						return;
 					}
-				});
+					closeEditors(toClose, w);
+				}
 			}
-		};
+		});
 		BusyIndicator.showWhile(PlatformUI.getWorkbench().getDisplay(), runnable);
 	}
 
@@ -364,19 +358,12 @@ public class CloseResourceAction extends WorkspaceAction implements IResourceCha
 			// ignore if factory can't restore input, see bug 461786
 			return null;
 		}
-		if (input instanceof FileEditorInput) {
-			FileEditorInput fi = (FileEditorInput) input;
-			IFile file = fi.getFile();
-			if (file != null) {
-				return file;
-			}
-		}
 		// here we can only guess how the input might be related to a resource
-		IFile adapter = Util.getAdapter(input, IFile.class);
+		IFile adapter = Adapters.adapt(input, IFile.class);
 		if (adapter != null) {
 			return adapter;
 		}
-		return Util.getAdapter(input, IResource.class);
+		return Adapters.adapt(input, IResource.class);
 	}
 
 	private static boolean belongsTo(List<? extends IResource> roots, IResource leaf) {

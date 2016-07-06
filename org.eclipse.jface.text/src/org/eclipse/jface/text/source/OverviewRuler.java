@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,12 +20,15 @@ import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -77,6 +80,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		/*
 		 * @see ITextListener#textChanged
 		 */
+		@Override
 		public void textChanged(TextEvent e) {
 			if (fTextViewer != null && e.getDocumentEvent() == null && e.getViewerRedrawState()) {
 				// handle only changes of visible document
@@ -84,17 +88,12 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			}
 		}
 
-		/*
-		 * @see IAnnotationModelListener#modelChanged(IAnnotationModel)
-		 */
+		@Override
 		public void modelChanged(IAnnotationModel model) {
 			update();
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.source.IAnnotationModelListenerExtension#modelChanged(org.eclipse.jface.text.source.AnnotationModelEvent)
-		 * @since 3.3
-		 */
+		@Override
 		public void modelChanged(AnnotationModelEvent event) {
 			if (!event.isValid())
 				return;
@@ -138,13 +137,13 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 * Enumerates the annotations of a specified type and characteristics
 	 * of the associated annotation model.
 	 */
-	class FilterIterator implements Iterator {
+	class FilterIterator implements Iterator<Annotation> {
 
 		final static int TEMPORARY= 1 << 1;
 		final static int PERSISTENT= 1 << 2;
 		final static int IGNORE_BAGS= 1 << 3;
 
-		private Iterator fIterator;
+		private Iterator<Annotation> fIterator;
 		private Object fType;
 		private Annotation fNext;
 		private int fStyle;
@@ -171,7 +170,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		 * @param style the style
 		 * @param iterator the iterator
 		 */
-		public FilterIterator(Object annotationType, int style, Iterator iterator) {
+		public FilterIterator(Object annotationType, int style, Iterator<Annotation> iterator) {
 			fType= annotationType;
 			fStyle= style;
 			fIterator= iterator;
@@ -185,7 +184,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			boolean ignr= (fStyle & IGNORE_BAGS) != 0;
 
 			while (fIterator.hasNext()) {
-				Annotation next= (Annotation) fIterator.next();
+				Annotation next= fIterator.next();
 
 				if (next.isMarkedDeleted())
 					continue;
@@ -212,16 +211,12 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			return fType.equals(annotationType);
 		}
 
-		/*
-		 * @see Iterator#hasNext()
-		 */
+		@Override
 		public boolean hasNext() {
 			return fNext != null;
 		}
-		/*
-		 * @see Iterator#next()
-		 */
-		public Object next() {
+		@Override
+		public Annotation next() {
 			try {
 				return fNext;
 			} finally {
@@ -229,9 +224,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 					skip();
 			}
 		}
-		/*
-		 * @see Iterator#remove()
-		 */
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
@@ -271,6 +264,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			gc.drawLine(x, y + h, x + w, y + h);
 		}
 
+		@Override
 		public void paintControl(PaintEvent e) {
 			if (fIndicatorColor == null)
 				return;
@@ -353,7 +347,23 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			writable= JFaceTextUtil.computeLineHeight(textWidget, 0, maxLines, maxLines);
 			
 			ScrollBar verticalBar= textWidget.getVerticalBar();
-			thumbHeight= verticalBar != null ? Math.max(Math.min(bounds.height, verticalBar.getThumbBounds().height), 0) : 0;
+			if (verticalBar != null && !verticalBar.getVisible()) {
+				// Note: when the vertical bar is invisible, the thumbHeight is not reliable,
+				// so, we'll compute what would be the thumbHeight in case it was visible.
+				int max= verticalBar.getMaximum();
+				double clientAreaHeight= textWidget.getClientArea().height;
+				if (max > clientAreaHeight) {
+					double percentage= clientAreaHeight / max;
+					thumbHeight= (int) (bounds.height * percentage);
+				} else {
+					thumbHeight= bounds.height;
+				}
+				if (thumbHeight < 0) {
+					thumbHeight= 0;
+				}
+			} else {
+				thumbHeight= verticalBar != null ? Math.max(Math.min(bounds.height, verticalBar.getThumbBounds().height), 0) : 0;
+			}
 			
 	        int partialTopIndex= JFaceTextUtil.getPartialTopIndex(textWidget);
 	        int topLineHeight= textWidget.getLineHeight(textWidget.getOffsetAtLine(partialTopIndex));
@@ -409,14 +419,14 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 * The list of annotation types to be shown in this ruler.
 	 * @since 3.0
 	 */
-	private Set fConfiguredAnnotationTypes= new HashSet();
+	private Set<Object> fConfiguredAnnotationTypes= new HashSet<>();
 	/**
 	 * The list of annotation types to be shown in the header of this ruler.
 	 * @since 3.0
 	 */
-	private Set fConfiguredHeaderAnnotationTypes= new HashSet();
+	private Set<Object> fConfiguredHeaderAnnotationTypes= new HashSet<>();
 	/** The mapping between annotation types and colors */
-	private Map fAnnotationTypes2Colors= new HashMap();
+	private Map<Object, Color> fAnnotationTypes2Colors= new HashMap<>();
 	/** The color manager */
 	private ISharedTextColors fSharedTextColors;
 	/**
@@ -424,32 +434,32 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 *
 	 * @since 3.0
 	 */
-	private List fAnnotationsSortedByLayer= new ArrayList();
+	private List<Object> fAnnotationsSortedByLayer= new ArrayList<>();
 	/**
 	 * All available layers sorted by layer.
 	 * This list may contain duplicates.
 	 * @since 3.0
 	 */
-	private List fLayersSortedByLayer= new ArrayList();
+	private List<Integer> fLayersSortedByLayer= new ArrayList<>();
 	/**
 	 * Map of allowed annotation types.
 	 * An allowed annotation type maps to <code>true</code>, a disallowed
 	 * to <code>false</code>.
 	 * @since 3.0
 	 */
-	private Map fAllowedAnnotationTypes= new HashMap();
+	private Map<Object, Boolean> fAllowedAnnotationTypes= new HashMap<>();
 	/**
 	 * Map of allowed header annotation types.
 	 * An allowed annotation type maps to <code>true</code>, a disallowed
 	 * to <code>false</code>.
 	 * @since 3.0
 	 */
-	private Map fAllowedHeaderAnnotationTypes= new HashMap();
+	private Map<Object, Boolean> fAllowedHeaderAnnotationTypes= new HashMap<>();
 	/**
 	 * The cached annotations.
 	 * @since 3.0
 	 */
-	private List fCachedAnnotations= new ArrayList();
+	private List<Annotation> fCachedAnnotations= new ArrayList<>();
 
 	/**
 	 * Redraw runnable lock
@@ -466,6 +476,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 * @since 3.3
 	 */
 	private Runnable fRunnable= new Runnable() {
+		@Override
 		public void run() {
 			synchronized (fRunnableLock) {
 				fIsRunnablePosted= false;
@@ -523,23 +534,17 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		fIsTemporaryAnnotationDiscolored= discolorTemporaryAnnotation;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfo#getControl()
-	 */
+	@Override
 	public Control getControl() {
 		return fCanvas;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfo#getWidth()
-	 */
+	@Override
 	public int getWidth() {
 		return fWidth;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRuler#setModel(org.eclipse.jface.text.source.IAnnotationModel)
-	 */
+	@Override
 	public void setModel(IAnnotationModel model) {
 		if (model != fModel || model != null) {
 
@@ -555,9 +560,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRuler#createControl(org.eclipse.swt.widgets.Composite, org.eclipse.jface.text.ITextViewer)
-	 */
+	@Override
 	public Control createControl(Composite parent, ITextViewer textViewer) {
 
 		fTextViewer= textViewer;
@@ -572,6 +575,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 				 * @see org.eclipse.swt.events.MouseTrackAdapter#mouseHover(org.eclipse.swt.events.MouseEvent)
 				 * @since 3.3
 				 */
+				@Override
 				public void mouseEnter(MouseEvent e) {
 					updateHeaderToolTipText();
 				}
@@ -581,6 +585,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		fCanvas= new Canvas(parent, SWT.NO_BACKGROUND);
 
 		fCanvas.addPaintListener(new PaintListener() {
+			@Override
 			public void paintControl(PaintEvent event) {
 				if (fTextViewer != null)
 					doubleBufferPaint(event.gc);
@@ -588,6 +593,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		});
 
 		fCanvas.addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent event) {
 				handleDispose();
 				fTextViewer= null;
@@ -595,19 +601,42 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		});
 
 		fCanvas.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseDown(MouseEvent event) {
 				handleMouseDown(event);
 			}
 		});
 
 		fCanvas.addMouseMoveListener(new MouseMoveListener() {
+			@Override
 			public void mouseMove(MouseEvent event) {
 				handleMouseMove(event);
 			}
 		});
 
-		if (fTextViewer != null)
+		fCanvas.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseScrolled(MouseEvent e) {
+				handleMouseScrolled(e);
+			}
+		});
+		
+		if (fTextViewer != null) {
 			fTextViewer.addTextListener(fInternalListener);
+			// on word wrap toggle a "resized" ControlEvent is fired: suggest a redraw of the ruler
+			fTextViewer.getTextWidget().addControlListener(new ControlAdapter() {
+				@Override
+				public void controlResized(ControlEvent e) {
+					if (fTextViewer == null) {
+						return;
+					}
+					StyledText textWidget= fTextViewer.getTextWidget();
+					if (textWidget != null && textWidget.getWordWrap()) {
+						redraw();
+					}
+				}
+			});
+		}
 
 		return fCanvas;
 	}
@@ -630,10 +659,12 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			fBuffer= null;
 		}
 
-		fConfiguredAnnotationTypes.clear();
-		fAllowedAnnotationTypes.clear();
-		fConfiguredHeaderAnnotationTypes.clear();
-		fAllowedHeaderAnnotationTypes.clear();
+		synchronized (fRunnableLock){
+			fConfiguredAnnotationTypes.clear();
+			fAllowedAnnotationTypes.clear();
+			fConfiguredHeaderAnnotationTypes.clear();
+			fAllowedHeaderAnnotationTypes.clear();
+		}
 		fAnnotationTypes2Colors.clear();
 		fAnnotationsSortedByLayer.clear();
 		fLayersSortedByLayer.clear();
@@ -680,9 +711,9 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	private void cacheAnnotations() {
 		fCachedAnnotations.clear();
 		if (fModel != null) {
-			Iterator iter= fModel.getAnnotationIterator();
+			Iterator<Annotation> iter= fModel.getAnnotationIterator();
 			while (iter.hasNext()) {
-				Annotation annotation= (Annotation) iter.next();
+				Annotation annotation= iter.next();
 
 				if (annotation.isMarkedDeleted())
 					continue;
@@ -716,7 +747,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 
 		WidgetInfos infos= null;
 		
-		for (Iterator iterator= fAnnotationsSortedByLayer.iterator(); iterator.hasNext();) {
+		for (Iterator<Object> iterator= fAnnotationsSortedByLayer.iterator(); iterator.hasNext();) {
 			Object annotationType= iterator.next();
 
 			if (skip(annotationType))
@@ -728,9 +759,9 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 				Color fill= null;
 				Color stroke= null;
 
-				Iterator e= new FilterIterator(annotationType, style[t], fCachedAnnotations.iterator());
+				Iterator<Annotation> e= new FilterIterator(annotationType, style[t], fCachedAnnotations.iterator());
 				while (e.hasNext()) {
-					Annotation a= (Annotation) e.next();
+					Annotation a= e.next();
 					Position p= fModel.getPosition(a);
 
 					if (p == null)
@@ -862,10 +893,8 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		return yy;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRuler#update()
-	 */
-	 public void update() {
+	 @Override
+	public void update() {
 		if (fCanvas != null && !fCanvas.isDisposed()) {
 			Display d= fCanvas.getDisplay();
 			if (d != null) {
@@ -887,7 +916,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			return;
 
 		if (fCanvas != null && !fCanvas.isDisposed()) {
-			if (VerticalRuler.IS_MAC_BUG_298936) {
+			if (VerticalRuler.AVOID_NEW_GC) {
 				fCanvas.redraw();
 				fCanvas.update();
 			} else {
@@ -1023,9 +1052,9 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 
 				Object annotationType= fAnnotationsSortedByLayer.get(i);
 
-				Iterator e= new FilterIterator(annotationType, FilterIterator.PERSISTENT | FilterIterator.TEMPORARY);
+				Iterator<Annotation> e= new FilterIterator(annotationType, FilterIterator.PERSISTENT | FilterIterator.TEMPORARY);
 				while (e.hasNext() && found == null) {
-					Annotation a= (Annotation) e.next();
+					Annotation a= e.next();
 					if (a.isMarkedDeleted())
 						continue;
 
@@ -1120,25 +1149,42 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#addAnnotationType(java.lang.Object)
+	/**
+	 * Handles mouse scrolls.
+	 *
+	 * @param event the mouse scrolled event
 	 */
+	private void handleMouseScrolled(MouseEvent event) {
+		if (fTextViewer instanceof ITextViewerExtension5) {
+			ITextViewerExtension5 extension= (ITextViewerExtension5) fTextViewer;
+			StyledText textWidget= fTextViewer.getTextWidget();
+			int topIndex= textWidget.getTopIndex();
+			int newTopIndex= Math.max(0, topIndex - event.count);
+			fTextViewer.setTopIndex(extension.widgetLine2ModelLine(newTopIndex));
+		} else if (fTextViewer != null) {
+			int topIndex= fTextViewer.getTopIndex();
+			int newTopIndex= Math.max(0, topIndex - event.count);
+			fTextViewer.setTopIndex(newTopIndex);
+		}
+	}
+
+	@Override
 	public void addAnnotationType(Object annotationType) {
-		fConfiguredAnnotationTypes.add(annotationType);
-		fAllowedAnnotationTypes.clear();
+		synchronized (fRunnableLock){
+			fConfiguredAnnotationTypes.add(annotationType);
+			fAllowedAnnotationTypes.clear();
+		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#removeAnnotationType(java.lang.Object)
-	 */
+	@Override
 	public void removeAnnotationType(Object annotationType) {
-		fConfiguredAnnotationTypes.remove(annotationType);
-		fAllowedAnnotationTypes.clear();
+		synchronized (fRunnableLock){
+			fConfiguredAnnotationTypes.remove(annotationType);
+			fAllowedAnnotationTypes.clear();
+		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#setAnnotationTypeLayer(java.lang.Object, int)
-	 */
+	@Override
 	public void setAnnotationTypeLayer(Object annotationType, int layer) {
 		int j= fAnnotationsSortedByLayer.indexOf(annotationType);
 		if (j != -1) {
@@ -1149,7 +1195,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		if (layer >= 0) {
 			int i= 0;
 			int size= fLayersSortedByLayer.size();
-			while (i < size && layer >= ((Integer)fLayersSortedByLayer.get(i)).intValue())
+			while (i < size && layer >= fLayersSortedByLayer.get(i).intValue())
 				i++;
 			Integer layerObj= new Integer(layer);
 			fLayersSortedByLayer.add(i, layerObj);
@@ -1157,9 +1203,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#setAnnotationTypeColor(java.lang.Object, org.eclipse.swt.graphics.Color)
-	 */
+	@Override
 	public void setAnnotationTypeColor(Object annotationType, Color color) {
 		if (color != null)
 			fAnnotationTypes2Colors.put(annotationType, color);
@@ -1200,13 +1244,16 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 *         otherwise
 	 * @since 3.0
 	 */
-	private boolean contains(Object annotationType, Map allowed, Set configured) {
-		Boolean cached= (Boolean) allowed.get(annotationType);
-		if (cached != null)
-			return cached.booleanValue();
-
-		boolean covered= isCovered(annotationType, configured);
-		allowed.put(annotationType, covered ? Boolean.TRUE : Boolean.FALSE);
+	private boolean contains(Object annotationType, Map<Object, Boolean> allowed, Set<Object> configured) {
+		boolean covered;
+		synchronized (fRunnableLock){
+			Boolean cached= allowed.get(annotationType);
+			if (cached != null)
+				return cached.booleanValue();
+	
+			covered = isCovered(annotationType, configured);
+			allowed.put(annotationType, covered ? Boolean.TRUE : Boolean.FALSE);
+		}
 		return covered;
 	}
 
@@ -1221,10 +1268,10 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 *         otherwise
 	 * @since 3.0
 	 */
-	private boolean isCovered(Object annotationType, Set configured) {
+	private boolean isCovered(Object annotationType, Set<Object> configured) {
 		if (fAnnotationAccess instanceof IAnnotationAccessExtension) {
 			IAnnotationAccessExtension extension= (IAnnotationAccessExtension) fAnnotationAccess;
-			Iterator e= configured.iterator();
+			Iterator<Object> e= configured.iterator();
 			while (e.hasNext()) {
 				if (extension.isSubtype(annotationType,e.next()))
 					return true;
@@ -1306,7 +1353,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 * @since 3.0
 	 */
 	private Color findColor(Object annotationType) {
-		Color color= (Color) fAnnotationTypes2Colors.get(annotationType);
+		Color color= fAnnotationTypes2Colors.get(annotationType);
 		if (color != null)
 			return color;
 
@@ -1315,7 +1362,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			Object[] superTypes= extension.getSupertypes(annotationType);
 			if (superTypes != null) {
 				for (int i= 0; i < superTypes.length; i++) {
-					color= (Color) fAnnotationTypes2Colors.get(superTypes[i]);
+					color= fAnnotationTypes2Colors.get(superTypes[i]);
 					if (color != null)
 						return color;
 				}
@@ -1347,18 +1394,14 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		return getColor(annotationType, temporary && fIsTemporaryAnnotationDiscolored ? 0.9 : 0.75);
 	}
 
-	/*
-	 * @see IVerticalRulerInfo#getLineOfLastMouseButtonActivity()
-	 */
+	@Override
 	public int getLineOfLastMouseButtonActivity() {
 		if (fLastMouseButtonActivityLine >= fTextViewer.getDocument().getNumberOfLines())
 			fLastMouseButtonActivityLine= -1;
 		return fLastMouseButtonActivityLine;
 	}
 
-	/*
-	 * @see IVerticalRulerInfo#toDocumentLineNumber(int)
-	 */
+	@Override
 	public int toDocumentLineNumber(int y_coordinate) {
 
 		if (fTextViewer == null || y_coordinate == -1)
@@ -1373,48 +1416,40 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 		return	bestLine;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRuler#getModel()
-	 */
+	@Override
 	public IAnnotationModel getModel() {
 		return fModel;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#getAnnotationHeight()
-	 */
+	@Override
 	public int getAnnotationHeight() {
 		return fAnnotationHeight;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#hasAnnotation(int)
-	 */
+	@Override
 	public boolean hasAnnotation(int y) {
 		return findBestMatchingLineNumber(toLineNumbers(y, true)) != -1;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#getHeaderControl()
-	 */
+	@Override
 	public Control getHeaderControl() {
 		return fHeader;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#addHeaderAnnotationType(java.lang.Object)
-	 */
+	@Override
 	public void addHeaderAnnotationType(Object annotationType) {
-		fConfiguredHeaderAnnotationTypes.add(annotationType);
-		fAllowedHeaderAnnotationTypes.clear();
+		synchronized (fRunnableLock) {
+			fConfiguredHeaderAnnotationTypes.add(annotationType);
+			fAllowedHeaderAnnotationTypes.clear();
+		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IOverviewRuler#removeHeaderAnnotationType(java.lang.Object)
-	 */
+	@Override
 	public void removeHeaderAnnotationType(Object annotationType) {
-		fConfiguredHeaderAnnotationTypes.remove(annotationType);
-		fAllowedHeaderAnnotationTypes.clear();
+		synchronized (fRunnableLock) {
+			fConfiguredHeaderAnnotationTypes.remove(annotationType);
+			fAllowedHeaderAnnotationTypes.clear();
+		}
 	}
 
 	/**
@@ -1432,7 +1467,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			if (skipInHeader(annotationType) || skip(annotationType))
 				continue;
 
-			Iterator e= new FilterIterator(annotationType, FilterIterator.PERSISTENT | FilterIterator.TEMPORARY | FilterIterator.IGNORE_BAGS, fCachedAnnotations.iterator());
+			Iterator<Annotation> e= new FilterIterator(annotationType, FilterIterator.PERSISTENT | FilterIterator.TEMPORARY | FilterIterator.IGNORE_BAGS, fCachedAnnotations.iterator());
 			while (e.hasNext()) {
 				if (e.next() != null) {
 					colorType= annotationType;
@@ -1482,9 +1517,9 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 			int count= 0;
 			String annotationTypeLabel= null;
 
-			Iterator e= new FilterIterator(annotationType, FilterIterator.PERSISTENT | FilterIterator.TEMPORARY | FilterIterator.IGNORE_BAGS, fCachedAnnotations.iterator());
+			Iterator<Annotation> e= new FilterIterator(annotationType, FilterIterator.PERSISTENT | FilterIterator.TEMPORARY | FilterIterator.IGNORE_BAGS, fCachedAnnotations.iterator());
 			while (e.hasNext()) {
-				Annotation annotation= (Annotation)e.next();
+				Annotation annotation= e.next();
 				if (annotation != null) {
 					if (annotationTypeLabel == null)
 						annotationTypeLabel= ((IAnnotationAccessExtension)fAnnotationAccess).getTypeLabel(annotation);
@@ -1508,6 +1543,7 @@ public class OverviewRuler implements IOverviewRulerExtension, IOverviewRuler {
 	 * 
 	 * @since 3.8
 	 */
+	@Override
 	public void setUseSaturatedColors(boolean useSaturatedColor) {
 		fUseSaturatedColors= useSaturatedColor;
 	}

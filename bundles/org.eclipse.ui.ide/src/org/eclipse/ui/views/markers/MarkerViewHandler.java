@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2011 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -94,17 +94,7 @@ public abstract class MarkerViewHandler extends AbstractHandler {
 			return EMPTY_MARKER_ARRAY;
 
 		final IMarker[][] result = new IMarker[1][];
-		view.getSite().getShell().getDisplay().syncExec(new Runnable() {
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see java.lang.Runnable#run()
-			 */
-			@Override
-			public void run() {
-				result[0] = view.getSelectedMarkers();
-			}
-		});
+		view.getSite().getShell().getDisplay().syncExec(() -> result[0] = view.getSelectedMarkers());
 		return result[0];
 	}
 }

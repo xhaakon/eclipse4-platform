@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,27 +21,27 @@ import java.util.Set;
 /*
  * Provides an algorithm for determining a recommended sequence of items that
  * satisfies a primary sequence and as many secondary sequences as possible.
- * 
+ *
  * For example, this is used to determine the display order of books on the tocs
  * based on the active product's preferred order as well as all other products'
  * preferred orders.
  */
-public class SequenceResolver {
+public class SequenceResolver<T> {
 
-	private List primaryList;
-	private List[] secondaryLists;
-	private ListIterator primaryIter;
-	private ListIterator[] secondaryIters;
-	private Set processedItems;
-	
+	private List<T> primaryList;
+	private List<T>[] secondaryLists;
+	private ListIterator<T> primaryIter;
+	private ListIterator<T>[] secondaryIters;
+	private Set<T> processedItems;
+
 	/*
 	 * Merges the given primary and secondary orderings such that all ordering
 	 * conditions from the primary are satisfied, and as many secondary ordering
 	 * conditions as reasonably possible are also satisfied. An ordering condition
 	 * is a pair of adjacent items in any ordering.
-	 * 
+	 *
 	 * For example:
-	 * 
+	 *
 	 *    primary =             {b, d, f}
 	 *    secondary[0] =        {c, d, e}
 	 *    secondary[1] =        {a, b, c}
@@ -51,32 +51,32 @@ public class SequenceResolver {
 	 * The algorithm works in iterations, where at each iteration we determine
 	 * the next element in the recommended sequence. We maintain a pointer for
 	 * each ordering to keep track of what we've already ordered.
-	 * 
+	 *
 	 * To determine the next item, we locate the current element in each ordering.
 	 * These are the candidates for the next item as the next item can only be
 	 * one of these.
-	 * 
+	 *
 	 * The top candidates are selected from the list of candidates, where a top
 	 * candidate is one that has the lowest rank (there can be many). Rank is
 	 * determined by how many other candidates appear before that candidate
 	 * item in all the orderings. That is, we find out how many items
 	 * the orderings list before each candidate.
-	 * 
+	 *
 	 * If a candidate has no other candidates listed before it, it will be
 	 * the next item. If there are many, the first one is selected. If one of
 	 * the top candidates is from the primary ordering (can only be one), it is
 	 * automatically selected.
-	 * 
+	 *
 	 * Using the top rank ensures that if there are conflicts, and that
 	 * as many orderings as possible are satisfied. For example, if most orderings
 	 * want x before y, but a few want the opposite, x will be placed before y.
 	 */
-	public List getSequence(List primary, List[] secondary) {
+	public List<T> getSequence(List<T> primary, List<T>[] secondary) {
 		primaryList = primary;
 		secondaryLists = secondary;
 		prepareDataStructures();
-		List order = new ArrayList();
-		Object item;
+		List<T> order = new ArrayList<>();
+		T item;
 		while ((item = getNextItem()) != null) {
 			processedItems.add(item);
 			advanceIterator(primaryIter);
@@ -91,21 +91,22 @@ public class SequenceResolver {
 	/*
 	 * Create the data structures necessary for later operations.
 	 */
+	@SuppressWarnings("unchecked")
 	private void prepareDataStructures() {
 		primaryIter = primaryList.listIterator();
 		secondaryIters = new ListIterator[secondaryLists.length];
 		for (int i=0;i<secondaryLists.length;++i) {
 			secondaryIters[i] = secondaryLists[i].listIterator();
 		}
-		processedItems = new HashSet();
+		processedItems = new HashSet<>();
 	}
-	
+
 	/*
 	 * Determine the next item in the sequence based on the top
 	 * candidate items.
 	 */
-	private Object getNextItem() {
-		Candidate[] candidates = getTopCandidates();
+	private T getNextItem() {
+		Candidate<T>[] candidates = getTopCandidates();
 		switch(candidates.length) {
 		case 0:
 			return null;
@@ -120,13 +121,13 @@ public class SequenceResolver {
 			return candidates[0].item;
 		}
 	}
-	
+
 	/*
 	 * Retrieves the top candidates from all the available next item candidates.
-	 * These are the candidates that have the lowest rank 
+	 * These are the candidates that have the lowest rank
 	 */
-	private Candidate[] getTopCandidates() {
-		Candidate[] candidates = getEligibleCandidates();
+	private Candidate<T>[] getTopCandidates() {
+		Candidate<T>[] candidates = getEligibleCandidates();
 		rankCandidates(candidates);
 		if (candidates.length > 0) {
 			int topRank = candidates[0].rank;
@@ -135,26 +136,26 @@ public class SequenceResolver {
 					topRank = candidates[i].rank;
 				}
 			}
-			List topCandidates = new ArrayList();
+			List<Candidate<T>> topCandidates = new ArrayList<>();
 			for (int i=0;i<candidates.length;++i) {
 				if (candidates[i].rank == topRank) {
 					topCandidates.add(candidates[i]);
 				}
 			}
-			return (Candidate[])topCandidates.toArray(new Candidate[topCandidates.size()]);
+			return toCandidatesArray(topCandidates);
 		}
 		return candidates;
 	}
-	
+
 	/*
 	 * Returns all eligible candidates. A candidate is eligible if it does not
 	 * conflict with the primary candidate. That is, if the primary candidate's list
 	 * has that candidate after the primary candidate, it is contradicting the primary
 	 * sequence and is not eligible.
 	 */
-	private Candidate[] getEligibleCandidates() {
-		Candidate[] allCandidates = getAllCandidates();
-		Candidate primary = null;
+	private Candidate<T>[] getEligibleCandidates() {
+		Candidate<T>[] allCandidates = getAllCandidates();
+		Candidate<T> primary = null;
 		for (int i=0;i<allCandidates.length;++i) {
 			if (allCandidates[i].isPrimary) {
 				primary = allCandidates[i];
@@ -163,12 +164,12 @@ public class SequenceResolver {
 		}
 		// if we have no primary candidate then they're all eligible
 		if (primary != null) {
-			List eligibleCandidates = new ArrayList(allCandidates.length);
+			List<Candidate<T>> eligibleCandidates = new ArrayList<>(allCandidates.length);
 			// primary candidate is always eligible
 			eligibleCandidates.add(primary);
-			Set primarySet = Collections.singleton(primary.item);
+			Set<T> primarySet = Collections.singleton(primary.item);
 			for (int i=0;i<allCandidates.length;++i) {
-				Candidate c = allCandidates[i];
+				Candidate<T> c = allCandidates[i];
 				if (c != primary) {
 					// does it contradict the primary sequence? if not, it is eligible
 					if (countPrecedingItems(c.item, primary.src, primarySet) == 0) {
@@ -176,20 +177,20 @@ public class SequenceResolver {
 					}
 				}
 			}
-			return (Candidate[])eligibleCandidates.toArray(new Candidate[eligibleCandidates.size()]);
+			return toCandidatesArray(eligibleCandidates);
 		}
 		return allCandidates;
 	}
-	
+
 	/*
 	 * Retrieve all the candidates for the next item in sequence, with
 	 * no duplicates.
 	 */
-	private Candidate[] getAllCandidates() {
-		List candidates = new ArrayList();
-		Object item = getNextItem(primaryIter);
+	private Candidate<T>[] getAllCandidates() {
+		List<Candidate<T>> candidates = new ArrayList<>();
+		T item = getNextItem(primaryIter);
 		if (item != null) {
-			Candidate c = new Candidate();
+			Candidate<T> c = new Candidate<>();
 			c.item = item;
 			c.isPrimary = true;
 			c.src = primaryList;
@@ -198,7 +199,7 @@ public class SequenceResolver {
 		for (int i=0;i<secondaryIters.length;++i) {
 			item = getNextItem(secondaryIters[i]);
 			if (item != null) {
-				Candidate c = new Candidate();
+				Candidate<T> c = new Candidate<>();
 				c.item = item;
 				c.isPrimary = false;
 				c.src = secondaryLists[i];
@@ -207,7 +208,13 @@ public class SequenceResolver {
 				}
 			}
 		}
-		return (Candidate[])candidates.toArray(new Candidate[candidates.size()]);
+		return toCandidatesArray(candidates);
+	}
+
+	/** Helper function as we cannot create arrays of parameterized types */
+	@SuppressWarnings("unchecked")
+	private Candidate<T>[] toCandidatesArray(List<Candidate<T>> candidates) {
+		return candidates.toArray(new Candidate[candidates.size()]);
 	}
 
 	/*
@@ -216,9 +223,9 @@ public class SequenceResolver {
 	 * This essentially means how far back this item should be in the final
 	 * sequence.
 	 */
-	private void rankCandidates(Candidate[] candidates) {
+	private void rankCandidates(Candidate<T>[] candidates) {
 		// for quick lookup
-		Set candidateItems = new HashSet();
+		Set<T> candidateItems = new HashSet<>();
 		for (int i=0;i<candidates.length;++i) {
 			candidateItems.add(candidates[i].item);
 		}
@@ -248,14 +255,14 @@ public class SequenceResolver {
 		}
 		return 0;
 	}
-	
+
 	/*
 	 * Returns the next item available to this iterator, without moving it
 	 * forward.
 	 */
-	private Object getNextItem(ListIterator iter) {
+	private T getNextItem(ListIterator<T> iter) {
 		if (iter.hasNext()) {
-			Object next = iter.next();
+			T next = iter.next();
 			iter.previous();
 			return next;
 		}
@@ -266,9 +273,9 @@ public class SequenceResolver {
 	 * Advances the given iterator to the next item in its
 	 * sequence that we haven't yet processed.
 	 */
-	private void advanceIterator(ListIterator iter) {
+	private void advanceIterator(ListIterator<T> iter) {
 		while (iter.hasNext()) {
-			Object item = iter.next();
+			T item = iter.next();
 			if (!processedItems.contains(item)) {
 				iter.previous();
 				break;
@@ -280,16 +287,18 @@ public class SequenceResolver {
 	 * A candidate item; one that could potentially be the next one in the final
 	 * sequence.
 	 */
-	private static class Candidate {
-		public Object item;
+	private static class Candidate<T> {
+		public T item;
 		public boolean isPrimary;
 		public int rank;
 		public List src;
-		
+
+		@Override
 		public boolean equals(Object obj) {
 			return item.equals(obj);
 		}
-		
+
+		@Override
 		public int hashCode() {
 			return item.hashCode();
 		}

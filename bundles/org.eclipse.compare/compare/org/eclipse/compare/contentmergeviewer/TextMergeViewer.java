@@ -107,6 +107,8 @@ import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.IFindReplaceTarget;
+import org.eclipse.jface.text.IFindReplaceTargetExtension;
+import org.eclipse.jface.text.IFindReplaceTargetExtension3;
 import org.eclipse.jface.text.IPositionUpdater;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.IRewriteTarget;
@@ -198,6 +200,7 @@ import org.eclipse.ui.texteditor.GotoLineAction;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.IDocumentProviderExtension;
 import org.eclipse.ui.texteditor.IElementStateListener;
+import org.eclipse.ui.texteditor.IFindReplaceTargetExtension2;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
@@ -684,6 +687,7 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 
 			} else if (fElement instanceof IDocument) {
 				newDocument= (IDocument) fElement;
+				setupDocument(newDocument);
 				
 			} else if (fElement instanceof IStreamContentAccessor) {
 				newDocument= DocumentManager.get(fElement);
@@ -900,14 +904,17 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 				provider.removeElementStateListener(this);
 			}
 			// If we have a listener registered with the widget, remove it
-			if (fSourceViewer != null && !fSourceViewer.getSourceViewer().getTextWidget().isDisposed()) {
-				if (fNeedsValidation) {
-					fSourceViewer.getSourceViewer().getTextWidget().removeVerifyListener(this);
-					fNeedsValidation = false;
-				}
-				IDocument oldDoc= internalGetDocument(fSourceViewer);
-				if (oldDoc != null) {
-					oldDoc.removeDocumentListener(this);
+			if (fSourceViewer != null) {
+				StyledText textWidget = fSourceViewer.getSourceViewer().getTextWidget();
+				if (textWidget != null && !textWidget.isDisposed()) {
+					if (fNeedsValidation) {
+						fSourceViewer.getSourceViewer().getTextWidget().removeVerifyListener(this);
+						fNeedsValidation = false;
+					}
+					IDocument oldDoc= internalGetDocument(fSourceViewer);
+					if (oldDoc != null) {
+						oldDoc.removeDocumentListener(this);
+					}
 				}
 			}
 			clearCachedDocument();
@@ -1337,7 +1344,7 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 		
 	}
 	
-	private class FindReplaceTarget implements IFindReplaceTarget {
+	private class FindReplaceTarget implements IFindReplaceTarget, IFindReplaceTargetExtension, IFindReplaceTargetExtension2, IFindReplaceTargetExtension3 {
 
 		public boolean canPerformFind() {
 			return fFocusPart != null;
@@ -1362,6 +1369,96 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 
 		public void replaceSelection(String text) {
 			fFocusPart.getSourceViewer().getFindReplaceTarget().replaceSelection(text);
+		}
+
+		public int findAndSelect(int offset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord, boolean regExSearch) {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension3) {
+				return ((IFindReplaceTargetExtension3) findReplaceTarget).findAndSelect(offset, findString, searchForward, caseSensitive, wholeWord, regExSearch);
+			}
+			
+			// fallback like in org.eclipse.ui.texteditor.FindReplaceTarget
+			if (!regExSearch && findReplaceTarget != null)
+				return findReplaceTarget.findAndSelect(offset, findString, searchForward, caseSensitive, wholeWord);
+			return -1;
+		}
+
+		public void replaceSelection(String text, boolean regExReplace) {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension3) {
+				((IFindReplaceTargetExtension3) findReplaceTarget).replaceSelection(text, regExReplace);
+				return;
+			}
+			
+			// fallback like in org.eclipse.ui.texteditor.FindReplaceTarget
+			if (!regExReplace && findReplaceTarget != null)
+				findReplaceTarget.replaceSelection(text);
+		}
+
+		public boolean validateTargetState() {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension2) {
+				return ((IFindReplaceTargetExtension2) findReplaceTarget).validateTargetState();
+			}
+			return true;
+		}
+
+		public void beginSession() {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				((IFindReplaceTargetExtension) findReplaceTarget).beginSession();
+			}
+		}
+
+		public void endSession() {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				((IFindReplaceTargetExtension) findReplaceTarget).endSession();
+			}
+		}
+
+		public IRegion getScope() {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				return ((IFindReplaceTargetExtension) findReplaceTarget).getScope();
+			}
+			return null;
+		}
+
+		public void setScope(IRegion scope) {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				((IFindReplaceTargetExtension) findReplaceTarget).setScope(scope);
+			}
+		}
+
+		public Point getLineSelection() {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				return ((IFindReplaceTargetExtension) findReplaceTarget).getLineSelection();
+			}
+			return null;
+		}
+
+		public void setSelection(int offset, int length) {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				((IFindReplaceTargetExtension) findReplaceTarget).setSelection(offset, length);
+			}
+		}
+
+		public void setScopeHighlightColor(Color color) {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				((IFindReplaceTargetExtension) findReplaceTarget).setScopeHighlightColor(color);
+			}
+		}
+
+		public void setReplaceAllMode(boolean replaceAll) {
+			IFindReplaceTarget findReplaceTarget = fFocusPart.getSourceViewer().getFindReplaceTarget();
+			if (findReplaceTarget instanceof IFindReplaceTargetExtension) {
+				((IFindReplaceTargetExtension) findReplaceTarget).setReplaceAllMode(replaceAll);
+			}
 		}
 		
 	}
@@ -1525,6 +1622,16 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 		updateFont();
 	}
 	
+	private static class LineNumberRulerToggleAction extends TextEditorPropertyAction {
+		public LineNumberRulerToggleAction(String label, MergeSourceViewer[] viewers, String preferenceKey) {
+			super(label, viewers, preferenceKey);
+		}
+
+		protected boolean toggleState(boolean checked) {
+			return true;
+		}
+	}
+
 	private ChainedPreferenceStore createChainedPreferenceStore() {
     	ArrayList stores= new ArrayList(2);
 		stores.add(getCompareConfiguration().getPreferenceStore());
@@ -2055,7 +2162,7 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 
 		IWorkbenchPart workbenchPart = getCompareConfiguration().getContainer().getWorkbenchPart();
 		if (workbenchPart != null) {
-			IContextService service = (IContextService)workbenchPart.getSite().getService(IContextService.class);
+			IContextService service = workbenchPart.getSite().getService(IContextService.class);
 			if (service != null) {
 				service.activateContext("org.eclipse.ui.textEditorScope"); //$NON-NLS-1$
 			}
@@ -3542,22 +3649,18 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 		
 			String format= CompareMessages.TextMergeViewer_diffDescription_diff_format;
 			diffDescription= MessageFormat.format(format,
-				new String[] {
-					getDiffType(diff),						// 0: diff type
-					getDiffNumber(diff),					// 1: diff number
-					getDiffRange(fLeft, diff.getPosition(LEFT_CONTRIBUTOR)),		// 2: left start line
-					getDiffRange(fRight, diff.getPosition(RIGHT_CONTRIBUTOR))	// 3: left end line
-				}
+				getDiffType(diff),						// 0: diff type
+				getDiffNumber(diff),					// 1: diff number
+				getDiffRange(fLeft, diff.getPosition(LEFT_CONTRIBUTOR)),		// 2: left start line
+				getDiffRange(fRight, diff.getPosition(RIGHT_CONTRIBUTOR))	// 3: left end line
 			);
 		}
 		
 		String format= CompareMessages.TextMergeViewer_statusLine_format;
 		String s= MessageFormat.format(format,
-			new String[] {
-				getCursorPosition(fLeft),	// 0: left column
-				getCursorPosition(fRight),	// 1: right column
-				diffDescription				// 2: diff description
-			}
+			getCursorPosition(fLeft),	// 0: left column
+			getCursorPosition(fRight),	// 1: right column
+			diffDescription				// 2: diff description
 		);
 	
 		getCompareConfiguration().getContainer().setStatusMessage(s);
@@ -3577,7 +3680,7 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 			break;
 		}
 		String format= CompareMessages.TextMergeViewer_diffType_format;
-		return MessageFormat.format(format, new String[] { s, diff.changeType() } );
+		return MessageFormat.format(format, s, diff.changeType());
 	}
 	
 	private String getDiffNumber(Diff diff) {
@@ -3604,9 +3707,7 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 			format= CompareMessages.TextMergeViewer_beforeLine_format;
 		else
 			format= CompareMessages.TextMergeViewer_range_format;
-		return MessageFormat.format(format,
-					new String[] { Integer.toString(startLine),
-									Integer.toString(endLine) } );
+		return MessageFormat.format(format, Integer.toString(startLine), Integer.toString(endLine));
 	}
 	
 	/*
@@ -3638,7 +3739,7 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 					
 					String format= CompareMessages.TextMergeViewer_cursorPosition_format;
 					return MessageFormat.format(format,
-						new String[] { Integer.toString(line + 1), Integer.toString(column + 1) } );
+						Integer.toString(line + 1), Integer.toString(column + 1) );
 					
 				} catch (BadLocationException x) {
 					// silently ignored
@@ -3775,9 +3876,9 @@ public class TextMergeViewer extends ContentMergeViewer implements IAdaptable {
 				new boolean[] {needsLeftPainter, needsRightPainter, needsAncestorPainter });
 		fHandlerService.registerAction(showWhitespaceAction, ITextEditorActionDefinitionIds.SHOW_WHITESPACE_CHARACTERS);
 		
-		toggleLineNumbersAction = new TextEditorPropertyAction(CompareMessages.TextMergeViewer_16, new MergeSourceViewer[] {
-				fLeft, fRight, fAncestor
-		}, AbstractDecoratedTextEditorPreferenceConstants.EDITOR_LINE_NUMBER_RULER);
+		toggleLineNumbersAction = new LineNumberRulerToggleAction(CompareMessages.TextMergeViewer_16,
+				new MergeSourceViewer[] { fLeft, fRight, fAncestor },
+				AbstractDecoratedTextEditorPreferenceConstants.EDITOR_LINE_NUMBER_RULER);
 		fHandlerService.registerAction(toggleLineNumbersAction, ITextEditorActionDefinitionIds.LINENUMBER_TOGGLE);
 	}
 	

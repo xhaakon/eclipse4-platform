@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -64,7 +65,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 
 	private static final String UNCATEGORIZED = "Uncategorized"; //$NON-NLS-1$
 
-	private SortedSet<WorkingSet> workingSets = new TreeSet<WorkingSet>(new WorkingSetComparator());
+	private SortedSet<WorkingSet> workingSets = new TreeSet<>(new WorkingSetComparator());
 
 	private AdaptableTocsArray root;
 
@@ -83,6 +84,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		restoreState();
 	}
 
+	@Override
 	public AdaptableTocsArray getRoot() {
 		if (root == null)
 			root = new AdaptableTocsArray(HelpPlugin.getTocManager().getTocs(
@@ -93,6 +95,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	/**
 	 * Adds a new working set and saves it
 	 */
+	@Override
 	public void addWorkingSet(WorkingSet workingSet) {
 		if (workingSet == null || workingSets.contains(workingSet))
 			return;
@@ -103,11 +106,13 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	/**
 	 * Creates a new working set
 	 */
+	@Override
 	public WorkingSet createWorkingSet(String name,
 			AdaptableHelpResource[] elements) {
 		return new WorkingSet(name, elements);
 	}
 
+	@Override
 	public WorkingSet createWorkingSet(String name, AdaptableHelpResource[] elements, CriterionResource[] criteria) {
 		return new WorkingSet(name, elements, criteria);
 	}
@@ -122,6 +127,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	 * @return true=the object equals the receiver, it has the same working
 	 *         sets. false otherwise
 	 */
+	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
 			return true;
@@ -137,6 +143,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	 * Returns a working set by name
 	 *
 	 */
+	@Override
 	public WorkingSet getWorkingSet(String name) {
 		if (name == null || workingSets == null)
 			return null;
@@ -155,6 +162,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	 *
 	 * @return the hash code.
 	 */
+	@Override
 	public int hashCode() {
 		return workingSets.hashCode();
 	}
@@ -164,6 +172,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	 *
 	 * @see org.eclipse.ui.IWorkingSetManager#getWorkingSets()
 	 */
+	@Override
 	public WorkingSet[] getWorkingSets() {
 		return workingSets.toArray(new WorkingSet[workingSets
 				.size()]);
@@ -183,6 +192,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	/**
 	 * Removes specified working set
 	 */
+	@Override
 	public void removeWorkingSet(WorkingSet workingSet) {
 		workingSets.remove(workingSet);
 		saveState();
@@ -195,9 +205,8 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		File stateFile = getWorkingSetStateFile();
 
 		if (stateFile.exists()) {
-			try {
-				FileInputStream input = new FileInputStream(stateFile);
-				InputStreamReader reader = new InputStreamReader(input, "utf-8"); //$NON-NLS-1$
+			try (FileInputStream input = new FileInputStream(stateFile);
+					InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
 
 				InputSource inputSource = new InputSource(reader);
 				inputSource.setSystemId(stateFile.toString());
@@ -208,7 +217,6 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 
 				Element rootElement = d.getDocumentElement();
 				restoreWorkingSetState(rootElement);
-				input.close();
 
 				return true;
 			} catch (ParserConfigurationException pce) {
@@ -262,7 +270,7 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		String name = workingSetNode.getAttribute("name"); //$NON-NLS-1$
 
 		// scope
-		List<AdaptableHelpResource> helpResources = new ArrayList<AdaptableHelpResource>();
+		List<AdaptableHelpResource> helpResources = new ArrayList<>();
 		NodeList contents = workingSetNode.getElementsByTagName("contents"); //$NON-NLS-1$
 		for (int i = 0; i < contents.getLength(); i++) {
 			Element content = (Element) contents.item(i);
@@ -303,14 +311,14 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 
 		//criteria
 
-		List<CriterionResource> criteriaResource = new ArrayList<CriterionResource>();
+		List<CriterionResource> criteriaResource = new ArrayList<>();
 		NodeList criteriaContents = workingSetNode.getElementsByTagName("criterion"); //$NON-NLS-1$
 		for (int i = 0; i < criteriaContents.getLength(); ++i) {
 			Element criterion = (Element) criteriaContents.item(i);
 			String criterionName = criterion.getAttribute("name"); //$NON-NLS-1$
 			if(null != name && 0 != name.length()){
 				NodeList items = criterion.getElementsByTagName("item"); //$NON-NLS-1$
-				List<String> criterionValues = new ArrayList<String>();
+				List<String> criterionValues = new ArrayList<>();
 				for(int j = 0; j < items.getLength(); ++j){
 					String value = ((Element) items.item(j)).getAttribute("value"); //$NON-NLS-1$
 					if(null != value && 0 != value.length()){
@@ -347,16 +355,15 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 
 			stateFile = getWorkingSetStateFile();
 			stateFile.getParentFile().mkdir();
-			FileOutputStream stream = new FileOutputStream(stateFile);
+			try (FileOutputStream stream = new FileOutputStream(stateFile)) {
+				Transformer transformer = transformerFactory.newTransformer();
+				transformer.setOutputProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
+				transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8"); //$NON-NLS-1$
+				DOMSource source = new DOMSource(doc);
+				StreamResult result = new StreamResult(stream);
 
-			Transformer transformer = transformerFactory.newTransformer();
-			transformer.setOutputProperty(OutputKeys.METHOD, "xml"); //$NON-NLS-1$
-			transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8"); //$NON-NLS-1$
-			DOMSource source = new DOMSource(doc);
-			StreamResult result = new StreamResult(stream);
-
-			transformer.transform(source, result);
-			stream.close();
+				transformer.transform(source, result);
+			}
 			return true;
 		} catch (ParserConfigurationException pce) {
 			HelpPlugin.logError(
@@ -395,14 +402,17 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	 * @param changedWorkingSet
 	 *            the working set that has changed
 	 */
+	@Override
 	public void workingSetChanged(WorkingSet changedWorkingSet) {
 		saveState();
 	}
 
+	@Override
 	public AdaptableToc getAdaptableToc(String href) {
 		return getRoot().getAdaptableToc(href);
 	}
 
+	@Override
 	public AdaptableTopic getAdaptableTopic(String id) {
 
 		if (id == null || id.length() == 0)
@@ -435,11 +445,13 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		return null;
 	}
 
+	@Override
 	public String getCurrentWorkingSet() {
 		return Platform.getPreferencesService().getString(HelpBasePlugin.PLUGIN_ID,
 				BaseHelpSystem.WORKING_SET, "", null); //$NON-NLS-1$
 	}
 
+	@Override
 	public void setCurrentWorkingSet(String workingSet) {
 		IEclipsePreferences prefs = InstanceScope.INSTANCE.getNode(HelpBasePlugin.PLUGIN_ID);
 		prefs.put(BaseHelpSystem.WORKING_SET, workingSet);
@@ -452,10 +464,11 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 	public void tocsChanged() {
 		saveState();
 		root = null;
-		workingSets = new TreeSet<WorkingSet>(new WorkingSetComparator());
+		workingSets = new TreeSet<>(new WorkingSetComparator());
 		restoreState();
 	}
 
+	@Override
 	public boolean isCriteriaScopeEnabled(){
 		if(null == allCriteriaValues){
 			allCriteriaValues = HelpPlugin.getCriteriaManager().getAllCriteriaValues(Platform.getNL());
@@ -467,11 +480,12 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		}
 	}
 
+	@Override
 	public String[] getCriterionIds() {
 		if(null == allCriteriaValues){
 			allCriteriaValues = HelpPlugin.getCriteriaManager().getAllCriteriaValues(Platform.getNL());
 		}
-		List<String> criterionIds = new ArrayList<String>();
+		List<String> criterionIds = new ArrayList<>();
 		if(null != allCriteriaValues){
 			for(Iterator<String> iter = allCriteriaValues.keySet().iterator(); iter.hasNext();){
 				String criterion = iter.next();
@@ -486,11 +500,12 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		return ids;
 	}
 
+	@Override
 	public String[] getCriterionValueIds(String criterionName) {
 		if(null == allCriteriaValues){
 			allCriteriaValues = HelpPlugin.getCriteriaManager().getAllCriteriaValues(Platform.getNL());
 		}
-		List<String> valueIds = new ArrayList<String>();
+		List<String> valueIds = new ArrayList<>();
 		if(null != criterionName && null != allCriteriaValues) {
 			Set<String> criterionValues = allCriteriaValues.get(criterionName);
 			if(null != criterionValues && !criterionValues.isEmpty()) {
@@ -504,10 +519,12 @@ public class WorkingSetManager implements IHelpWorkingSetManager {
 		return valueIdsArray;
 	}
 
+	@Override
 	public String getCriterionDisplayName(String criterionId) {
 		return HelpPlugin.getCriteriaManager().getCriterionDisplayName(criterionId, Platform.getNL());
 	}
 
+	@Override
 	public String getCriterionValueDisplayName(String criterionId, String criterionValueId) {
 		return HelpPlugin.getCriteriaManager().getCriterionValueDisplayName(criterionId, criterionValueId, Platform.getNL());
 	}

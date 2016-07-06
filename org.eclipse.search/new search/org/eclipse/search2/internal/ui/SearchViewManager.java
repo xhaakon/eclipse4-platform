@@ -38,25 +38,29 @@ public class SearchViewManager {
 	private IQueryListener fNewQueryListener;
 	private int fViewCount= 0;
 
-	private LinkedList fLRUSearchViews;
+	private LinkedList<SearchView> fLRUSearchViews;
 
 
 	public SearchViewManager(QueryManager queryManager) {
 		fNewQueryListener= new IQueryListener() {
 
+			@Override
 			public void queryAdded(ISearchQuery query) {
 				showNewSearchQuery(query);
 			}
 
+			@Override
 			public void queryRemoved(ISearchQuery query) {}
+			@Override
 			public void queryStarting(ISearchQuery query) {}
+			@Override
 			public void queryFinished(ISearchQuery query) {}
 
 		};
 
 		queryManager.addQueryListener(fNewQueryListener);
 
-		fLRUSearchViews= new LinkedList();
+		fLRUSearchViews= new LinkedList<>();
 
 	}
 
@@ -67,7 +71,7 @@ public class SearchViewManager {
 
 	protected boolean showNewSearchQuery(ISearchQuery query) {
 		if (!fLRUSearchViews.isEmpty()) {
-			SearchView view= (SearchView) fLRUSearchViews.getFirst();
+			SearchView view= fLRUSearchViews.getFirst();
 			view.showSearchResult(query.getSearchResult());
 			return true;
 		}
@@ -116,8 +120,8 @@ public class SearchViewManager {
 	}
 
 	public boolean isShown(ISearchQuery query) {
-		for (Iterator iter= fLRUSearchViews.iterator(); iter.hasNext();) {
-			SearchView view= (SearchView) iter.next();
+		for (Iterator<SearchView> iter= fLRUSearchViews.iterator(); iter.hasNext();) {
+			SearchView view= iter.next();
 			ISearchResult currentSearchResult= view.getCurrentSearchResult();
 			if (currentSearchResult != null && query == currentSearchResult.getQuery()) {
 				return true;
@@ -138,8 +142,8 @@ public class SearchViewManager {
 
 	private ISearchResultViewPart findLRUSearchResultView(IWorkbenchPage page, boolean avoidPinnedViews) {
 		boolean viewFoundInPage= false;
-		for (Iterator iter= fLRUSearchViews.iterator(); iter.hasNext();) {
-			SearchView view= (SearchView) iter.next();
+		for (Iterator<SearchView> iter= fLRUSearchViews.iterator(); iter.hasNext();) {
+			SearchView view= iter.next();
 			if (page.equals(view.getSite().getPage())) {
 				if (!avoidPinnedViews || !view.isPinned()) {
 					return view;

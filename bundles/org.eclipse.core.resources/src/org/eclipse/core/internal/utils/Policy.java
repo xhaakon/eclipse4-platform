@@ -114,7 +114,7 @@ public class Policy {
 	}
 
 	/**
-	 * Print a debug message to the console. 
+	 * Print a debug message to the console.
 	 * Prepend the message with the current date, the name of the current thread and the current job if present.
 	 */
 	public static void debug(String message) {
@@ -135,7 +135,7 @@ public class Policy {
 	}
 
 	/**
-	 * Print a debug throwable to the console. 
+	 * Print a debug throwable to the console.
 	 */
 	public static void debug(Throwable t) {
 		StringWriter writer = new StringWriter();
@@ -178,13 +178,4 @@ public class Policy {
 			return monitor;
 		return new SubProgressMonitor(monitor, ticks);
 	}
-
-	public static IProgressMonitor subMonitorFor(IProgressMonitor monitor, int ticks, int style) {
-		if (monitor == null)
-			return new NullProgressMonitor();
-		if (monitor instanceof NullProgressMonitor)
-			return monitor;
-		return new SubProgressMonitor(monitor, ticks, style);
-	}
-
 }

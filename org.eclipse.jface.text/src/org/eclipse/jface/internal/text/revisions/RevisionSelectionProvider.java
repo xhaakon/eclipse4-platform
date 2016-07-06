@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -51,6 +51,7 @@ public final class RevisionSelectionProvider implements ISelectionProvider {
 			fPostProvider= postProvider;
         }
 
+		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
 	    	ISelection selection= event.getSelection();
 	    	if (selection instanceof ITextSelection) {
@@ -67,7 +68,8 @@ public final class RevisionSelectionProvider implements ISelectionProvider {
     }
 
 	private final RevisionPainter fPainter;
-	private final ListenerList fListeners= new ListenerList();
+
+	private final ListenerList<ISelectionChangedListener> fListeners= new ListenerList<>();
 
 	/**
 	 * The text viewer once we are installed, <code>null</code> if not installed.
@@ -97,33 +99,25 @@ public final class RevisionSelectionProvider implements ISelectionProvider {
 		fPainter= painter;
     }
 
-	/*
-     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
-     */
-    public void addSelectionChangedListener(ISelectionChangedListener listener) {
+    @Override
+	public void addSelectionChangedListener(ISelectionChangedListener listener) {
     	fListeners.add(listener);
     }
 
-    /*
-     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
-     */
-    public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+    @Override
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
     	fListeners.remove(listener);
     }
 
-	/*
-     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
-     */
-    public ISelection getSelection() {
+    @Override
+	public ISelection getSelection() {
     	if (fSelection == null)
     		return StructuredSelection.EMPTY;
 	    return new StructuredSelection(fSelection);
     }
 
-	/*
-     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
-     */
-    public void setSelection(ISelection selection) {
+    @Override
+	public void setSelection(ISelection selection) {
     	if (fIgnoreEvents)
     		return;
     	if (selection instanceof IStructuredSelection) {
@@ -192,9 +186,9 @@ public final class RevisionSelectionProvider implements ISelectionProvider {
     		ISelection selection= getSelection();
     		SelectionChangedEvent event= new SelectionChangedEvent(this, selection);
 
-    		Object[] listeners= fListeners.getListeners();
-    		for (int i= 0; i < listeners.length; i++)
-    			((ISelectionChangedListener) listeners[i]).selectionChanged(event);
+			for (ISelectionChangedListener listener : fListeners) {
+				listener.selectionChanged(event);
+			}
     	} finally {
     		fIgnoreEvents= false;
     	}

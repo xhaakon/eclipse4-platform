@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.ide.undo.AbstractWorkspaceOperation;
@@ -67,7 +66,7 @@ public class MoveFilesAndFoldersOperation extends CopyFilesAndFoldersOperation {
 	 *            the resources to move
 	 * @param destination
 	 *            destination to which resources will be moved
-	 * @param subMonitor
+	 * @param monitor
 	 *            a progress monitor for showing progress and for cancelation
 	 *
 	 * @deprecated As of 3.3, the work is performed in the undoable operation
@@ -76,9 +75,10 @@ public class MoveFilesAndFoldersOperation extends CopyFilesAndFoldersOperation {
 	 */
 	@Deprecated
 	@Override
-	protected void copy(IResource[] resources, IPath destination,
-			IProgressMonitor subMonitor) throws CoreException {
+	protected void copy(IResource[] resources, IPath destination, IProgressMonitor monitor) throws CoreException {
+		SubMonitor subMonitor = SubMonitor.convert(monitor, resources.length);
 		for (int i = 0; i < resources.length; i++) {
+			SubMonitor iterationMonitor = subMonitor.split(1).setWorkRemaining(100);
 			IResource source = resources[i];
 			IPath destinationPath = destination.append(source.getName());
 			IWorkspace workspace = source.getWorkspace();
@@ -89,38 +89,31 @@ public class MoveFilesAndFoldersOperation extends CopyFilesAndFoldersOperation {
 				// move the children of the folder.
 				if (homogenousResources(source, existing)) {
 					IResource[] children = ((IContainer) source).members();
-					copy(children, destinationPath, subMonitor);
-					delete(source, subMonitor);
+					copy(children, destinationPath, iterationMonitor.split(50));
+					delete(source, iterationMonitor.split(50));
 				} else {
 					// delete the destination folder, moving a linked folder
 					// over an unlinked one or vice versa. Fixes bug 28772.
-					delete(existing, new SubProgressMonitor(subMonitor, 0));
-					source.move(destinationPath, IResource.SHALLOW
-							| IResource.KEEP_HISTORY, new SubProgressMonitor(
-							subMonitor, 0));
+					delete(existing, iterationMonitor.split(50));
+					source.move(destinationPath, IResource.SHALLOW | IResource.KEEP_HISTORY,
+							iterationMonitor.split(50));
 				}
 			} else {
 				// if we're merging folders, we could be overwriting an existing
 				// file
 				if (existing != null) {
 					if (homogenousResources(source, existing)) {
-						moveExisting(source, existing, subMonitor);
+						moveExisting(source, existing, iterationMonitor.split(100));
 					} else {
 						// Moving a linked resource over unlinked or vice versa.
 						// Can't use setContents here. Fixes bug 28772.
-						delete(existing, new SubProgressMonitor(subMonitor, 0));
-						source.move(destinationPath, IResource.SHALLOW
-								| IResource.KEEP_HISTORY,
-								new SubProgressMonitor(subMonitor, 0));
+						delete(existing, iterationMonitor.split(50));
+						source.move(destinationPath, IResource.SHALLOW | IResource.KEEP_HISTORY,
+								iterationMonitor.split(50));
 					}
 				} else {
-					source.move(destinationPath, IResource.SHALLOW
-							| IResource.KEEP_HISTORY, new SubProgressMonitor(
-							subMonitor, 0));
-				}
-				subMonitor.worked(1);
-				if (subMonitor.isCanceled()) {
-					throw new OperationCanceledException();
+					source.move(destinationPath, IResource.SHALLOW | IResource.KEEP_HISTORY,
+							iterationMonitor.split(100));
 				}
 			}
 		}
@@ -191,35 +184,27 @@ public class MoveFilesAndFoldersOperation extends CopyFilesAndFoldersOperation {
 	 *            source file to move
 	 * @param existing
 	 *            existing file to set the source content in
-	 * @param subMonitor
+	 * @param monitor
 	 *            a progress monitor for showing progress and for cancelation
 	 * @throws CoreException
 	 *             setContents failed
 	 * @deprecated As of 3.3, this method is not called.
 	 */
 	@Deprecated
-	private void moveExisting(IResource source, IResource existing,
-			IProgressMonitor subMonitor) throws CoreException {
+	private void moveExisting(IResource source, IResource existing, IProgressMonitor monitor) throws CoreException {
+		SubMonitor subMonitor = SubMonitor.convert(monitor, 2);
 		IFile existingFile = getFile(existing);
 
 		if (existingFile != null) {
 			IFile sourceFile = getFile(source);
 
 			if (sourceFile != null) {
-				existingFile.setContents(sourceFile.getContents(),
-						IResource.KEEP_HISTORY, new SubProgressMonitor(
-								subMonitor, 0));
-				delete(sourceFile, subMonitor);
+				existingFile.setContents(sourceFile.getContents(), IResource.KEEP_HISTORY, subMonitor.split(1));
+				delete(sourceFile, subMonitor.split(1));
 			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc) Overrides method in CopyFilesAndFoldersOperation
-	 *
-	 * Note this method is for internal use only. It is not API.
-	 *
-	 */
 	@Override
 	public String validateDestination(IContainer destination,
 			IResource[] sourceResources) {
@@ -252,11 +237,6 @@ public class MoveFilesAndFoldersOperation extends CopyFilesAndFoldersOperation {
 		return super.validateDestination(destination, sourceResources);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.actions.CopyFilesAndFoldersOperation#isMove()
-	 */
 	@Override
 	protected boolean isMove() {
 		return true;

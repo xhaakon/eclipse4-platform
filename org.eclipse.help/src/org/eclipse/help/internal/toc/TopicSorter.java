@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,14 +23,14 @@ import com.ibm.icu.text.Collator;
  * Handles the "sort" attribute on topics and tocs
  */
 public class TopicSorter {
-	
-	private Comparator comparator;
-	
+
+	private TopicComparator comparator;
+
 	public void sortChildren(Toc toc) {
 		if (comparator == null) {
 			comparator = new TopicComparator();
 		}
-		if (toc.isSorted()) { 
+		if (toc.isSorted()) {
 			sort(toc, toc.getTopics());
 	    }
 		ITopic[] childTopics = toc.getTopics();
@@ -38,9 +38,9 @@ public class TopicSorter {
 			sortChildren((Topic)childTopics[i]);
 		}
 	}
-	
+
 	private void sortChildren(Topic topic) {
-		if (topic.isSorted()) { 
+		if (topic.isSorted()) {
 			sort(topic, topic.getSubtopics());
 	    }
 		ITopic[] childTopics = topic.getSubtopics();
@@ -49,16 +49,17 @@ public class TopicSorter {
 		}
 	}
 
-	private class TopicComparator implements Comparator {
+	private class TopicComparator implements Comparator<ITopic> {
 		Collator collator = Collator.getInstance();
-		
-		public int compare(Object o1, Object o2) {
-			String label1 = ((ITopic)o1).getLabel();
-			String label2 = ((ITopic)o2).getLabel();
+
+		@Override
+		public int compare(ITopic o1, ITopic o2) {
+			String label1 = o1.getLabel();
+			String label2 = o2.getLabel();
 			return collator.compare(label1, label2);
-		}	
+		}
 	}
-	
+
 	/*
 	 * Sort the given node's descendants recursively using the given
 	 * Comparator.
@@ -77,4 +78,3 @@ public class TopicSorter {
 	}
 }
 
-	

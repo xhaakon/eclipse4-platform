@@ -33,17 +33,18 @@ public class ResourceMappingHierarchyArea extends DialogArea implements INavigat
     private CommonViewer viewer;
 	private final ISynchronizationScope scope;
 	private final ISynchronizationContext context;
-    
-    
+
+
     public static ResourceMappingHierarchyArea create(ISynchronizationScope scope, ISynchronizationContext context) {
         return new ResourceMappingHierarchyArea(scope, context);
     }
-    
+
 	private ResourceMappingHierarchyArea(ISynchronizationScope scope, ISynchronizationContext context) {
 		this.scope = scope;
 		this.context = context;
 	}
 
+	@Override
 	public void createArea(Composite parent) {
         Composite composite = new Composite(parent, SWT.NULL);
         GridLayout layout = new GridLayout(1, false);
@@ -51,10 +52,10 @@ public class ResourceMappingHierarchyArea extends DialogArea implements INavigat
         layout.marginWidth = 0;
         composite.setLayout(layout);
         composite.setLayoutData(new GridData(GridData.FILL_BOTH));
-        
+
         if (description != null)
             createWrappingLabel(composite, description, 1);
-        
+
         viewer = new CommonViewer(TEAM_NAVIGATOR_CONTENT, composite, SWT.BORDER);
         viewer.setSorter(new CommonViewerSorter());
         viewer.setSorter(new TeamViewerSorter((CommonViewerSorter)viewer.getSorter()));
@@ -96,6 +97,7 @@ public class ResourceMappingHierarchyArea extends DialogArea implements INavigat
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.navigator.internal.extensions.INavigatorContentServiceListener#onLoad(org.eclipse.ui.navigator.internal.extensions.NavigatorContentExtension)
 	 */
+	@Override
 	public void onLoad(INavigatorContentExtension anExtension) {
 		anExtension.getStateModel().setProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_SCOPE, scope);
 		if (context != null) {

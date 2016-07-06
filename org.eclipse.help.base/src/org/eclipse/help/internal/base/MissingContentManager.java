@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 IBM Corporation and others.
+ * Copyright (c) 2011, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,8 +29,8 @@ import org.eclipse.help.internal.HelpPlugin;
 import org.osgi.service.prefs.BackingStoreException;
 
 /**
- * Handle sunresolved toc place holders as well as situations
- * where remote help is unavailable
+ * Handles unresolved toc place holders as well as situations where remote help
+ * is unavailable
  */
 
 public class MissingContentManager {
@@ -65,6 +65,7 @@ public class MissingContentManager {
 			this.placeholderPage = placeholderPage;
 		}
 
+		@Override
 		public int compareTo(Placeholder o) {
 			return o.path.compareTo(path);
 		}
@@ -86,8 +87,8 @@ public class MissingContentManager {
 	 */
 	private MissingContentManager() {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
-        placeholders = new ArrayList<Placeholder>();
-        bundlesToIgnore = new HashSet<String>();
+		placeholders = new ArrayList<>();
+		bundlesToIgnore = new HashSet<>();
         if ( BaseHelpSystem.getMode() == BaseHelpSystem.MODE_INFOCENTER ) {
         	return; // Placeholders are not shown for infocenters
         }
@@ -182,7 +183,7 @@ public class MissingContentManager {
 
 	public Placeholder[] getUnresolvedPlaceholders() {
 		List<Placeholder> unresolved;
-		unresolved = new ArrayList<Placeholder>();
+		unresolved = new ArrayList<>();
 		for (Iterator<Placeholder> iter = placeholders.iterator(); iter.hasNext(); ) {
 			Placeholder ph = iter.next();
 			String bundle = ph.bundle;

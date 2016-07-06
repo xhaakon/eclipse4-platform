@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -57,10 +57,10 @@ public class HTMLTextPresenter implements DefaultInformationControl.IInformation
 		int yoursEnd=   offset + insertLength -1;
 		yoursEnd= Math.max(yoursStart, yoursEnd);
 
-		Iterator e= presentation.getAllStyleRangeIterator();
+		Iterator<StyleRange> e= presentation.getAllStyleRangeIterator();
 		while (e.hasNext()) {
 
-			StyleRange range= (StyleRange) e.next();
+			StyleRange range= e.next();
 
 			int myStart= range.start;
 			int myEnd=   range.start + range.length -1;
@@ -104,14 +104,13 @@ public class HTMLTextPresenter implements DefaultInformationControl.IInformation
 	 * @deprecated Use {@link #updatePresentation(Drawable, String, TextPresentation, int, int)}
 	 *             instead
 	 */
+	@Deprecated
+	@Override
 	public String updatePresentation(Display display, String hoverInfo, TextPresentation presentation, int maxWidth, int maxHeight) {
 		return updatePresentation((Drawable)display, hoverInfo, presentation, maxWidth, maxHeight);
 	}
 
-	/*
-	 * @see IHoverInformationPresenterExtension#updatePresentation(Drawable drawable, String, TextPresentation, int, int)
-	 * @since 3.2
-	 */
+	@Override
 	public String updatePresentation(Drawable drawable, String hoverInfo, TextPresentation presentation, int maxWidth, int maxHeight) {
 
 		if (hoverInfo == null)

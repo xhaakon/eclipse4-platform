@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.ui.cheatsheets.*;
+import org.eclipse.ui.cheatsheets.CheatSheetListener;
+import org.eclipse.ui.cheatsheets.ICheatSheetEvent;
+import org.eclipse.ui.cheatsheets.ICheatSheetManager;
 import org.eclipse.ui.internal.cheatsheets.registry.CheatSheetElement;
 
 /**
@@ -30,31 +32,29 @@ public class CheatSheetManager implements ICheatSheetManager {
 	private static final String VARIABLE_END = "}"; //$NON-NLS-1$
 	private static final String VARIABLE_BEGIN = "${"; //$NON-NLS-1$
 	private String cheatsheetID;
-	private List listeners;
-	private Map dataTable = null;
+	private List<CheatSheetListener> listeners;
+	private Map<String, String> dataTable = null;
 	private ICheatSheetManager parent;
-	
+
 	public CheatSheetManager(CheatSheetElement element) {
 		cheatsheetID = element.getID();
-		listeners = new ArrayList();
+		listeners = new ArrayList<>();
 		CheatSheetListener listener = element.createListenerInstance();
 		if (listener != null) {
 			addListener(listener);
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.cheatsheets.ICheatSheetManager#getCheatSheetID()
-	 */
+	@Override
 	public String getCheatSheetID() {
 		return cheatsheetID;
 	}
 
 	public void fireEvent(int eventType) {
 		// Send an event to every listener
-		for (Iterator iterator = listeners.iterator();iterator.hasNext();) {
+		for (Iterator<CheatSheetListener> iterator = listeners.iterator(); iterator.hasNext();) {
 		    ICheatSheetEvent event = new CheatSheetEvent(eventType, cheatsheetID, this);
-		    CheatSheetListener listener = (CheatSheetListener)iterator.next();
+			CheatSheetListener listener = iterator.next();
 		    listener.cheatSheetEvent(event);
 		}
 	}
@@ -62,24 +62,25 @@ public class CheatSheetManager implements ICheatSheetManager {
 	/**
 	 * returns the hashtable with all manager data stored.
 	 */
-	public Map getData() {
+	public Map<String, String> getData() {
 		return dataTable;
 	}
-	
+
 	/**
 	 * Initialize all variables
 	 * @param data a map containg values for all variables
 	 */
-	public void setData(Map data) {
+	public void setData(Map<String, String> data) {
 		dataTable = data;
 	}
 
+	@Override
 	public String getData(String key) {
 		if (dataTable == null)
 			return null;
-		return (String) dataTable.get(key);
+		return dataTable.get(key);
 	}
-	
+
 	/**
 	 * Similar to get data except that if the key is prefixed with "parent."
 	 * get the data from the parent
@@ -102,12 +103,12 @@ public class CheatSheetManager implements ICheatSheetManager {
 		}
 		return result;
 	}
-	
+
     /**
      * Substitute occurences of ${data} with values from the cheatsheetmanager.
      * @param input The input string
      * @param csm The cheatsheet manager
-     * @return The input string with substitutions made for any cheatsheet 
+     * @return The input string with substitutions made for any cheatsheet
      * variables encountered.
      */
 	public String performVariableSubstitution(String input)
@@ -134,13 +135,11 @@ public class CheatSheetManager implements ICheatSheetManager {
 		return output;
 	}
 
-	/*package*/ void setData(Hashtable data) {
+	/* package */ void setData(Hashtable<String, String> data) {
 		dataTable = data;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.cheatsheets.ICheatSheetManager#setData(java.lang.String, java.lang.String)
-	 */
+	@Override
 	public void setData(String key, String data) {
 		if (key == null) {
 			throw new IllegalArgumentException();
@@ -152,14 +151,14 @@ public class CheatSheetManager implements ICheatSheetManager {
 		}
 
 		if (dataTable == null) {
-			dataTable = new Hashtable(30);
+			dataTable = new Hashtable<>(30);
 		}
 
 		dataTable.put(key, data);
 	}
-	
+
 	/**
-	 * Similar to setData except that if the key is prefixed by "parent." 
+	 * Similar to setData except that if the key is prefixed by "parent."
 	 * set the data in the parent.
 	 * @param qualifiedKey A key which may be prefixed by parent.
 	 * @param data The value to set
@@ -185,17 +184,19 @@ public class CheatSheetManager implements ICheatSheetManager {
 		}
 	}
 
+	@Override
 	public ICheatSheetManager getParent() {
 		return parent;
 	}
-	
+
 	public void setParent(ICheatSheetManager parent) {
 		this.parent = parent;
 	}
 
-	public Set getKeySet() {
+	@Override
+	public Set<String> getKeySet() {
 		if (dataTable == null) {
-			return new HashSet();
+			return new HashSet<>();
 		} else {
 		    return dataTable.keySet();
 		}

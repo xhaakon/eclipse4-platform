@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,6 +56,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 *
 	 * @deprecated As of 3.0, replaced by Annotation.TYPE_UNKNOWN
 	 */
+	@Deprecated
 	public static final String UNKNOWN= Annotation.TYPE_UNKNOWN;
 
 	/**
@@ -99,10 +100,10 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 *
 	 * @since 3.0
 	 */
-	private final static Map MAPPING;
+	private final static Map<String, String> MAPPING;
 
 	static {
-		MAPPING= new HashMap();
+		MAPPING= new HashMap<>();
 		MAPPING.put(ERROR_SYSTEM_IMAGE, ISharedImages.IMG_OBJS_ERROR_TSK);
 		MAPPING.put(WARNING_SYSTEM_IMAGE, ISharedImages.IMG_OBJS_WARN_TSK);
 		MAPPING.put(INFO_SYSTEM_IMAGE, ISharedImages.IMG_OBJS_INFO_TSK);
@@ -116,6 +117,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 *
 	 * @deprecated As of 3.0, no replacement
 	 */
+	@Deprecated
 	protected MarkerAnnotationPreferences fMarkerAnnotationPreferences;
 
 	/**
@@ -132,6 +134,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 * @deprecated As of 3.0, replaced by
 	 *             {@link org.eclipse.ui.texteditor.DefaultMarkerAnnotationAccess#DefaultMarkerAnnotationAccess()}
 	 */
+	@Deprecated
 	public DefaultMarkerAnnotationAccess(MarkerAnnotationPreferences markerAnnotationPreferences) {
 		fMarkerAnnotationPreferences= markerAnnotationPreferences;
 	}
@@ -146,10 +149,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	public DefaultMarkerAnnotationAccess() {
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension2#setQuickAssistAssistant(org.eclipse.jface.text.quickassist.IQuickAssistAssistant)
-	 * @since 3.2
-	 */
+	@Override
 	public void setQuickAssistAssistant(IQuickAssistAssistant assistant) {
 		fQuickAssistAssistant= assistant;
 	}
@@ -183,6 +183,8 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 * @deprecated use <code>Annotation.getType()</code>
 	 */
 
+	@Deprecated
+	@Override
 	public Object getType(Annotation annotation) {
 		return annotation.getType();
 	}
@@ -192,6 +194,8 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 *
 	 * @deprecated assumed to always return <code>true</code>
 	 */
+	@Deprecated
+	@Override
 	public boolean isMultiLine(Annotation annotation) {
 		return true;
 	}
@@ -201,6 +205,8 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 *
 	 * @deprecated assumed to always return <code>true</code>
 	 */
+	@Deprecated
+	@Override
 	public boolean isTemporary(Annotation annotation) {
 		return !annotation.isPersistent();
 	}
@@ -209,15 +215,13 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension#getLabel(org.eclipse.jface.text.source.Annotation)
 	 * @since 3.0
 	 */
+	@Override
 	public String getTypeLabel(Annotation annotation) {
 		AnnotationPreference preference= getAnnotationPreference(annotation);
 		return preference != null ? preference.getPreferenceLabel() : null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension#getLayer(org.eclipse.jface.text.source.Annotation)
-	 * @since 3.0
-	 */
+	@Override
 	public int getLayer(Annotation annotation) {
 		if (annotation instanceof IAnnotationPresentation) {
 			IAnnotationPresentation presentation= (IAnnotationPresentation) annotation;
@@ -231,8 +235,8 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 		// backward compatibility, ignore exceptions, just return default layer
 		try {
 
-			Method method= annotation.getClass().getMethod("getLayer", null); //$NON-NLS-1$
-			Integer result= (Integer) method.invoke(annotation, null);
+			Method method= annotation.getClass().getMethod("getLayer"); //$NON-NLS-1$
+			Integer result= (Integer) method.invoke(annotation);
 			return result.intValue();
 
 		} catch (SecurityException x) {
@@ -245,10 +249,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 		return IAnnotationAccessExtension.DEFAULT_LAYER;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension#paint(org.eclipse.jface.text.source.Annotation, org.eclipse.swt.graphics.GC, org.eclipse.swt.widgets.Canvas, org.eclipse.swt.graphics.Rectangle)
-	 * @since 3.0
-	 */
+	@Override
 	public void paint(Annotation annotation, GC gc, Canvas canvas, Rectangle bounds) {
 
 		if (annotation instanceof IAnnotationPresentation) {
@@ -282,10 +283,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension#isPaintable(org.eclipse.jface.text.source.Annotation)
-	 * @since 3.0
-	 */
+	@Override
 	public boolean isPaintable(Annotation annotation) {
 		if (annotation instanceof IAnnotationPresentation)
 			return true;
@@ -300,17 +298,13 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 		return image != null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension#isSubtype(java.lang.Object, java.lang.Object)
-	 */
+	@Override
 	public boolean isSubtype(Object annotationType, Object potentialSupertype) {
 		AnnotationTypeHierarchy hierarchy= getAnnotationTypeHierarchy();
 		return hierarchy.isSubtype(potentialSupertype.toString(), annotationType.toString());
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationAccessExtension#getSupertypes(java.lang.Object)
-	 */
+	@Override
 	public Object[] getSupertypes(Object annotationType) {
 		AnnotationTypeHierarchy hierarchy= getAnnotationTypeHierarchy();
 		AnnotationType type= hierarchy.getAnnotationType(annotationType.toString());
@@ -346,7 +340,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 	 */
 	public static String getSharedImageName(String symbolicImageName) {
 		Assert.isLegal(symbolicImageName != null);
-		String sharedImageName= (String)MAPPING.get(symbolicImageName);
+		String sharedImageName= MAPPING.get(symbolicImageName);
 		Assert.isLegal(sharedImageName != null);
 		return sharedImageName;
 	}
@@ -366,7 +360,7 @@ public class DefaultMarkerAnnotationAccess implements IAnnotationAccess, IAnnota
 		if (annotation instanceof AnnotationBag) {
 			AnnotationBag bag= (AnnotationBag)annotation;
 			if (!bag.isEmpty())
-				annotation= (Annotation)bag.iterator().next();
+				annotation= bag.iterator().next();
 		}
 
 		ImageRegistry registry= EditorsPlugin.getDefault().getImageRegistry();

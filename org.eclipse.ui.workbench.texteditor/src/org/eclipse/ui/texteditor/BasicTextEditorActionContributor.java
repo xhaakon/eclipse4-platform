@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,7 +29,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.EditorActionBarContributor;
-
 
 
 /**
@@ -136,7 +135,7 @@ public class BasicTextEditorActionContributor extends EditorActionBarContributor
 	 * The map of status fields.
 	 * @since 2.0
 	 */
-	private Map fStatusFields;
+	private Map<StatusFieldDef, StatusLineContributionItem> fStatusFields;
 
 
 	/**
@@ -160,7 +159,7 @@ public class BasicTextEditorActionContributor extends EditorActionBarContributor
 		fHippieCompletion= new RetargetTextEditorAction(EditorMessages.getBundleForConstructedKeys(), "Editor.HippieCompletion."); //$NON-NLS-1$
 		fHippieCompletion.setActionDefinitionId(ITextEditorActionDefinitionIds.HIPPIE_COMPLETION);
 
-		fStatusFields= new HashMap(3);
+		fStatusFields= new HashMap<>(3);
 		for (int i= 0; i < STATUS_FIELD_DEFS.length; i++) {
 			StatusFieldDef fieldDef= STATUS_FIELD_DEFS[i];
 			fStatusFields.put(fieldDef, new StatusLineContributionItem(fieldDef.category, fieldDef.visible, fieldDef.widthInChars));
@@ -214,6 +213,8 @@ public class BasicTextEditorActionContributor extends EditorActionBarContributor
 			actionBars.setGlobalActionHandler(ACTIONS[i], getAction(editor, ACTIONS[i]));
 		actionBars.setGlobalActionHandler(ITextEditorActionDefinitionIds.SHOW_WHITESPACE_CHARACTERS, getAction(editor, ITextEditorActionConstants.SHOW_WHITESPACE_CHARACTERS));
 		actionBars.setGlobalActionHandler(ITextEditorActionDefinitionIds.BLOCK_SELECTION_MODE, getAction(editor, ITextEditorActionConstants.BLOCK_SELECTION_MODE));
+		if (editor instanceof AbstractTextEditor && ((AbstractTextEditor)editor).isWordWrapSupported())
+			actionBars.setGlobalActionHandler(ITextEditorActionDefinitionIds.WORD_WRAP, getAction(editor, ITextEditorActionConstants.WORD_WRAP));
 
 		fFindNext.setAction(getAction(editor, ITextEditorActionConstants.FIND_NEXT));
 		fFindPrevious.setAction(getAction(editor, ITextEditorActionConstants.FIND_PREVIOUS));
@@ -224,7 +225,7 @@ public class BasicTextEditorActionContributor extends EditorActionBarContributor
 
 		for (int i= 0; i < STATUS_FIELD_DEFS.length; i++) {
 			if (fActiveEditorPart instanceof ITextEditorExtension) {
-				StatusLineContributionItem statusField= (StatusLineContributionItem) fStatusFields.get(STATUS_FIELD_DEFS[i]);
+				StatusLineContributionItem statusField= fStatusFields.get(STATUS_FIELD_DEFS[i]);
 				statusField.setActionHandler(getAction(editor, STATUS_FIELD_DEFS[i].actionId));
 				ITextEditorExtension extension= (ITextEditorExtension) fActiveEditorPart;
 				extension.setStatusField(statusField, STATUS_FIELD_DEFS[i].category);
@@ -242,13 +243,12 @@ public class BasicTextEditorActionContributor extends EditorActionBarContributor
 	 *
 	 * @param part {@inheritDoc}
 	 */
+	@Override
 	public void setActiveEditor(IEditorPart part) {
 		doSetActiveEditor(part);
 	}
 
-	/*
-	 * @see EditorActionBarContributor#contributeToMenu(IMenuManager)
-	 */
+	@Override
 	public void contributeToMenu(IMenuManager menu) {
 
 		IMenuManager editMenu= menu.findMenuUsingPath(IWorkbenchActionConstants.M_EDIT);
@@ -291,20 +291,14 @@ public class BasicTextEditorActionContributor extends EditorActionBarContributor
 	    	menu.insertAfter(id, item);
     }
 
-	/*
-	 * @see EditorActionBarContributor#contributeToStatusLine(org.eclipse.jface.action.IStatusLineManager)
-	 * @since 2.0
-	 */
+	@Override
 	public void contributeToStatusLine(IStatusLineManager statusLineManager) {
 		super.contributeToStatusLine(statusLineManager);
 		for (int i= 0; i < STATUS_FIELD_DEFS.length; i++)
-			statusLineManager.add((IContributionItem)fStatusFields.get(STATUS_FIELD_DEFS[i]));
+			statusLineManager.add(fStatusFields.get(STATUS_FIELD_DEFS[i]));
 	}
 
-	/*
-	 * @see org.eclipse.ui.IEditorActionBarContributor#dispose()
-	 * @since 2.0
-	 */
+	@Override
 	public void dispose() {
 		doSetActiveEditor(null);
 		super.dispose();

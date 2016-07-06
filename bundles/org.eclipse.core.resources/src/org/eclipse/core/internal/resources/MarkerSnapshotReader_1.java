@@ -1,13 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -63,7 +65,7 @@ public class MarkerSnapshotReader_1 extends MarkerSnapshotReader {
 		IPath path = new Path(input.readUTF());
 		int markersSize = input.readInt();
 		MarkerSet markers = new MarkerSet(markersSize);
-		ArrayList<String> readTypes = new ArrayList<String>();
+		ArrayList<String> readTypes = new ArrayList<>();
 		for (int i = 0; i < markersSize; i++)
 			markers.add(readMarkerInfo(input, readTypes));
 		// we've read all the markers from the file for this snap. if the resource
@@ -79,17 +81,17 @@ public class MarkerSnapshotReader_1 extends MarkerSnapshotReader {
 		short attributesSize = input.readShort();
 		if (attributesSize == 0)
 			return null;
-		Map<String, Object> result = new MarkerAttributeMap<Object>(attributesSize);
+		Map<String, Object> result = new MarkerAttributeMap<>(attributesSize);
 		for (int j = 0; j < attributesSize; j++) {
 			String key = input.readUTF();
 			byte type = input.readByte();
 			Object value = null;
 			switch (type) {
 				case ATTRIBUTE_INTEGER :
-					value = new Integer(input.readInt());
+					value = input.readInt();
 					break;
 				case ATTRIBUTE_BOOLEAN :
-					value = input.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
+					value = input.readBoolean();
 					break;
 				case ATTRIBUTE_STRING :
 					value = input.readUTF();

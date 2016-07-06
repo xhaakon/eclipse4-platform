@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,17 +43,17 @@ public class HelpData {
 	private static final String ELEMENT_TOC = "toc"; //$NON-NLS-1$
 	private static final String ELEMENT_CATEGORY = "category"; //$NON-NLS-1$
 	private static final String ELEMENT_INDEX = "index"; //$NON-NLS-1$
-	private static final String ATTRIBUTE_ID = "id"; //$NON-NLS-1$	
+	private static final String ATTRIBUTE_ID = "id"; //$NON-NLS-1$
 	private static final String ELEMENT_OTHER_TOCS = "otherTocs"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_SORT = "sort"; //$NON-NLS-1$
 	private static final String PLUGINS_ROOT_SLASH = "PLUGINS_ROOT/"; //$NON-NLS-1$
 
 	private static HelpData productHelpData;
-	
+
 	private URL url;
-	private List tocOrder;
-	private Set hiddenTocs;
-	private Set hiddenIndexes;
+	private List<String> tocOrder;
+	private Set<String> hiddenTocs;
+	private Set<String> hiddenIndexes;
 	private String sortMode;
 
 	/*
@@ -90,7 +90,7 @@ public class HelpData {
 		}
 		return productHelpData;
 	}
-	
+
 	/*
 	 * For testing
 	 */
@@ -104,12 +104,12 @@ public class HelpData {
 	public HelpData(URL url) {
 		this.url = url;
 	}
-	
+
 	/*
 	 * Returns a list of strings which are the IDs of the tocs/categories listed
 	 * in tocOrder.
 	 */
-	public synchronized List getTocOrder() {
+	public synchronized List<String> getTocOrder() {
 		if (tocOrder == null) {
 			loadHelpData();
 		}
@@ -120,7 +120,7 @@ public class HelpData {
 	 * Returns a set of strings which are the IDs of the tocs/categories listed
 	 * in the hidden section.
 	 */
-	public synchronized Set getHiddenTocs() {
+	public synchronized Set<String> getHiddenTocs() {
 		if (hiddenTocs == null) {
 			loadHelpData();
 		}
@@ -131,13 +131,13 @@ public class HelpData {
 	 * Returns a set of strings which are the IDs of the indexes listed
 	 * in the hidden section.
 	 */
-	public synchronized Set getHiddenIndexes() {
+	public synchronized Set<String> getHiddenIndexes() {
 		if (hiddenIndexes == null) {
 			loadHelpData();
 		}
 		return hiddenIndexes;
 	}
-	
+
 	/*
 	 * Returns true if tocs not specified in the toc order are sorted
 	 */
@@ -159,9 +159,9 @@ public class HelpData {
 	 * Loads and parses the file and populates the data structures.
 	 */
 	private void loadHelpData() {
-		tocOrder = new ArrayList();
-		hiddenTocs = new HashSet();
-		hiddenIndexes = new HashSet();
+		tocOrder = new ArrayList<>();
+		hiddenTocs = new HashSet<>();
+		hiddenIndexes = new HashSet<>();
 		sortMode = "true"; //$NON-NLS-1$
 		if (url != null) {
 			try {
@@ -189,13 +189,14 @@ public class HelpData {
 	 * SAX Handler for parsing the help data file.
 	 */
 	private class Handler extends DefaultHandler {
-		
+
 		private boolean inTocOrder;
 		private boolean inHidden;
-		
+
 		/* (non-Javadoc)
 		 * @see org.xml.sax.helpers.DefaultHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
 		 */
+		@Override
 		public void startElement(String uri, String localName, String name, Attributes attributes) throws SAXException {
 			if (ELEMENT_TOC_ORDER.equals(name)) {
 				inTocOrder = true;
@@ -227,10 +228,11 @@ public class HelpData {
 				}
 			}
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.xml.sax.helpers.DefaultHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
 		 */
+		@Override
 		public void endElement(String uri, String localName, String name) throws SAXException {
 			if (ELEMENT_TOC_ORDER.equals(name)) {
 				inTocOrder = false;
@@ -239,13 +241,14 @@ public class HelpData {
 				inHidden = false;
 			}
 		}
-		
+
 		/*
 		 * Note: throws clause does not declare IOException due to a bug in
 		 * sun jdk: http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6327149
-		 * 
+		 *
 		 * @see org.xml.sax.helpers.DefaultHandler#resolveEntity(java.lang.String, java.lang.String)
 		 */
+		@Override
 		public InputSource resolveEntity(String publicId, String systemId) throws SAXException {
 			return new InputSource(new StringReader("")); //$NON-NLS-1$
 		}

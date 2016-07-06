@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.ui.internal.ide;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.mapping.ResourceMapping;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IContributorResourceAdapter;
 import org.eclipse.ui.ide.IContributorResourceAdapter2;
@@ -49,12 +50,12 @@ public class DefaultContributorResourceAdapter implements
      */
     @Override
 	public IResource getAdaptedResource(IAdaptable adaptable) {
-        return adaptable.getAdapter(IResource.class);
+		return Adapters.adapt(adaptable, IResource.class);
     }
 
     @Override
 	public ResourceMapping getAdaptedResourceMapping(IAdaptable adaptable) {
-        return adaptable.getAdapter(ResourceMapping.class);
+		return Adapters.adapt(adaptable, ResourceMapping.class);
     }
 }
 

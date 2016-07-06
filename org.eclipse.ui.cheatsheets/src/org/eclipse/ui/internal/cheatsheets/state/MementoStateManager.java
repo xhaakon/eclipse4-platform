@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,6 +48,7 @@ public class MementoStateManager implements ICheatSheetStateManager {
 	/**
 	 * Load properties from the memento.
 	 */
+	@Override
 	public Properties getProperties() {
 		if (memento == null) {
 			return null;
@@ -58,19 +59,22 @@ public class MementoStateManager implements ICheatSheetStateManager {
 		return props;
 	}
 
+	@Override
 	public CheatSheetManager getCheatSheetManager() {
 		CheatSheetManager result = new CheatSheetManager(element);
 		if (getProperties() != null) {
-		    result.setData((Hashtable) getProperties().get(IParserTags.MANAGERDATA));
+			result.setData((Hashtable<String, String>) getProperties().get(IParserTags.MANAGERDATA));
 		}
 		result.setParent(parentCsm);
 		return result;
 	}
 
+	@Override
 	public void setElement(CheatSheetElement element) {
 		this.element = element;
 	}
 
+	@Override
 	public IStatus saveState(Properties properties, CheatSheetManager manager) {
 		// The real save will use a memento, this is an empty method
 		return Status.OK_STATUS;

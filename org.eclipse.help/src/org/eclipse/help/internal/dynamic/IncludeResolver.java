@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,19 +25,19 @@ import org.xml.sax.SAXException;
  * replacing the original include with it.
  */
 public class IncludeResolver {
-	
+
 	private static final String ATTRIBUTE_ID = "id"; //$NON-NLS-1$
-	
+
 	private DocumentProcessor processor;
 	private DocumentReader reader;
 	private String locale;
-	
+
 	public IncludeResolver(DocumentProcessor processor, DocumentReader reader, String locale) {
 		this.processor = processor;
 		this.reader = reader;
 		this.locale = locale;
 	}
-	
+
 	/*
 	 * Resolves the include target to a processed Element.
 	 */
@@ -56,7 +56,7 @@ public class IncludeResolver {
 			catch (IOException e) {}
 		}
 	}
-	
+
 	/*
 	 * Finds the specified element from the given XML input stream.
 	 */
@@ -64,7 +64,7 @@ public class IncludeResolver {
 		UAElement element = reader.read(in);
 		return findElement(element, elementId);
 	}
-	
+
 	/*
 	 * Finds the specified element under the given subtree.
 	 */

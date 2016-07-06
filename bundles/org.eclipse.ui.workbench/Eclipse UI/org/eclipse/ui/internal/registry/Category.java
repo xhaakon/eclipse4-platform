@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -108,9 +108,6 @@ public class Category implements IWorkbenchAdapter, IPluginContribution, IAdapta
         elements.add(element);
     }
 
-    /* (non-Javadoc)
-     * Method declared on IAdaptable.
-     */
     @Override
 	public Object getAdapter(Class adapter) {
         if (adapter == IWorkbenchAdapter.class) {
@@ -122,25 +119,16 @@ public class Category implements IWorkbenchAdapter, IPluginContribution, IAdapta
 		}
     }
 
-    /* (non-Javadoc)
-     * Method declared on IWorkbenchAdapter.
-     */
     @Override
 	public Object[] getChildren(Object o) {
         return getElements().toArray();
     }
 
-    /* (non-Javadoc)
-     * Method declared on IWorkbenchAdapter.
-     */
     @Override
 	public ImageDescriptor getImageDescriptor(Object object) {
         return WorkbenchImages.getImageDescriptor(ISharedImages.IMG_OBJ_FOLDER);
     }
 
-    /* (non-Javadoc)
-     * Method declared on IWorkbenchAdapter.
-     */
     @Override
 	public String getLabel(Object o) {
         return getLabel();
@@ -248,25 +236,16 @@ public class Category implements IWorkbenchAdapter, IPluginContribution, IAdapta
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.model.IWorkbenchAdapter#getParent(java.lang.Object)
-     */
     @Override
 	public Object getParent(Object o) {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.activities.support.IPluginContribution#getLocalId()
-     */
     @Override
 	public String getLocalId() {
         return id;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.activities.support.IPluginContribution#getPluginId()
-     */
     @Override
 	public String getPluginId() {
         return configurationElement == null ? pluginId : configurationElement

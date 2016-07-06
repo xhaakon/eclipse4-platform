@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Dan Rubel <dan_rubel@instantiations.com> - Implementation of getLocalTimeStamp
@@ -16,6 +16,7 @@
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Project Path Variable Support
  *     James Blackburn (Broadcom Corp.) - ongoing development
  *     Sergey Prigogin (Google) - [338010] Resource.createLink() does not preserve symbolic links
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -131,7 +132,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 		//check that this resource matches the member flags
 		if (!isMember(flags, memberFlags))
 			return;
-		// visit this resource		
+		// visit this resource
 		if (!visitor.visit(this) || depth == DEPTH_ZERO)
 			return;
 		// get the info again because it might have been changed by the visitor
@@ -225,7 +226,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	 * IResource#copy and IWorkspace#copy. The first one gets the error and throws
 	 * its message in an AssertionFailureException. The second one just throws a
 	 * CoreException using the status returned by this method.
-	 * 
+	 *
 	 * @see IResource#copy(IPath, int, IProgressMonitor)
 	 */
 	public IStatus checkCopyRequirements(IPath destination, int destinationType, int updateFlags) throws CoreException {
@@ -336,7 +337,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	}
 
 	/**
-	 * Checks that this resource is local to the given depth.  
+	 * Checks that this resource is local to the given depth.
 	 *
 	 * @exception CoreException if this resource is not local
 	 */
@@ -358,7 +359,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	 * the error and throws its message in an AssertionFailureException. The
 	 * second one just throws a CoreException using the status returned
 	 * by this method.
-	 * 
+	 *
 	 * @see IResource#move(IPath, int, IProgressMonitor)
 	 */
 	protected IStatus checkMoveRequirements(IPath destination, int destinationType, int updateFlags) throws CoreException {
@@ -443,7 +444,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	/**
 	 * Checks that the destination is a suitable one given that it could be a
 	 * group.
-	 * 
+	 *
 	 * @exception CoreException
 	 *                if the path points to a group
 	 */
@@ -459,7 +460,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	/**
 	 * Checks that the destination is a suitable one given that it could be a
 	 * group.
-	 * 
+	 *
 	 * @exception CoreException
 	 *                if the path points to a group
 	 */
@@ -520,7 +521,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 		info.set(M_PHANTOM);
 		getLocalManager().updateLocalSync(info, I_NULL_SYNC_INFO);
 		info.clearModificationStamp();
-		// should already be done by the #deleteResource call but left in 
+		// should already be done by the #deleteResource call but left in
 		// just to be safe and for code clarity.
 		info.setMarkers(null);
 	}
@@ -844,7 +845,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 			for (Iterator<Resource> it = links.iterator(); it.hasNext();)
 				workspace.broadcastEvent(LifecycleEvent.newEvent(LifecycleEvent.PRE_LINK_DELETE, it.next()));
 
-		// check if we deleted a preferences file 
+		// check if we deleted a preferences file
 		ProjectPreferences.deleted(this);
 
 		//remove all deleted linked resources from the project description
@@ -919,7 +920,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 			IPath linkPath = link.getProjectRelativePath();
 			if (myPath.isPrefixOf(linkPath)) {
 				if (links == null)
-					links = new ArrayList<Resource>();
+					links = new ArrayList<>();
 				links.add(workspace.newResource(project.getFullPath().append(linkPath), link.getType()));
 			}
 		}
@@ -942,7 +943,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 					IPath filterPath = it.next();
 					if (myPath.isPrefixOf(filterPath)) {
 						if (filters == null)
-							filters = new ArrayList<Resource>();
+							filters = new ArrayList<>();
 						filters.add(workspace.newResource(project.getFullPath().append(filterPath), IResource.FOLDER));
 					}
 				}
@@ -1036,7 +1037,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	protected void fixupAfterMoveSource() throws CoreException {
 		ResourceInfo info = getResourceInfo(true, true);
-		//if a linked resource is moved, we need to remove the location info from the .project 
+		//if a linked resource is moved, we need to remove the location info from the .project
 		if (isLinked() || isVirtual()) {
 			Project project = (Project) getProject();
 			if (project.internalGetDescription().setLinkLocation(getProjectRelativePath(), null))
@@ -1053,7 +1054,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 			project.writeDescription(IResource.NONE);
 		}
 
-		// check if we deleted a preferences file 
+		// check if we deleted a preferences file
 		ProjectPreferences.deleted(this);
 
 		if (!synchronizing(info)) {
@@ -1241,7 +1242,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	@Override
 	public int hashCode() {
-		// the container may be null if the identified resource 
+		// the container may be null if the identified resource
 		// does not exist so don't bother with it in the hash
 		return getFullPath().hashCode();
 	}
@@ -1392,7 +1393,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	}
 
 	/**
-	 * Note the depth parameter is intentionally ignored because 
+	 * Note the depth parameter is intentionally ignored because
 	 * this method is over-ridden by Container.isLocal().
 	 * @deprecated
 	 */
@@ -1404,7 +1405,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	/**
 	 * Returns whether a resource should be included in a traversal
 	 * based on the provided member flags.
-	 * 
+	 *
 	 * @param flags The resource info flags
 	 * @param memberFlags The member flag mask
 	 * @return Whether the resource is included
@@ -1774,7 +1775,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	/**
 	 * Returns true if this resource has the potential to be
-	 * (or have been) synchronized.  
+	 * (or have been) synchronized.
 	 */
 	public boolean synchronizing(ResourceInfo info) {
 		return info != null && info.getSyncInfo(false) != null;
@@ -1816,8 +1817,8 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	}
 
 	/**
-	 * Calls the move/delete hook to perform the deletion.  Since this method calls 
-	 * client code, it is run "unprotected", so the workspace lock is not held.  
+	 * Calls the move/delete hook to perform the deletion.  Since this method calls
+	 * client code, it is run "unprotected", so the workspace lock is not held.
 	 */
 	private void unprotectedDelete(ResourceTree tree, int updateFlags, IProgressMonitor monitor) {
 		IMoveDeleteHook hook = workspace.getMoveDeleteHook();
@@ -1846,8 +1847,8 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 	}
 
 	/**
-	 * Calls the move/delete hook to perform the move.  Since this method calls 
-	 * client code, it is run "unprotected", so the workspace lock is not held.  
+	 * Calls the move/delete hook to perform the move.  Since this method calls
+	 * client code, it is run "unprotected", so the workspace lock is not held.
 	 * Returns true if resources were actually moved, and false otherwise.
 	 */
 	private boolean unprotectedMove(ResourceTree tree, final IResource destination, int updateFlags, IProgressMonitor monitor) throws CoreException, ResourceException {
@@ -1921,11 +1922,11 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	/* (non-Javadoc)
 	 *  Calculates whether the current resource is filtered out from the resource tree
-	 *  by resource filters.  This can happen because resource filters apply to the resource, 
+	 *  by resource filters.  This can happen because resource filters apply to the resource,
 	 *  or because resource filters apply to one of its parent.  For example, if "/foo/bar"
-	 *  is filtered out, then calling isFilteredFromParent() on "/foo/bar/sub/file.txt" will 
+	 *  is filtered out, then calling isFilteredFromParent() on "/foo/bar/sub/file.txt" will
 	 *  return true as well, even though there's no resource filters that apply to "file.txt" per se.
-	 * 
+	 *
 	 * @return true is the resource is filtered out from the resource tree
 	 * @see IResource#isFiltered()
 	 */
@@ -1981,8 +1982,8 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	private IFileInfo[] filterChildren(Project project, ProjectDescription description, IFileInfo[] list, boolean throwException) throws CoreException {
 		IPath relativePath = getProjectRelativePath();
-		LinkedList<Filter> currentIncludeFilters = new LinkedList<Filter>();
-		LinkedList<Filter> currentExcludeFilters = new LinkedList<Filter>();
+		LinkedList<Filter> currentIncludeFilters = new LinkedList<>();
+		LinkedList<Filter> currentExcludeFilters = new LinkedList<>();
 		LinkedList<FilterDescription> filters = null;
 
 		boolean firstSegment = true;
@@ -2025,7 +2026,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see IResource#setLinkLocation(IPath)
 	 */
 	public void setLinkLocation(URI location, int updateFlags, IProgressMonitor monitor) throws CoreException {
@@ -2066,7 +2067,7 @@ public abstract class Resource extends PlatformObject implements IResource, ICor
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see IResource#setLinkLocation(URI)
 	 */
 	public void setLinkLocation(IPath location, int updateFlags, IProgressMonitor monitor) throws CoreException {

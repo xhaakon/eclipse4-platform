@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -189,11 +189,6 @@ public class DecorationBuilder implements IDecoration {
 		valueSet = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.viewers.IDecoration#setBackgroundColor(org.eclipse.swt.graphics.Color)
-	 */
 
 	@Override
 	public void setBackgroundColor(Color bgColor) {
@@ -201,33 +196,18 @@ public class DecorationBuilder implements IDecoration {
 		valueSet = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.viewers.IDecoration#setFont(org.eclipse.swt.graphics.Font)
-	 */
 	@Override
 	public void setFont(Font newFont) {
 		this.font = newFont;
 		valueSet = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.viewers.IDecoration#setForegroundColor(org.eclipse.swt.graphics.Color)
-	 */
 	@Override
 	public void setForegroundColor(Color fgColor) {
 		this.foregroundColor = fgColor;
 		valueSet = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.viewers.IDecoration#getDecorationContext()
-	 */
 	@Override
 	public IDecorationContext getDecorationContext() {
 		return context;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,11 +35,9 @@ public class TocFileProvider extends AbstractTocProvider {
 	public static final String ATTRIBUTE_NAME_EXTRADIR = "extradir"; //$NON-NLS-1$
 	public static final String ATTRIBUTE_NAME_CATEGORY = "category"; //$NON-NLS-1$
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.help.AbstractTocProvider#getTocContributions(java.lang.String)
-	 */
+	@Override
 	public ITocContribution[] getTocContributions(String locale) {
-		List contributions = new ArrayList();
+		List<ITocContribution> contributions = new ArrayList<>();
 		TocFile[] tocFiles = getTocFiles(locale);
 		TocFileParser parser = new TocFileParser();
 		for (int i=0;i<tocFiles.length;++i) {
@@ -58,19 +56,19 @@ public class TocFileProvider extends AbstractTocProvider {
 				String file = tocFiles[i].getFile();
 				String msg = "Error reading help table of contents file /\""  //$NON-NLS-1$
 					+ ResourceLocator.getErrorPath(pluginId, file, locale)
-					+ locationInfo 
+					+ locationInfo
 					+ "\" (skipping file)"; //$NON-NLS-1$
-				HelpPlugin.logError(msg, t);			
+				HelpPlugin.logError(msg, t);
 			}
 		}
-		return (ITocContribution[])contributions.toArray(new ITocContribution[contributions.size()]);
+		return contributions.toArray(new ITocContribution[contributions.size()]);
 	}
 
 	/*
 	 * Returns all available TocFiles for the given locale.
 	 */
 	protected TocFile[] getTocFiles(String locale) {
-		List tocFiles = new ArrayList();
+		List<TocFile> tocFiles = new ArrayList<>();
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor(EXTENSION_POINT_ID_TOC);
 		for (int i=0;i<elements.length;++i) {
@@ -93,12 +91,10 @@ public class TocFileProvider extends AbstractTocProvider {
 				tocFiles.add(tocFile);
 			}
 		}
-		return (TocFile[])tocFiles.toArray(new TocFile[tocFiles.size()]);
+		return tocFiles.toArray(new TocFile[tocFiles.size()]);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.help.AbstractTocProvider#getPriority()
-	 */
+	@Override
 	public int getPriority() {
 		return TOC_FILE_PRIORITY;
 	}

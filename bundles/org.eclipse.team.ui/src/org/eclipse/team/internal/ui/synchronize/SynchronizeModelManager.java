@@ -50,12 +50,13 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 			configuration.addPropertyChangeListener(this);
 		}
 
+		@Override
 		public void run() {
 			if (!getSelectedProviderId().equals(descriptor.getId())) {
 				setInput(descriptor.getId(), null);
 			}
 		}
-		
+
 		public void update() {
 			setChecked(getSelectedProviderId().equals(descriptor.getId()));
 		}
@@ -63,6 +64,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.util.IPropertyChangeListener#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
 		 */
+		@Override
 		public void propertyChange(PropertyChangeEvent event) {
 			if (event.getProperty().equals(SynchronizePageConfiguration.P_MODEL)) {
 				update();
@@ -96,7 +98,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 	 * @return the model provider
 	 */
 	protected abstract ISynchronizeModelProvider createModelProvider(String id);
-	
+
 	/**
 	 * Return the provider that is currently active.
 	 * @return the provider that is currently active
@@ -118,7 +120,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 	}
 
 	/**
-	 * Return the id of the selected provider. By default, this is the 
+	 * Return the id of the selected provider. By default, this is the
 	 * id of the active provider. However, subclasses that use a composite
 	 * may return an id that differs from that of the active provider
 	 * and return an id of a sub-provider instead.
@@ -144,7 +146,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 		    modelProvider.saveState();
 			modelProvider.dispose();
 		}
-		modelProvider = createModelProvider(id);		
+		modelProvider = createModelProvider(id);
 		saveProviderSettings(id);
 		modelProvider.prepareInput(monitor);
 		setInput();
@@ -168,7 +170,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 		if(advisor != null)
 			advisor.setInput(modelProvider);
 	}
-	
+
 	/**
 	 * Return the model root of the currently active model provider.
 	 * This method will wait until the model is done updating.
@@ -178,21 +180,29 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 	public ISynchronizeModelElement getModelRoot() {
 		if (modelProvider != null && modelProvider instanceof SynchronizeModelProvider) {
 			((SynchronizeModelProvider)modelProvider).waitUntilDone(new IProgressMonitor() {
+				@Override
 				public void beginTask(String name, int totalWork) {
 				}
+				@Override
 				public void done() {
 				}
+				@Override
 				public void internalWorked(double work) {
 				}
+				@Override
 				public boolean isCanceled() {
 					return false;
 				}
+				@Override
 				public void setCanceled(boolean value) {
 				}
+				@Override
 				public void setTaskName(String name) {
 				}
+				@Override
 				public void subTask(String name) {
 				}
+				@Override
 				public void worked(int work) {
 					while (Display.getCurrent().readAndDispatch()) {}
 				}
@@ -206,6 +216,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.IActionContribution#initialize(org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration)
 	 */
+	@Override
 	public void initialize(ISynchronizePageConfiguration configuration) {
 		super.initialize(configuration);
 		ISynchronizeModelProviderDescriptor[] providers = getSupportedModelProviders();
@@ -223,7 +234,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 			String defaultProviderId = getDefaultProviderId(); /* use providers prefered */
 			IDialogSettings pageSettings = configuration.getSite().getPageSettings();
 			if(pageSettings != null && pageSettings.get(P_LAST_PROVIDER) != null) {
-				defaultProviderId = pageSettings.get(P_LAST_PROVIDER); 
+				defaultProviderId = pageSettings.get(P_LAST_PROVIDER);
 			}
 			setInput(defaultProviderId, null);
 		} else {
@@ -234,6 +245,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.IActionContribution#setActionBars(org.eclipse.ui.IActionBars)
 	 */
+	@Override
 	public void fillActionBars(IActionBars actionBars) {
 		if (toggleModelProviderActions == null) return;
 		IToolBarManager toolbar = actionBars.getToolBarManager();
@@ -241,7 +253,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 		IContributionItem group = findGroup(menu, ISynchronizePageConfiguration.LAYOUT_GROUP);
 		if(menu != null && group != null) {
 			MenuManager layout = new MenuManager(Utils.getString("action.layout.label", Policy.getActionBundle())); //$NON-NLS-1$
-			menu.appendToGroup(group.getId(), layout);	
+			menu.appendToGroup(group.getId(), layout);
 			appendToMenu(null, layout);
 		} else if(toolbar != null) {
 			group = findGroup(toolbar, ISynchronizePageConfiguration.LAYOUT_GROUP);
@@ -250,7 +262,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 			}
 		}
 	}
-	
+
 	private void appendToMenu(String groupId, IContributionManager menu) {
 		for (Iterator iter = toggleModelProviderActions.iterator(); iter.hasNext();) {
 			if (groupId == null) {
@@ -260,10 +272,11 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 			}
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.IActionContribution#dispose()
 	 */
+	@Override
 	public void dispose() {
 		if(modelProvider != null) {
 			modelProvider.dispose();
@@ -275,6 +288,7 @@ public abstract class SynchronizeModelManager extends SynchronizePageActionGroup
 	 * Returns the configuration
 	 * @return the configuration.
 	 */
+	@Override
 	public ISynchronizePageConfiguration getConfiguration() {
 		return configuration;
 	}

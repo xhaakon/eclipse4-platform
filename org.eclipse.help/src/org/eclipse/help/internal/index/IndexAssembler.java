@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,47 +42,47 @@ import com.ibm.icu.text.Collator;
 public class IndexAssembler {
 
 	private DocumentProcessor processor;
-	private Comparator comparator;
+	private IndexComparator comparator;
 	private String locale;
 
 	/*
 	 * Assembles the given index contributions into a complete, sorted index.
 	 * The originals are not modified.
 	 */
-	public Index assemble(List contributions, String locale) {
+	public Index assemble(List<IndexContribution> contributions, String locale) {
 		this.locale = locale;
 		process(contributions);
 		Index index = merge(contributions);
 		sortAndPrune(index);
 		return index;
 	}
-	
+
 	/*
 	 * Merge all index contributions into one large index, not sorted.
 	 */
-	private Index merge(List contributions) {
+	private Index merge(List<IndexContribution> contributions) {
 		Index index = new Index();
-		Iterator iter = contributions.iterator();
+		Iterator<IndexContribution> iter = contributions.iterator();
 		while (iter.hasNext()) {
-			IndexContribution contribution = (IndexContribution)iter.next();
+			IndexContribution contribution = iter.next();
 			mergeChildren(index, (Index)contribution.getIndex());
 			contribution.setIndex(null);
 		}
 		return index;
 	}
-	
+
 	/*
 	 * Merges the children of nodes a and b, and stores them into a. If the two
 	 * contain the same keyword, only one is kept but its children are merged,
 	 * recursively. If multiple topics exist with the same href, only the
-	 * first one found is kept. If multiple see elements are found with the same target 
+	 * first one found is kept. If multiple see elements are found with the same target
 	 * only one is retained
 	 */
 	private void mergeChildren(UAElement a, UAElement b) {
 		// create data structures for fast lookup
-		Map entriesByKeyword = new HashMap();
-		Set topicHrefs = new HashSet();
-		Set seeTargets = new HashSet();
+		Map<String, UAElement> entriesByKeyword = new HashMap<>();
+		Set<String> topicHrefs = new HashSet<>();
+		Set<IndexSee> seeTargets = new HashSet<>();
 		IUAElement[] childrenA = a.getChildren();
 		for (int i=0;i<childrenA.length;++i) {
 			UAElement childA = (UAElement)childrenA[i];
@@ -92,10 +92,10 @@ public class IndexAssembler {
 			else if (childA instanceof Topic) {
 				topicHrefs.add(childA.getAttribute(Topic.ATTRIBUTE_HREF));
 			} else if (childA instanceof IndexSee) {
-				seeTargets.add(((IndexSee)childA));
+				seeTargets.add((IndexSee) childA);
 			}
 		}
-		
+
 		// now do the merge
 		IUAElement[] childrenB = b.getChildren();
 		for (int i=0;i<childrenB.length;++i) {
@@ -104,7 +104,7 @@ public class IndexAssembler {
 				String keyword = childB.getAttribute(IndexEntry.ATTRIBUTE_KEYWORD);
 				if (entriesByKeyword.containsKey(keyword)) {
 					// duplicate keyword; merge children
-					mergeChildren((IndexEntry)entriesByKeyword.get(keyword), childB);
+					mergeChildren(entriesByKeyword.get(keyword), childB);
 				}
 				else {
 					// wasn't a duplicate
@@ -120,16 +120,16 @@ public class IndexAssembler {
 					topicHrefs.add(href);
 				}
 			} else if (childB instanceof IndexSee) {
-				if (!seeTargets.contains(((IndexSee) childB))) {
+				if (!seeTargets.contains((childB))) {
 					// add see only if it doesn't exist yet
 					a.appendChild(childB);
-					seeTargets.add(childB);
+					seeTargets.add((IndexSee) childB);
 				}
 			}
 		}
 	}
-	
-	private void process(List contributions) {
+
+	private void process(List<IndexContribution> contributions) {
 		if (processor == null) {
 			DocumentReader reader = new DocumentReader();
 			processor = new DocumentProcessor(new ProcessorHandler[] {
@@ -138,9 +138,9 @@ public class IndexAssembler {
 				new ExtensionHandler(reader, locale),
 			});
 		}
-		Iterator iter = contributions.iterator();
+		Iterator<IndexContribution> iter = contributions.iterator();
 		while (iter.hasNext()) {
-			IndexContribution contribution = (IndexContribution)iter.next();
+			IndexContribution contribution = iter.next();
 			processor.process((Index)contribution.getIndex(), contribution.getId());
 		}
 	}
@@ -154,13 +154,13 @@ public class IndexAssembler {
 		}
 		sortAndPrune(element, comparator);
 	}
-	
+
 	/*
 	 * Sort the given node's descendants recursively using the given
 	 * Comparator. Prune out any empty entry elements. Return true if this node was
 	 * not pruned
 	 */
-	private boolean sortAndPrune(UAElement element, Comparator comparator) {
+	private boolean sortAndPrune(UAElement element, IndexComparator comparator) {
 		// sort children
 		IUAElement[] children = element.getChildren();
 		if (children.length > 1) {
@@ -187,7 +187,7 @@ public class IndexAssembler {
 		}
 		return true;
 	}
-	
+
 	boolean isValidSeeReference(IndexSee see) {
 		UAElement ancestor = see.getParentElement();
 		while (!(ancestor instanceof Index)) {
@@ -198,12 +198,13 @@ public class IndexAssembler {
 		}
 		return ((Index)ancestor).getSeeTarget(see) != null;
 	}
-	
+
 	/*
 	 * Normalizes topic hrefs, by prepending the plug-in id to form an href.
 	 * e.g. "path/myfile.html" -> "/my.plugin/path/myfile.html"
 	 */
 	private class NormalizeHandler extends ProcessorHandler {
+		@Override
 		public short handle(UAElement element, String id) {
 			if (element instanceof Topic) {
 				Topic topic = (Topic)element;
@@ -224,23 +225,24 @@ public class IndexAssembler {
 		}
 	}
 
-	private class IndexComparator implements Comparator {
+	private class IndexComparator implements Comparator<IUAElement> {
 		Collator collator = Collator.getInstance();
-		public int compare(Object o1, Object o2) {
+		@Override
+		public int compare(IUAElement o1, IUAElement o2) {
 			/*
 			 * First separate the objects into different groups by type;
 			 * topics first, then entries, etc. Then within each
 			 * group, sort alphabetically.
 			 */
-			int c1 = getCategory((UAElement)o1);
-			int c2 = getCategory((UAElement)o2);
+			int c1 = getCategory(o1);
+			int c2 = getCategory(o2);
 			if (c1 == c2) {
                 if (o1 instanceof IndexSee) {
                 	return ((IndexSee)o1).compareTo(o2);
                 }
 				// same type of object; compare alphabetically
-				String s1 = getLabel((UAElement)o1);
-				String s2 = getLabel((UAElement)o2);
+				String s1 = getLabel(o1);
+				String s2 = getLabel(o2);
 				//return s1.compareTo(s2);
 				return collator.compare(s1, s2);
 			}
@@ -258,7 +260,7 @@ public class IndexAssembler {
 		 * 4. entries starting with alpha
 		 * 5. other
 		 */
-		private int getCategory(UAElement element) {
+		private int getCategory(IUAElement element) {
 			if (element instanceof Topic) {
 				return 0;
 			}
@@ -282,12 +284,12 @@ public class IndexAssembler {
 				return 6;
 			}
 		}
-		
+
 		/*
 		 * Returns the string that will be displayed for the given object,
 		 * used for sorting.
 		 */
-		private String getLabel(UAElement element) {
+		private String getLabel(IUAElement element) {
 			if (element instanceof Topic) {
 				Topic topic = (Topic)element;
 				if (topic.getLabel() == null) {

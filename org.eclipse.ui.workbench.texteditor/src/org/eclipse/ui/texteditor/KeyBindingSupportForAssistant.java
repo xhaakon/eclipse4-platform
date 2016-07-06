@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2009 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -81,7 +81,7 @@ public final class KeyBindingSupportForAssistant implements ICompletionListener 
 	}
 
 
-	private List fReplacedCommands;
+	private List<ReplacedCommand> fReplacedCommands;
 	private ContentAssistantFacade fContentAssistantFacade;
 	private IQuickAssistAssistant fQuickAssistAssistant;
 
@@ -91,6 +91,7 @@ public final class KeyBindingSupportForAssistant implements ICompletionListener 
 	 * @param contentAssistFacade the content assist facade
 	 * @deprecated As of 3.5, this is a NOP since the framework installs this now
 	 */
+	@Deprecated
 	public KeyBindingSupportForAssistant(ContentAssistantFacade contentAssistFacade) {
 	}
 
@@ -113,6 +114,7 @@ public final class KeyBindingSupportForAssistant implements ICompletionListener 
 	 * @param contentAssistant the content assist facade
 	 * @deprecated As of 3.5, this is a NOP since the framework installs this now
 	 */
+	@Deprecated
 	public KeyBindingSupportForAssistant(ContentAssistant contentAssistant) {
 	}
 
@@ -127,14 +129,11 @@ public final class KeyBindingSupportForAssistant implements ICompletionListener 
 		fQuickAssistAssistant.addCompletionListener(this);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.ICompletionListener#assistSessionStarted(org.eclipse.jface.text.contentassist.ContentAssistEvent)
-	 * @since 3.4
-	 */
+	@Override
 	public void assistSessionStarted(ContentAssistEvent event) {
-		ICommandService commandService= (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+		ICommandService commandService= PlatformUI.getWorkbench().getService(ICommandService.class);
 		IHandler handler= getHandler(ContentAssistant.SELECT_NEXT_PROPOSAL_COMMAND_ID);
-		fReplacedCommands= new ArrayList(10);
+		fReplacedCommands= new ArrayList<>(10);
 		fReplacedCommands.add(new ReplacedCommand(ITextEditorActionDefinitionIds.LINE_DOWN, handler, commandService));
 		handler= getHandler(ContentAssistant.SELECT_PREVIOUS_PROPOSAL_COMMAND_ID);
 		fReplacedCommands.add(new ReplacedCommand(ITextEditorActionDefinitionIds.LINE_UP, handler, commandService));
@@ -166,24 +165,18 @@ public final class KeyBindingSupportForAssistant implements ICompletionListener 
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.ICompletionListener#assistSessionEnded(org.eclipse.jface.text.contentassist.ContentAssistEvent)
-	 * @since 3.4
-	 */
+	@Override
 	public void assistSessionEnded(ContentAssistEvent event) {
 		if (fReplacedCommands == null)
 			return;
 
-		Iterator iter= fReplacedCommands.iterator();
+		Iterator<ReplacedCommand> iter= fReplacedCommands.iterator();
 		while (iter.hasNext())
-			((ReplacedCommand)iter.next()).activate();
+			iter.next().activate();
 		fReplacedCommands= null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.ICompletionListener#selectionChanged(org.eclipse.jface.text.contentassist.ICompletionProposal, boolean)
-	 * @since 3.4
-	 */
+	@Override
 	public void selectionChanged(ICompletionProposal proposal, boolean smartToggle) {
 	}
 

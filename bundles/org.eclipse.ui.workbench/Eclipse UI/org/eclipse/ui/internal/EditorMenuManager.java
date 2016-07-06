@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,7 +71,7 @@ public class EditorMenuManager extends SubMenuManager {
                         item);
 			} else {
 				// no acclerator if the item is disabled
-                return new Integer(0);
+				return Integer.valueOf(0);
 			}
         }
 

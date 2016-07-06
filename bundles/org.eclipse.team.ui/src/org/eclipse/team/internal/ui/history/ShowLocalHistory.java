@@ -33,16 +33,19 @@ public class ShowLocalHistory extends ActionDelegate implements IObjectActionDel
 
 	private IStructuredSelection fSelection;
 	private IWorkbenchPart targetPart;
-	
+
+	@Override
 	public void run(IAction action) {
 		IFileState states[]= getLocalHistory();
 		if (states == null || states.length == 0)
 			return;
 		try {
 			PlatformUI.getWorkbench().getProgressService().busyCursorWhile(new IRunnableWithProgress() {
+				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 					final IResource resource = (IResource) fSelection.getFirstElement();
 					Runnable r = new Runnable() {
+						@Override
 						public void run() {
 							IHistoryView view = TeamUI.showHistoryFor(TeamUIPlugin.getActivePage(), resource,  LocalHistoryPageSource.getInstance());
 							IHistoryPage page = view.getHistoryPage();
@@ -52,7 +55,7 @@ public class ShowLocalHistory extends ActionDelegate implements IObjectActionDel
 							}
 						}
 					};
-					TeamUIPlugin.getStandardDisplay().asyncExec(r);				
+					TeamUIPlugin.getStandardDisplay().asyncExec(r);
 				}
 			});
 		} catch (InvocationTargetException exception) {
@@ -60,16 +63,18 @@ public class ShowLocalHistory extends ActionDelegate implements IObjectActionDel
 		} catch (InterruptedException exception) {
 		}
 	}
-	
+
+	@Override
 	public void selectionChanged(IAction action, ISelection sel) {
 		if (sel instanceof IStructuredSelection) {
 			fSelection= (IStructuredSelection) sel;
 		}
 	}
+	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
 		this.targetPart = targetPart;
 	}
-	
+
 	protected Shell getShell() {
 		if (targetPart != null)
 			return targetPart.getSite().getShell();
@@ -83,17 +88,17 @@ public class ShowLocalHistory extends ActionDelegate implements IObjectActionDel
 	public IStructuredSelection getSelection() {
 		return fSelection;
 	}
-	
+
 	protected IFileState[] getLocalHistory() {
 		final IFile file = (IFile) getSelection().getFirstElement();
 		IFileState states[];
 		try {
 			states= file.getHistory(null);
-		} catch (CoreException ex) {		
+		} catch (CoreException ex) {
 			MessageDialog.openError(getShell(), getPromptTitle(), ex.getMessage());
 			return null;
 		}
-		
+
 		if (states == null || states.length <= 0) {
 			MessageDialog.openInformation(getShell(), getPromptTitle(), TeamUIMessages.ShowLocalHistory_0);
 			return states;

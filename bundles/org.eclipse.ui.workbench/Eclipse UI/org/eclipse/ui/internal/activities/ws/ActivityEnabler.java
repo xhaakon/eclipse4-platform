@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,12 +13,12 @@ package org.eclipse.ui.internal.activities.ws;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -67,11 +68,6 @@ public class ActivityEnabler {
 
 	private ISelectionChangedListener selectionListener = new ISelectionChangedListener() {
 
-		/*
-		 * (non-Javadoc)
-		 *
-		 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-		 */
 		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
 			Object element = ((IStructuredSelection) event.getSelection())
@@ -95,11 +91,6 @@ public class ActivityEnabler {
 	 */
 	private ICheckStateListener checkListener = new ICheckStateListener() {
 
-		/*
-		 * (non-Javadoc)
-		 *
-		 * @see org.eclipse.jface.viewers.ICheckStateListener#checkStateChanged(org.eclipse.jface.viewers.CheckStateChangedEvent)
-		 */
 		@Override
 		public void checkStateChanged(CheckStateChangedEvent event) {
 			Set checked = new HashSet(Arrays.asList(dualViewer
@@ -262,6 +253,8 @@ public class ActivityEnabler {
 
     private IMutableActivityManager activitySupport;
 
+	private TableViewer dependantViewer;
+
 	/**
 	 * Create a new instance.
 	 *
@@ -291,9 +284,12 @@ public class ActivityEnabler {
         gc.dispose();
 
 		Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayout(createGridLayoutWithoutMargins(1, fontMetrics));
 
-		new Label(composite, SWT.NONE).setText(strings.getProperty(ActivitiesPreferencePage.ACTIVITY_NAME, ActivityMessages.ActivityEnabler_activities));
+		composite.setLayout(new GridLayout(2, true));
+
+		new Label(composite, SWT.NONE).setText(strings.getProperty(ActivitiesPreferencePage.ACTIVITY_NAME,
+				ActivityMessages.ActivityEnabler_activities));
+		new Label(composite, SWT.NONE).setText(ActivityMessages.ActivityEnabler_description);
 
 		dualViewer = new CheckboxTreeViewer(composite);
 		dualViewer.setComparator(new ViewerComparator());
@@ -301,19 +297,31 @@ public class ActivityEnabler {
 		dualViewer.setContentProvider(provider);
 		dualViewer.setInput(activitySupport);
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		data.heightHint = 200;
 		dualViewer.getControl().setLayoutData(data);
 
+		Composite detailsComp = new Composite(composite, SWT.NONE);
+		detailsComp.setLayout(new GridLayout());
+		detailsComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+		descriptionText = new Text(detailsComp, SWT.READ_ONLY | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
+		data = new GridData(SWT.FILL, SWT.FILL, true, false);
+		data.heightHint = Dialog.convertHeightInCharsToPixels(fontMetrics, 5);
+		descriptionText.setLayoutData(data);
+		setInitialStates();
+
+		new Label(detailsComp, SWT.NONE).setText(ActivityMessages.ActivitiesPreferencePage_requirements);
+		dependantViewer = new TableViewer(detailsComp, SWT.BORDER);
+		dependantViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
+		dependantViewer.setContentProvider(new ActivityCategoryContentProvider());
+		dependantViewer.setLabelProvider(new ActivityCategoryLabelProvider());
+		dependantViewer.setInput(Collections.EMPTY_SET);
 		Composite buttonComposite = new Composite(composite, SWT.NONE);
 		buttonComposite.setLayout(createGridLayoutWithoutMargins(2, fontMetrics));
 
 		Button selectAllButton = new Button(buttonComposite, SWT.PUSH);
 		selectAllButton.setText(ActivityMessages.ActivityEnabler_selectAll);
 		selectAllButton.addSelectionListener(new SelectionAdapter() {
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-			 */
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				toggleTreeEnablement(true);
@@ -324,11 +332,6 @@ public class ActivityEnabler {
 		Button deselectAllButton = new Button(buttonComposite, SWT.PUSH);
 		deselectAllButton.setText(ActivityMessages.ActivityEnabler_deselectAll);
 		deselectAllButton.addSelectionListener(new SelectionAdapter() {
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-			 */
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				toggleTreeEnablement(false);
@@ -336,14 +339,6 @@ public class ActivityEnabler {
 		});
 		setButtonLayoutData(deselectAllButton, fontMetrics);
 
-		new Label(composite, SWT.NONE).setText(ActivityMessages.ActivityEnabler_description);
-
-		descriptionText = new Text(composite, SWT.READ_ONLY | SWT.WRAP | SWT.BORDER
-				| SWT.V_SCROLL);
-		data = new GridData(SWT.FILL, SWT.FILL, true, false);
-		data.heightHint = Dialog.convertHeightInCharsToPixels(fontMetrics, 5);
-		descriptionText.setLayoutData(data);
-		setInitialStates();
 
 		dualViewer.addCheckStateListener(checkListener);
 		dualViewer.addSelectionChangedListener(selectionListener);

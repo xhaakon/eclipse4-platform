@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,6 +39,7 @@ public class RemoteIndexProvider extends AbstractIndexProvider {
 	 */
 	public RemoteIndexProvider() {
 		RemoteHelp.addPreferenceChangeListener(new IPreferenceChangeListener() {
+			@Override
 			public void preferenceChange(PreferenceChangeEvent event) {
 				contentChanged();
 			}
@@ -48,9 +49,10 @@ public class RemoteIndexProvider extends AbstractIndexProvider {
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.AbstractIndexProvider#getIndexContributions(String)
 	 */
+	@Override
 	public IIndexContribution[] getIndexContributions(String locale) {
 		if (RemoteHelp.isEnabled()) {
-			List<IIndexContribution> contributions = new ArrayList<IIndexContribution>();
+			List<IIndexContribution> contributions = new ArrayList<>();
 			PreferenceFileHandler handler = new PreferenceFileHandler();
 			String isEnabled[] = handler.isEnabled();
 			String [] protocol = handler.getProtocolEntries();

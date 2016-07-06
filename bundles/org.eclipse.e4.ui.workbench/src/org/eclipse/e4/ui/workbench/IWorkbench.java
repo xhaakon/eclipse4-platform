@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2013 BestSolution.at and others.
+ * Copyright (c) 2008, 2015 BestSolution.at and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@
 package org.eclipse.e4.ui.workbench;
 
 import java.net.URI;
+import org.eclipse.e4.core.contexts.EclipseContextFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.ui.model.application.MApplication;
 
@@ -88,6 +89,16 @@ public interface IWorkbench {
 	 * @since 0.12.0
 	 */
 	public static final String XMI_URI_ARG = "applicationXMI"; //$NON-NLS-1$
+
+	/**
+	 * Context key to retrieve the application context In most applications
+	 * (like e.g., e4) this is the direct child of the root context which is
+	 * retrieved from
+	 * {@link EclipseContextFactory#getServiceContext(org.osgi.framework.BundleContext)}
+	 *
+	 * @since 1.4
+	 */
+	public final static String APPLICATION_CONTEXT_KEY = "applicationContext"; //$NON-NLS-1$
 
 	/**
 	 * Close the workbench instance

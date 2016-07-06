@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -77,9 +77,9 @@ public abstract class Page implements IPageBookViewPage {
      * <code>null</code>. Subclasses must reimplement.
      */
     @Override
-	public abstract Control getControl();
+    public abstract Control getControl();
 
-	/**
+    /**
 	 * This method exists for backward compatibility. Subclasses should
 	 * reimplement <code>init</code>.
 	 */
@@ -87,13 +87,12 @@ public abstract class Page implements IPageBookViewPage {
             IToolBarManager toolBarManager, IStatusLineManager statusLineManager) {
     }
 
-
-	/**
+    /**
 	 * This method exists for backward compatibility. Subclasses should
 	 * reimplement <code>init</code>.
 	 */
     @Override
-	public void setActionBars(IActionBars actionBars) {
+    public void setActionBars(IActionBars actionBars) {
         makeContributions(actionBars.getMenuManager(), actionBars
                 .getToolBarManager(), actionBars.getStatusLineManager());
     }
@@ -109,7 +108,7 @@ public abstract class Page implements IPageBookViewPage {
      * @since 2.0
      */
     @Override
-	public void init(IPageSite pageSite) {
+    public void init(IPageSite pageSite) {
         site = pageSite;
     }
 
@@ -119,7 +118,7 @@ public abstract class Page implements IPageBookViewPage {
      * @return the site which contains this page
      */
     @Override
-	public IPageSite getSite() {
+    public IPageSite getSite() {
         return site;
     }
 

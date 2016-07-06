@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -51,44 +51,24 @@ public abstract class AbstractWizardRegistry implements IWizardRegistry {
 	 */
 	protected abstract void doInitialize();
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.wizards.IWizardRegistry#findCategory(java.lang.String)
-	 */
 	@Override
 	public IWizardCategory findCategory(String id) {
 		initialize();
 		return wizardElements.findCategory(id);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.wizards.IWizardRegistry#findWizard(java.lang.String)
-	 */
 	@Override
 	public IWizardDescriptor findWizard(String id) {
 		initialize();
 		return wizardElements.findWizard(id, true);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.wizards.IWizardRegistry#getPrimaryWizards()
-	 */
 	@Override
 	public IWizardDescriptor[] getPrimaryWizards() {
 		initialize();
 		return primaryWizards;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.wizards.IWizardRegistry#getRootCategory()
-	 */
 	@Override
 	public IWizardCategory getRootCategory() {
 		initialize();

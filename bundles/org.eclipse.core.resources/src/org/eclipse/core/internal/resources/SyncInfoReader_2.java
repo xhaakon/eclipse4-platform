@@ -1,13 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -45,12 +46,12 @@ public class SyncInfoReader_2 extends SyncInfoReader {
 	 * INDEX -> int int
 	 * QNAME -> int String
 	 * BYTES -> byte[]
-	 * 
+	 *
 	 */
 	@Override
 	public void readSyncInfo(DataInputStream input) throws IOException, CoreException {
 		try {
-			List<QualifiedName> readPartners = new ArrayList<QualifiedName>(5);
+			List<QualifiedName> readPartners = new ArrayList<>(5);
 			while (true) {
 				IPath path = new Path(input.readUTF());
 				readSyncInfo(path, input, readPartners);
@@ -62,7 +63,7 @@ public class SyncInfoReader_2 extends SyncInfoReader {
 
 	private void readSyncInfo(IPath path, DataInputStream input, List<QualifiedName> readPartners) throws IOException, CoreException {
 		int size = input.readInt();
-		ObjectMap<QualifiedName, Object> table = new ObjectMap<QualifiedName, Object>(size);
+		ObjectMap<QualifiedName, Object> table = new ObjectMap<>(size);
 		for (int i = 0; i < size; i++) {
 			QualifiedName name = null;
 			int type = input.readInt();

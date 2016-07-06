@@ -53,6 +53,7 @@ public interface ITextFileBufferManager extends IFileBufferManager {
 	 * @return the text file buffer managed for that location or <code>null</code>
 	 * @deprecated As of 3.3, replaced by {@link #getTextFileBuffer(IPath, LocationKind)}
 	 */
+	@Deprecated
 	ITextFileBuffer getTextFileBuffer(IPath location);
 
 	/**
@@ -77,7 +78,8 @@ public interface ITextFileBufferManager extends IFileBufferManager {
 	 * <p>
 	 * <strong>Note:</strong> This API must not be used if the given file
 	 * store maps to a resource contained in the workspace. A file buffer
-	 * that has been connected using a path will not be found.
+	 * that has been connected using a path will not be found. The encoding
+	 * of the file in the workspace will not be considered.
 	 * </p>
 	 * <p>
 	 * We had to use a different name than <code>getTextFileBuffer</code> for this method
@@ -128,6 +130,7 @@ public interface ITextFileBufferManager extends IFileBufferManager {
 	 * @return a new empty document
 	 * @deprecated As of 3.3, replaced by {@link #createEmptyDocument(IPath, LocationKind)}
 	 */
+	@Deprecated
 	IDocument createEmptyDocument(IPath location);
 
 	/**
@@ -158,6 +161,7 @@ public interface ITextFileBufferManager extends IFileBufferManager {
 	 * @return the newly created annotation model
 	 * @deprecated As of 3.3, replaced by {@link #createAnnotationModel(IPath, LocationKind)}
 	 */
+	@Deprecated
 	IAnnotationModel createAnnotationModel(IPath location);
 
 	/**
@@ -194,6 +198,7 @@ public interface ITextFileBufferManager extends IFileBufferManager {
 	 * @since 3.1
 	 * @deprecated As of 3.2, replaced by {@link #isTextFileLocation(IPath, boolean)}
 	 */
+	@Deprecated
 	boolean isTextFileLocation(IPath location);
 	/**
 	 * Returns whether a file at the given location is or can be considered a

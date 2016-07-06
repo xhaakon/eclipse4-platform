@@ -1,16 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [252996] add resource filtering
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Group and Project Path Variable Support
- * Markus Schorn (Wind River) - [306575] Save snapshot location with project
- * James Blackburn (Broadcom Corp.) - ongoing development
+ *     Markus Schorn (Wind River) - [306575] Save snapshot location with project
+ *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -73,7 +75,7 @@ public class ModelObjectWriter implements IModelObjectConstants {
 	private boolean shouldWriteTriggers(BuildCommand command) {
 		//only write triggers if command is configurable and there exists a trigger
 		//that the builder does NOT respond to.  I.e., don't write out on the default
-		//cases to avoid dirtying .project files unnecessarily.	
+		//cases to avoid dirtying .project files unnecessarily.
 		if (!command.isConfigurable())
 			return false;
 		return !command.isBuilding(IncrementalProjectBuilder.AUTO_BUILD) || !command.isBuilding(IncrementalProjectBuilder.CLEAN_BUILD) || !command.isBuilding(IncrementalProjectBuilder.FULL_BUILD) || !command.isBuilding(IncrementalProjectBuilder.INCREMENTAL_BUILD);
@@ -93,7 +95,7 @@ public class ModelObjectWriter implements IModelObjectConstants {
 	protected void write(IResourceFilterDescription description, XMLWriter writer) {
 		writer.startTag(FILTER, null);
 		if (description != null) {
-			writer.printSimpleTag(ID, new Long(((FilterDescription) description).getId()));
+			writer.printSimpleTag(ID, ((FilterDescription) description).getId());
 			writer.printSimpleTag(NAME, description.getResource().getProjectRelativePath());
 			writer.printSimpleTag(TYPE, Integer.toString(description.getType()));
 			if (description.getFileInfoMatcherDescription() != null) {
@@ -223,13 +225,13 @@ public class ModelObjectWriter implements IModelObjectConstants {
 			HashMap<IPath, LinkDescription> links = description.getLinks();
 			if (links != null) {
 				// ensure consistent order of map elements
-				List<LinkDescription> sorted = new ArrayList<LinkDescription>(links.values());
+				List<LinkDescription> sorted = new ArrayList<>(links.values());
 				Collections.sort(sorted);
 				write(LINKED_RESOURCES, sorted, writer);
 			}
 			HashMap<IPath, LinkedList<FilterDescription>> filters = description.getFilters();
 			if (filters != null) {
-				List<FilterDescription> sorted = new ArrayList<FilterDescription>();
+				List<FilterDescription> sorted = new ArrayList<>();
 				for (Iterator<LinkedList<FilterDescription>> it = filters.values().iterator(); it.hasNext();) {
 					List<FilterDescription> list = it.next();
 					sorted.addAll(list);
@@ -239,7 +241,7 @@ public class ModelObjectWriter implements IModelObjectConstants {
 			}
 			HashMap<String, VariableDescription> variables = description.getVariables();
 			if (variables != null) {
-				List<VariableDescription> sorted = new ArrayList<VariableDescription>(variables.values());
+				List<VariableDescription> sorted = new ArrayList<>(variables.values());
 				Collections.sort(sorted);
 				write(VARIABLE_LIST, sorted, writer);
 			}
@@ -261,7 +263,7 @@ public class ModelObjectWriter implements IModelObjectConstants {
 		writer.startTag(name, null);
 		if (table != null) {
 			// ensure consistent order of map elements
-			List<String> sorted = new ArrayList<String>(table.keySet());
+			List<String> sorted = new ArrayList<>(table.keySet());
 			Collections.sort(sorted);
 
 			for (Iterator<String> it = sorted.iterator(); it.hasNext();) {
@@ -290,11 +292,11 @@ public class ModelObjectWriter implements IModelObjectConstants {
 		if (description != null) {
 			writer.printSimpleTag(NAME, description.getName());
 			writer.printSimpleTag(AUTOBUILD, description.isAutoBuilding() ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$
-			writer.printSimpleTag(SNAPSHOT_INTERVAL, new Long(description.getSnapshotInterval()));
+			writer.printSimpleTag(SNAPSHOT_INTERVAL, description.getSnapshotInterval());
 			writer.printSimpleTag(APPLY_FILE_STATE_POLICY, description.isApplyFileStatePolicy() ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$
-			writer.printSimpleTag(FILE_STATE_LONGEVITY, new Long(description.getFileStateLongevity()));
-			writer.printSimpleTag(MAX_FILE_STATE_SIZE, new Long(description.getMaxFileStateSize()));
-			writer.printSimpleTag(MAX_FILE_STATES, new Integer(description.getMaxFileStates()));
+			writer.printSimpleTag(FILE_STATE_LONGEVITY, description.getFileStateLongevity());
+			writer.printSimpleTag(MAX_FILE_STATE_SIZE, description.getMaxFileStateSize());
+			writer.printSimpleTag(MAX_FILE_STATES, description.getMaxFileStates());
 			String[] order = description.getBuildOrder(false);
 			if (order != null)
 				write(BUILD_ORDER, PROJECT, order, writer);

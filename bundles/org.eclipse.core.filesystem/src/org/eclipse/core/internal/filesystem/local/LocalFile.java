@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,14 +7,17 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- * 	Martin Oberhuber (Wind River) - [294429] Avoid substring baggage in FileInfo
- * 	Martin Lippert (VMware) - [394607] Poor performance when using findFilesForLocationURI
- * 	Sergey Prigogin (Google) - Fix for bug 435519
+ * 	   Martin Oberhuber (Wind River) - [294429] Avoid substring baggage in FileInfo
+ * 	   Martin Lippert (VMware) - [394607] Poor performance when using findFilesForLocationURI
+ * 	   Sergey Prigogin (Google) - [433061] Deletion of project follows symbolic links
+ *                                [464072] Refresh on Access ignored during text search
  *******************************************************************************/
 package org.eclipse.core.internal.filesystem.local;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
 import org.eclipse.core.filesystem.*;
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.filesystem.provider.FileInfo;
@@ -152,30 +155,13 @@ public class LocalFile extends FileStore {
 
 	@Override
 	public IFileInfo fetchInfo(int options, IProgressMonitor monitor) {
-		if (LocalFileNativesManager.isUsingNatives()) {
-			FileInfo info = LocalFileNativesManager.fetchFileInfo(filePath);
-			//natives don't set the file name on all platforms
-			if (info.getName().length() == 0) {
-				String name = file.getName();
-				//Bug 294429: make sure that substring baggage is removed
-				info.setName(new String(name.toCharArray()));
-			}
-			return info;
+		FileInfo info = LocalFileNativesManager.fetchFileInfo(filePath);
+		//natives don't set the file name on all platforms
+		if (info.getName().isEmpty()) {
+			String name = file.getName();
+			//Bug 294429: make sure that substring baggage is removed
+			info.setName(new String(name.toCharArray()));
 		}
-		//in-lined non-native implementation
-		FileInfo info = new FileInfo(file.getName());
-		final long lastModified = file.lastModified();
-		if (lastModified <= 0) {
-			//if the file doesn't exist, all other attributes should be default values
-			info.setExists(false);
-			return info;
-		}
-		info.setLastModified(lastModified);
-		info.setExists(true);
-		info.setLength(file.length());
-		info.setDirectory(file.isDirectory());
-		info.setAttribute(EFS.ATTRIBUTE_READ_ONLY, file.exists() && !file.canWrite());
-		info.setAttribute(EFS.ATTRIBUTE_HIDDEN, file.isHidden());
 		return info;
 	}
 
@@ -224,13 +210,14 @@ public class LocalFile extends FileStore {
 	 * to optimize java.io.File object creation.
 	 */
 	private boolean internalDelete(File target, String pathToDelete, MultiStatus status, IProgressMonitor monitor) {
-		//first try to delete - this should succeed for files and symbolic links to directories
 		if (monitor.isCanceled()) {
 			throw new OperationCanceledException();
 		}
-		if (target.delete() || !target.exists())
+		try {
+			// First try to delete - this should succeed for files and symbolic links to directories.
+			Files.deleteIfExists(target.toPath());
 			return true;
-		if (target.isDirectory()) {
+		} catch (DirectoryNotEmptyException e) {
 			monitor.subTask(NLS.bind(Messages.deleting, target));
 			String[] list = target.list();
 			if (list == null)
@@ -241,35 +228,40 @@ public class LocalFile extends FileStore {
 				if (monitor.isCanceled()) {
 					throw new OperationCanceledException();
 				}
-				//optimized creation of child path object
-				StringBuffer childBuffer = new StringBuffer(parentLength + list[i].length() + 1);
+				// Optimized creation of child path object
+				StringBuilder childBuffer = new StringBuilder(parentLength + list[i].length() + 1);
 				childBuffer.append(pathToDelete);
 				childBuffer.append(File.separatorChar);
 				childBuffer.append(list[i]);
 				String childName = childBuffer.toString();
-				// try best effort on all children so put logical OR at end
+				// Try best effort on all children so put logical OR at end.
 				failedRecursive = !internalDelete(new java.io.File(childName), childName, status, monitor) || failedRecursive;
 				monitor.worked(1);
 			}
 			try {
-				// don't try to delete the root if one of the children failed
-				if (!failedRecursive && target.delete())
+				// Don't try to delete the root if one of the children failed.
+				if (!failedRecursive && Files.deleteIfExists(target.toPath()))
 					return true;
-			} catch (Exception e) {
-				// we caught a runtime exception so log it
+			} catch (Exception e1) {
+				// We caught a runtime exception so log it.
 				String message = NLS.bind(Messages.couldnotDelete, target.getAbsolutePath());
-				status.add(new Status(IStatus.ERROR, Policy.PI_FILE_SYSTEM, EFS.ERROR_DELETE, message, e));
+				status.add(new Status(IStatus.ERROR, Policy.PI_FILE_SYSTEM, EFS.ERROR_DELETE, message, e1));
 				return false;
 			}
+			// If we got this far, we failed.
+			String message = null;
+			if (fetchInfo().getAttribute(EFS.ATTRIBUTE_READ_ONLY)) {
+				message = NLS.bind(Messages.couldnotDeleteReadOnly, target.getAbsolutePath());
+			} else {
+				message = NLS.bind(Messages.couldnotDelete, target.getAbsolutePath());
+			}
+			status.add(new Status(IStatus.ERROR, Policy.PI_FILE_SYSTEM, EFS.ERROR_DELETE, message, null));
+			return false;
+		} catch (IOException e) {
+			String message = NLS.bind(Messages.couldnotDelete, target.getAbsolutePath());
+			status.add(new Status(IStatus.ERROR, Policy.PI_FILE_SYSTEM, EFS.ERROR_DELETE, message, e));
+			return false;
 		}
-		//if we got this far, we failed
-		String message = null;
-		if (fetchInfo().getAttribute(EFS.ATTRIBUTE_READ_ONLY))
-			message = NLS.bind(Messages.couldnotDeleteReadOnly, target.getAbsolutePath());
-		else
-			message = NLS.bind(Messages.couldnotDelete, target.getAbsolutePath());
-		status.add(new Status(IStatus.ERROR, Policy.PI_FILE_SYSTEM, EFS.ERROR_DELETE, message, null));
-		return false;
 	}
 
 	@Override
@@ -320,9 +312,8 @@ public class LocalFile extends FileStore {
 		File source = file;
 		File destination = ((LocalFile) destFile).file;
 		boolean overwrite = (options & EFS.OVERWRITE) != 0;
-		monitor = Policy.monitorFor(monitor);
+		SubMonitor subMonitor = SubMonitor.convert(monitor, NLS.bind(Messages.moving, source.getAbsolutePath()), 1);
 		try {
-			monitor.beginTask(NLS.bind(Messages.moving, source.getAbsolutePath()), 10);
 			//this flag captures case renaming on a case-insensitive OS, or moving
 			//two equivalent files in an environment that supports symbolic links.
 			//in these cases we NEVER want to delete anything
@@ -357,8 +348,7 @@ public class LocalFile extends FileStore {
 						String message = NLS.bind(Messages.failedMove, source.getAbsolutePath(), destination.getAbsolutePath());
 						Policy.error(EFS.ERROR_WRITE, message);
 					}
-					//the move was successful
-					monitor.worked(10);
+					// the move was successful
 					return;
 				}
 			}
@@ -368,51 +358,48 @@ public class LocalFile extends FileStore {
 				Policy.error(EFS.ERROR_WRITE, message, null);
 			}
 			// fall back to default implementation
-			super.move(destFile, options, Policy.subMonitorFor(monitor, 10));
+			super.move(destFile, options, subMonitor.newChild(1));
 		} finally {
-			monitor.done();
+			subMonitor.done();
 		}
 	}
 
 	@Override
 	public InputStream openInputStream(int options, IProgressMonitor monitor) throws CoreException {
-		monitor = Policy.monitorFor(monitor);
 		try {
-			monitor.beginTask("", 1); //$NON-NLS-1$
 			return new FileInputStream(file);
 		} catch (FileNotFoundException e) {
 			String message;
-			if (!file.exists())
+			if (!file.exists()) {
 				message = NLS.bind(Messages.fileNotFound, filePath);
-			else if (file.isDirectory())
+				Policy.error(EFS.ERROR_NOT_EXISTS, message, e);
+			} else if (file.isDirectory()) {
 				message = NLS.bind(Messages.notAFile, filePath);
-			else
+				Policy.error(EFS.ERROR_WRONG_TYPE, message, e);
+			} else {
 				message = NLS.bind(Messages.couldNotRead, filePath);
-			Policy.error(EFS.ERROR_READ, message, e);
+				Policy.error(EFS.ERROR_READ, message, e);
+			}
 			return null;
-		} finally {
-			monitor.done();
 		}
 	}
 
 	@Override
 	public OutputStream openOutputStream(int options, IProgressMonitor monitor) throws CoreException {
-		monitor = Policy.monitorFor(monitor);
 		try {
-			monitor.beginTask("", 1); //$NON-NLS-1$
 			return new FileOutputStream(file, (options & EFS.APPEND) != 0);
 		} catch (FileNotFoundException e) {
 			checkReadOnlyParent(file, e);
 			String message;
 			String path = filePath;
-			if (file.isDirectory())
+			if (file.isDirectory()) {
 				message = NLS.bind(Messages.notAFile, path);
-			else
+				Policy.error(EFS.ERROR_WRONG_TYPE, message, e);
+			} else {
 				message = NLS.bind(Messages.couldNotWrite, path);
-			Policy.error(EFS.ERROR_WRITE, message, e);
+				Policy.error(EFS.ERROR_WRITE, message, e);
+			}
 			return null;
-		} finally {
-			monitor.done();
 		}
 	}
 
@@ -420,8 +407,7 @@ public class LocalFile extends FileStore {
 	public void putInfo(IFileInfo info, int options, IProgressMonitor monitor) throws CoreException {
 		boolean success = true;
 		if ((options & EFS.SET_ATTRIBUTES) != 0) {
-			if (LocalFileNativesManager.isUsingNatives())
-				success &= LocalFileNativesManager.putFileInfo(filePath, info, options);
+			success &= LocalFileNativesManager.putFileInfo(filePath, info, options);
 		}
 		//native does not currently set last modified
 		if ((options & EFS.SET_LAST_MODIFIED) != 0)

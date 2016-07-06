@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -135,6 +135,7 @@ public class AbstractDecoratedTextEditorPreferenceConstants {
 	 * </p>
 	 * @deprecated as of 3.0 there are no UNKNOWN annotations any more
 	 */
+	@Deprecated
 	public final static String EDITOR_UNKNOWN_INDICATION= "othersIndication"; //$NON-NLS-1$
 
 	/**
@@ -149,6 +150,7 @@ public class AbstractDecoratedTextEditorPreferenceConstants {
 	 * @see PreferenceConverter
 	 * @deprecated As of 3.0, there are no UNKNOWN annotations any more
 	 */
+	@Deprecated
 	public final static String EDITOR_UNKNOWN_INDICATION_COLOR= "othersIndicationColor"; //$NON-NLS-1$
 
 	/**
@@ -159,6 +161,7 @@ public class AbstractDecoratedTextEditorPreferenceConstants {
 	 * </p>
 	 * @deprecated As of 3.0, there are no UNKNOWN annotations any more
 	 */
+	@Deprecated
 	public final static String EDITOR_UNKNOWN_INDICATION_IN_OVERVIEW_RULER= "othersIndicationInOverviewRuler"; //$NON-NLS-1$
 
 	/**
@@ -745,6 +748,7 @@ public class AbstractDecoratedTextEditorPreferenceConstants {
 		store.setDefault(EDITOR_TEXT_DRAG_AND_DROP_ENABLED, true);
 		store.setDefault(EDITOR_SHOW_TEXT_HOVER_AFFORDANCE, true);
 		store.setDefault(EDITOR_HOVER_ENRICH_MODE, 0);
+		store.setDefault(AbstractTextEditor.PREFERENCE_WORD_WRAP_ENABLED, false);
 
 		MarkerAnnotationPreferences.initializeDefaultValues(store);
 

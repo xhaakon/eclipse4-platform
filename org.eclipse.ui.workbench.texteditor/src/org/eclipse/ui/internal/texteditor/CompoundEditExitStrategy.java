@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,43 +58,40 @@ public final class CompoundEditExitStrategy {
 	 */
 	private final class EventListener implements MouseListener, FocusListener, VerifyKeyListener, IExecutionListener {
 
-		/*
-		 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-		 */
+		@Override
 		public void mouseDoubleClick(MouseEvent e) {
 			// mouse actions end the compound change
 			fireEndCompoundEdit();
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-		 */
+		@Override
 		public void mouseDown(MouseEvent e) {
 			// mouse actions end the compound change
 			fireEndCompoundEdit();
 		}
 
+		@Override
 		public void mouseUp(MouseEvent e) {}
 
+		@Override
 		public void focusGained(FocusEvent e) {}
 
-		/*
-		 * @see org.eclipse.swt.events.FocusListener#focusLost(org.eclipse.swt.events.FocusEvent)
-		 */
+		@Override
 		public void focusLost(FocusEvent e) {
 			// losing focus ends the change
 			fireEndCompoundEdit();
 		}
 
+		@Override
 		public void notHandled(String commandId, NotHandledException exception) {}
 
+		@Override
 		public void postExecuteFailure(String commandId, ExecutionException exception) {}
 
+		@Override
 		public void postExecuteSuccess(String commandId, Object returnValue) {}
 
-		/*
-		 * @see org.eclipse.core.commands.IExecutionListener#preExecute(java.lang.String, org.eclipse.core.commands.ExecutionEvent)
-		 */
+		@Override
 		public void preExecute(String commandId, ExecutionEvent event) {
 			// any command other than the known ones end the compound change
 			for (int i= 0; i < fCommandIds.length; i++) {
@@ -104,9 +101,7 @@ public final class CompoundEditExitStrategy {
 			fireEndCompoundEdit();
 		}
 
-		/*
-		 * @see org.eclipse.swt.custom.VerifyKeyListener#verifyKey(org.eclipse.swt.events.VerifyEvent)
-		 */
+		@Override
 		public void verifyKey(VerifyEvent event) {
 			// any key press that is not a modifier combo ends the compound change
 			final int maskWithoutShift= SWT.MODIFIER_MASK & ~SWT.SHIFT;
@@ -118,7 +113,8 @@ public final class CompoundEditExitStrategy {
 
 	private final String[] fCommandIds;
 	private final EventListener fEventListener= new EventListener();
-	private final ListenerList fListenerList= new ListenerList(ListenerList.IDENTITY);
+
+	private final ListenerList<ICompoundEditListener> fListenerList= new ListenerList<>(ListenerList.IDENTITY);
 
 	private ITextViewer fViewer;
 	private StyledText fWidgetEventSource;
@@ -188,13 +184,13 @@ public final class CompoundEditExitStrategy {
 			fWidgetEventSource.addFocusListener(fEventListener);
 		}
 
-		ICommandService commandService= (ICommandService)PlatformUI.getWorkbench().getAdapter(ICommandService.class);
+		ICommandService commandService= PlatformUI.getWorkbench().getAdapter(ICommandService.class);
 		if (commandService != null)
 			commandService.addExecutionListener(fEventListener);
 	}
 
 	private void removeListeners() {
-		ICommandService commandService= (ICommandService)PlatformUI.getWorkbench().getAdapter(ICommandService.class);
+		ICommandService commandService= PlatformUI.getWorkbench().getAdapter(ICommandService.class);
 		if (commandService != null)
 			commandService.removeExecutionListener(fEventListener);
 
@@ -212,9 +208,7 @@ public final class CompoundEditExitStrategy {
 
 	private void fireEndCompoundEdit() {
 		disarm();
-		Object[] listeners= fListenerList.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
-			ICompoundEditListener listener= (ICompoundEditListener) listeners[i];
+		for (ICompoundEditListener listener : fListenerList) {
 			try {
 				listener.endCompoundEdit();
 			} catch (Exception e) {

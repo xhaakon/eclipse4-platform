@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,7 @@ import org.eclipse.jface.text.DocumentRewriteSession;
 import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension4;
+import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.TextUtilities;
 
 /**
@@ -77,16 +78,12 @@ public abstract class TextFileBufferOperation implements IFileBufferOperation {
 		fOperationName= operationName;
 	}
 
-	/*
-	 * @see org.eclipse.core.internal.filebuffers.textmanipulation.IFileBufferOperation#getOperationName()
-	 */
+	@Override
 	public String getOperationName() {
 		return fOperationName;
 	}
 
-	/*
-	 * @see org.eclipse.core.internal.filebuffers.textmanipulation.IFileBufferOperation#run(org.eclipse.core.filebuffers.IFileBuffer, org.eclipse.core.runtime.IProgressMonitor)
-	 */
+	@Override
 	public void run(IFileBuffer fileBuffer, IProgressMonitor progressMonitor) throws CoreException, OperationCanceledException {
 
 		if (fileBuffer instanceof ITextFileBuffer) {
@@ -100,7 +97,7 @@ public abstract class TextFileBufferOperation implements IFileBufferOperation {
 				MultiTextEditWithProgress edit= computeTextEdit(textFileBuffer, subMonitor);
 				subMonitor.done();
 				if (edit != null) {
-					Object stateData= startRewriteSession(textFileBuffer);
+					Map<String, IDocumentPartitioner> stateData= startRewriteSession(textFileBuffer);
 					try {
 						subMonitor= Progress.getSubMonitor(progressMonitor, 90);
 						applyTextEdit(textFileBuffer, edit, subMonitor);
@@ -115,8 +112,8 @@ public abstract class TextFileBufferOperation implements IFileBufferOperation {
 		}
 	}
 
-	private Object startRewriteSession(ITextFileBuffer fileBuffer) {
-		Object stateData= null;
+	private Map<String, IDocumentPartitioner> startRewriteSession(ITextFileBuffer fileBuffer) {
+		Map<String, IDocumentPartitioner> stateData= null;
 
 		IDocument document= fileBuffer.getDocument();
 		if (document instanceof IDocumentExtension4) {
@@ -128,14 +125,14 @@ public abstract class TextFileBufferOperation implements IFileBufferOperation {
 		return stateData;
 	}
 
-	private void stopRewriteSession(ITextFileBuffer fileBuffer, Object stateData) {
+	private void stopRewriteSession(ITextFileBuffer fileBuffer, Map<String, IDocumentPartitioner> stateData) {
 		IDocument document= fileBuffer.getDocument();
 		if (document instanceof IDocumentExtension4) {
 			IDocumentExtension4 extension= (IDocumentExtension4) document;
 			extension.stopRewriteSession(fDocumentRewriteSession);
 			fDocumentRewriteSession= null;
-		} else if (stateData instanceof Map)
-			TextUtilities.addDocumentPartitioners(document, (Map) stateData);
+		} else if (stateData != null)
+			TextUtilities.addDocumentPartitioners(document, stateData);
 	}
 
 	private void applyTextEdit(ITextFileBuffer fileBuffer, MultiTextEditWithProgress textEdit, IProgressMonitor progressMonitor) throws CoreException, OperationCanceledException {

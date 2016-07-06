@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010, 2013 BestSolution.at and others.
+ * Copyright (c) 2010, 2015 BestSolution.at and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,7 +55,7 @@ public interface MStringModelFragment extends MModelFragment {
 	 * <!-- end-model-doc -->
 	 * @return the value of the '<em>Featurename</em>' attribute.
 	 * @see #setFeaturename(String)
-	 * @model
+	 * @model required="true"
 	 * @generated
 	 */
 	String getFeaturename();
@@ -96,7 +96,7 @@ public interface MStringModelFragment extends MModelFragment {
 	 * <!-- end-model-doc -->
 	 * @return the value of the '<em>Parent Element Id</em>' attribute.
 	 * @see #setParentElementId(String)
-	 * @model
+	 * @model required="true"
 	 * @generated
 	 */
 	String getParentElementId();

@@ -28,6 +28,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.IRewriteTarget;
 import org.eclipse.jface.text.TextUtilities;
@@ -40,6 +41,7 @@ import org.eclipse.jface.text.TextUtilities;
  * @since 2.0
  * @deprecated since 3.1. Line delimiter conversion has been modified to work on groups of files rather than being editor specific
  */
+@Deprecated
 public class ConvertLineDelimitersAction extends TextEditorAction {
 
 
@@ -74,9 +76,7 @@ public class ConvertLineDelimitersAction extends TextEditorAction {
 		update();
 	}
 
-	/*
-	 * @see org.eclipse.jface.action.Action#run()
-	 */
+	@Override
 	public void run() {
 
 		try {
@@ -136,9 +136,7 @@ public class ConvertLineDelimitersAction extends TextEditorAction {
 			fLineDelimiter= lineDelimiter;
 		}
 
-		/*
-		 * @see IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
-		 */
+		@Override
 		public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 
 			IDocument document= fRewriteTarget.getDocument();
@@ -150,7 +148,7 @@ public class ConvertLineDelimitersAction extends TextEditorAction {
 				fRewriteTarget.setRedraw(false);
 			fRewriteTarget.beginCompoundChange();
 
-			Map partitioners= TextUtilities.removeDocumentPartitioners(document);
+			Map<String, IDocumentPartitioner> partitioners= TextUtilities.removeDocumentPartitioners(document);
 
 			try {
 				for (int i= 0; i < lineCount; i++) {
@@ -182,9 +180,7 @@ public class ConvertLineDelimitersAction extends TextEditorAction {
 			}
 		}
 
-		/*
-		 * @see Runnable#run()
-		 */
+		@Override
 		public void run() {
 			try {
 				run(new NullProgressMonitor());
@@ -266,9 +262,7 @@ public class ConvertLineDelimitersAction extends TextEditorAction {
 		}
 	}
 
-	/*
-	 * @see IUpdate#update()
-	 */
+	@Override
 	public void update() {
 		super.update();
 		setEnabled(canModifyEditor());

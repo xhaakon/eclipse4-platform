@@ -1,13 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM - Initial API and implementation
  * Francis Lynch (Wind River) - [305718] Allow reading snapshot into renamed project
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -26,14 +27,14 @@ import org.eclipse.osgi.util.NLS;
  * from a future version).
  */
 public abstract class WorkspaceTreeReader {
-	
-	/** 
-	 * Configuration setting to have an existing workspace 
+
+	/**
+	 * Configuration setting to have an existing workspace
 	 * project name take precedence over data being read,
 	 * when set to <code>true</code>.
 	 */
 	protected boolean renameProjectNode;
-	
+
 	/**
 	 * Returns the tree reader associated with the given tree version number.
 	 * @param renameProjectNode if <code>true</code>, set up the reader to have
@@ -54,7 +55,7 @@ public abstract class WorkspaceTreeReader {
 				return w;
 			default :
 				// Unknown tree version - fail to read the tree
-				String msg = NLS.bind(Messages.resources_format, new Integer(version));
+				String msg = NLS.bind(Messages.resources_format, version);
 				throw new ResourceException(IResourceStatus.FAILED_READ_METADATA, null, msg, null);
 		}
 	}

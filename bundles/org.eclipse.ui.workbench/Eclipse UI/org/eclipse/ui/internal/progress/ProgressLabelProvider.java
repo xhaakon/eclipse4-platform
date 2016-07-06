@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2006 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,17 +21,11 @@ public class ProgressLabelProvider extends LabelProvider {
 
     Image image;
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.ILabelProvider#getImage(java.lang.Object)
-     */
     @Override
 	public Image getImage(Object element) {
         return ((JobTreeElement) element).getDisplayImage();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.ILabelProvider#getText(java.lang.Object)
-     */
     @Override
 	public String getText(Object element) {
         return ((JobTreeElement) element).getDisplayString();

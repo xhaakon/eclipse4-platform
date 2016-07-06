@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2009 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,9 +43,6 @@ public class ImageBindingRegistry implements IExtensionChangeHandler {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.dynamicHelpers.IExtensionChangeHandler#addExtension(org.eclipse.core.runtime.dynamicHelpers.IExtensionTracker, org.eclipse.core.runtime.IExtension)
-	 */
 	@Override
 	public void addExtension(IExtensionTracker tracker, IExtension extension) {
 		IConfigurationElement [] elements = extension.getConfigurationElements();
@@ -80,9 +77,6 @@ public class ImageBindingRegistry implements IExtensionChangeHandler {
                 PlatformUI.PLUGIN_ID, IWorkbenchRegistryConstants.PL_ACTIVITYSUPPORT);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.dynamicHelpers.IExtensionChangeHandler#removeExtension(org.eclipse.core.runtime.IExtension, java.lang.Object[])
-	 */
 	@Override
 	public void removeExtension(IExtension extension, Object[] objects) {
 		for (int i = 0; i < objects.length; i++) {

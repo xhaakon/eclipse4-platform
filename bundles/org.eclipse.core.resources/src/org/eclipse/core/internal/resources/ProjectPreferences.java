@@ -4,18 +4,18 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Markus Schorn (Wind River) - [108066] Project prefs marked dirty on read
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427, 483529
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
 import java.io.*;
 import java.util.*;
-import org.eclipse.core.internal.preferences.EclipsePreferences;
-import org.eclipse.core.internal.preferences.ExportedPreferences;
+import org.eclipse.core.internal.preferences.*;
 import org.eclipse.core.internal.utils.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
@@ -30,7 +30,7 @@ import org.osgi.service.prefs.Preferences;
 /**
  * Represents a node in the Eclipse preference hierarchy which stores preference
  * values for projects.
- * 
+ *
  * @since 3.0
  */
 public class ProjectPreferences extends EclipsePreferences {
@@ -104,7 +104,7 @@ public class ProjectPreferences extends EclipsePreferences {
 		boolean hasResourcesSettings = getFile(folder, PREFS_REGULAR_QUALIFIER).exists() || getFile(folder, PREFS_DERIVED_QUALIFIER).exists();
 		// remove the preferences
 		removeNode(projectNode);
-		// notifies the CharsetManager 		
+		// notifies the CharsetManager
 		if (hasResourcesSettings)
 			preferencesChanged(folder.getProject());
 	}
@@ -123,7 +123,7 @@ public class ProjectPreferences extends EclipsePreferences {
 		boolean hasResourcesSettings = getFile(project, PREFS_REGULAR_QUALIFIER).exists() || getFile(project, PREFS_DERIVED_QUALIFIER).exists();
 		// remove the preferences
 		removeNode(projectNode);
-		// notifies the CharsetManager 		
+		// notifies the CharsetManager
 		if (hasResourcesSettings)
 			preferencesChanged(project);
 	}
@@ -346,7 +346,7 @@ public class ProjectPreferences extends EclipsePreferences {
 		} catch (CoreException e) {
 			return EMPTY_STRING_ARRAY;
 		}
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		for (int i = 0; i < members.length; i++) {
 			IResource resource = members[i];
 			if (resource.getType() == IResource.FILE && PREFS_FILE_EXTENSION.equals(resource.getFullPath().getFileExtension()))
@@ -401,9 +401,9 @@ public class ProjectPreferences extends EclipsePreferences {
 
 	/*
 	 * Calculate and return the file system location for this preference node.
-	 * Use the absolute path of the node to find out the project name so 
+	 * Use the absolute path of the node to find out the project name so
 	 * we can get its location on disk.
-	 * 
+	 *
 	 * NOTE: we cannot cache the location since it may change over the course
 	 * of the project life-cycle.
 	 */
@@ -525,9 +525,7 @@ public class ProjectPreferences extends EclipsePreferences {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#nodeExists(java.lang.String)
-	 * 
+	/**
 	 * If we are at the /project node and we are checking for the existence of a child, we
 	 * want special behaviour. If the child is a single segment name, then we want to
 	 * return true if the node exists OR if a project with that name exists in the workspace.
@@ -583,7 +581,7 @@ public class ProjectPreferences extends EclipsePreferences {
 		final String finalQualifier = qualifier;
 		final BackingStoreException[] bse = new BackingStoreException[1];
 		try {
-			IWorkspaceRunnable operation = new IWorkspaceRunnable() {
+			ICoreRunnable operation = new ICoreRunnable() {
 				@Override
 				public void run(IProgressMonitor monitor) throws CoreException {
 					try {

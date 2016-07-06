@@ -4,10 +4,11 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -132,7 +133,7 @@ public abstract class Container extends Resource implements IContainer {
 		try {
 			children = workspace.tree.getChildren(path);
 		} catch (IllegalArgumentException e) {
-			//concurrency problem: the container has been deleted by another 
+			//concurrency problem: the container has been deleted by another
 			//thread during this call.  Just return empty children set
 		}
 		if (children == null || children.length == 0)
@@ -293,7 +294,7 @@ public abstract class Container extends Resource implements IContainer {
 		IHistoryStore historyStore = getLocalManager().getHistoryStore();
 		IPath basePath = getFullPath();
 		IWorkspaceRoot root = getWorkspace().getRoot();
-		Set<IFile> deletedFiles = new HashSet<IFile>();
+		Set<IFile> deletedFiles = new HashSet<>();
 
 		if (depth == IResource.DEPTH_ZERO) {
 			// this folder might have been a file in a past life
@@ -329,7 +330,7 @@ public abstract class Container extends Resource implements IContainer {
 		try {
 			String message = NLS.bind(Messages.resources_settingDefaultCharsetContainer, getFullPath());
 			monitor.beginTask(message, Policy.totalWork);
-			// need to get the project as a scheduling rule because we might be 
+			// need to get the project as a scheduling rule because we might be
 			// creating a new folder/file to hold the project settings
 			final ISchedulingRule rule = workspace.getRuleFactory().charsetRule(this);
 			try {

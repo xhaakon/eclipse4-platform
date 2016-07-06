@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,7 @@ public class SearchManager {
 			 */
 			localSearchJob = new Job("localSearchJob") { //$NON-NLS-1$
 
+				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					localManager.search(searchQuery, bufferedCollector, localMonitor);
 					return Status.OK_STATUS;
@@ -65,6 +66,7 @@ public class SearchManager {
 			};
 			remoteSearchJob = new Job("remoteSearchJob") { //$NON-NLS-1$
 
+				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					remoteManager.search(searchQuery, bufferedCollector, remoteMonitor);
 					return Status.OK_STATUS;
@@ -175,7 +177,7 @@ public class SearchManager {
 		IConfigurationElement[] configs =
 			Platform.getExtensionRegistry().getConfigurationElementsFor("org.eclipse.help.base.searchProcessor"); //$NON-NLS-1$
 
-		ArrayList<Object> processors = new ArrayList<Object>();
+		ArrayList<Object> processors = new ArrayList<>();
 
 		for (int c=0;c<configs.length;c++)
 		{
@@ -247,12 +249,13 @@ public class SearchManager {
 	 * when flush() is called.
 	 */
 	private class BufferedSearchHitCollector implements ISearchHitCollector {
-		private Set<SearchHit> allHits = new HashSet<SearchHit>();
+		private Set<SearchHit> allHits = new HashSet<>();
 		private String wordsSearched = null;
 
 		/* (non-Javadoc)
 		 * @see org.eclipse.help.internal.search.ISearchHitCollector#addHits(java.util.List, java.lang.String)
 		 */
+		@Override
 		public void addHits(List<SearchHit> hits, String wordsSearched) {
 			if (wordsSearched != null) {
 				this.wordsSearched = wordsSearched;
@@ -266,13 +269,14 @@ public class SearchManager {
 		 */
 		public void flush(ISearchHitCollector collector) {
 			// sort by score
-			List<SearchHit> hitsList = new ArrayList<SearchHit>(allHits);
+			List<SearchHit> hitsList = new ArrayList<>(allHits);
 			Collections.sort(hitsList);
 			collector.addHits(hitsList, wordsSearched);
 			allHits.clear();
 			wordsSearched = null;
 		}
 
+		@Override
 		public void addQTCException(QueryTooComplexException exception) throws QueryTooComplexException {
 			throw exception;
 		}

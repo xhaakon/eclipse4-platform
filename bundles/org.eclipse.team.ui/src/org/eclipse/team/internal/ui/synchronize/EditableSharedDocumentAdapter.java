@@ -32,7 +32,7 @@ import org.eclipse.ui.texteditor.IElementStateListener;
  */
 public class EditableSharedDocumentAdapter extends
 		SharedDocumentAdapter implements IElementStateListener {
-	
+
 	private int connectionCount;
 	private final ISharedDocumentAdapterListener listener;
 	private IEditorInput bufferedKey;
@@ -42,37 +42,37 @@ public class EditableSharedDocumentAdapter extends
 	 * and supports call backs to the element when the adapter state changes.
 	 */
 	public interface ISharedDocumentAdapterListener {
-		
+
 		/**
 		 * Method that is invoked when the adapter connects to the
 		 * document provider. This method is only invoked when the
 		 * adapter first connects to the document.
 		 */
 		void handleDocumentConnected();
-		
+
 		/**
 		 * Method that is invoked when the adapter disconnects from the
 		 * document provider. This method is only invoked when the
 		 * adapter no longer has any connection to the document provider.
 		 */
 		void handleDocumentDisconnected();
-		
+
 		/**
 		 * Method invoked when changes in the document are flushed to the adapter.
 		 */
 		void handleDocumentFlushed();
-		
+
 		/**
 		 * Method invoked when the file behind the shared document is deleted.
 		 */
 		void handleDocumentDeleted();
-		
+
 		/**
 		 * Method invoked when the document dirty state changes from dirty to clean.
 		 */
 		void handleDocumentSaved();
 	}
-	
+
 	/**
 	 * Create the shared document adapter for the given element.
 	 * @param listener access to element internals
@@ -81,10 +81,11 @@ public class EditableSharedDocumentAdapter extends
 		super();
 		this.listener = listener;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.SharedDocumentAdapter#connect(org.eclipse.ui.texteditor.IDocumentProvider, org.eclipse.ui.IEditorInput)
 	 */
+	@Override
 	public void connect(IDocumentProvider provider, IEditorInput documentKey)
 			throws CoreException {
 		super.connect(provider, documentKey);
@@ -98,6 +99,7 @@ public class EditableSharedDocumentAdapter extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.SharedDocumentAdapter#disconnect(org.eclipse.ui.texteditor.IDocumentProvider, org.eclipse.ui.IEditorInput)
 	 */
+	@Override
 	public void disconnect(IDocumentProvider provider,
 			IEditorInput documentKey) {
 		try {
@@ -119,7 +121,7 @@ public class EditableSharedDocumentAdapter extends
 	public boolean isConnected() {
 		return connectionCount > 0;
 	}
-	
+
 	/**
 	 * Save the shared document of the element of this adapter.
 	 * @param input the document key of the element.
@@ -154,10 +156,11 @@ public class EditableSharedDocumentAdapter extends
 			bufferedKey = null;
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.SharedDocumentAdapter#flushDocument(org.eclipse.ui.texteditor.IDocumentProvider, org.eclipse.ui.IEditorInput, org.eclipse.jface.text.IDocument, boolean, org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	public void flushDocument(IDocumentProvider provider,
 			IEditorInput documentKey, IDocument document,
 			boolean overwrite)
@@ -174,6 +177,7 @@ public class EditableSharedDocumentAdapter extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.texteditor.IElementStateListener#elementContentAboutToBeReplaced(java.lang.Object)
 	 */
+	@Override
 	public void elementContentAboutToBeReplaced(Object element) {
 		// Nothing to do
 	}
@@ -181,6 +185,7 @@ public class EditableSharedDocumentAdapter extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.texteditor.IElementStateListener#elementContentReplaced(java.lang.Object)
 	 */
+	@Override
 	public void elementContentReplaced(Object element) {
 		// Nothing to do
 	}
@@ -188,6 +193,7 @@ public class EditableSharedDocumentAdapter extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.texteditor.IElementStateListener#elementDeleted(java.lang.Object)
 	 */
+	@Override
 	public void elementDeleted(Object element) {
 		listener.handleDocumentDeleted();
 	}
@@ -195,6 +201,7 @@ public class EditableSharedDocumentAdapter extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.texteditor.IElementStateListener#elementDirtyStateChanged(java.lang.Object, boolean)
 	 */
+	@Override
 	public void elementDirtyStateChanged(Object element, boolean isDirty) {
 		if (!isDirty) {
 			this.listener.handleDocumentSaved();
@@ -204,13 +211,14 @@ public class EditableSharedDocumentAdapter extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.texteditor.IElementStateListener#elementMoved(java.lang.Object, java.lang.Object)
 	 */
+	@Override
 	public void elementMoved(Object originalElement, Object movedElement) {
 		// Nothing to do
 	}
 
 	/**
 	 * Return whether the adapter has buffered contents. The adapter
-	 * buffers contents by connecting to the document through the document 
+	 * buffers contents by connecting to the document through the document
 	 * provider. This means that the adapter must be disconnected either by saving
 	 * or discarding the buffer.
 	 * @return whether the adapter has buffered contents

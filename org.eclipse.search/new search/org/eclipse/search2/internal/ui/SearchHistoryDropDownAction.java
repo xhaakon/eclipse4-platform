@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,7 +38,7 @@ class SearchHistoryDropDownAction extends Action implements IMenuCreator {
 
 			String label= escapeAmp(search.getLabel());
 			if (InternalSearchUI.getInstance().isQueryRunning(search.getQuery()))
-				label= MessageFormat.format(SearchMessages.SearchDropDownAction_running_message, new String[] { label });
+				label= MessageFormat.format(SearchMessages.SearchDropDownAction_running_message, new Object[] { label });
 			// fix for bug 38049
 			if (label.indexOf('@') >= 0)
 				label+= '@';
@@ -59,10 +59,12 @@ class SearchHistoryDropDownAction extends Action implements IMenuCreator {
 			return buf.toString();
 		}
 
+		@Override
 		public void runWithEvent(Event event) {
 			runIfChecked(event.stateMask == SWT.CTRL);
 		}
 
+		@Override
 		public void run() {
 			runIfChecked(false);
 		}
@@ -91,6 +93,7 @@ class SearchHistoryDropDownAction extends Action implements IMenuCreator {
 		setEnabled(hasQueries);
 	}
 
+	@Override
 	public void dispose() {
 		disposeMenu();
 	}
@@ -100,10 +103,12 @@ class SearchHistoryDropDownAction extends Action implements IMenuCreator {
 			fMenu.dispose();
 	}
 
+	@Override
 	public Menu getMenu(Menu parent) {
 		return null;
 	}
 
+	@Override
 	public Menu getMenu(Control parent) {
 		ISearchResult currentSearch= fSearchView.getCurrentSearchResult();
 		disposeMenu();
@@ -130,6 +135,7 @@ class SearchHistoryDropDownAction extends Action implements IMenuCreator {
 		item.fill(parent, -1);
 	}
 
+	@Override
 	public void run() {
 		new ShowSearchHistoryDialogAction(fSearchView).run();
 	}

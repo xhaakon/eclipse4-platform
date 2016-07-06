@@ -44,13 +44,14 @@ public class ProjectSelectionPage extends WizardPage {
 
 	protected ProjectSelectionPage(IProject[] projects, ConfigurationWizardElement element) {
 		super("projectSelectionPage", //$NON-NLS-1$
-				NLS.bind(TeamUIMessages.ProjectSelectionPage_1, element.getLabel(null)), 
+				NLS.bind(TeamUIMessages.ProjectSelectionPage_1, element.getLabel(null)),
 				TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_WIZBAN_SHARE));
 		setDescription(NLS.bind(TeamUIMessages.ProjectSelectionPage_0, element.getLabel(null)));
 		this.projects = projects;
 		this.element = element;
 	}
 
+	@Override
 	public void createControl(Composite parent) {
 		Composite composite = SWTUtils.createHVFillComposite(parent, SWTUtils.MARGINS_DIALOG, 2);
 		createProjectList(composite);
@@ -69,6 +70,7 @@ public class ProjectSelectionPage extends WizardPage {
 		projectViewer.setInput(projectList);
 		projectViewer.getTable().select(0);
 		projectViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				updateEnablements();
 			}
@@ -83,9 +85,11 @@ public class ProjectSelectionPage extends WizardPage {
 		shareButton.setLayoutData(gridData);
 		shareButton.setText(TeamUIMessages.ProjectSelectionPage_2);
 		shareButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				shareSelectedProject();
 			}
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// Ignore
 			}
@@ -108,7 +112,7 @@ public class ProjectSelectionPage extends WizardPage {
 			}
 		}
 	}
-	
+
 	private void updateProjectList(IProject project) {
 		if (RepositoryProvider.isShared(project)) {
 			projectList.remove(project);

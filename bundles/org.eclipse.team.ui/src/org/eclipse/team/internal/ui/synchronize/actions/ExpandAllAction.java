@@ -17,17 +17,18 @@ import org.eclipse.jface.viewers.*;
 
 
 public class ExpandAllAction extends Action implements ISelectionChangedListener {
-	
+
 	private final AbstractTreeViewer viewer;
-	
+
 	public ExpandAllAction(AbstractTreeViewer viewer) {
 		this.viewer = viewer;
 		viewer.addSelectionChangedListener(this);
 	}
+	@Override
 	public void run() {
 		expandAllFromSelection();
 	}
-	
+
 	protected void expandAllFromSelection() {
 		AbstractTreeViewer tree = viewer;
 		if (tree == null) return;
@@ -48,6 +49,7 @@ public class ExpandAllAction extends Action implements ISelectionChangedListener
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
 	 */
+	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
 		ISelection selection = event.getSelection();
 		if (selection instanceof IStructuredSelection) {

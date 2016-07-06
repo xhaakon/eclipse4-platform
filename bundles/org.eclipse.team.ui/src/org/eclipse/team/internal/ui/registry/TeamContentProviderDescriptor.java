@@ -27,13 +27,13 @@ import org.osgi.service.prefs.Preferences;
 public class TeamContentProviderDescriptor implements ITeamContentProviderDescriptor {
 
 	private static final String TAG_TEAM_CONTENT_PROVIDER = "teamContentProvider"; //$NON-NLS-1$
-	
+
 	private static final String ATT_MODEL_PROVIDER_ID = "modelProviderId"; //$NON-NLS-1$
 	private static final String ATT_CONTENT_EXTENSION_ID = "contentExtensionId"; //$NON-NLS-1$
 	private static final String ATT_ICON = "icon"; //$NON-NLS-1$
 	private static final String ATT_PREFERENCE_PAGE = "preferencePage"; //$NON-NLS-1$
 	private static final String ATT_SUPPORTS_FLAT_LAYOUT = "supportsFlatLayout"; //$NON-NLS-1$
-	
+
 	private static final String PREF_TEAM_CONTENT_DESCRIPTORS = "teamContentDescriptors"; //$NON-NLS-1$
 	private static final String PREF_ENABLED = "enabled"; //$NON-NLS-1$
 
@@ -91,7 +91,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 					new String[] { ATT_CONTENT_EXTENSION_ID,
 							TAG_TEAM_CONTENT_PROVIDER, id == null ? "" : id })); //$NON-NLS-1$
 	}
-	
+
 	protected void fail(String reason) throws CoreException {
 		throw new CoreException(new Status(IStatus.ERROR, TeamUIPlugin.ID, 0, reason, null));
 	}
@@ -99,6 +99,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.registry.ITeamContentProviderDescriptor#getContentExtensionId()
 	 */
+	@Override
 	public String getContentExtensionId() {
 		return contentExtensionId;
 	}
@@ -106,6 +107,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.registry.ITeamContentProviderDescriptor#getModelProviderId()
 	 */
+	@Override
 	public String getModelProviderId() {
 		return modelProviderId;
 	}
@@ -113,6 +115,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.registry.ITeamContentProviderDescriptor#getImageDescriptor()
 	 */
+	@Override
 	public ImageDescriptor getImageDescriptor() {
 		if (imageDescriptor != null)
 			return imageDescriptor;
@@ -122,10 +125,11 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 		imageDescriptor = TeamUIPlugin.getImageDescriptorFromExtension(configElement.getDeclaringExtension(), iconName);
 		return imageDescriptor;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.registry.ITeamContentProviderDescriptor#createPreferencePage()
 	 */
+	@Override
 	public IPreferencePage createPreferencePage() throws CoreException {
 		if (configElement.getAttribute(ATT_PREFERENCE_PAGE) == null)
 			return null;
@@ -136,6 +140,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamContentProviderDescriptor#isEnabled()
 	 */
+	@Override
 	public boolean isEnabled() {
 		if (!hasPreferences()) {
 			return true;
@@ -149,7 +154,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 			flushPreferences();
 		}
 	}
-	
+
 	public Preferences getParentPreferences() {
 		return TeamUIPlugin.getPlugin().getInstancePreferences().node(PREF_TEAM_CONTENT_DESCRIPTORS);
 	}
@@ -162,11 +167,11 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 		}
 		return internalGetPreferences();
 	}
-	
+
 	private Preferences internalGetPreferences() {
 		return getParentPreferences().node(getPreferenceName());
 	}
-	
+
 	private boolean hasPreferences() {
 		try {
 			return getParentPreferences().nodeExists(getPreferenceName());
@@ -175,7 +180,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Return a unique name that identifies this location but
 	 * does not contain any slashes (/). Also, do not use ':'.
@@ -192,7 +197,7 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 		prefs.putBoolean(PREF_ENABLED, true);
 		flushPreferences();
 	}
-	
+
 	private void flushPreferences() {
 		try {
 			internalGetPreferences().flush();
@@ -207,16 +212,18 @@ public class TeamContentProviderDescriptor implements ITeamContentProviderDescri
 		}
 	}
 
+	@Override
 	public String getName() {
 		if (contentProviderName != null)
 			return contentProviderName;
-		
+
 		return null;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamContentProviderDescriptor#isFlatLayoutSupported()
 	 */
+	@Override
 	public boolean isFlatLayoutSupported() {
 		return supportsFlatLayout;
 	}

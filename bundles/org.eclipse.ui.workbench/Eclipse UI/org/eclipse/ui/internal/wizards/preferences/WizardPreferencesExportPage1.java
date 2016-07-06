@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2014 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -210,6 +210,6 @@ public class WizardPreferencesExportPage1 extends WizardPreferencesPage  {
 	private void reportException(Exception e) {
 		Shell shell = getControl().getShell();
 		WorkbenchPlugin.log(e.getMessage(), e);
-		MessageDialog.open(MessageDialog.ERROR, shell, new String(), e.getLocalizedMessage(), SWT.SHEET);
+		MessageDialog.open(MessageDialog.ERROR, shell, "", e.getLocalizedMessage(), SWT.SHEET); //$NON-NLS-1$
 	}
 }

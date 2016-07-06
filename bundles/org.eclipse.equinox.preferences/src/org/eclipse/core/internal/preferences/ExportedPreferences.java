@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2005 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -28,9 +28,8 @@ public class ExportedPreferences extends EclipsePreferences implements IExported
 		super(parent, name);
 	}
 
-	/*
-	 * @see org.eclipse.core.runtime.preferences.IExportedPreferences#isExportRoot()
-	 */
+
+	@Override
 	public boolean isExportRoot() {
 		return isExportRoot;
 	}
@@ -58,14 +57,16 @@ public class ExportedPreferences extends EclipsePreferences implements IExported
 		this.version = version;
 	}
 
+	@Override
 	protected EclipsePreferences internalCreate(EclipsePreferences nodeParent, String nodeName, Object context) {
 		return new ExportedPreferences(nodeParent, nodeName);
 	}
 
 	/*
-	 * Return a string representation of this object. To be used for 
+	 * Return a string representation of this object. To be used for
 	 * debugging purposes only.
 	 */
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		if (isExportRoot)

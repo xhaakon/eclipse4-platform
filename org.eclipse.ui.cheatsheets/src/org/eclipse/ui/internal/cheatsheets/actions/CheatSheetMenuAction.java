@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,7 @@ import org.eclipse.ui.internal.cheatsheets.CheatSheetPlugin;
 
 /**
  * This is the action used to contribute the CheatSheets menu to the workbench's
- * help menu.  
+ * help menu.
  */
 public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, IPropertyListener {
 	/**
@@ -40,9 +40,7 @@ public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, 
 		CheatSheetPlugin.getPlugin().getCheatSheetHistory().addListener(this);
 	}
 
-	/* (non-Javadoc)
-	 * @see IWorkbenchWindowActionDelegate#dispose
-	 */
+	@Override
 	public void dispose() {
 		setMenu(null);
 		CheatSheetPlugin.getPlugin().getCheatSheetHistory().removeListener(this);
@@ -50,7 +48,7 @@ public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, 
 
 	/**
 	 * Fills the drop-down menu with cheat sheets history
-	 * 
+	 *
 	 * @param menu the menu to fill
 	 */
 	protected void fillMenu(Menu menu) {
@@ -58,16 +56,12 @@ public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, 
 		cheatsheetMenuMenuItem.fill(menu, 0);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowPulldownDelegate#getMenu(org.eclipse.swt.widgets.Control)
-	 */
+	@Override
 	public Menu getMenu(Control parent) {
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowPulldownDelegate2#getMenu(org.eclipse.swt.widgets.Menu)
-	 */
+	@Override
 	public Menu getMenu(Menu parent) {
 		setMenu(new Menu(parent));
 		fillMenu(fMenu);
@@ -75,9 +69,7 @@ public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, 
 		return fMenu;
 	}
 
-	/* (non-Javadoc)
-	 * @see IWorkbenchWindowActionDelegate#init
-	 */
+	@Override
 	public void init(IWorkbenchWindow window) {
 	}
 
@@ -88,6 +80,7 @@ public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, 
 		// Add listener to repopulate the menu each time
 		// it is shown because of dynamic history list
 		fMenu.addMenuListener(new MenuAdapter() {
+			@Override
 			public void menuShown(MenuEvent e) {
 				if (fRecreateMenu) {
 					Menu m = (Menu)e.widget;
@@ -101,29 +94,23 @@ public class CheatSheetMenuAction implements IWorkbenchWindowPulldownDelegate2, 
 			}
 		});
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPropertyListener#propertyChanged(java.lang.Object, int)
-	 */
+
+	@Override
 	public void propertyChanged(Object source, int propId) {
 		fRecreateMenu = true;
 	}
 
-	/* (non-Javadoc)
-	 * @see IWorkbenchWindowActionDelegate#run
-	 */
+	@Override
 	public void run(IAction action) {
 	}
 
-	/* (non-Javadoc)
-	 * @see IWorkbenchWindowActionDelegate#selectionChanged
-	 */
+	@Override
 	public void selectionChanged(IAction action, ISelection selection) {
 	}
 
 	/**
 	 * Sets this action's drop-down menu, disposing the previous menu.
-	 * 
+	 *
 	 * @param menu the new menu
 	 */
 	private void setMenu(Menu menu) {

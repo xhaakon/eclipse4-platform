@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -390,6 +390,7 @@ public interface ITextEditorActionDefinitionIds extends IWorkbenchActionDefiniti
 	 * Value: <code>"org.eclipse.ui.edit.text.convert.lineDelimiters.toWindows"</code>
 	 * @deprecated since 3.1. No longer supported as editor actions.
 	 */
+	@Deprecated
 	String CONVERT_LINE_DELIMITERS_TO_WINDOWS= "org.eclipse.ui.edit.text.convert.lineDelimiters.toWindows"; //$NON-NLS-1$
 
 	/**
@@ -397,6 +398,7 @@ public interface ITextEditorActionDefinitionIds extends IWorkbenchActionDefiniti
 	 * Value: <code>"org.eclipse.ui.edit.text.convert.lineDelimiters.toUNIX"</code>
 	 * @deprecated since 3.1. No longer supported as editor actions.
 	 */
+	@Deprecated
 	String CONVERT_LINE_DELIMITERS_TO_UNIX= "org.eclipse.ui.edit.text.convert.lineDelimiters.toUNIX"; //$NON-NLS-1$
 
 	/**
@@ -404,6 +406,7 @@ public interface ITextEditorActionDefinitionIds extends IWorkbenchActionDefiniti
 	 * Value: <code>"org.eclipse.ui.edit.text.convert.lineDelimiters.toMac"</code>
 	 * @deprecated since 3.1. No longer supported as editor actions.
 	 */
+	@Deprecated
 	String CONVERT_LINE_DELIMITERS_TO_MAC= "org.eclipse.ui.edit.text.convert.lineDelimiters.toMac"; //$NON-NLS-1$
 
 
@@ -577,6 +580,14 @@ public interface ITextEditorActionDefinitionIds extends IWorkbenchActionDefiniti
 	 * @since 3.5
 	 */
 	String BLOCK_SELECTION_MODE= "org.eclipse.ui.edit.text.toggleBlockSelectionMode"; //$NON-NLS-1$
+
+	/**
+	 * Command ID of the command to toggle word wrap:
+	 * <code>"org.eclipse.ui.edit.text.toggleWordWrap"</code>).
+	 *
+	 * @since 3.10
+	 */
+	String WORD_WRAP= "org.eclipse.ui.edit.text.toggleWordWrap"; //$NON-NLS-1$
 
 	/**
 	 * Command ID of the command to display a sticky ruler hover for the current caret location.

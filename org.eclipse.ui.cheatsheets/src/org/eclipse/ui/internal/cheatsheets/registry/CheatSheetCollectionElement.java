@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2008 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.IPluginContribution;
 import org.eclipse.ui.internal.cheatsheets.ICheatSheetResource;
 import org.eclipse.ui.model.AdaptableList;
@@ -22,7 +25,7 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.WorkbenchAdapter;
 /**
  * Instances of this class are a collection of CheatSheetCollectionElements,
- * thereby facilitating the definition of tree structures composed of 
+ * thereby facilitating the definition of tree structures composed of
  * these elements. Instances also store a list of cheatsheets.
  */
 public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPluginContribution {
@@ -31,7 +34,7 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 	private String name;
 	private CheatSheetCollectionElement parent;
 	private AdaptableList cheatsheets = new AdaptableList();
-	private List childCollections = new ArrayList();
+	private List<CheatSheetCollectionElement> childCollections = new ArrayList<>();
 
 	/**
 	 * Creates a new <code>CheatSheetCollectionElement</code>.  Parent can be null.
@@ -52,7 +55,7 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 		if (a instanceof CheatSheetElement) {
 			cheatsheets.add(a);
 		} else {
-			childCollections.add(a);
+			childCollections.add((CheatSheetCollectionElement) a);
 		}
 	}
 
@@ -107,9 +110,10 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 	 * associated with this object. Returns <code>null</code> if
 	 * no such object can be found.
 	 */
-	public Object getAdapter(Class adapter) {
+	@SuppressWarnings("unchecked")
+	public <T> T getAdapter(Class<T> adapter) {
 		if (adapter == IWorkbenchAdapter.class) {
-			return this;
+			return (T) this;
 		}
 		return Platform.getAdapterManager().getAdapter(this, adapter);
 	}
@@ -124,6 +128,7 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 	/**
 	 * Returns the label for this collection.
 	 */
+	@Override
 	public String getLabel(Object o) {
 		return name;
 	}
@@ -131,6 +136,7 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 	/**
 	 * Returns the logical parent of the given object in its tree.
 	 */
+	@Override
 	public Object getParent(Object o) {
 		return parent;
 	}
@@ -176,6 +182,7 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 	/**
 	 * For debugging purposes.
 	 */
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer("CheatSheetCollection, "); //$NON-NLS-1$
 		buf.append(childCollections.size());
@@ -185,10 +192,12 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 		return buf.toString();
 	}
 
+	@Override
 	public String getLocalId() {
 		return getId();
 	}
 
+	@Override
 	public String getPluginId() {
 		return pluginId;
 	}
@@ -198,6 +207,6 @@ public class CheatSheetCollectionElement extends WorkbenchAdapter implements IPl
 	}
 
 	public void add(CheatSheetCollectionElement newElement) {
-		childCollections.add(newElement);	
+		childCollections.add(newElement);
 	}
 }

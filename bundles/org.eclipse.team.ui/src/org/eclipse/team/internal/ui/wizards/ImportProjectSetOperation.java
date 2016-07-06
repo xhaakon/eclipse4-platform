@@ -22,16 +22,16 @@ import org.eclipse.ui.IWorkingSet;
 import org.eclipse.ui.IWorkingSetManager;
 
 public class ImportProjectSetOperation extends TeamOperation {
-	
+
 	private String psfFileContents;
 	private String urlString;
 	private String psfFile;
 	private IWorkingSet[] workingSets;
-	
-	
+
+
 	/**
 	 * Operation for importing a Team Project Set stored in a String
-	 * 
+	 *
 	 * @param context
 	 *            a runnable context,
 	 *            <code>null</null> for running in background
@@ -55,7 +55,7 @@ public class ImportProjectSetOperation extends TeamOperation {
 
 	/**
 	 * Operation for importing a Team Project Set file
-	 * 
+	 *
 	 * @param context
 	 *            a runnable context
 	 * @param psfFile
@@ -72,13 +72,13 @@ public class ImportProjectSetOperation extends TeamOperation {
 		this.psfFile = psfFile;
 		this.workingSets = workingSets;
 	}
-	
+
 	private void runForStringContent(IProgressMonitor monitor) throws InvocationTargetException{
 		IProject[] newProjects = ProjectSetImporter.importProjectSetFromString(
 				psfFileContents, urlString, getShell(), monitor);
 		createWorkingSet(workingSets, newProjects);
 	}
-	
+
 	private void runForFile(IProgressMonitor monitor) throws InvocationTargetException{
 		PsfFilenameStore.getInstance().remember(psfFile);
 		IProject[] newProjects = ProjectSetImporter.importProjectSet(psfFile,
@@ -88,9 +88,10 @@ public class ImportProjectSetOperation extends TeamOperation {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	public void run(IProgressMonitor monitor)
 			throws InvocationTargetException, InterruptedException{
 		if (psfFileContents != null) {
@@ -102,22 +103,24 @@ public class ImportProjectSetOperation extends TeamOperation {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.team.ui.TeamOperation#canRunAsJob()
 	 */
+	@Override
 	protected boolean canRunAsJob() {
 		return true;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.team.ui.TeamOperation#getJobName()
 	 */
+	@Override
 	protected String getJobName() {
 		return TeamUIMessages.ImportProjectSetMainPage_jobName;
 	}
-	
+
 	private void createWorkingSet(IWorkingSet[] workingSets, IProject[] projects) {
 		IWorkingSetManager manager = TeamUIPlugin.getPlugin().getWorkbench().getWorkingSetManager();
 		String workingSetName;
@@ -135,7 +138,7 @@ public class ImportProjectSetOperation extends TeamOperation {
 				System.arraycopy(tempElements, 0, finalElementList, 0, tempElements.length);
 				System.arraycopy(adaptedProjects, 0,finalElementList, tempElements.length, adaptedProjects.length);
 				oldSet.setElements(finalElementList);
-			}	
+			}
 		}
 	}
 }

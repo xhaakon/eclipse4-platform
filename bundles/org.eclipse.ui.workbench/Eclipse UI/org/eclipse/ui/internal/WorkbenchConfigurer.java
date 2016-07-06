@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2010 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -79,26 +79,17 @@ public final class WorkbenchConfigurer implements IWorkbenchConfigurer {
         super();
     }
 
-    /* (non-javadoc)
-     * @see org.eclipse.ui.application.IWorkbenchConfigurer#getWorkbench
-     */
     @Override
 	public IWorkbench getWorkbench() {
         return PlatformUI.getWorkbench();
     }
 
-    /* (non-javadoc)
-     * @see org.eclipse.ui.application.IWorkbenchConfigurer#getWorkbenchWindowManager
-     */
     @Override
 	public WindowManager getWorkbenchWindowManager() {
         // return the global workbench window manager
 		return null;
     }
 
-    /* (non-javadoc)
-     * @see org.eclipse.ui.application.IWorkbenchConfigurer#declareImage
-     */
     @Override
 	public void declareImage(String symbolicName, ImageDescriptor descriptor,
             boolean shared) {
@@ -108,9 +99,6 @@ public final class WorkbenchConfigurer implements IWorkbenchConfigurer {
         WorkbenchImages.declareImage(symbolicName, descriptor, shared);
     }
 
-    /* (non-javadoc)
-     * @see org.eclipse.ui.application.IWorkbenchConfigurer#getWindowConfigurer
-     */
     @Override
 	public IWorkbenchWindowConfigurer getWindowConfigurer(
             IWorkbenchWindow window) {

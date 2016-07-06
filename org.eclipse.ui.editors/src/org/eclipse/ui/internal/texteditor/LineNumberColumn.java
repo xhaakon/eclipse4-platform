@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,8 +33,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.revisions.IRevisionRulerColumn;
 import org.eclipse.jface.text.revisions.IRevisionRulerColumnExtension;
-import org.eclipse.jface.text.revisions.RevisionInformation;
 import org.eclipse.jface.text.revisions.IRevisionRulerColumnExtension.RenderingMode;
+import org.eclipse.jface.text.revisions.RevisionInformation;
 import org.eclipse.jface.text.source.AnnotationModel;
 import org.eclipse.jface.text.source.CompositeRuler;
 import org.eclipse.jface.text.source.IAnnotationHover;
@@ -113,9 +113,7 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 	private ISourceViewer fViewer;
 	private ICompatibilityForwarder fForwarder;
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#createControl(org.eclipse.jface.text.source.CompositeRuler, org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	public Control createControl(CompositeRuler parentRuler, Composite parentControl) {
 		Assert.isTrue(fDelegate != null);
 		ITextViewer viewer= parentRuler.getTextViewer();
@@ -126,97 +124,73 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		return control;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#getControl()
-	 */
+	@Override
 	public Control getControl() {
 		return fDelegate.getControl();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#getWidth()
-	 */
+	@Override
 	public int getWidth() {
 		return fDelegate.getWidth();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#redraw()
-	 */
+	@Override
 	public void redraw() {
 		fDelegate.redraw();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#setFont(org.eclipse.swt.graphics.Font)
-	 */
+	@Override
 	public void setFont(Font font) {
 		fDelegate.setFont(font);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#setModel(org.eclipse.jface.text.source.IAnnotationModel)
-	 */
+	@Override
 	public void setModel(IAnnotationModel model) {
 		if (getQuickDiffPreference())
 			fDelegate.setModel(model);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfo#getLineOfLastMouseButtonActivity()
-	 */
+	@Override
 	public int getLineOfLastMouseButtonActivity() {
 		if (fDelegate instanceof IVerticalRulerInfo)
 			return ((IVerticalRulerInfo)fDelegate).getLineOfLastMouseButtonActivity();
 		return -1;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfo#toDocumentLineNumber(int)
-	 */
+	@Override
 	public int toDocumentLineNumber(int y_coordinate) {
 		if (fDelegate instanceof IVerticalRulerInfo)
 			return ((IVerticalRulerInfo)fDelegate).toDocumentLineNumber(y_coordinate);
 		return -1;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#addVerticalRulerListener(org.eclipse.jface.text.source.IVerticalRulerListener)
-	 */
+	@Override
 	public void addVerticalRulerListener(IVerticalRulerListener listener) {
 		if (fDelegate instanceof IVerticalRulerInfoExtension)
 			((IVerticalRulerInfoExtension) fDelegate).addVerticalRulerListener(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#getHover()
-	 */
+	@Override
 	public IAnnotationHover getHover() {
 		if (fDelegate instanceof IVerticalRulerInfoExtension)
 			return ((IVerticalRulerInfoExtension) fDelegate).getHover();
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#getModel()
-	 */
+	@Override
 	public IAnnotationModel getModel() {
 		if (fDelegate instanceof IVerticalRulerInfoExtension)
 			return ((IVerticalRulerInfoExtension) fDelegate).getModel();
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#removeVerticalRulerListener(org.eclipse.jface.text.source.IVerticalRulerListener)
-	 */
+	@Override
 	public void removeVerticalRulerListener(IVerticalRulerListener listener) {
 		if (fDelegate instanceof IVerticalRulerInfoExtension)
 			((IVerticalRulerInfoExtension) fDelegate).removeVerticalRulerListener(listener);
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.rulers.AbstractContributedRulerColumn#columnRemoved()
-	 */
+	@Override
 	public void columnRemoved() {
 		if (fDispatcher != null) {
 			fDispatcher.dispose();
@@ -251,10 +225,10 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		updateRevisionAuthorVisibility(store, fDelegate);
 		updateRevisionIdVisibility(store, fDelegate);
 
-		Map annotationPrefs= getAnnotationPreferenceMap();
-		final AnnotationPreference changedPref= (AnnotationPreference) annotationPrefs.get("org.eclipse.ui.workbench.texteditor.quickdiffChange"); //$NON-NLS-1$
-		final AnnotationPreference addedPref= (AnnotationPreference) annotationPrefs.get("org.eclipse.ui.workbench.texteditor.quickdiffAddition"); //$NON-NLS-1$
-		final AnnotationPreference deletedPref= (AnnotationPreference) annotationPrefs.get("org.eclipse.ui.workbench.texteditor.quickdiffDeletion"); //$NON-NLS-1$
+		Map<Object, AnnotationPreference> annotationPrefs= getAnnotationPreferenceMap();
+		final AnnotationPreference changedPref= annotationPrefs.get("org.eclipse.ui.workbench.texteditor.quickdiffChange"); //$NON-NLS-1$
+		final AnnotationPreference addedPref= annotationPrefs.get("org.eclipse.ui.workbench.texteditor.quickdiffAddition"); //$NON-NLS-1$
+		final AnnotationPreference deletedPref= annotationPrefs.get("org.eclipse.ui.workbench.texteditor.quickdiffDeletion"); //$NON-NLS-1$
 		updateChangedColor(changedPref, store, fDelegate);
 		updateAddedColor(addedPref, store, fDelegate);
 		updateDeletedColor(deletedPref, store, fDelegate);
@@ -265,12 +239,14 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		fDispatcher= new PropertyEventDispatcher(store);
 
 		fDispatcher.addPropertyChangeListener(FG_COLOR_KEY, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateForegroundColor(store, fDelegate);
 				fDelegate.redraw();
 			}
 		});
 		IPropertyChangeListener backgroundHandler= new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateBackgroundColor(store, fDelegate);
 				fDelegate.redraw();
@@ -280,6 +256,7 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		fDispatcher.addPropertyChangeListener(USE_DEFAULT_BG_KEY, backgroundHandler);
 
 		fDispatcher.addPropertyChangeListener(LINE_NUMBER_KEY, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				// only handle quick diff on/off information, but not ruler visibility (handled by AbstractDecoratedTextEditor)
 				updateLineNumbersVisibility(fDelegate);
@@ -287,30 +264,35 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		});
 
 		fDispatcher.addPropertyChangeListener(AbstractDecoratedTextEditorPreferenceConstants.QUICK_DIFF_CHARACTER_MODE, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateCharacterMode(store, fDelegate);
 			}
 		});
 
 		fDispatcher.addPropertyChangeListener(AbstractDecoratedTextEditorPreferenceConstants.REVISION_RULER_RENDERING_MODE, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateRevisionRenderingMode(store, fDelegate);
 			}
 		});
 
 		fDispatcher.addPropertyChangeListener(AbstractDecoratedTextEditorPreferenceConstants.REVISION_RULER_SHOW_AUTHOR, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateRevisionAuthorVisibility(store, fDelegate);
 			}
 		});
 
 		fDispatcher.addPropertyChangeListener(AbstractDecoratedTextEditorPreferenceConstants.REVISION_RULER_SHOW_REVISION, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateRevisionIdVisibility(store, fDelegate);
 			}
 		});
 
 		fDispatcher.addPropertyChangeListener(AbstractDecoratedTextEditorPreferenceConstants.QUICK_DIFF_ALWAYS_ON, new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				updateQuickDiffVisibility(fDelegate);
 			}
@@ -318,6 +300,7 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 
 		if (changedPref != null) {
 			fDispatcher.addPropertyChangeListener(changedPref.getColorPreferenceKey(), new IPropertyChangeListener() {
+				@Override
 				public void propertyChange(PropertyChangeEvent event) {
 					updateChangedColor(changedPref, store, fDelegate);
 					fDelegate.redraw();
@@ -326,6 +309,7 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		}
 		if (addedPref != null) {
 			fDispatcher.addPropertyChangeListener(addedPref.getColorPreferenceKey(), new IPropertyChangeListener() {
+				@Override
 				public void propertyChange(PropertyChangeEvent event) {
 					updateAddedColor(addedPref, store, fDelegate);
 					fDelegate.redraw();
@@ -334,6 +318,7 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		}
 		if (deletedPref != null) {
 			fDispatcher.addPropertyChangeListener(deletedPref.getColorPreferenceKey(), new IPropertyChangeListener() {
+				@Override
 				public void propertyChange(PropertyChangeEvent event) {
 					updateDeletedColor(deletedPref, store, fDelegate);
 					fDelegate.redraw();
@@ -342,11 +327,11 @@ public class LineNumberColumn extends AbstractContributedRulerColumn implements 
 		}
 	}
 
-	private Map getAnnotationPreferenceMap() {
-		Map annotationPrefs= new HashMap();
-		Iterator iter= fAnnotationPreferences.getAnnotationPreferences().iterator();
+	private Map<Object, AnnotationPreference> getAnnotationPreferenceMap() {
+		Map<Object, AnnotationPreference> annotationPrefs= new HashMap<>();
+		Iterator<AnnotationPreference> iter= fAnnotationPreferences.getAnnotationPreferences().iterator();
 		while (iter.hasNext()) {
-			AnnotationPreference pref= (AnnotationPreference) iter.next();
+			AnnotationPreference pref= iter.next();
 			Object type= pref.getAnnotationType();
 			annotationPrefs.put(type, pref);
 		}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,6 +65,13 @@ import org.eclipse.jface.text.IDocument;
  *				<li>Allow styled ranges in the display string.</li>
  *			</ul>
  * </li>
+ * <li>{@link org.eclipse.jface.text.contentassist.ICompletionProposalExtension7} since version 3.11 introducing
+ *		the following function:
+ *			<ul>
+ *				<li>Emphasize ranges in the styled display string of the proposal that match the token at the 
+ *				current caret offset.</li>
+ *			</ul>
+ * </li>
  * </ul>
  * </p>
  * <p>
@@ -116,7 +123,8 @@ public interface ICompletionProposal {
 	 *
 	 * @return the string to be displayed
 	 * 
-	 * @see ICompletionProposalExtension6#getStyledDisplayString()
+	 * @see ICompletionProposalExtension6#getStyledDisplayString() 
+	 * @see ICompletionProposalExtension7#getStyledDisplayString(IDocument, int, BoldStylerProvider)
 	 */
 	String getDisplayString();
 

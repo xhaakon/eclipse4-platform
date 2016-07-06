@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,42 +25,34 @@ import java.util.Map;
 public abstract class ContextBasedFormattingStrategy implements IFormattingStrategy, IFormattingStrategyExtension {
 
 	/** The current preferences for formatting */
-	private Map fCurrentPreferences= null;
+	private Map<String, String> fCurrentPreferences= null;
 
 	/** The list of preferences for initiated the formatting steps */
-	private final LinkedList fPreferences= new LinkedList();
+	private final LinkedList<Map<String, String>> fPreferences= new LinkedList<>();
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IFormattingStrategyExtension#format()
-	 */
+	@Override
 	public void format() {
-		fCurrentPreferences= (Map)fPreferences.removeFirst();
+		fCurrentPreferences= fPreferences.removeFirst();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IFormattingStrategy#format(java.lang.String, boolean, java.lang.String, int[])
-	 */
+	@Override
 	public String format(String content, boolean start, String indentation, int[] positions) {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IFormattingStrategyExtension#formatterStarts(org.eclipse.jface.text.formatter.IFormattingContext)
-	 */
+	@Override
 	public void formatterStarts(final IFormattingContext context) {
-		fPreferences.addLast(context.getProperty(FormattingContextProperties.CONTEXT_PREFERENCES));
+		@SuppressWarnings("unchecked")
+		Map<String, String> prefs= (Map<String, String>) context.getProperty(FormattingContextProperties.CONTEXT_PREFERENCES);
+		fPreferences.addLast(prefs);
 	}
 
-	/*
-	 * @see IFormattingStrategy#formatterStarts(String)
-	 */
+	@Override
 	public void formatterStarts(final String indentation) {
 		// Do nothing
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.formatter.IFormattingStrategyExtension#formatterStops()
-	 */
+	@Override
 	public void formatterStops() {
 		fPreferences.clear();
 
@@ -72,7 +64,7 @@ public abstract class ContextBasedFormattingStrategy implements IFormattingStrat
 	 *
 	 * @return The preferences for the current formatting step
 	 */
-	public final Map getPreferences() {
+	public final Map<String, String> getPreferences() {
 		return fCurrentPreferences;
 	}
 }

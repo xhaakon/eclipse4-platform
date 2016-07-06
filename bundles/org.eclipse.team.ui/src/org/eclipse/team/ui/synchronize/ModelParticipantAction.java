@@ -31,7 +31,7 @@ import org.eclipse.ui.actions.BaseSelectionListenerAction;
 
 /**
  * Model provider actions for use with a {@link ModelSynchronizeParticipant}.
- * 
+ *
  * @since 3.2
  */
 public abstract class ModelParticipantAction extends BaseSelectionListenerAction {
@@ -52,6 +52,7 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 	private void initialize(ISynchronizePageConfiguration configuration) {
 		configuration.getSite().getSelectionProvider().addSelectionChangedListener(this);
 		configuration.getPage().getViewer().getControl().addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				getConfiguration().getSite().getSelectionProvider().removeSelectionChangedListener(ModelParticipantAction.this);
 			}
@@ -65,10 +66,10 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 	protected ISynchronizePageConfiguration getConfiguration() {
 		return configuration;
 	}
-	
+
 	/**
 	 * Set the selection of this action to the given selection
-	 * 
+	 *
 	 * @param selection the selection
 	 */
 	public void selectionChanged(ISelection selection) {
@@ -77,17 +78,18 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 		} else {
 			super.selectionChanged(StructuredSelection.EMPTY);
 		}
-		
+
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.actions.BaseSelectionListenerAction#updateSelection(org.eclipse.jface.viewers.IStructuredSelection)
 	 */
+	@Override
 	protected boolean updateSelection(IStructuredSelection selection) {
 		super.updateSelection(selection);
 		return isEnabledForSelection(selection);
 	}
-	
+
 	/**
 	 * Return whether the action is enabled for the given selection
 	 * @param selection the selection
@@ -111,7 +113,7 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 	 */
 	protected boolean isVisible(IDiff node) {
 		ISynchronizePageConfiguration configuration = getConfiguration();
-		if (configuration.getComparisonType() == ISynchronizePageConfiguration.THREE_WAY 
+		if (configuration.getComparisonType() == ISynchronizePageConfiguration.THREE_WAY
 				&& node instanceof IThreeWayDiff) {
 			IThreeWayDiff twd = (IThreeWayDiff) node;
 			int mode = configuration.getMode();
@@ -140,19 +142,20 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 		}
 		return false;
 	}
-	
+
 	/**
-	 * Check to see if the target saveable differs from the currently 
+	 * Check to see if the target saveable differs from the currently
 	 * active saveable. If it does, prompt to save changes in the
 	 * active saveable if it is dirty.
-	 * @throws InterruptedException 
-	 * @throws InvocationTargetException 
+	 * @throws InterruptedException
+	 * @throws InvocationTargetException
 	 */
 	protected void handleTargetSaveableChange() throws InvocationTargetException, InterruptedException {
 		final SaveableComparison targetSaveable = getTargetSaveable();
 		final SaveableComparison  activeSaveable = getActiveSaveable();
 		if (activeSaveable != null && activeSaveable.isDirty()) {
-			PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {	
+			PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {
+				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
 						InterruptedException {
 					try {
@@ -200,6 +203,7 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 	public static boolean promptToSaveChanges(final Shell shell, final SaveableComparison saveable, final boolean allowCancel) throws InterruptedException {
 		final int[] result = new int[] { 0 };
 		Runnable runnable = new Runnable() {
+			@Override
 			public void run() {
 				String[] options;
 				if (allowCancel) {
@@ -208,8 +212,8 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 					options = new String[] {IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL};
 				}
 				MessageDialog dialog = new MessageDialog(
-						shell, 
-						TeamUIMessages.ModelParticipantAction_0, null, 
+						shell,
+						TeamUIMessages.ModelParticipantAction_0, null,
 						NLS.bind(TeamUIMessages.ModelParticipantAction_1, saveable.getName()),
 						MessageDialog.QUESTION,
 						options,
@@ -243,7 +247,7 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 	protected void setActiveSaveable(SaveableComparison saveable) {
 		((ModelSynchronizeParticipant)configuration.getParticipant()).setActiveSaveable(saveable);
 	}
-	
+
 	/**
 	 * Return the saveable that is the target of this operation.
 	 * By default, <code>null</code> is returned.
@@ -252,14 +256,14 @@ public abstract class ModelParticipantAction extends BaseSelectionListenerAction
 	protected SaveableComparison getTargetSaveable() {
 		return null;
 	}
-	
+
 	/**
 	 * Method called when the action is about to be shown in a context menu.
 	 * This method recalculates the enablement for the current
-	 * selection and uses that to set the enablement. 
+	 * selection and uses that to set the enablement.
 	 */
 	public void updateEnablement() {
 		setEnabled(isEnabledForSelection(getStructuredSelection()));
 	}
-	
+
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -128,7 +128,8 @@ public class PortingActionProvider extends CommonActionProvider {
 	 */
 	protected ImageDescriptor getImageDescriptor(String relativePath) {
 		String iconPath = "icons/full/"; //$NON-NLS-1$
-		URL url = FileLocator.find(WorkbenchNavigatorPlugin.getDefault().getBundle(), new Path(iconPath + relativePath), Collections.EMPTY_MAP);
+		URL url = FileLocator.find(WorkbenchNavigatorPlugin.getDefault().getBundle(), new Path(iconPath + relativePath),
+				Collections.<String, String> emptyMap());
 		if (url == null) {
 			return ImageDescriptor.getMissingImageDescriptor();
 		}

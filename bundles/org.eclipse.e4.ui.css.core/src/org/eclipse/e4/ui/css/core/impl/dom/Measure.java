@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2013 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,10 +47,6 @@ public class Measure extends CSSValueImpl {
 		return value.getIntegerValue();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSPrimitiveValue#getStringValue()
-	 */
 	@Override
 	public String getStringValue() throws DOMException {
 		short lexicalUnit = value.getLexicalUnitType();
@@ -62,10 +58,6 @@ public class Measure extends CSSValueImpl {
 		throw new UnsupportedOperationException("NOT YET IMPLEMENTED");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSPrimitiveValue#getPrimitiveType()
-	 */
 	@Override
 	public short getPrimitiveType() {
 		switch (value.getLexicalUnitType()) {
@@ -101,10 +93,6 @@ public class Measure extends CSSValueImpl {
 		throw new UnsupportedOperationException("NOT YET IMPLEMENTED - LexicalUnit type: " + value.getLexicalUnitType());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSValue#getCssText()
-	 */
 	@Override
 	public String getCssText() {
 		// TODO: All LexicalUnit.SAC_OPERATOR_* except for COMMA left undone for

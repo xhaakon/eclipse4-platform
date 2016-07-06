@@ -7,43 +7,69 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars.Vogel <Lars.Vogel@vogella.com> - Bug 479914
  *******************************************************************************/
 package org.eclipse.core.runtime;
 
 /**
- * For new implementations consider using {@link SubMonitor}.
- * 
- * A progress monitor that uses a given amount of work ticks
- * from a parent monitor. It can be used as follows:
+ * A progress monitor that uses a given amount of work ticks from a parent monitor. Code that 
+ * currently uses this utility should be rewritten to use {@link SubMonitor} instead.
+ * Consider the following example:
  * <pre>
- *     try {
- *         pm.beginTask("Main Task", 100);
- *         doSomeWork(pm, 30);
- *         SubProgressMonitor subMonitor= new SubProgressMonitor(pm, 40);
- *         try {
- *             subMonitor.beginTask("", 300);
- *             doSomeWork(subMonitor, 300);
- *         } finally {
- *             subMonitor.done();
- *         }
- *         doSomeWork(pm, 30);
- *     } finally {
- *         pm.done();
+ *     void someMethod(IProgressMonitor pm) {
+ *        pm.beginTask("Main Task", 100);
+ *        SubProgressMonitor subMonitor1= new SubProgressMonitor(pm, 60);
+ *        try {
+ *           doSomeWork(subMonitor1);
+ *        } finally {
+ *           subMonitor1.done();
+ *        }
+ *        SubProgressMonitor subMonitor2= new SubProgressMonitor(pm, 40);
+ *        try {
+ *           doSomeMoreWork(subMonitor2);
+ *        } finally {
+ *           subMonitor2.done();
+ *        }
  *     }
  * </pre>
+ * <p>
+ * The above code should be refactored to this:
+ * <pre>
+ *     void someMethod(IProgressMonitor pm) {
+ *        SubMonitor subMonitor = SubMonitor.convert(pm, "Main Task", 100);
+ *        doSomeWork(subMonitor.split(60));
+ *        doSomeMoreWork(subMonitor.split(40));
+ *     }
+ * </pre>
+ * <p>
+ * The process for converting code which used SubProgressMonitor into SubMonitor is:
+ * <ul>
+ * <li>Calls to {@link IProgressMonitor#beginTask} on the root monitor should be replaced by a call
+ * to {@link SubMonitor#convert}. Keep the returned SubMonitor around as a local variable and refer
+ * to it instead of the root monitor for the remainder of the method.</li>
+ * <li>All calls to {@link #SubProgressMonitor(IProgressMonitor, int)} should be replaced by calls to
+ * {@link SubMonitor#split(int)}.</li>
+ * <li>If a SubProgressMonitor is constructed using the SUPPRESS_SUBTASK_LABEL flag, replace it with the
+ * two-argument version of {@link SubMonitor#split(int, int)} using {@link SubMonitor#SUPPRESS_SUBTASK}
+ * as the second argument.</li>
+ * <li>It is not necessary to call done on an instance of {@link SubMonitor}.</li> 
+ * </ul>
+ * <p>
+ * Please see the {@link SubMonitor} documentation for further examples.
  * <p>
  * This class can be used without OSGi running.
  * </p><p>
  * This class may be instantiated or subclassed by clients.
  * </p>
  * 
- * @see SubMonitor
+ * @deprecated use {@link SubMonitor} instead
  */
+@Deprecated
 public class SubProgressMonitor extends ProgressMonitorWrapper {
 
 	/**
 	 * Style constant indicating that calls to <code>subTask</code>
-	 * should not have any effect.
+	 * should not have any effect. This is equivalent to {@link SubMonitor#SUPPRESS_SUBTASK}
 	 *
 	 * @see #SubProgressMonitor(IProgressMonitor,int,int)
 	 */
@@ -100,8 +126,7 @@ public class SubProgressMonitor extends ProgressMonitorWrapper {
 		this.style = style;
 	}
 
-	/* (Intentionally not javadoc'd)
-	 * Implements the method <code>IProgressMonitor.beginTask</code>.
+	/**
 	 *
 	 * Starts a new main task. Since this progress monitor is a sub
 	 * progress monitor, the given name will NOT be used to update
@@ -126,9 +151,6 @@ public class SubProgressMonitor extends ProgressMonitorWrapper {
 		}
 	}
 
-	/* (Intentionally not javadoc'd)
-	 * Implements the method <code>IProgressMonitor.done</code>.
-	 */
 	@Override
 	public void done() {
 		// Ignore if more done calls than beginTask calls or if we are still
@@ -145,9 +167,6 @@ public class SubProgressMonitor extends ProgressMonitorWrapper {
 		sentToParent = 0;
 	}
 
-	/* (Intentionally not javadoc'd)
-	 * Implements the internal method <code>IProgressMonitor.internalWorked</code>.
-	 */
 	@Override
 	public void internalWorked(double work) {
 		if (usedUp || nestedBeginTasks != 1) {
@@ -162,9 +181,6 @@ public class SubProgressMonitor extends ProgressMonitorWrapper {
 		}
 	}
 
-	/* (Intentionally not javadoc'd)
-	 * Implements the method <code>IProgressMonitor.subTask</code>.
-	 */
 	@Override
 	public void subTask(String name) {
 		if ((style & SUPPRESS_SUBTASK_LABEL) != 0) {
@@ -178,9 +194,6 @@ public class SubProgressMonitor extends ProgressMonitorWrapper {
 		super.subTask(label);
 	}
 
-	/* (Intentionally not javadoc'd)
-	 * Implements the method <code>IProgressMonitor.worked</code>.
-	 */
 	@Override
 	public void worked(int work) {
 		internalWorked(work);

@@ -35,11 +35,12 @@ public class RefreshSubscriberParticipantJob extends RefreshParticipantJob {
 	protected Subscriber getSubscriber() {
 		return ((SubscriberParticipant)getParticipant()).getSubscriber();
 	}
-	
+
 	private SubscriberSyncInfoCollector getCollector() {
 		return ((SubscriberParticipant)getParticipant()).getSubscriberSyncInfoCollector();
 	}
-	
+
+	@Override
 	protected int getChangeCount() {
 		int numChanges = 0;
 		SubscriberSyncInfoCollector collector = getCollector();
@@ -55,15 +56,17 @@ public class RefreshSubscriberParticipantJob extends RefreshParticipantJob {
 		}
 		return numChanges;
 	}
-    
-    protected int getIncomingChangeCount() {
+
+    @Override
+	protected int getIncomingChangeCount() {
       return getChangesInMode(SyncInfo.INCOMING);
     }
-    
-    protected int getOutgoingChangeCount() {
+
+    @Override
+	protected int getOutgoingChangeCount() {
       return getChangesInMode(SyncInfo.OUTGOING);
     }
-    
+
     private int getChangesInMode(int kind) {
         int numChanges = 0;
         SubscriberSyncInfoCollector collector = getCollector();
@@ -83,31 +86,36 @@ public class RefreshSubscriberParticipantJob extends RefreshParticipantJob {
         }
         return numChanges;
     }
-	
+
+	@Override
 	protected RefreshParticipantJob.IChangeDescription createChangeDescription() {
 		return new RefreshChangeListener(resources, getCollector());
 	}
-	
+
+	@Override
 	protected void handleProgressGroupSet(IProgressMonitor group, int ticks) {
 		getCollector().setProgressGroup(group, ticks);
 	}
-	
+
 	/**
-	 * If a collector is available then run the refresh and the background event processing 
+	 * If a collector is available then run the refresh and the background event processing
 	 * within the same progress group.
 	 */
+	@Override
 	public boolean shouldRun() {
 		// Ensure that any progress shown as a result of this refresh occurs hidden in a progress group.
 		return getSubscriber() != null && getCollector().getSyncInfoSet() != null;
 	}
-	
-	public boolean belongsTo(Object family) {	
+
+	@Override
+	public boolean belongsTo(Object family) {
 		if(family instanceof RefreshSubscriberParticipantJob) {
 			return ((RefreshSubscriberParticipantJob)family).getSubscriber() == getSubscriber();
 		}
 		return super.belongsTo(family);
 	}
-	
+
+	@Override
 	protected void doRefresh(IChangeDescription changeListener, IProgressMonitor monitor) throws TeamException {
 		Subscriber subscriber = getSubscriber();
 		if (subscriber != null) {

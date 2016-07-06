@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -50,33 +50,21 @@ public class ScrubLocalAction extends WorkspaceAction {
 				IIDEHelpContextIds.SCRUB_LOCAL_ACTION);
     }
 
-    /* (non-Javadoc)
-     * Method declared on WorkspaceAction.
-     */
     @Override
 	protected String getOperationMessage() {
         return IDEWorkbenchMessages.ScrubLocalAction_progress;
     }
 
-    /* (non-Javadoc)
-     * Method declared on WorkspaceAction.
-     */
     @Override
 	protected String getProblemsMessage() {
         return IDEWorkbenchMessages.ScrubLocalAction_problemsMessage;
     }
 
-    /* (non-Javadoc)
-     * Method declared on WorkspaceAction.
-     */
     @Override
 	protected String getProblemsTitle() {
         return IDEWorkbenchMessages.ScrubLocalAction_problemsTitle;
     }
 
-    /* (non-Javadoc)
-     * Method declared on WorkspaceAction.
-     */
     @Override
 	protected void invokeOperation(IResource resource, IProgressMonitor monitor)
             throws CoreException {

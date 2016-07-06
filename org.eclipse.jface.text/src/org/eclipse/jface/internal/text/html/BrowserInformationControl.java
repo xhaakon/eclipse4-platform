@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -159,7 +159,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 	 * The listeners to be notified when the input changed.
 	 * @since 3.4
 	 */
-	private ListenerList/*<IInputChangedListener>*/fInputChangeListeners= new ListenerList(ListenerList.IDENTITY);
+	private ListenerList<IInputChangedListener> fInputChangeListeners= new ListenerList<>(ListenerList.IDENTITY);
 
 	/**
 	 * The symbolic name of the font used for size computations, or <code>null</code> to use dialog font.
@@ -211,9 +211,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		create();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.AbstractInformationControl#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	protected void createContent(Composite parent) {
 		fBrowser= new Browser(parent, SWT.NONE);
 		fBrowser.setJavascriptEnabled(false);
@@ -223,12 +221,14 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		fBrowser.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 
 		fBrowser.addProgressListener(new ProgressAdapter() {
+			@Override
 			public void completed(ProgressEvent event) {
 				fCompleted= true;
 			}
 		});
 
 		fBrowser.addOpenWindowListener(new OpenWindowListener() {
+			@Override
 			public void open(WindowEvent event) {
 				event.required= true; // Cancel opening of new windows
 			}
@@ -244,16 +244,21 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 	 * {@inheritDoc}
 	 * @deprecated use {@link #setInput(Object)}
 	 */
+	@Deprecated
+	@Override
 	public void setInformation(final String content) {
 		setInput(new BrowserInformationControlInput(null) {
+			@Override
 			public String getHtml() {
 				return content;
 			}
 
+			@Override
 			public String getInputName() {
 				return ""; //$NON-NLS-1$
 			}
 
+			@Override
 			public Object getInputElement() {
 				return content;
 			}
@@ -264,6 +269,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 	 * {@inheritDoc} This control can handle {@link String} and
 	 * {@link BrowserInformationControlInput}.
 	 */
+	@Override
 	public void setInput(Object input) {
 		Assert.isLegal(input == null || input instanceof String || input instanceof BrowserInformationControlInput);
 
@@ -313,14 +319,12 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		fCompleted= false;
 		fBrowser.setText(content);
 
-		Object[] listeners= fInputChangeListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++)
-			((IInputChangedListener)listeners[i]).inputChanged(fInput);
+		for (IInputChangedListener listener : fInputChangeListeners) {
+			listener.inputChanged(fInput);
+		}
 	}
 
-	/*
-	 * @see IInformationControl#setVisible(boolean)
-	 */
+	@Override
 	public void setVisible(boolean visible) {
 		Shell shell= getShell();
 		if (shell.isVisible() == visible)
@@ -341,6 +345,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 
 		// Make sure the display wakes from sleep after timeout:
 		display.timerExec(100, new Runnable() {
+			@Override
 			public void run() {
 				fCompleted= true;
 			}
@@ -367,9 +372,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		super.setVisible(true);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.AbstractInformationControl#setSize(int, int)
-	 */
+	@Override
 	public void setSize(int width, int height) {
 		fBrowser.setRedraw(false); // avoid flickering
 		try {
@@ -403,10 +406,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		fTextLayout.setText(""); //$NON-NLS-1$
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.AbstractInformationControl#handleDispose()
-	 * @since 3.6
-	 */
+	@Override
 	protected void handleDispose() {
 		if (fTextLayout != null) {
 			fTextLayout.dispose();
@@ -417,9 +417,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		super.handleDispose();
 	}
 
-	/*
-	 * @see IInformationControl#computeSizeHint()
-	 */
+	@Override
 	public Point computeSizeHint() {
 		Point sizeConstraints= getSizeConstraints();
 		Rectangle trim= computeTrim();
@@ -429,9 +427,8 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		// Instead of inserting an empty line, it just adds a single line break.
 		// Furthermore, the indentation of <dl><dd> elements is too small (e.g with a long @see line)
 		TextPresentation presentation= new TextPresentation();
-		HTML2TextReader reader= new HTML2TextReader(new StringReader(fInput.getHtml()), presentation);
 		String text;
-		try {
+		try (HTML2TextReader reader= new HTML2TextReader(new StringReader(fInput.getHtml()), presentation)) {
 			text= reader.getString();
 		} catch (IOException e) {
 			text= ""; //$NON-NLS-1$
@@ -439,9 +436,9 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 
 		fTextLayout.setText(text);
 		fTextLayout.setWidth(sizeConstraints == null ? SWT.DEFAULT : sizeConstraints.x - trim.width);
-		Iterator iter= presentation.getAllStyleRangeIterator();
+		Iterator<StyleRange> iter= presentation.getAllStyleRangeIterator();
 		while (iter.hasNext()) {
-			StyleRange sr= (StyleRange)iter.next();
+			StyleRange sr= iter.next();
 			if (sr.fontStyle == SWT.BOLD)
 				fTextLayout.setStyle(fBoldStyle, sr.start, sr.start + sr.length - 1);
 		}
@@ -482,9 +479,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		return new Point(width, height);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IInformationControlExtension3#computeTrim()
-	 */
+	@Override
 	public Rectangle computeTrim() {
 		Rectangle trim= super.computeTrim();
 		if (isResizable()) {
@@ -509,25 +504,19 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		fBrowser.addLocationListener(listener);
 	}
 
-	/*
-	 * @see IInformationControl#setForegroundColor(Color)
-	 */
+	@Override
 	public void setForegroundColor(Color foreground) {
 		super.setForegroundColor(foreground);
 		fBrowser.setForeground(foreground);
 	}
 
-	/*
-	 * @see IInformationControl#setBackgroundColor(Color)
-	 */
+	@Override
 	public void setBackgroundColor(Color background) {
 		super.setBackgroundColor(background);
 		fBrowser.setBackground(background);
 	}
 
-	/*
-	 * @see IInformationControlExtension#hasContents()
-	 */
+	@Override
 	public boolean hasContents() {
 		return fBrowserHasContent;
 	}
@@ -555,10 +544,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		fInputChangeListeners.remove(inputChangeListener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDelayedInputChangeProvider#setDelayedInputChangeListener(org.eclipse.jface.text.IInputChangedListener)
-	 * @since 3.4
-	 */
+	@Override
 	public void setDelayedInputChangeListener(IInputChangedListener inputChangeListener) {
 		fDelayedInputChangeListener= inputChangeListener;
 	}
@@ -585,10 +571,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 			fDelayedInputChangeListener.inputChanged(newInput);
 	}
 
-	/*
-	 * @see java.lang.Object#toString()
-	 * @since 3.4
-	 */
+	@Override
 	public String toString() {
 		String style= (getShell().getStyle() & SWT.RESIZE) == 0 ? "fixed" : "resizeable"; //$NON-NLS-1$ //$NON-NLS-2$
 		return super.toString() + " -  style: " + style; //$NON-NLS-1$
@@ -601,9 +584,7 @@ public class BrowserInformationControl extends AbstractInformationControl implem
 		return fInput;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IInformationControlExtension5#computeSizeConstraints(int, int)
-	 */
+	@Override
 	public Point computeSizeConstraints(int widthInChars, int heightInChars) {
 		if (fSymbolicFontName == null)
 			return null;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -99,6 +99,7 @@ public final class CopyTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#doCopy
 	 */
+	@Override
 	protected TextEdit doCopy() {
 		return new CopyTargetEdit(this);
 	}
@@ -106,6 +107,7 @@ public final class CopyTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#postProcessCopy
 	 */
+	@Override
 	protected void postProcessCopy(TextEditCopier copier) {
 		if (fSource != null) {
 			CopyTargetEdit target= (CopyTargetEdit)copier.getCopy(this);
@@ -118,6 +120,7 @@ public final class CopyTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#accept0
 	 */
+	@Override
 	protected void accept0(TextEditVisitor visitor) {
 		boolean visitChildren= visitor.visit(this);
 		if (visitChildren) {
@@ -128,13 +131,15 @@ public final class CopyTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#traverseConsistencyCheck
 	 */
-	int traverseConsistencyCheck(TextEditProcessor processor, IDocument document, List sourceEdits) {
+	@Override
+	int traverseConsistencyCheck(TextEditProcessor processor, IDocument document, List<List<TextEdit>> sourceEdits) {
 		return super.traverseConsistencyCheck(processor, document, sourceEdits) + 1;
 	}
 
 	/*
 	 * @see TextEdit#performConsistencyCheck
 	 */
+	@Override
 	void performConsistencyCheck(TextEditProcessor processor, IDocument document) throws MalformedTreeException {
 		if (fSource == null)
 			throw new MalformedTreeException(getParent(), this, TextEditMessages.getString("CopyTargetEdit.no_source")); //$NON-NLS-1$
@@ -145,6 +150,7 @@ public final class CopyTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#performDocumentUpdating
 	 */
+	@Override
 	int performDocumentUpdating(IDocument document) throws BadLocationException {
 		String source= fSource.getContent();
 		document.replace(getOffset(), getLength(), source);
@@ -156,6 +162,7 @@ public final class CopyTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#deleteChildren
 	 */
+	@Override
 	boolean deleteChildren() {
 		return false;
 	}

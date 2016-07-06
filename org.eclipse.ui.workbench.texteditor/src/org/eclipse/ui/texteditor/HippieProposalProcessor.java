@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,16 +18,21 @@ import java.util.List;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 
+import org.eclipse.jface.viewers.StyledString;
+
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.contentassist.BoldStylerProvider;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension3;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension4;
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6;
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension7;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
@@ -52,11 +57,13 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 	private static final ICompletionProposal[] NO_PROPOSALS= new ICompletionProposal[0];
 	private static final IContextInformation[] NO_CONTEXTS= new IContextInformation[0];
 
-	private static final class Proposal implements ICompletionProposal, ICompletionProposalExtension, ICompletionProposalExtension2, ICompletionProposalExtension3, ICompletionProposalExtension4 {
+	private static final class Proposal implements ICompletionProposal, ICompletionProposalExtension, ICompletionProposalExtension2, ICompletionProposalExtension3, ICompletionProposalExtension4,
+			ICompletionProposalExtension6, ICompletionProposalExtension7 {
 
 		private final String fString;
 		private final String fPrefix;
 		private final int fOffset;
+		private StyledString fDisplayString;
 
 		public Proposal(String string, String prefix, int offset) {
 			fString= string;
@@ -64,30 +71,37 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 			fOffset= offset;
 		}
 
+		@Override
 		public void apply(IDocument document) {
 			apply(null, '\0', 0, fOffset);
 		}
 
+		@Override
 		public Point getSelection(IDocument document) {
 			return new Point(fOffset + fString.length(), 0);
 		}
 
+		@Override
 		public String getAdditionalProposalInfo() {
 			return null;
 		}
 
+		@Override
 		public String getDisplayString() {
 			return fPrefix + fString;
 		}
 
+		@Override
 		public Image getImage() {
 			return null;
 		}
 
+		@Override
 		public IContextInformation getContextInformation() {
 			return null;
 		}
 
+		@Override
 		public void apply(IDocument document, char trigger, int offset) {
 			try {
 				String replacement= fString.substring(offset - fOffset);
@@ -98,28 +112,35 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 			}
 		}
 
+		@Override
 		public boolean isValidFor(IDocument document, int offset) {
 			return validate(document, offset, null);
 		}
 
+		@Override
 		public char[] getTriggerCharacters() {
 			return null;
 		}
 
+		@Override
 		public int getContextInformationPosition() {
 			return 0;
 		}
 
+		@Override
 		public void apply(ITextViewer viewer, char trigger, int stateMask, int offset) {
 			apply(viewer.getDocument(), trigger, offset);
 		}
 
+		@Override
 		public void selected(ITextViewer viewer, boolean smartToggle) {
 		}
 
+		@Override
 		public void unselected(ITextViewer viewer) {
 		}
 
+		@Override
 		public boolean validate(IDocument document, int offset, DocumentEvent event) {
 			try {
 				int prefixStart= fOffset - fPrefix.length();
@@ -129,20 +150,45 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 			}
 		}
 
+		@Override
 		public IInformationControlCreator getInformationControlCreator() {
 			return null;
 		}
 
+		@Override
 		public CharSequence getPrefixCompletionText(IDocument document, int completionOffset) {
 			return fPrefix + fString;
 		}
 
+		@Override
 		public int getPrefixCompletionStart(IDocument document, int completionOffset) {
 			return fOffset - fPrefix.length();
 		}
 
+		@Override
 		public boolean isAutoInsertable() {
 			return true;
+		}
+
+		@Override
+		public StyledString getStyledDisplayString() {
+			if (fDisplayString == null) {
+				fDisplayString= new StyledString(getDisplayString());
+			}
+			return fDisplayString;
+		}
+
+		@Override
+		public StyledString getStyledDisplayString(IDocument document, int offset, BoldStylerProvider boldStylerProvider) {
+			StyledString styledDisplayString= new StyledString();
+			styledDisplayString.append(getStyledDisplayString());
+
+			int start= getPrefixCompletionStart(document, offset);
+			int patternLength= offset - start;
+			if (patternLength > 0) {
+				styledDisplayString.setStyle(0, patternLength, boldStylerProvider.getBoldStyler());
+			}
+			return styledDisplayString;
 		}
 
 	}
@@ -155,25 +201,23 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 	public HippieProposalProcessor() {
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer, int)
-	 */
+	@Override
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		try {
 			String prefix= getPrefix(viewer, offset);
 			if (prefix == null || prefix.length() == 0)
 				return NO_PROPOSALS;
 
-			List suggestions= getSuggestions(viewer, offset, prefix);
+			List<String> suggestions= getSuggestions(viewer, offset, prefix);
 
-			List result= new ArrayList();
-			for (Iterator it= suggestions.iterator(); it.hasNext();) {
-				String string= (String) it.next();
+			List<ICompletionProposal> result= new ArrayList<>();
+			for (Iterator<String> it= suggestions.iterator(); it.hasNext();) {
+				String string= it.next();
 				if (string.length() > 0)
 					result.add(createProposal(string, prefix, offset));
 			}
 
-			return (ICompletionProposal[]) result.toArray(new ICompletionProposal[result.size()]);
+			return result.toArray(new ICompletionProposal[result.size()]);
 
 		} catch (BadLocationException x) {
 			// ignore and return no proposals
@@ -197,31 +241,23 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 		return new Proposal(string, prefix, offset);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeContextInformation(org.eclipse.jface.text.ITextViewer, int)
-	 */
+	@Override
 	public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset) {
 		// no context informations for hippie completions
 		return NO_CONTEXTS;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getCompletionProposalAutoActivationCharacters()
-	 */
+	@Override
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationAutoActivationCharacters()
-	 */
+	@Override
 	public char[] getContextInformationAutoActivationCharacters() {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationValidator()
-	 */
+	@Override
 	public IContextInformationValidator getContextInformationValidator() {
 		return null;
 	}
@@ -236,9 +272,9 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 	 * @return all possible completions that were found in the current document
 	 * @throws BadLocationException if accessing the document fails
 	 */
-	private ArrayList createSuggestionsFromOpenDocument(ITextViewer viewer, int offset, String prefix) throws BadLocationException {
+	private ArrayList<String> createSuggestionsFromOpenDocument(ITextViewer viewer, int offset, String prefix) throws BadLocationException {
 		IDocument document= viewer.getDocument();
-		ArrayList completions= new ArrayList();
+		ArrayList<String> completions= new ArrayList<>();
 		completions.addAll(fEngine.getCompletionsBackwards(document, prefix, offset));
 		completions.addAll(fEngine.getCompletionsForward(document, prefix, offset - prefix.length(), true));
 
@@ -255,9 +291,9 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 	 * @return the list of all possible suggestions in the currently open editors
 	 * @throws BadLocationException if accessing the current document fails
 	 */
-	private List getSuggestions(ITextViewer viewer, int offset, String prefix) throws BadLocationException {
+	private List<String> getSuggestions(ITextViewer viewer, int offset, String prefix) throws BadLocationException {
 
-		ArrayList suggestions= createSuggestionsFromOpenDocument(viewer, offset, prefix);
+		ArrayList<String> suggestions= createSuggestionsFromOpenDocument(viewer, offset, prefix);
 		IDocument currentDocument= viewer.getDocument();
 
 		IWorkbenchWindow window= PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -276,14 +312,12 @@ public final class HippieProposalProcessor implements IContentAssistProcessor {
 		// add the empty suggestion
 		suggestions.add(""); //$NON-NLS-1$
 
-		List uniqueSuggestions= fEngine.makeUnique(suggestions);
+		List<String> uniqueSuggestions= fEngine.makeUnique(suggestions);
 
 		return uniqueSuggestions;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.ICompletionProposalComputer#getErrorMessage()
-	 */
+	@Override
 	public String getErrorMessage() {
 		return null; // no custom error message
 	}

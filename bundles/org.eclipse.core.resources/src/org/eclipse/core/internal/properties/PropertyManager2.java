@@ -4,9 +4,11 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.properties;
 
@@ -30,7 +32,7 @@ public class PropertyManager2 implements IPropertyManager {
 	private static final int MAX_VALUE_SIZE = 2 * 1024;
 
 	class PropertyCopyVisitor extends Bucket.Visitor {
-		private List<PropertyEntry> changes = new ArrayList<PropertyEntry>();
+		private List<PropertyEntry> changes = new ArrayList<>();
 		private IPath destination;
 		private IPath source;
 
@@ -119,7 +121,7 @@ public class PropertyManager2 implements IPropertyManager {
 
 	@Override
 	public synchronized Map<QualifiedName, String> getProperties(IResource target) throws CoreException {
-		final Map<QualifiedName, String> result = new HashMap<QualifiedName, String>();
+		final Map<QualifiedName, String> result = new HashMap<>();
 		tree.accept(new PropertyBucket.Visitor() {
 			@Override
 			public int visit(Entry entry) {
@@ -163,7 +165,7 @@ public class PropertyManager2 implements IPropertyManager {
 		resource.checkAccessible(flags);
 		// enforce the limit stated by the spec
 		if (value != null && value.length() > MAX_VALUE_SIZE) {
-			String message = NLS.bind(Messages.properties_valueTooLong, new Object[] {name.getQualifier(), name.getLocalName(), new Integer(MAX_VALUE_SIZE).toString()});
+			String message = NLS.bind(Messages.properties_valueTooLong, new Object[] {name.getQualifier(), name.getLocalName(), Integer.toString(MAX_VALUE_SIZE)});
 			throw new ResourceException(IResourceStatus.FAILED_WRITE_METADATA, target.getFullPath(), message, null);
 		}
 		if (name.getQualifier() == null) {

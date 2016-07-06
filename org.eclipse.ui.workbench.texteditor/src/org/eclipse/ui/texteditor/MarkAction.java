@@ -49,16 +49,14 @@ public class MarkAction extends TextEditorAction {
 		fType= type;
 	}
 
-	/*
-	 * @see IAction#run()
-	 */
+	@Override
 	public void run() {
 
 		ITextEditor editor= getTextEditor();
 		if (editor == null)
 			return;
 
-		IMarkRegionTarget target= (IMarkRegionTarget) editor.getAdapter(IMarkRegionTarget.class);
+		IMarkRegionTarget target= editor.getAdapter(IMarkRegionTarget.class);
 		if (target == null)
 			return;
 

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.core.internal.commands.util.Util;
@@ -58,6 +59,7 @@ public final class ParameterizedCommand implements Comparable {
 	 *
 	 * @deprecated no longer used
 	 */
+	@Deprecated
 	public static final int INDEX_PARAMETER_ID = 0;
 
 	/**
@@ -66,6 +68,7 @@ public final class ParameterizedCommand implements Comparable {
 	 *
 	 * @deprecated no longer used
 	 */
+	@Deprecated
 	public static final int INDEX_PARAMETER_NAME = 1;
 
 	/**
@@ -74,6 +77,7 @@ public final class ParameterizedCommand implements Comparable {
 	 *
 	 * @deprecated no longer used
 	 */
+	@Deprecated
 	public static final int INDEX_PARAMETER_VALUE_NAME = 2;
 
 	/**
@@ -81,6 +85,7 @@ public final class ParameterizedCommand implements Comparable {
 	 *
 	 * @deprecated no longer used
 	 */
+	@Deprecated
 	public static final int INDEX_PARAMETER_VALUE_VALUE = 3;
 
 	/**
@@ -184,7 +189,7 @@ public final class ParameterizedCommand implements Comparable {
 			// This is it, so just return the current parameterizations.
 			for (int i = 0; i < parameterizationCount; i++) {
 				final Parameterization parameterization = (Parameterization) parameterizations.get(i);
-				final List<Parameterization> combination = new ArrayList<Parameterization>(1);
+				final List<Parameterization> combination = new ArrayList<>(1);
 				combination.add(parameterization);
 				parameterizations.set(i, combination);
 			}
@@ -200,7 +205,7 @@ public final class ParameterizedCommand implements Comparable {
 			// This is it, so just return the current parameterizations.
 			for (int i = 0; i < parameterizationCount; i++) {
 				final Parameterization parameterization = (Parameterization) parameterizations.get(i);
-				final List<Parameterization> combination = new ArrayList<Parameterization>(1);
+				final List<Parameterization> combination = new ArrayList<>(1);
 				combination.add(parameterization);
 				parameterizations.set(i, combination);
 			}
@@ -295,12 +300,9 @@ public final class ParameterizedCommand implements Comparable {
 		}
 
 		try {
-			ArrayList<Parameterization> parms = new ArrayList<Parameterization>();
-			Iterator<?> i = parameters.keySet().iterator();
-
-			// iterate over given parameters
-			while (i.hasNext()) {
-				String key = (String) i.next();
+			ArrayList<Parameterization> parms = new ArrayList<>();
+			for (Entry<?, ?> entry : ((Map<?, ?>) parameters).entrySet()) {
+				String key = (String) entry.getKey();
 				IParameter parameter = null;
 				// get the parameter from the command
 				parameter = command.getParameter(key);
@@ -311,16 +313,15 @@ public final class ParameterizedCommand implements Comparable {
 				}
 				ParameterType parameterType = command.getParameterType(key);
 				if (parameterType == null) {
-					parms.add(new Parameterization(parameter,
-							(String) parameters.get(key)));
+					parms.add(new Parameterization(parameter, (String) entry.getValue()));
 				} else {
 					AbstractParameterValueConverter valueConverter = parameterType
 							.getValueConverter();
 					if (valueConverter != null) {
-						String val = valueConverter.convertToString(parameters.get(key));
+						String val = valueConverter.convertToString(entry.getValue());
 						parms.add(new Parameterization(parameter, val));
 					} else {
-						parms.add(new Parameterization(parameter, (String) parameters.get(key)));
+						parms.add(new Parameterization(parameter, (String) entry.getValue()));
 					}
 				}
 			}
@@ -453,6 +454,7 @@ public final class ParameterizedCommand implements Comparable {
 	 * @deprecated Please use {@link #executeWithChecks(Object, Object)}
 	 *             instead.
 	 */
+	@Deprecated
 	public final Object execute(final Object trigger, final Object applicationContext)
 			throws ExecutionException, NotHandledException {
 		return command.execute(new ExecutionEvent(command, getParameterMap(), trigger, applicationContext));
@@ -516,15 +518,32 @@ public final class ParameterizedCommand implements Comparable {
 	 *             If the underlying command is not defined.
 	 */
 	public final String getName() throws NotDefinedException {
+		return getName(command.getName());
+	}
+
+	/**
+	 * Returns a human-readable representation of this command with all of its
+	 * parameterizations.
+	 *
+	 * @param baseName
+	 *            The base name of the command that should be used to create the
+	 *            parameterized command representation.
+	 * @return The human-readable representation of this parameterized command;
+	 *         never <code>null</code>.
+	 * @throws NotDefinedException
+	 *             If the underlying command is not defined.
+	 * @since 3.8
+	 */
+	public final String getName(String baseName) throws NotDefinedException {
 		if (name == null) {
 			final StringBuffer nameBuffer = new StringBuffer();
-			nameBuffer.append(command.getName());
+			nameBuffer.append(baseName);
 			if (parameterizations != null) {
 				nameBuffer.append(" ("); //$NON-NLS-1$
 				final int parameterizationCount = parameterizations.length;
-				if(parameterizationCount == 1) {
+				if (parameterizationCount == 1) {
 					appendParameter(nameBuffer, parameterizations[0], false);
-				}else {
+				} else {
 					for (int i = 0; i < parameterizationCount; i++) {
 
 						appendParameter(nameBuffer, parameterizations[i], true);
@@ -572,7 +591,7 @@ public final class ParameterizedCommand implements Comparable {
 			return Collections.EMPTY_MAP;
 		}
 
-		final Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<>();
 		for (int i = 0; i < parameterizations.length; i++) {
 			final Parameterization parameterization = parameterizations[i];
 			parameterMap.put(parameterization.getParameter().getId(), parameterization.getValue());

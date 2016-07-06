@@ -4,13 +4,14 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Red Hat Incorporated - loadProjectDescription(InputStream)
  *     Serge Beauchamp (Freescale Semiconductor) - [252996] add resource filtering
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Group and Project Path Variable Support
  *     Broadcom Corporation - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -97,7 +98,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	protected final IWorkspaceRoot defaultRoot = new WorkspaceRoot(Path.ROOT, this);
 	protected WorkspacePreferences description;
 	protected FileSystemResourceManager fileSystemManager;
-	protected final CopyOnWriteArrayList<ILifecycleListener> lifecycleListeners = new CopyOnWriteArrayList<ILifecycleListener>();
+	protected final CopyOnWriteArrayList<ILifecycleListener> lifecycleListeners = new CopyOnWriteArrayList<>();
 	protected LocalMetaArea localMetaArea;
 	/**
 	 * Helper class for performing validation of resource names and locations.
@@ -130,7 +131,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 
 	protected SaveManager saveManager;
 	/**
-	 * File modification validation.  If it is true and validator is null, we try/initialize 
+	 * File modification validation.  If it is true and validator is null, we try/initialize
 	 * validator first time through.  If false, there is no validator.
 	 */
 	protected boolean shouldValidate = true;
@@ -159,7 +160,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * reconciles the state of the files on disk with this tree (@link {@link IResource#refreshLocal(int, IProgressMonitor)}).
 	 * The tree is also used to store metadata associated with resources in
 	 * the workspace (markers, properties, etc).
-	 * 
+	 *
 	 * While the ElementTree data structure can handle both concurrent
 	 * reads and concurrent writes, write access to the tree is governed
 	 * by {@link WorkManager}.
@@ -172,7 +173,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * in the middle of a resource change notification.  This is used to cause
 	 * attempts to modify the workspace during notifications to fail.
 	 */
-	protected Thread treeLocked = null;
+	protected volatile Thread treeLocked = null;
 
 	/**
 	 * The currently installed file modification validator.
@@ -185,7 +186,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * <p>
 	 * This class is not intended to be instantiated by clients.
 	 * </p>
-	 * 
+	 *
 	 * @see Workspace#computeProjectBuildConfigOrder(IBuildConfiguration[])
 	 * @since 3.7
 	 */
@@ -195,7 +196,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		 * <p>
 		 * This class is not intended to be instantiated by clients.
 		 * </p>
-		 * 
+		 *
 		 * @param buildConfigurations initial value of <code>buildConfigurations</code> field
 		 * @param hasCycles initial value of <code>hasCycles</code> field
 		 * @param knots initial value of <code>knots</code> field
@@ -458,7 +459,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 							configs = getBuildOrder();
 						else {
 							// clean all accessible configurations
-							List<IBuildConfiguration> configArr = new ArrayList<IBuildConfiguration>();
+							List<IBuildConfiguration> configArr = new ArrayList<>();
 							IProject[] prjs = getRoot().getProjects();
 							for (int i = 0; i < prjs.length; i++)
 								if (prjs[i].isAccessible())
@@ -467,7 +468,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 						}
 					} else {
 						// Order the passed in build configurations + resolve references if requested
-						Set<IBuildConfiguration> refsList = new HashSet<IBuildConfiguration>();
+						Set<IBuildConfiguration> refsList = new HashSet<>();
 						for (int i = 0; i < configs.length; i++) {
 							// Check project + build configuration are accessible.
 							if (!configs[i].getProject().isAccessible() || !configs[i].getProject().hasBuildConfig(configs[i].getName()))
@@ -530,7 +531,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 				endOperation(rule, build, null);
 			}
 		} catch (CoreException e) {
-			Policy.log(e.getStatus());
+			Policy.log(e.getStatus().getSeverity(), e.getMessage(), e);
 		}
 	}
 
@@ -538,7 +539,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * Closes this workspace; ignored if this workspace is not open.
 	 * The state of this workspace is not saved before the workspace
 	 * is shut down.
-	 * <p> 
+	 * <p>
 	 * If the workspace was saved immediately prior to closing,
 	 * it will have the same set of projects
 	 * (open or closed) when reopened for a subsequent session.
@@ -561,12 +562,10 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		//nothing to do if the workspace failed to open
 		if (!isOpen())
 			return;
-		monitor = Policy.monitorFor(monitor);
 		try {
 			String msg = Messages.resources_closing_0;
-			int rootCount = tree.getChildCount(Path.ROOT);
-			monitor.beginTask(msg, rootCount + 2);
-			monitor.subTask(msg);
+			SubMonitor subMonitor = SubMonitor.convert(monitor, msg, 20);
+			subMonitor.subTask(msg);
 			//this operation will never end because the world is going away
 			try {
 				stringPoolJob.cancel();
@@ -574,15 +573,16 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 				//note: you can't call #save() from within a nested operation
 				saveManager.shutdown(null);
 				saveManager.reportSnapshotRequestor();
-				prepareOperation(getRoot(), monitor);
+				prepareOperation(getRoot(), subMonitor.newChild(1));
 				//shutdown notification first to avoid calling third parties during shutdown
 				notificationManager.shutdown(null);
 				beginOperation(true);
 				IProject[] projects = getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
+				subMonitor.setWorkRemaining(projects.length + 2);
 				for (int i = 0; i < projects.length; i++) {
 					//notify managers of closing so they can cleanup
 					broadcastEvent(LifecycleEvent.newEvent(LifecycleEvent.PRE_PROJECT_CLOSE, projects[i]));
-					monitor.worked(1);
+					subMonitor.worked(1);
 				}
 				//empty the workspace tree so we leave in a clean state
 				deleteResource(getRoot());
@@ -590,12 +590,11 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 				// endOperation not needed here
 			} finally {
 				// Shutdown needs to be executed regardless of failures
-				shutdown(Policy.subMonitorFor(monitor, 2, SubProgressMonitor.SUPPRESS_SUBTASK_LABEL));
+				shutdown(subMonitor.newChild(2, SubMonitor.SUPPRESS_SUBTASK));
 			}
 		} finally {
 			//release the scheduling rule to be a good job citizen
 			Job.getJobManager().endRule(getRoot());
-			monitor.done();
 		}
 	}
 
@@ -628,7 +627,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	private VertexOrder computeFullProjectOrder() {
 		// determine the full set of accessible projects in the workspace
 		// order the set in descending alphabetical order of project name
-		SortedSet<IProject> allAccessibleProjects = new TreeSet<IProject>(new Comparator<IProject>() {
+		SortedSet<IProject> allAccessibleProjects = new TreeSet<>(new Comparator<IProject>() {
 			@Override
 			public int compare(IProject px, IProject py) {
 				return py.getName().compareTo(px.getName());
@@ -636,7 +635,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		});
 		IProject[] allProjects = getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
 		// List<IProject[]> edges
-		List<IProject[]> edges = new ArrayList<IProject[]>(allProjects.length);
+		List<IProject[]> edges = new ArrayList<>(allProjects.length);
 		for (int i = 0; i < allProjects.length; i++) {
 			Project project = (Project) allProjects[i];
 			// ignore projects that are not accessible
@@ -690,14 +689,14 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		// Order the set in descending alphabetical order of project name then build config name,
 		// as a secondary sort applied after sorting based on references, to achieve a stable
 		// ordering.
-		SortedSet<IBuildConfiguration> allAccessibleBuildConfigs = new TreeSet<IBuildConfiguration>(new BuildConfigurationComparator());
+		SortedSet<IBuildConfiguration> allAccessibleBuildConfigs = new TreeSet<>(new BuildConfigurationComparator());
 
 		// For each project's active build config, perform a depth first search in the reference graph
 		// rooted at that build config.
 		// This generates the required subset of the reference graph that is required to order all
 		// the dependencies of the active project buildConfigs.
 		IProject[] allProjects = getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
-		List<IBuildConfiguration[]> edges = new ArrayList<IBuildConfiguration[]>(allProjects.length);
+		List<IBuildConfiguration[]> edges = new ArrayList<>(allProjects.length);
 
 		for (int i = 0; i < allProjects.length; i++) {
 			Project project = (Project) allProjects[i];
@@ -709,7 +708,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 			// perform a depth first search rooted at it
 			if (!allAccessibleBuildConfigs.contains(project.internalGetActiveBuildConfig())) {
 				allAccessibleBuildConfigs.add(project.internalGetActiveBuildConfig());
-				Stack<IBuildConfiguration> stack = new Stack<IBuildConfiguration>();
+				Stack<IBuildConfiguration> stack = new Stack<>();
 				stack.push(project.internalGetActiveBuildConfig());
 
 				while (!stack.isEmpty()) {
@@ -770,10 +769,10 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 */
 	private VertexOrder computeFullBuildConfigOrder() {
 		// Compute the order for all accessible project buildConfigs
-		SortedSet<IBuildConfiguration> allAccessibleBuildConfigurations = new TreeSet<IBuildConfiguration>(new BuildConfigurationComparator());
+		SortedSet<IBuildConfiguration> allAccessibleBuildConfigurations = new TreeSet<>(new BuildConfigurationComparator());
 
 		IProject[] allProjects = getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
-		List<IBuildConfiguration[]> edges = new ArrayList<IBuildConfiguration[]>(allProjects.length);
+		List<IBuildConfiguration[]> edges = new ArrayList<>(allProjects.length);
 
 		for (int i = 0; i < allProjects.length; i++) {
 			Project project = (Project) allProjects[i];
@@ -831,10 +830,10 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/*
-	 * Compatible reimplementation of 
-	 * <code>IWorkspace.computePrerequisiteOrder</code> using 
+	 * Compatible reimplementation of
+	 * <code>IWorkspace.computePrerequisiteOrder</code> using
 	 * <code>IWorkspace.computeProjectOrder</code>.
-	 * 
+	 *
 	 * @since 2.1
 	 */
 	private IProject[][] computePrerequisiteOrder1(IProject[] projects) {
@@ -845,9 +844,9 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		// when there are cycles, we need to remove all knotted projects from
 		// r.projects to form result[0] and merge all knots to form result[1]
 		// Set<IProject> bad
-		Set<IProject> bad = new HashSet<IProject>();
+		Set<IProject> bad = new HashSet<>();
 		// Set<IProject> bad
-		Set<IProject> keepers = new HashSet<IProject>(Arrays.asList(r.projects));
+		Set<IProject> keepers = new HashSet<>(Arrays.asList(r.projects));
 		for (int i = 0; i < r.knots.length; i++) {
 			IProject[] knot = r.knots[i];
 			for (int j = 0; j < knot.length; j++) {
@@ -861,7 +860,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		IProject[] result2 = new IProject[bad.size()];
 		bad.toArray(result2);
 		// List<IProject> p
-		List<IProject> p = new LinkedList<IProject>();
+		List<IProject> p = new LinkedList<>();
 		p.addAll(Arrays.asList(r.projects));
 		for (Iterator<IProject> it = p.listIterator(); it.hasNext();) {
 			IProject project = it.next();
@@ -881,7 +880,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		VertexOrder fullProjectOrder = computeFullProjectOrder();
 
 		// Create a filter to remove all projects that are not in the list asked for
-		final Set<IProject> projectSet = new HashSet<IProject>(projects.length);
+		final Set<IProject> projectSet = new HashSet<>(projects.length);
 		projectSet.addAll(Arrays.asList(projects));
 		VertexFilter filter = new VertexFilter() {
 			@Override
@@ -923,7 +922,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * the outcome: creating, renaming, or deleting a project; opening or
 	 * closing a project; deleting a build configuration; adding or removing a build configuration reference.
 	 * </p>
-	 * 
+	 *
 	 * @param buildConfigs the build configurations to order
 	 * @return result describing the build configuration order
 	 * @since 3.7
@@ -933,7 +932,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		VertexOrder fullBuildConfigOrder = computeFullBuildConfigOrder();
 
 		// Create a filter to remove all project buildConfigs that are not in the list asked for
-		final Set<IBuildConfiguration> projectConfigSet = new HashSet<IBuildConfiguration>(buildConfigs.length);
+		final Set<IBuildConfiguration> projectConfigSet = new HashSet<>(buildConfigs.length);
 		projectConfigSet.addAll(Arrays.asList(buildConfigs));
 		VertexFilter filter = new VertexFilter() {
 			@Override
@@ -1187,7 +1186,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 
 			String[] referencedVariables = PathVariableUtil.splitVariableNames(srcValue.toPortableString());
 			shouldConvertToRelative = false;
-			// If the variable value is of type ${PARENT-COUNT-VAR}, 
+			// If the variable value is of type ${PARENT-COUNT-VAR},
 			// we can avoid generating an intermediate variable and convert it directly.
 			if (referencedVariables.length == 1) {
 				if (PathVariableUtil.isParentVariable(referencedVariables[0]))
@@ -1226,7 +1225,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 
 	/**
 	 * Returns the number of resources in a subtree of the resource tree.
-	 * 
+	 *
 	 * @param root The subtree to count resources for
 	 * @param depth The depth of the subtree to count
 	 * @param phantom If true, phantoms are included, otherwise they are ignored.
@@ -1256,11 +1255,11 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/*
-	 * Creates the given resource in the tree and returns the new resource info object.  
+	 * Creates the given resource in the tree and returns the new resource info object.
 	 * If phantom is true, the created element is marked as a phantom.
 	 * If there is already be an element in the tree for the given resource
-	 * in the given state (i.e., phantom), a CoreException is thrown.  
-	 * If there is already a phantom in the tree and the phantom flag is false, 
+	 * in the given state (i.e., phantom), a CoreException is thrown.
+	 * If there is already a phantom in the tree and the phantom flag is false,
 	 * the element is overwritten with the new element. (but the synchronization
 	 * information is preserved)
 	 */
@@ -1286,15 +1285,15 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/*
-	 * Creates the given resource in the tree and returns the new resource info object.  
+	 * Creates the given resource in the tree and returns the new resource info object.
 	 * If phantom is true, the created element is marked as a phantom.
 	 * If there is already be an element in the tree for the given resource
-	 * in the given state (i.e., phantom), a CoreException is thrown.  
-	 * If there is already a phantom in the tree and the phantom flag is false, 
+	 * in the given state (i.e., phantom), a CoreException is thrown.
+	 * If there is already a phantom in the tree and the phantom flag is false,
 	 * the element is overwritten with the new element. (but the synchronization
 	 * information is preserved) If the specified resource info is null, then create
 	 * a new one.
-	 * 
+	 *
 	 * If keepSyncInfo is set to be true, the sync info in the given ResourceInfo is NOT
 	 * cleared before being created and thus any sync info already existing at that namespace
 	 * (as indicated by an already existing phantom resource) will be lost.
@@ -1412,7 +1411,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 
 	/**
 	 * Delete the given resource from the current tree of the receiver.
-	 * This method simply removes the resource from the tree.  No cleanup or 
+	 * This method simply removes the resource from the tree.  No cleanup or
 	 * other management is done.  Use IResource.delete for proper deletion.
 	 * If the given resource is the root, all of its children (i.e., all projects) are
 	 * deleted but the root is left.
@@ -1531,7 +1530,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * <p>
 	 * The returned value is cached in the <code>buildOrder</code> field.
 	 * </p>
-	 * 
+	 *
 	 * @return the list of currently open projects active buildConfigs (and the project buildConfigs
 	 * they depend on) in the workspace in the order in which they would be built by <code>IWorkspace.build</code>.
 	 * @see IWorkspace#build(int, IProgressMonitor)
@@ -1545,7 +1544,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		// see if a particular build order is specified
 		String[] order = description.getBuildOrder(false);
 		if (order != null) {
-			LinkedHashSet<IBuildConfiguration> configs = new LinkedHashSet<IBuildConfiguration>();
+			LinkedHashSet<IBuildConfiguration> configs = new LinkedHashSet<>();
 
 			// convert from project names to active project buildConfigs
 			// and eliminate non-existent and closed projects
@@ -1581,13 +1580,13 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	@Override
 	public Map<IProject, IProject[]> getDanglingReferences() {
 		IProject[] projects = getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
-		Map<IProject, IProject[]> result = new HashMap<IProject, IProject[]>(projects.length);
+		Map<IProject, IProject[]> result = new HashMap<>(projects.length);
 		for (int i = 0; i < projects.length; i++) {
 			Project project = (Project) projects[i];
 			if (!project.isAccessible())
 				continue;
 			IProject[] refs = project.internalGetDescription().getReferencedProjects(false);
-			List<IProject> dangling = new ArrayList<IProject>(refs.length);
+			List<IProject> dangling = new ArrayList<>(refs.length);
 			for (int j = 0; j < refs.length; j++)
 				if (!refs[i].exists())
 					dangling.add(refs[i]);
@@ -1604,7 +1603,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		return workingCopy;
 	}
 
-	/** 
+	/**
 	 * Returns the current element tree for this workspace
 	 */
 	public ElementTree getElementTree() {
@@ -1754,7 +1753,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/**
-	 * A move/delete hook hasn't been initialized. Check the extension point and 
+	 * A move/delete hook hasn't been initialized. Check the extension point and
 	 * try to create a new hook if a user has one defined as an extension. Otherwise
 	 * use the Core's implementation as the default.
 	 */
@@ -1774,7 +1773,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 				Policy.log(status);
 				return;
 			}
-			// otherwise we have exactly one hook extension. Try to create a new instance 
+			// otherwise we have exactly one hook extension. Try to create a new instance
 			// from the user-specified class.
 			try {
 				IConfigurationElement config = configs[0];
@@ -1795,8 +1794,8 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/**
-	 * A team hook hasn't been initialized. Check the extension point and 
-	 * try to create a new hook if a user has one defined as an extension. 
+	 * A team hook hasn't been initialized. Check the extension point and
+	 * try to create a new hook if a user has one defined as an extension.
 	 * Otherwise use the Core's implementation as the default.
 	 */
 	protected void initializeTeamHook() {
@@ -1815,7 +1814,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 				Policy.log(status);
 				return;
 			}
-			// otherwise we have exactly one hook extension. Try to create a new instance 
+			// otherwise we have exactly one hook extension. Try to create a new instance
 			// from the user-specified class.
 			try {
 				IConfigurationElement config = configs[0];
@@ -1839,7 +1838,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/**
-	 * A file modification validator hasn't been initialized. Check the extension point and 
+	 * A file modification validator hasn't been initialized. Check the extension point and
 	 * try to create a new validator if a user has one defined as an extension.
 	 */
 	protected void initializeValidator() {
@@ -1859,7 +1858,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 			Policy.log(status);
 			return;
 		}
-		// otherwise we have exactly one validator extension. Try to create a new instance 
+		// otherwise we have exactly one validator extension. Try to create a new instance
 		// from the user-specified class.
 		try {
 			IConfigurationElement config = configs[0];
@@ -2086,7 +2085,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	/**
-	 * Opens a new mutable element tree layer, thus allowing 
+	 * Opens a new mutable element tree layer, thus allowing
 	 * modifications to the tree.
 	 */
 	public ElementTree newWorkingTree() {
@@ -2122,7 +2121,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 *    reporting and cancellation are not desired
 	 * @return status with code <code>OK</code> if no problems;
 	 *     otherwise status describing any serious but non-fatal problems.
-	 *     
+	 *
 	 * @exception CoreException if the workspace could not be opened.
 	 * Reasons include:
 	 * <ul>
@@ -2174,9 +2173,9 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 
 	/**
 	 * Called before checking the pre-conditions of an operation.  Optionally supply
-	 * a scheduling rule to determine when the operation is safe to run.  If a scheduling 
+	 * a scheduling rule to determine when the operation is safe to run.  If a scheduling
 	 * rule is supplied, this method will block until it is safe to run.
-	 * 
+	 *
 	 * @param rule the scheduling rule that describes what this operation intends to modify.
 	 */
 	public void prepareOperation(ISchedulingRule rule, IProgressMonitor monitor) throws CoreException {
@@ -2221,12 +2220,12 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	}
 
 	@Override
-	public void run(IWorkspaceRunnable action, IProgressMonitor monitor) throws CoreException {
+	public void run(ICoreRunnable action, IProgressMonitor monitor) throws CoreException {
 		run(action, defaultRoot, IWorkspace.AVOID_UPDATE, monitor);
 	}
 
 	@Override
-	public void run(IWorkspaceRunnable action, ISchedulingRule rule, int options, IProgressMonitor monitor) throws CoreException {
+	public void run(ICoreRunnable action, ISchedulingRule rule, int options, IProgressMonitor monitor) throws CoreException {
 		monitor = Policy.monitorFor(monitor);
 		try {
 			monitor.beginTask("", Policy.totalWork); //$NON-NLS-1$
@@ -2238,9 +2237,13 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 				if (avoidNotification)
 					avoidNotification = notificationManager.beginAvoidNotify();
 				depth = getWorkManager().beginUnprotected();
-				action.run(Policy.subMonitorFor(monitor, Policy.opWork, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK));
+				action.run(Policy.subMonitorFor(monitor, Policy.opWork));
 			} catch (OperationCanceledException e) {
 				getWorkManager().operationCanceled();
+				throw e;
+			} catch (CoreException e) {
+				if (e.getStatus().getSeverity() == IStatus.CANCEL)
+					getWorkManager().operationCanceled();
 				throw e;
 			} finally {
 				if (avoidNotification)
@@ -2252,6 +2255,16 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		} finally {
 			monitor.done();
 		}
+	}
+
+	@Override
+	public void run(IWorkspaceRunnable action, IProgressMonitor monitor) throws CoreException {
+		run((ICoreRunnable) action, defaultRoot, IWorkspace.AVOID_UPDATE, monitor);
+	}
+
+	@Override
+	public void run(IWorkspaceRunnable action, ISchedulingRule rule, int options, IProgressMonitor monitor) throws CoreException {
+		run((ICoreRunnable) action, rule, options, monitor);
 	}
 
 	@Override
@@ -2269,7 +2282,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 			}
 			return saveManager.save(ISaveContext.FULL_SAVE, keepConsistencyWhenCanceled, null, monitor);
 		}
-		// A snapshot was requested.  Start an operation (if not already started) and 
+		// A snapshot was requested.  Start an operation (if not already started) and
 		// signal that a snapshot should be done at the end.
 		try {
 			prepareOperation(getRoot(), monitor);
@@ -2405,7 +2418,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		}
 	}
 
-	/** 
+	/**
 	 * Returns a string representation of this working state's
 	 * structure suitable for debug purposes.
 	 */
@@ -2445,7 +2458,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		// first time through the validator hasn't been initialized so try and create it
 		if (validator == null)
 			initializeValidator();
-		// we were unable to initialize the validator. Validation has been turned off and 
+		// we were unable to initialize the validator. Validation has been turned off and
 		// a warning has already been logged so just return.
 		if (validator == null)
 			return Status.OK_STATUS;
@@ -2513,7 +2526,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 	 * <li><code>IFile#setContents(InputStream, boolean, boolean, IProgressMonitor)</code></li>
 	 * <li><code>IFile#setContents(IFileState, boolean, boolean, IProgressMonitor)</code></li>
 	 * </ul>
-	 * 
+	 *
 	 * @see IFileModificationValidator#validateSave(IFile)
 	 */
 	protected void validateSave(final IFile file) throws CoreException {
@@ -2523,7 +2536,7 @@ public class Workspace extends PlatformObject implements IWorkspace, ICoreConsta
 		// first time through the validator hasn't been initialized so try and create it
 		if (validator == null)
 			initializeValidator();
-		// we were unable to initialize the validator. Validation has been turned off and 
+		// we were unable to initialize the validator. Validation has been turned off and
 		// a warning has already been logged so just return.
 		if (validator == null)
 			return;

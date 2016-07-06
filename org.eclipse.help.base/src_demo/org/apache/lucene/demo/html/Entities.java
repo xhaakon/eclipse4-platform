@@ -1,7 +1,7 @@
 package org.apache.lucene.demo.html;
 
 /**
- * Copyright 2004 The Apache Software Foundation
+ * Copyright 2004, 2015 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.apache.lucene.demo.html;
 import java.util.*;
 
 public class Entities {
-  static final Hashtable<String, String> decoder = new Hashtable<String, String>(300);
+	static final Hashtable<String, String> decoder = new Hashtable<>(300);
   static final String[]  encoder = new String[0x100];
 
   static final String decode(String entity) {

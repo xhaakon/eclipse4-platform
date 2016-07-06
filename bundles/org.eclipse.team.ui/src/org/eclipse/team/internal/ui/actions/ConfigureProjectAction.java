@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.team.internal.ui.actions;
 
- 
+
 import java.lang.reflect.InvocationTargetException;
 
 import org.eclipse.core.resources.IProject;
@@ -27,13 +27,15 @@ import org.eclipse.team.internal.ui.wizards.ConfigureProjectWizard;
  * configuration that is necessary.
  */
 public class ConfigureProjectAction extends TeamAction {
-	
+
+	@Override
 	protected void execute(IAction action) throws InvocationTargetException,
 			InterruptedException {
 		run(new IRunnableWithProgress() {
+			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				try {
-					if (!isEnabled()) 
+					if (!isEnabled())
 						return;
 					IProject[] projects = getSelectedProjects();
 					ConfigureProjectWizard.shareProjects(getShell(), projects);
@@ -41,19 +43,20 @@ public class ConfigureProjectAction extends TeamAction {
 					throw new InvocationTargetException(e);
 				}
 			}
-		}, TeamUIMessages.ConfigureProjectAction_configureProject, PROGRESS_BUSYCURSOR); 
+		}, TeamUIMessages.ConfigureProjectAction_configureProject, PROGRESS_BUSYCURSOR);
 	}
-	
+
 	/**
 	 * @see TeamAction#isEnabled()
 	 */
+	@Override
 	public boolean isEnabled() {
 		IProject[] selectedProjects = getSelectedProjects();
 		for (int i = 0; i < selectedProjects.length; i++) {
 			IProject project = selectedProjects[i];
 			if (!project.isAccessible()) return false;
-			if (RepositoryProvider.isShared(project)) return false;	
-		}		
+			if (RepositoryProvider.isShared(project)) return false;
+		}
 		return selectedProjects.length > 0;
 	}
 }

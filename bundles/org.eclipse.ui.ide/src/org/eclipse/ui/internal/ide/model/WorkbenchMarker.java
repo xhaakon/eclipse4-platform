@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,10 +24,6 @@ import org.eclipse.ui.model.WorkbenchAdapter;
  */
 public class WorkbenchMarker extends WorkbenchAdapter implements
         IMarkerActionFilter {
-    /*
-     *  (non-Javadoc)
-     * @see org.eclipse.ui.model.IWorkbenchAdapter#getImageDescriptor(java.lang.Object)
-     */
     @Override
 	public ImageDescriptor getImageDescriptor(Object o) {
         if (!(o instanceof IMarker)) {
@@ -37,20 +33,12 @@ public class WorkbenchMarker extends WorkbenchAdapter implements
                 .getImageDescriptor((IMarker) o);
     }
 
-    /*
-     *  (non-Javadoc)
-     * @see org.eclipse.ui.model.IWorkbenchAdapter#getLabel(java.lang.Object)
-     */
     @Override
 	public String getLabel(Object o) {
         IMarker marker = (IMarker) o;
         return marker.getAttribute(IMarker.MESSAGE, "");//$NON-NLS-1$
     }
 
-    /*
-     *  (non-Javadoc)
-     * @see org.eclipse.ui.model.IWorkbenchAdapter#getParent(java.lang.Object)
-     */
     @Override
 	public Object getParent(Object o) {
         return ((IMarker) o).getResource();

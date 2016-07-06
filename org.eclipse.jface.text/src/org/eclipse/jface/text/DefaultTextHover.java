@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,14 +44,16 @@ public class DefaultTextHover implements ITextHover {
 	 *
 	 * @deprecated As of 3.4, replaced by {@link ITextHoverExtension2#getHoverInfo2(ITextViewer, IRegion)}
 	 */
+	@Deprecated
+	@Override
 	public String getHoverInfo(ITextViewer textViewer, IRegion hoverRegion) {
 		IAnnotationModel model= getAnnotationModel(fSourceViewer);
 		if (model == null)
 			return null;
 
-		Iterator e= model.getAnnotationIterator();
+		Iterator<Annotation> e= model.getAnnotationIterator();
 		while (e.hasNext()) {
-			Annotation a= (Annotation) e.next();
+			Annotation a= e.next();
 			if (isIncluded(a)) {
 				Position p= model.getPosition(a);
 				if (p != null && p.overlapsWith(hoverRegion.getOffset(), hoverRegion.getLength())) {
@@ -65,9 +67,7 @@ public class DefaultTextHover implements ITextHover {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextHover#getHoverRegion(org.eclipse.jface.text.ITextViewer, int)
-	 */
+	@Override
 	public IRegion getHoverRegion(ITextViewer textViewer, int offset) {
 		return findWord(textViewer.getDocument(), offset);
 	}

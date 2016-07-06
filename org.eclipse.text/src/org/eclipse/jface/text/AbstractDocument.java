@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -92,25 +92,25 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	/** The document's line tracker */
 	private ILineTracker fTracker;
 	/** The registered document listeners */
-	private ListenerList fDocumentListeners;
+	private ListenerList<IDocumentListener> fDocumentListeners;
 	/** The registered pre-notified document listeners */
-	private ListenerList fPrenotifiedDocumentListeners;
+	private ListenerList<IDocumentListener> fPrenotifiedDocumentListeners;
 	/** The registered document partitioning listeners */
-	private ListenerList fDocumentPartitioningListeners;
+	private ListenerList<IDocumentPartitioningListener> fDocumentPartitioningListeners;
 	/** All positions managed by the document ordered by their start positions. */
-	private Map fPositions;
+	private Map<String, List<Position>> fPositions;
 	/**
-	 * All positions managed by the document ordered by there end positions.
+	 * All positions managed by the document ordered by their end positions.
 	 * @since 3.4
 	 */
-	private Map fEndPositions;
+	private Map<String, List<Position>> fEndPositions;
 	/** All registered document position updaters */
-	private List fPositionUpdaters;
+	private List<IPositionUpdater> fPositionUpdaters;
 	/**
 	 * The list of post notification changes
 	 * @since 2.0
 	 */
-	private List fPostNotificationChanges;
+	private List<RegisteredReplace> fPostNotificationChanges;
 	/**
 	 * The reentrance count for post notification changes.
 	 * @since 2.0
@@ -140,7 +140,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * The registered document partitioners.
 	 * @since 3.0
 	 */
-	private Map fDocumentPartitioners;
+	private Map<String, IDocumentPartitioner> fDocumentPartitioners;
 	/**
 	 * The partitioning changed event.
 	 * @since 3.0
@@ -160,7 +160,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * The registered document rewrite session listeners.
 	 * @since 3.1
 	 */
-	private List fDocumentRewriteSessionListeners;
+	private List<IDocumentRewriteSessionListener> fDocumentRewriteSessionListeners;
 	/**
 	 * The current modification stamp.
 	 * @since 3.1
@@ -211,13 +211,21 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return fTracker;
 	}
 
+	private static <T> List<T> asList(ListenerList<T> listenerList) {
+		List<?> list= Arrays.asList(listenerList.getListeners());
+		@SuppressWarnings("unchecked")
+		List<T> castList= (List<T>) list;
+		return castList;
+	}
+
+
 	/**
 	 * Returns the document's document listeners.
 	 *
 	 * @return the document's document listeners
 	 */
-	protected List getDocumentListeners() {
-		return Arrays.asList(fDocumentListeners.getListeners());
+	protected List<IDocumentListener> getDocumentListeners() {
+		return asList(fDocumentListeners);
 	}
 
 	/**
@@ -225,8 +233,8 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *
 	 * @return the document's partitioning listeners
 	 */
-	protected List getDocumentPartitioningListeners() {
-		return Arrays.asList(fDocumentPartitioningListeners.getListeners());
+	protected List<IDocumentPartitioningListener> getDocumentPartitioningListeners() {
+		return asList(fDocumentPartitioningListeners);
 	}
 
 	/**
@@ -234,13 +242,11 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *
 	 * @return the document's positions
      */
-	protected Map getDocumentManagedPositions() {
+	protected Map<String, List<Position>> getDocumentManagedPositions() {
 		return fPositions;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getDocumentPartitioner()
-	 */
+	@Override
 	public IDocumentPartitioner getDocumentPartitioner() {
 		return getDocumentPartitioner(DEFAULT_PARTITIONING);
 	}
@@ -269,9 +275,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		fTracker= tracker;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#setDocumentPartitioner(org.eclipse.jface.text.IDocumentPartitioner)
-	 */
+	@Override
 	public void setDocumentPartitioner(IDocumentPartitioner partitioner) {
 		setDocumentPartitioner(DEFAULT_PARTITIONING, partitioner);
 	}
@@ -283,13 +287,13 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 */
 	protected void completeInitialization() {
 
-		fPositions= new HashMap();
-		fEndPositions= new HashMap();
-		fPositionUpdaters= new ArrayList();
-		fDocumentListeners= new ListenerList(ListenerList.IDENTITY);
-		fPrenotifiedDocumentListeners= new ListenerList(ListenerList.IDENTITY);
-		fDocumentPartitioningListeners= new ListenerList(ListenerList.IDENTITY);
-		fDocumentRewriteSessionListeners= new ArrayList();
+		fPositions= new HashMap<>();
+		fEndPositions= new HashMap<>();
+		fPositionUpdaters= new ArrayList<>();
+		fDocumentListeners= new ListenerList<>(ListenerList.IDENTITY);
+		fPrenotifiedDocumentListeners= new ListenerList<>(ListenerList.IDENTITY);
+		fDocumentPartitioningListeners= new ListenerList<>(ListenerList.IDENTITY);
+		fDocumentRewriteSessionListeners= new ArrayList<>();
 
 		addPositionCategory(DEFAULT_CATEGORY);
 		addPositionUpdater(new DefaultPositionUpdater(DEFAULT_CATEGORY));
@@ -298,57 +302,43 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 
 	//-------------------------------------------------------
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void addDocumentListener(IDocumentListener listener) {
 		Assert.isNotNull(listener);
 		fDocumentListeners.add(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removeDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void removeDocumentListener(IDocumentListener listener) {
 		Assert.isNotNull(listener);
 		fDocumentListeners.remove(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addPrenotifiedDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void addPrenotifiedDocumentListener(IDocumentListener listener) {
 		Assert.isNotNull(listener);
 		fPrenotifiedDocumentListeners.add(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removePrenotifiedDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void removePrenotifiedDocumentListener(IDocumentListener listener) {
 		Assert.isNotNull(listener);
 		fPrenotifiedDocumentListeners.remove(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addDocumentPartitioningListener(org.eclipse.jface.text.IDocumentPartitioningListener)
-	 */
+	@Override
 	public void addDocumentPartitioningListener(IDocumentPartitioningListener listener) {
 		Assert.isNotNull(listener);
 		fDocumentPartitioningListeners.add(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removeDocumentPartitioningListener(org.eclipse.jface.text.IDocumentPartitioningListener)
-	 */
+	@Override
 	public void removeDocumentPartitioningListener(IDocumentPartitioningListener listener) {
 		Assert.isNotNull(listener);
 		fDocumentPartitioningListeners.remove(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addPosition(java.lang.String, org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void addPosition(String category, Position position) throws BadLocationException, BadPositionCategoryException  {
 
 		if ((0 > position.offset) || (0 > position.length) || (position.offset + position.length > getLength()))
@@ -357,20 +347,18 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		if (category == null)
 			throw new BadPositionCategoryException();
 
-		List list= (List) fPositions.get(category);
+		List<Position> list= fPositions.get(category);
 		if (list == null)
 			throw new BadPositionCategoryException();
 		list.add(computeIndexInPositionList(list, position.offset), position);
 
-		List endPositions= (List) fEndPositions.get(category);
+		List<Position> endPositions= fEndPositions.get(category);
 		if (endPositions == null)
 			throw new BadPositionCategoryException();
 		endPositions.add(computeIndexInPositionList(endPositions, position.offset + position.length - 1, false), position);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addPosition(org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void addPosition(Position position) throws BadLocationException {
 		try {
 			addPosition(DEFAULT_CATEGORY, position);
@@ -378,36 +366,30 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addPositionCategory(java.lang.String)
-	 */
+	@Override
 	public void addPositionCategory(String category) {
 
 		if (category == null)
 			return;
 
 		if (!containsPositionCategory(category)) {
-			fPositions.put(category, new ArrayList());
-			fEndPositions.put(category, new ArrayList());
+			fPositions.put(category, new ArrayList<>());
+			fEndPositions.put(category, new ArrayList<>());
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#addPositionUpdater(org.eclipse.jface.text.IPositionUpdater)
-	 */
+	@Override
 	public void addPositionUpdater(IPositionUpdater updater) {
 		insertPositionUpdater(updater, fPositionUpdaters.size());
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#containsPosition(java.lang.String, int, int)
-	 */
+	@Override
 	public boolean containsPosition(String category, int offset, int length) {
 
 		if (category == null)
 			return false;
 
-		List list= (List) fPositions.get(category);
+		List<Position> list= fPositions.get(category);
 		if (list == null)
 			return false;
 
@@ -417,21 +399,19 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 
 		int index= computeIndexInPositionList(list, offset);
 		if (index < size) {
-			Position p= (Position) list.get(index);
+			Position p= list.get(index);
 			while (p != null && p.offset == offset) {
 				if (p.length == length)
 					return true;
 				++ index;
-				p= (index < size) ? (Position) list.get(index) : null;
+				p= (index < size) ? list.get(index) : null;
 			}
 		}
 
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#containsPositionCategory(java.lang.String)
-	 */
+	@Override
 	public boolean containsPositionCategory(String category) {
 		if (category != null)
 			return fPositions.containsKey(category);
@@ -451,7 +431,8 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @see IDocument#computeIndexInCategory(String, int)
 	 * @deprecated As of 3.4, replaced by {@link #computeIndexInPositionList(List, int, boolean)}
 	 */
-	protected int computeIndexInPositionList(List positions, int offset) {
+	@Deprecated
+	protected int computeIndexInPositionList(List<? extends Position> positions, int offset) {
 		return computeIndexInPositionList(positions, offset, true);
 	}
 
@@ -466,7 +447,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @return the computed index
 	 * @since 3.4
 	 */
-	protected int computeIndexInPositionList(List positions, int offset, boolean orderedByOffset) {
+	protected int computeIndexInPositionList(List<? extends Position> positions, int offset, boolean orderedByOffset) {
 		if (positions.size() == 0)
 			return 0;
 
@@ -479,7 +460,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 
 			mid= (left + right) / 2;
 
-			p= (Position) positions.get(mid);
+			p= positions.get(mid);
 			int pOffset= getOffset(orderedByOffset, p);
 			if (offset < pOffset) {
 				if (left == mid)
@@ -498,7 +479,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 
 		int pos= left;
-		p= (Position) positions.get(pos);
+		p= positions.get(pos);
 		int pPosition= getOffset(orderedByOffset, p);
 		if (offset > pPosition) {
 			// append to the end
@@ -509,7 +490,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 				--pos;
 				if (pos < 0)
 					break;
-				p= (Position) positions.get(pos);
+				p= positions.get(pos);
 				pPosition= getOffset(orderedByOffset, p);
 			} while (offset == pPosition);
 			++pos;
@@ -529,15 +510,13 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return position.getOffset() + position.getLength() - 1;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#computeIndexInCategory(java.lang.String, int)
-	 */
+	@Override
 	public int computeIndexInCategory(String category, int offset) throws BadLocationException, BadPositionCategoryException {
 
 		if (0 > offset || offset > getLength())
 			throw new BadLocationException();
 
-		List c= (List) fPositions.get(category);
+		List<Position> c= fPositions.get(category);
 		if (c == null)
 			throw new BadPositionCategoryException();
 
@@ -550,13 +529,14 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *
 	 * @deprecated as of 2.0. Use <code>fireDocumentPartitioningChanged(IRegion)</code> instead.
 	 */
+	@Deprecated
 	protected void fireDocumentPartitioningChanged() {
 		if (fDocumentPartitioningListeners == null)
 			return;
 
-		Object[] listeners= fDocumentPartitioningListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++)
-			((IDocumentPartitioningListener)listeners[i]).documentPartitioningChanged(this);
+		for (IDocumentPartitioningListener listener : fDocumentPartitioningListeners) {
+			listener.documentPartitioningChanged(this);
+		}
 	}
 
 	/**
@@ -571,13 +551,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *             <code>fireDocumentPartitioningChanged(DocumentPartitioningChangedEvent)</code>
 	 *             instead.
 	 */
+	@Deprecated
 	protected void fireDocumentPartitioningChanged(IRegion region) {
 		if (fDocumentPartitioningListeners == null)
 			return;
 
-		Object[] listeners= fDocumentPartitioningListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
-			IDocumentPartitioningListener l= (IDocumentPartitioningListener)listeners[i];
+		for (IDocumentPartitioningListener l : fDocumentPartitioningListeners) {
 			try {
 				if (l instanceof IDocumentPartitioningListenerExtension)
 					((IDocumentPartitioningListenerExtension)l).documentPartitioningChanged(this, region);
@@ -602,9 +581,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		if (fDocumentPartitioningListeners == null)
 			return;
 
-		Object[] listeners= fDocumentPartitioningListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
-			IDocumentPartitioningListener l= (IDocumentPartitioningListener)listeners[i];
+		for (IDocumentPartitioningListener l : fDocumentPartitioningListeners) {
 			try {
 				if (l instanceof IDocumentPartitioningListenerExtension2) {
 					IDocumentPartitioningListenerExtension2 extension2= (IDocumentPartitioningListenerExtension2)l;
@@ -634,9 +611,9 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			flushPostNotificationChanges();
 
 		if (fDocumentPartitioners != null) {
-			Iterator e= fDocumentPartitioners.values().iterator();
+			Iterator<IDocumentPartitioner> e= fDocumentPartitioners.values().iterator();
 			while (e.hasNext()) {
-				IDocumentPartitioner p= (IDocumentPartitioner) e.next();
+				IDocumentPartitioner p= e.next();
 				if (p instanceof IDocumentPartitionerExtension3) {
 					IDocumentPartitionerExtension3 extension= (IDocumentPartitionerExtension3) p;
 					if (extension.getActiveRewriteSession() != null)
@@ -650,19 +627,17 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			}
 		}
 
-		Object[] listeners= fPrenotifiedDocumentListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
+		for (IDocumentListener listener : fPrenotifiedDocumentListeners) {
 			try {
-				((IDocumentListener)listeners[i]).documentAboutToBeChanged(event);
+				listener.documentAboutToBeChanged(event);
 			} catch (Exception ex) {
 				log(ex);
 			}
 		}
 
-		listeners= fDocumentListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
+		for (IDocumentListener listener : fDocumentListeners) {
 			try {
-				((IDocumentListener)listeners[i]).documentAboutToBeChanged(event);
+				listener.documentAboutToBeChanged(event);
 			} catch (Exception ex) {
 				log(ex);
 			}
@@ -680,10 +655,10 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 
 		if (fDocumentPartitioners != null) {
 			fDocumentPartitioningChangedEvent= new DocumentPartitioningChangedEvent(this);
-			Iterator e= fDocumentPartitioners.keySet().iterator();
+			Iterator<String> e= fDocumentPartitioners.keySet().iterator();
 			while (e.hasNext()) {
-				String partitioning= (String) e.next();
-				IDocumentPartitioner partitioner= (IDocumentPartitioner) fDocumentPartitioners.get(partitioning);
+				String partitioning= e.next();
+				IDocumentPartitioner partitioner= fDocumentPartitioners.get(partitioning);
 
 				if (partitioner instanceof IDocumentPartitionerExtension3) {
 					IDocumentPartitionerExtension3 extension= (IDocumentPartitionerExtension3) partitioner;
@@ -732,6 +707,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @since 2.0
 	 * @deprecated as of 3.0. Use <code>doFireDocumentChanged2(DocumentEvent)</code> instead; this method will be removed.
 	 */
+	@Deprecated
 	protected void doFireDocumentChanged(DocumentEvent event, boolean firePartitionChange, IRegion partitionChange) {
 		doFireDocumentChanged2(event);
 	}
@@ -754,19 +730,17 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		if (p != null && !p.isEmpty())
 			fireDocumentPartitioningChanged(p);
 
-		Object[] listeners= fPrenotifiedDocumentListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
+		for (IDocumentListener listener : fPrenotifiedDocumentListeners) {
 			try {
-				((IDocumentListener)listeners[i]).documentChanged(event);
+				listener.documentChanged(event);
 			} catch (Exception ex) {
 				log(ex);
 			}
 		}
 
-		listeners= fDocumentListeners.getListeners();
-		for (int i= 0; i < listeners.length; i++) {
+		for (IDocumentListener listener : fDocumentListeners) {
 			try {
-				((IDocumentListener)listeners[i]).documentChanged(event);
+				listener.documentChanged(event);
 			} catch (Exception ex) {
 				log(ex);
 			}
@@ -798,18 +772,14 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			fDeferredDocumentEvent= event;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getChar(int)
-	 */
+	@Override
 	public char getChar(int pos) throws BadLocationException {
 		if ((0 > pos) || (pos >= getLength()))
 			throw new BadLocationException();
 		return getStore().get(pos);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getContentType(int)
-	 */
+	@Override
 	public String getContentType(int offset) throws BadLocationException {
 		String contentType= null;
 		try {
@@ -821,9 +791,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return contentType;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLegalContentTypes()
-	 */
+	@Override
 	public String[] getLegalContentTypes() {
 		String[] contentTypes= null;
 		try {
@@ -835,31 +803,22 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return contentTypes;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLength()
-	 */
+	@Override
 	public int getLength() {
 		return getStore().getLength();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLineDelimiter(int)
-	 */
+	@Override
 	public String getLineDelimiter(int line) throws BadLocationException {
 		return getTracker().getLineDelimiter(line);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLegalLineDelimiters()
-	 */
+	@Override
 	public String[] getLegalLineDelimiters() {
 		return getTracker().getLegalLineDelimiters();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#getDefaultLineDelimiter()
-	 * @since 3.1
-	 */
+	@Override
 	public String getDefaultLineDelimiter() {
 
 		String lineDelimiter= null;
@@ -892,74 +851,53 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#setInitialLineDelimiter(java.lang.String)
-	 * @since 3.1
-	 */
+	@Override
 	public void setInitialLineDelimiter(String lineDelimiter) {
 		Assert.isNotNull(lineDelimiter);
 		fInitialLineDelimiter= lineDelimiter;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLineLength(int)
-	 */
+	@Override
 	public int getLineLength(int line) throws BadLocationException {
 		return getTracker().getLineLength(line);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLineOfOffset(int)
-	 */
+	@Override
 	public int getLineOfOffset(int pos) throws BadLocationException {
 		return getTracker().getLineNumberOfOffset(pos);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLineOffset(int)
-	 */
+	@Override
 	public int getLineOffset(int line) throws BadLocationException {
 		return getTracker().getLineOffset(line);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLineInformation(int)
-	 */
+	@Override
 	public IRegion getLineInformation(int line) throws BadLocationException {
 		return getTracker().getLineInformation(line);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getLineInformationOfOffset(int)
-	 */
+	@Override
 	public IRegion getLineInformationOfOffset(int offset) throws BadLocationException {
 		return getTracker().getLineInformationOfOffset(offset);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getNumberOfLines()
-	 */
+	@Override
 	public int getNumberOfLines() {
 		return getTracker().getNumberOfLines();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getNumberOfLines(int, int)
-	 */
+	@Override
 	public int getNumberOfLines(int offset, int length) throws BadLocationException {
 		return getTracker().getNumberOfLines(offset, length);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#computeNumberOfLines(java.lang.String)
-	 */
+	@Override
 	public int computeNumberOfLines(String text) {
 		return getTracker().computeNumberOfLines(text);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getPartition(int)
-	 */
+	@Override
 	public ITypedRegion getPartition(int offset) throws BadLocationException {
 		ITypedRegion partition= null;
 		try {
@@ -971,9 +909,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return  partition;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#computePartitioning(int, int)
-	 */
+	@Override
 	public ITypedRegion[] computePartitioning(int offset, int length) throws BadLocationException {
 		ITypedRegion[] partitioning= null;
 		try {
@@ -985,15 +921,13 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return partitioning;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getPositions(java.lang.String)
-	 */
+	@Override
 	public Position[] getPositions(String category) throws BadPositionCategoryException {
 
 		if (category == null)
 			throw new BadPositionCategoryException();
 
-		List c= (List) fPositions.get(category);
+		List<Position> c= fPositions.get(category);
 		if (c == null)
 			throw new BadPositionCategoryException();
 
@@ -1002,36 +936,28 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return positions;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getPositionCategories()
-	 */
+	@Override
 	public String[] getPositionCategories() {
 		String[] categories= new String[fPositions.size()];
-		Iterator keys= fPositions.keySet().iterator();
+		Iterator<String> keys= fPositions.keySet().iterator();
 		for (int i= 0; i < categories.length; i++)
-			categories[i]= (String) keys.next();
+			categories[i]= keys.next();
 		return categories;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#getPositionUpdaters()
-	 */
+	@Override
 	public IPositionUpdater[] getPositionUpdaters() {
 		IPositionUpdater[] updaters= new IPositionUpdater[fPositionUpdaters.size()];
 		fPositionUpdaters.toArray(updaters);
 		return updaters;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#get()
-	 */
+	@Override
 	public String get() {
 		return getStore().get(0, getLength());
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#get(int, int)
-	 */
+	@Override
 	public String get(int pos, int length) throws BadLocationException {
 		int myLength= getLength();
 		if ((0 > pos) || (0 > length) || (pos + length > myLength))
@@ -1039,9 +965,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return getStore().get(pos, length);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#insertPositionUpdater(org.eclipse.jface.text.IPositionUpdater, int)
-	 */
+	@Override
 	public void insertPositionUpdater(IPositionUpdater updater, int index) {
 
 		for (int i= fPositionUpdaters.size() - 1; i >= 0; i--) {
@@ -1055,9 +979,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			fPositionUpdaters.add(index, updater);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removePosition(java.lang.String, org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void removePosition(String category, Position position) throws BadPositionCategoryException {
 
 		if (position == null)
@@ -1066,12 +988,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		if (category == null)
 			throw new BadPositionCategoryException();
 
-		List c= (List) fPositions.get(category);
+		List<Position> c= fPositions.get(category);
 		if (c == null)
 			throw new BadPositionCategoryException();
 		removeFromPositionsList(c, position, true);
 
-		List endPositions= (List) fEndPositions.get(category);
+		List<Position> endPositions= fEndPositions.get(category);
 		if (endPositions == null)
 			throw new BadPositionCategoryException();
 		removeFromPositionsList(endPositions, position, false);
@@ -1085,7 +1007,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @param orderedByOffset true if <code>positions</code> is ordered by offset, false if ordered by end position
 	 * @since 3.4
 	 */
-	private void removeFromPositionsList(List positions, Position position, boolean orderedByOffset) {
+	private void removeFromPositionsList(List<Position> positions, Position position, boolean orderedByOffset) {
 		int size= positions.size();
 
 		//Assume position is somewhere near it was before
@@ -1116,9 +1038,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removePosition(org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void removePosition(Position position) {
 		try {
 			removePosition(DEFAULT_CATEGORY, position);
@@ -1126,9 +1046,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removePositionCategory(java.lang.String)
-	 */
+	@Override
 	public void removePositionCategory(String category) throws BadPositionCategoryException {
 
 		if (category == null)
@@ -1141,9 +1059,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		fEndPositions.remove(category);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#removePositionUpdater(org.eclipse.jface.text.IPositionUpdater)
-	 */
+	@Override
 	public void removePositionUpdater(IPositionUpdater updater) {
 		for (int i= fPositionUpdaters.size() - 1; i >= 0; i--) {
 			if (fPositionUpdaters.get(i) == updater) {
@@ -1162,18 +1078,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return fNextModificationStamp;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#getModificationStamp()
-	 * @since 3.1
-	 */
+	@Override
 	public long getModificationStamp() {
 		return fModificationStamp;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#replace(int, int, java.lang.String)
-	 * @since 3.1
-	 */
+	@Override
 	public void replace(int pos, int length, String text, long modificationStamp) throws BadLocationException {
 		if ((0 > pos) || (0 > length) || (pos + length > getLength()))
 			throw new BadLocationException();
@@ -1196,13 +1106,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *
 	 * @since 3.4
 	 */
+	@Override
 	public boolean isLineInformationRepairNeeded(int offset, int length, String text) throws BadLocationException {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#replace(int, int, java.lang.String)
-	 */
+	@Override
 	public void replace(int pos, int length, String text) throws BadLocationException {
 		if (length == 0 && (text == null || text.length() == 0))
 			replace(pos, length, text, getModificationStamp());
@@ -1210,17 +1119,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			replace(pos, length, text, getNextModificationStamp());
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocument#set(java.lang.String)
-	 */
+	@Override
 	public void set(String text) {
 		set(text, getNextModificationStamp());
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#set(java.lang.String, long)
-	 * @since 3.1
-	 */
+	@Override
 	public void set(String text, long modificationStamp) {
 		int length= getStore().getLength();
 
@@ -1246,10 +1150,10 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *            the positions
 	 */
 	protected void updatePositions(DocumentEvent event) {
-		List list= new ArrayList(fPositionUpdaters);
-		Iterator e= list.iterator();
+		List<IPositionUpdater> list= new ArrayList<>(fPositionUpdaters);
+		Iterator<IPositionUpdater> e= list.iterator();
 		while (e.hasNext()) {
-			IPositionUpdater u= (IPositionUpdater) e.next();
+			IPositionUpdater u= e.next();
 			u.update(event);
 		}
 	}
@@ -1259,6 +1163,8 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *
 	 * @deprecated as of 3.0 search is provided by {@link FindReplaceDocumentAdapter}
 	 */
+	@Deprecated
+	@Override
 	public int search(int startPosition, String findString, boolean forwardSearch, boolean caseSensitive, boolean wholeWord) throws BadLocationException {
 		try {
 			IRegion region= getFindReplaceDocumentAdapter().find(startPosition, findString, forwardSearch, caseSensitive, wholeWord, false);
@@ -1305,57 +1211,42 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			return;
 
 		while (fPostNotificationChanges != null) {
-			List changes= fPostNotificationChanges;
+			List<RegisteredReplace> changes= fPostNotificationChanges;
 			fPostNotificationChanges= null;
 
-			Iterator e= changes.iterator();
+			Iterator<RegisteredReplace> e= changes.iterator();
 			while (e.hasNext()) {
-				RegisteredReplace replace= (RegisteredReplace) e.next();
+				RegisteredReplace replace= e.next();
 				replace.fReplace.perform(this, replace.fOwner);
 			}
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension2#acceptPostNotificationReplaces()
-	 * @since 2.1
-	 */
+	@Override
 	public void acceptPostNotificationReplaces() {
 		fAcceptPostNotificationReplaces= true;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension2#ignorePostNotificationReplaces()
-	 * @since 2.1
-	 */
+	@Override
 	public void ignorePostNotificationReplaces() {
 		fAcceptPostNotificationReplaces= false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension#registerPostNotificationReplace(org.eclipse.jface.text.IDocumentListener, org.eclipse.jface.text.IDocumentExtension.IReplace)
-	 * @since 2.0
-	 */
+	@Override
 	public void registerPostNotificationReplace(IDocumentListener owner, IDocumentExtension.IReplace replace) {
 		if (fAcceptPostNotificationReplaces) {
 			if (fPostNotificationChanges == null)
-				fPostNotificationChanges= new ArrayList(1);
+				fPostNotificationChanges= new ArrayList<>(1);
 			fPostNotificationChanges.add(new RegisteredReplace(owner, replace));
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension#stopPostNotificationProcessing()
-	 * @since 2.0
-	 */
+	@Override
 	public void stopPostNotificationProcessing() {
 		++ fStoppedCount;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension#resumePostNotificationProcessing()
-	 * @since 2.0
-	 */
+	@Override
 	public void resumePostNotificationProcessing() {
 		-- fStoppedCount;
 		if (fStoppedCount == 0 && fReentranceCount == 0)
@@ -1370,6 +1261,8 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 *             {@link IDocumentExtension4#startRewriteSession(DocumentRewriteSessionType)}
 	 *             instead.
 	 */
+	@Deprecated
+	@Override
 	public void startSequentialRewrite(boolean normalized) {
 	}
 
@@ -1379,13 +1272,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @since 2.0
 	 * @deprecated As of 3.1, replaced by {@link IDocumentExtension4#stopRewriteSession(DocumentRewriteSession)}
 	 */
+	@Deprecated
+	@Override
 	public void stopSequentialRewrite() {
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension2#resumeListenerNotification()
-	 * @since 2.1
-	 */
+	@Override
 	public void resumeListenerNotification() {
 		-- fStoppedListenerNotification;
 		if (fStoppedListenerNotification == 0) {
@@ -1393,10 +1285,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension2#stopListenerNotification()
-	 * @since 2.1
-	 */
+	@Override
 	public void stopListenerNotification() {
 		++ fStoppedListenerNotification;
 	}
@@ -1419,6 +1308,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @see org.eclipse.jface.text.IDocumentExtension3#computeZeroLengthPartitioning(java.lang.String, int, int)
 	 * @since 3.0
 	 */
+	@Override
 	public ITypedRegion[] computePartitioning(String partitioning, int offset, int length, boolean includeZeroLengthPartitions) throws BadLocationException, BadPartitioningException {
 		if ((0 > offset) || (0 > length) || (offset + length > getLength()))
 			throw new BadLocationException();
@@ -1441,6 +1331,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @see org.eclipse.jface.text.IDocumentExtension3#getZeroLengthContentType(java.lang.String, int)
 	 * @since 3.0
 	 */
+	@Override
 	public String getContentType(String partitioning, int offset, boolean preferOpenPartitions) throws BadLocationException, BadPartitioningException {
 		if ((0 > offset) || (offset > getLength()))
 			throw new BadLocationException();
@@ -1459,18 +1350,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			throw new BadPartitioningException();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension3#getDocumentPartitioner(java.lang.String)
-	 * @since 3.0
-	 */
+	@Override
 	public IDocumentPartitioner getDocumentPartitioner(String partitioning)  {
-		return fDocumentPartitioners != null ? (IDocumentPartitioner) fDocumentPartitioners.get(partitioning) : null;
+		return fDocumentPartitioners != null ? fDocumentPartitioners.get(partitioning) : null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension3#getLegalContentTypes(java.lang.String)
-	 * @since 3.0
-	 */
+	@Override
 	public String[] getLegalContentTypes(String partitioning) throws BadPartitioningException {
 		IDocumentPartitioner partitioner= getDocumentPartitioner(partitioning);
 		if (partitioner != null)
@@ -1484,6 +1369,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @see org.eclipse.jface.text.IDocumentExtension3#getZeroLengthPartition(java.lang.String, int)
 	 * @since 3.0
 	 */
+	@Override
 	public ITypedRegion getPartition(String partitioning, int offset, boolean preferOpenPartitions) throws BadLocationException, BadPartitioningException {
 		if ((0 > offset) || (offset > getLength()))
 			throw new BadLocationException();
@@ -1502,10 +1388,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			throw new BadPartitioningException();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension3#getPartitionings()
-	 * @since 3.0
-	 */
+	@Override
 	public String[] getPartitionings() {
 		if (fDocumentPartitioners == null)
 			return new String[0];
@@ -1514,10 +1397,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		return partitionings;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension3#setDocumentPartitioner(java.lang.String, org.eclipse.jface.text.IDocumentPartitioner)
-	 * @since 3.0
-	 */
+	@Override
 	public void setDocumentPartitioner(String partitioning, IDocumentPartitioner partitioner) {
 		if (partitioner == null) {
 			if (fDocumentPartitioners != null) {
@@ -1527,7 +1407,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			}
 		} else {
 			if (fDocumentPartitioners == null)
-				fDocumentPartitioners= new HashMap();
+				fDocumentPartitioners= new HashMap<>();
 			fDocumentPartitioners.put(partitioning, partitioner);
 		}
 		DocumentPartitioningChangedEvent event= new DocumentPartitioningChangedEvent(this);
@@ -1535,10 +1415,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		fireDocumentPartitioningChanged(event);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IRepairableDocument#repairLineInformation()
-	 * @since 3.0
-	 */
+	@Override
 	public void repairLineInformation() {
 		getTracker().set(get());
 	}
@@ -1551,11 +1428,11 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 */
 	protected void fireRewriteSessionChanged(DocumentRewriteSessionEvent event) {
 		if (fDocumentRewriteSessionListeners.size() > 0) {
-			List list= new ArrayList(fDocumentRewriteSessionListeners);
-			Iterator e= list.iterator();
+			List<IDocumentRewriteSessionListener> list= new ArrayList<>(fDocumentRewriteSessionListeners);
+			Iterator<IDocumentRewriteSessionListener> e= list.iterator();
 			while (e.hasNext()) {
 				try {
-					IDocumentRewriteSessionListener l= (IDocumentRewriteSessionListener)e.next();
+					IDocumentRewriteSessionListener l= e.next();
 					l.documentRewriteSessionChanged(event);
 				} catch (Exception ex) {
 					log(ex);
@@ -1564,17 +1441,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#getActiveRewriteSession()
-	 */
+	@Override
 	public final DocumentRewriteSession getActiveRewriteSession() {
 		return fDocumentRewriteSession;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#startRewriteSession(org.eclipse.jface.text.DocumentRewriteSessionType)
-	 * @since 3.1
-	 */
+	@Override
 	public DocumentRewriteSession startRewriteSession(DocumentRewriteSessionType sessionType) {
 
 		if (getActiveRewriteSession() != null)
@@ -1611,7 +1483,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 */
 	protected final void startRewriteSessionOnPartitioners(DocumentRewriteSession session) {
 		if (fDocumentPartitioners != null) {
-			Iterator e= fDocumentPartitioners.values().iterator();
+			Iterator<IDocumentPartitioner> e= fDocumentPartitioners.values().iterator();
 			while (e.hasNext()) {
 				Object partitioner= e.next();
 				if (partitioner instanceof IDocumentPartitionerExtension3) {
@@ -1622,10 +1494,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#stopRewriteSession(org.eclipse.jface.text.DocumentRewriteSession)
-	 * @since 3.1
-	 */
+	@Override
 	public void stopRewriteSession(DocumentRewriteSession session) {
 		if (fDocumentRewriteSession == session) {
 
@@ -1658,10 +1527,10 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	protected final void stopRewriteSessionOnPartitioners(DocumentRewriteSession session) {
 		if (fDocumentPartitioners != null) {
 			DocumentPartitioningChangedEvent event= new DocumentPartitioningChangedEvent(this);
-			Iterator e= fDocumentPartitioners.keySet().iterator();
+			Iterator<String> e= fDocumentPartitioners.keySet().iterator();
 			while (e.hasNext()) {
-				String partitioning= (String) e.next();
-				IDocumentPartitioner partitioner= (IDocumentPartitioner) fDocumentPartitioners.get(partitioning);
+				String partitioning= e.next();
+				IDocumentPartitioner partitioner= fDocumentPartitioners.get(partitioning);
 				if (partitioner instanceof IDocumentPartitionerExtension3) {
 					IDocumentPartitionerExtension3 extension= (IDocumentPartitionerExtension3) partitioner;
 					extension.stopRewriteSession(session);
@@ -1673,20 +1542,14 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#addDocumentRewriteSessionListener(org.eclipse.jface.text.IDocumentRewriteSessionListener)
-	 * @since 3.1
-	 */
+	@Override
 	public void addDocumentRewriteSessionListener(IDocumentRewriteSessionListener listener) {
 		Assert.isNotNull(listener);
 		if (! fDocumentRewriteSessionListeners.contains(listener))
 			fDocumentRewriteSessionListeners.add(listener);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentExtension4#removeDocumentRewriteSessionListener(org.eclipse.jface.text.IDocumentRewriteSessionListener)
-	 * @since 3.1
-	 */
+	@Override
 	public void removeDocumentRewriteSessionListener(IDocumentRewriteSessionListener listener) {
 		Assert.isNotNull(listener);
 		fDocumentRewriteSessionListeners.remove(listener);
@@ -1734,7 +1597,7 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 */
 	public Position[] getPositions(String category, int offset, int length, boolean canStartBefore, boolean canEndAfter) throws BadPositionCategoryException {
 		if (canStartBefore && canEndAfter || (!canStartBefore && !canEndAfter)) {
-			List documentPositions;
+			List<Position> documentPositions;
 			if (canStartBefore && canEndAfter) {
 				if (offset < getLength() / 2) {
 					documentPositions= getStartingPositions(category, 0, offset + length);
@@ -1745,12 +1608,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 				documentPositions= getStartingPositions(category, offset, length);
 			}
 
-			ArrayList list= new ArrayList(documentPositions.size());
+			ArrayList<Position> list= new ArrayList<>(documentPositions.size());
 
 			Position region= new Position(offset, length);
 
-			for (Iterator iterator= documentPositions.iterator(); iterator.hasNext();) {
-				Position position= (Position) iterator.next();
+			for (Iterator<Position> iterator= documentPositions.iterator(); iterator.hasNext();) {
+				Position position= iterator.next();
 				if (isWithinRegion(region, position, canStartBefore, canEndAfter)) {
 					list.add(position);
 				}
@@ -1760,14 +1623,14 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 			list.toArray(positions);
 			return positions;
 		} else if (canStartBefore) {
-			List list= getEndingPositions(category, offset, length);
+			List<Position> list= getEndingPositions(category, offset, length);
 			Position[] positions= new Position[list.size()];
 			list.toArray(positions);
 			return positions;
 		} else {
 			Assert.isLegal(canEndAfter && !canStartBefore);
 
-			List list= getStartingPositions(category, offset, length);
+			List<Position> list= getStartingPositions(category, offset, length);
 			Position[] positions= new Position[list.size()];
 			list.toArray(positions);
 			return positions;
@@ -1801,8 +1664,8 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @throws BadPositionCategoryException if category is undefined in this document
 	 * @since 3.4
 	 */
-	private List getStartingPositions(String category, int offset, int length) throws BadPositionCategoryException {
-		List positions= (List) fPositions.get(category);
+	private List<Position> getStartingPositions(String category, int offset, int length) throws BadPositionCategoryException {
+		List<Position> positions= fPositions.get(category);
 		if (positions == null)
 			throw new BadPositionCategoryException();
 
@@ -1823,8 +1686,8 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 * @throws BadPositionCategoryException if category is undefined in this document
 	 * @since 3.4
 	 */
-	private List getEndingPositions(String category, int offset, int length) throws BadPositionCategoryException {
-		List positions= (List) fEndPositions.get(category);
+	private List<Position> getEndingPositions(String category, int offset, int length) throws BadPositionCategoryException {
+		List<Position> positions= fEndPositions.get(category);
 		if (positions == null)
 			throw new BadPositionCategoryException();
 
@@ -1842,10 +1705,12 @@ public abstract class AbstractDocument implements IDocument, IDocumentExtension,
 	 */
 	private static void log(final Exception ex) {
 		SafeRunner.run(new ISafeRunnable() {
+			@Override
 			public void run() throws Exception {
 				throw ex;
 			}
 
+			@Override
 			public void handleException(Throwable exception) {
 				// NOTE: Logging is done by SafeRunner
 			}

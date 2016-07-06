@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2010 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -97,7 +97,8 @@ public class RemoteIC {
 
 	//I added this method, which overrides the original "equal" method in the class Object
 
-   public boolean equals(Object anotherObject)throws ClassCastException {
+   @Override
+public boolean equals(Object anotherObject)throws ClassCastException {
         if (!(anotherObject instanceof RemoteIC))
             return false;
         if ( !(((RemoteIC) anotherObject).getName().equals(this.getName())))

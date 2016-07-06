@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,6 +35,7 @@ public final class SmartAnalyzer extends Analyzer {
 	 * Reader. Delegates to DefaultAnalyzer when field used to search for exact
 	 * match, and to plugged-in analyzer for other fields.
 	 */
+	@Override
 	public final TokenStream tokenStream(String fieldName, Reader reader) {
 		if (fieldName != null && fieldName.startsWith("exact_")) { //$NON-NLS-1$
 			return exactAnalyzer.tokenStream(fieldName, reader);

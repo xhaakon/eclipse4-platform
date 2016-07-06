@@ -32,7 +32,7 @@ import org.eclipse.ui.IWorkbenchPart;
  * A model operation that executes a merge according to the merge lifecycle
  * associated with an {@link IMergeContext} and {@link IResourceMappingMerger}
  * instances obtained from the model providers involved.
- * 
+ *
  * @since 3.2
  */
 public abstract class ModelMergeOperation extends ModelOperation {
@@ -42,7 +42,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	 * the scope of the context. The {@link IResourceMappingMerger} for each
 	 * model provider will be consulted and any non-OK status will be
 	 * accumulated and returned,
-	 * 
+	 *
 	 * @param context
 	 *            the merge context being validated
 	 * @param monitor
@@ -70,7 +70,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 			monitor.done();
 		}
 	}
-	
+
 	/*
 	 * Validate the merge by obtaining the {@link IResourceMappingMerger} for the
 	 * given provider.
@@ -85,13 +85,13 @@ public abstract class ModelMergeOperation extends ModelOperation {
 			return Status.OK_STATUS;
 		return merger.validateMerge(context, monitor);
 	}
-	
+
 	/*
 	 * Return the auto-merger associated with the given model provider using the
 	 * adaptable mechanism. If the model provider does not have a merger
 	 * associated with it, a default merger that performs the merge at the file
 	 * level is returned.
-	 * 
+	 *
 	 * @param provider
 	 *            the model provider of the elements to be merged (must not be
 	 *            <code>null</code>)
@@ -101,7 +101,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 		Assert.isNotNull(provider);
 		return (IResourceMappingMerger)Utils.getAdapter(provider, IResourceMappingMerger.class);
 	}
-	
+
 	/**
 	 * Create a model merge operation.
 	 * @param part the workbench part from which the operation was requested or <code>null</code>
@@ -110,14 +110,15 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	protected ModelMergeOperation(IWorkbenchPart part, ISynchronizationScopeManager manager) {
 		super(part, manager);
 	}
-	
+
 	/**
 	 * Perform a merge. First {@link #initializeContext(IProgressMonitor)} is
 	 * called to determine the set of resource changes. Then the
 	 * {@link #executeMerge(IProgressMonitor)} method is invoked.
-	 * 
+	 *
 	 * @param monitor a progress monitor
 	 */
+	@Override
 	protected void execute(IProgressMonitor monitor)
 			throws InvocationTargetException, InterruptedException {
 		try {
@@ -139,7 +140,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	 * there are no validation problems, {@link #performMerge(IProgressMonitor)}
 	 * will then be called to perform the merge. If there are problems encountered
 	 * or if a preview was requested, {@link #handlePreviewRequest()} is called.
-	 * 
+	 *
 	 * @param monitor a progress monitor
 	 */
 	protected void executeMerge(IProgressMonitor monitor) throws CoreException {
@@ -161,7 +162,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 		}
 		monitor.done();
 	}
-	
+
 	/**
 	 * A preview of the merge has been requested. By default, this method does
 	 * nothing. Subclasses that wish to support previewing must override this
@@ -193,8 +194,10 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	protected void handleValidationFailure(final IStatus status) {
     	final boolean[] result = new boolean[] { false };
     	Runnable runnable = new Runnable() {
+			@Override
 			public void run() {
 				ErrorDialog dialog = new ErrorDialog(getShell(), TeamUIMessages.ModelMergeOperation_0, TeamUIMessages.ModelMergeOperation_1, status, IStatus.ERROR | IStatus.WARNING | IStatus.INFO) {
+					@Override
 					protected void createButtonsForButtonBar(Composite parent) {
 				        createButton(parent, IDialogConstants.YES_ID, IDialogConstants.YES_LABEL,
 				                false);
@@ -205,6 +208,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 					/* (non-Javadoc)
 					 * @see org.eclipse.jface.dialogs.ErrorDialog#buttonPressed(int)
 					 */
+					@Override
 					protected void buttonPressed(int id) {
 						if (id == IDialogConstants.YES_ID)
 							super.buttonPressed(IDialogConstants.OK_ID);
@@ -230,6 +234,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	 */
 	protected void handleMergeFailure(final IStatus status) {
 		Display.getDefault().syncExec(new Runnable() {
+			@Override
 			public void run() {
 				MessageDialog.openInformation(getShell(), TeamUIMessages.MergeIncomingChangesAction_0, status.getMessage());
 			};
@@ -244,12 +249,13 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	 */
 	protected void handleNoChanges() {
 		Display.getDefault().syncExec(new Runnable() {
+			@Override
 			public void run() {
 				NoChangesDialog.open(getShell(), TeamUIMessages.ResourceMappingMergeOperation_0, TeamUIMessages.ResourceMappingMergeOperation_1, TeamUIMessages.ModelMergeOperation_3, getScope().asInputScope());
 			};
 		});
 	}
-	
+
 	/**
 	 * Attempt a headless merge of the elements in the context of this
 	 * operation. The merge is performed by obtaining the
@@ -259,7 +265,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	 * method. The method will stop on the first conflict encountered.
 	 * This method will throw a runtime exception
 	 * if the operation does not have a merge context.
-	 * 
+	 *
 	 * @param monitor
 	 *            a progress monitor
 	 * @return a status that indicates whether the merge succeeded.
@@ -269,10 +275,11 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	protected IStatus performMerge(IProgressMonitor monitor) throws CoreException {
 		ISynchronizationContext sc = getContext();
 		if (sc instanceof IMergeContext) {
-			IMergeContext context = (IMergeContext) sc;		
+			IMergeContext context = (IMergeContext) sc;
 			final ModelProvider[] providers = sortByExtension(context.getScope().getModelProviders());
 			final IStatus[] result = new IStatus[] { Status.OK_STATUS };
 			context.run(new IWorkspaceRunnable() {
+				@Override
 				public void run(IProgressMonitor monitor) throws CoreException {
 					try {
 						int ticks = 100;
@@ -301,7 +308,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 		}
 		return noMergeContextAvailable();
 	}
-	
+
 	/**
 	 * Attempt to merge all the mappings that come from the given provider.
 	 * Return a status which indicates whether the merge succeeded or if
@@ -338,11 +345,11 @@ public abstract class ModelMergeOperation extends ModelOperation {
 		}
 		return noMergeContextAvailable();
 	}
-	
+
 	private IStatus noMergeContextAvailable() {
 		throw new IllegalStateException(TeamUIMessages.ModelMergeOperation_2);
 	}
-	
+
 	/**
 	 * Return whether the context of this operation has changes that are
 	 * of interest to the operation. Subclasses may override.
@@ -352,9 +359,10 @@ public abstract class ModelMergeOperation extends ModelOperation {
 	protected boolean hasChangesOfInterest() {
 		return !getContext().getDiffTree().isEmpty() && hasIncomingChanges(getContext().getDiffTree());
 	}
-	
+
 	private boolean hasIncomingChanges(IDiffTree tree) {
 		return tree.hasMatchingDiffs(ResourcesPlugin.getWorkspace().getRoot().getFullPath(), new FastDiffFilter() {
+			@Override
 			public boolean select(IDiff node) {
 				if (node instanceof IThreeWayDiff) {
 					IThreeWayDiff twd = (IThreeWayDiff) node;
@@ -370,7 +378,7 @@ public abstract class ModelMergeOperation extends ModelOperation {
 			}
 		});
 	}
-	
+
 	private IMergeContext getMergeContext() {
 		return (IMergeContext)getContext();
 	}

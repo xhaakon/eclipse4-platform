@@ -31,13 +31,14 @@ public class ResourceModelPersistenceAdapter extends SynchronizationCompareAdapt
 	private static final String WORKING_SET_NAME = "workingSetName"; //$NON-NLS-1$
 	private static final String MODEL_PROVIDERS = "modelProviders"; //$NON-NLS-1$
 	private static final String MODEL_PROVIDER_ID = "modelProviderId"; //$NON-NLS-1$
-	
+
 	public ResourceModelPersistenceAdapter() {
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.SynchronizationCompareAdapter#save(org.eclipse.core.resources.mapping.ResourceMapping[], org.eclipse.ui.IMemento)
 	 */
+	@Override
 	public void save(ResourceMapping[] mappings, IMemento memento) {
 		for (int i = 0; i < mappings.length; i++) {
 			ResourceMapping mapping = mappings[i];
@@ -62,13 +63,14 @@ public class ResourceModelPersistenceAdapter extends SynchronizationCompareAdapt
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.SynchronizationCompareAdapter#restore(org.eclipse.ui.IMemento)
 	 */
+	@Override
 	public ResourceMapping[] restore(IMemento memento) {
 		IMemento[] children = memento.getChildren(RESOURCES);
 		List result = new ArrayList();
 		for (int i = 0; i < children.length; i++) {
 			IMemento child = children[i];
 			Integer typeInt = child.getInteger(RESOURCE_TYPE);
-			if (typeInt == null) 
+			if (typeInt == null)
 				continue;
 			int type = typeInt.intValue();
 			String pathString = child.getString(RESOURCE_PATH);
@@ -135,5 +137,5 @@ public class ResourceModelPersistenceAdapter extends SynchronizationCompareAdapt
 		}
 		return (ResourceMapping[]) result.toArray(new ResourceMapping[result.size()]);
 	}
-	
+
 }

@@ -23,14 +23,14 @@ import org.eclipse.team.internal.ui.TeamUIPlugin;
 import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 
 public class ImageManager {
-	
+
 	private static final String PROP_IMAGE_MANAGER = TeamUIPlugin.ID + ".imageManager"; //$NON-NLS-1$
-	
+
 	private LocalResourceManager imageManager;
 	// Contains direction images
 	private CompareConfiguration compareConfig = new CompareConfiguration();
 	private boolean disposed = false;
-	
+
 	public synchronized static ImageManager getImageManager(ISynchronizationContext context, ISynchronizePageConfiguration configuration) {
 		ImageManager manager = (ImageManager)context.getCache().get(PROP_IMAGE_MANAGER);
 		if (manager == null || manager.disposed) {
@@ -40,6 +40,7 @@ public class ImageManager {
 			if (v != null) {
 				// It is best to dispose the images when the view is disposed (see bug 198383)
 				v.getControl().addDisposeListener(new DisposeListener() {
+					@Override
 					public void widgetDisposed(DisposeEvent e) {
 						newRegistry.dispose();
 					}
@@ -47,6 +48,7 @@ public class ImageManager {
 			} else {
 				// The viewer wasn't available so we'll dispose when the context is disposed
 				context.getCache().addCacheListener(new ICacheListener() {
+					@Override
 					public void cacheDisposed(ICache cache) {
 						newRegistry.dispose();
 					}
@@ -64,7 +66,7 @@ public class ImageManager {
 			return null;
 		return configuration.getPage().getViewer();
 	}
-	
+
 	public Image getImage(ImageDescriptor descriptor) {
 		if (descriptor == null || disposed)
 			return null;
@@ -72,7 +74,7 @@ public class ImageManager {
 		Image image = manager.createImage(descriptor);
 		return image;
 	}
-	
+
 	private synchronized ResourceManager getResourceManager() {
 		if (imageManager == null) {
 			imageManager = new LocalResourceManager(JFaceResources.getResources());

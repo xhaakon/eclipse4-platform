@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ import org.eclipse.ui.internal.cheatsheets.actions.CheatSheetHelpMenuAction;
  * This allows the extensions to be made available for use by RCP applications
  * without exposing their concrete implementation classes.
  * </p>
- * 
+ *
  * @since 3.1
  */
 
@@ -49,11 +49,7 @@ public class CheatSheetExtensionFactory implements IExecutableExtensionFactory,
 		// do nothing
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.core.runtime.IExecutableExtensionFactory#create()
-	 */
+	@Override
 	public Object create() throws CoreException {
 		if (HELP_MENU_ACTION.equals(id))
 			return configure(new CheatSheetHelpMenuAction());
@@ -62,12 +58,7 @@ public class CheatSheetExtensionFactory implements IExecutableExtensionFactory,
 				0, "Unknown id in data argument for " + getClass(), null)); //$NON-NLS-1$
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.core.runtime.IExecutableExtension#setInitializationData(org.eclipse.core.runtime.IConfigurationElement,
-	 *      java.lang.String, java.lang.Object)
-	 */
+	@Override
 	public void setInitializationData(IConfigurationElement config,
 			String propertyName, Object data) throws CoreException {
 		if (data instanceof String)

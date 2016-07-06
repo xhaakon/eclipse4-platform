@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.ui.internal.ide.dialogs;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
@@ -62,13 +63,13 @@ public class ProjectLinkedResourcePage extends PropertyPage implements
 				IIDEHelpContextIds.LINKED_RESOURCE_PAGE);
 
 		IAdaptable adaptable = getElement();
-		 if (adaptable.getAdapter(IProject.class) != null) {
-			 IProject project = adaptable.getAdapter(IProject.class);
-			 pathVariablesGroup.setResource(project);
-			 linkedResourceEditor.setProject(project);
-		 }
+		IProject project = Adapters.adapt(adaptable, IProject.class);
+		if (project != null) {
+			pathVariablesGroup.setResource(project);
+			linkedResourceEditor.setProject(project);
+		}
 
-		 Font font = parent.getFont();
+		Font font = parent.getFont();
 
         // PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, IIDEHelpContextIds.LINKED_RESOURCE_PREFERENCE_PAGE);
         // define container & its gridding

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.IShellProvider;
@@ -106,25 +105,22 @@ public class MoveProjectAction extends CopyProjectAction {
 	boolean performMove(final IProject project,
 			final URI newLocation) {
 
-		IRunnableWithProgress op =  new IRunnableWithProgress() {
-    		@Override
-			public void run(IProgressMonitor monitor) {
-    			MoveProjectOperation op = new MoveProjectOperation(project, newLocation, IDEWorkbenchMessages.MoveProjectAction_moveTitle);
-    			op.setModelProviderIds(getModelProviderIds());
-    			try {
-    				PlatformUI.getWorkbench().getOperationSupport()
-    						.getOperationHistory().execute(op, monitor,
-    								WorkspaceUndoUtil.getUIInfoAdapter(shellProvider.getShell()));
-    			} catch (ExecutionException e) {
-					if (e.getCause() instanceof CoreException) {
-						recordError((CoreException)e.getCause());
-					} else {
-						IDEWorkbenchPlugin.log(e.getMessage(), e);
-						displayError(e.getMessage());
-					}
-    			}
-    		}
-    	};
+		IRunnableWithProgress op =  monitor -> {
+			MoveProjectOperation op1 = new MoveProjectOperation(project, newLocation, IDEWorkbenchMessages.MoveProjectAction_moveTitle);
+			op1.setModelProviderIds(getModelProviderIds());
+			try {
+				PlatformUI.getWorkbench().getOperationSupport()
+						.getOperationHistory().execute(op1, monitor,
+								WorkspaceUndoUtil.getUIInfoAdapter(shellProvider.getShell()));
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof CoreException) {
+					recordError((CoreException)e.getCause());
+				} else {
+					IDEWorkbenchPlugin.log(e.getMessage(), e);
+					displayError(e.getMessage());
+				}
+			}
+		};
 
 		try {
 			new ProgressMonitorJobsDialog(shellProvider.getShell()).run(true, true, op);

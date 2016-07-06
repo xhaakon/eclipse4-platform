@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,19 +20,19 @@ public interface IToc2 extends IToc{
 
 	/**
 	 * Return the criteria information of this toc.
-	 * 
+	 *
 	 * @return array of CriterionResource
 	 */
 	public ICriteria[] getCriteria();
-	
+
 	/**
 	 * Toc elements can have non standard icons which are declared using a
-	 * tocIcon element in the org.eclipse.help.toc extension point 
+	 * tocIcon element in the org.eclipse.help.toc extension point
 	 * @return NULL if the standard icons are to be used, otherwise the name of
-	 * an icon declared in an org.eclipse.help.toc extension 
+	 * an icon declared in an org.eclipse.help.toc extension
 	 */
 	public String getIcon();
-	
+
 	/**
 	 * Allows child elements to be sorted alphabetically regardless of their actual
 	 * order in the list of children.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.core.databinding.conversion;
+
+import java.util.function.Function;
 
 /**
  * A one-way converter.
@@ -50,4 +52,37 @@ public interface IConverter {
 	 * @return the converted object, of type {@link #getToType()}
 	 */
 	public Object convert(Object fromObject);
+
+	/**
+	 * Create a converter
+	 *
+	 * @param fromType
+	 *            the from type
+	 * @param toType
+	 *            the to type
+	 * @param conversion
+	 *            the conversion method
+	 * @return a new converter instance
+	 * @since 1.6
+	 */
+	public static IConverter create(Object fromType, Object toType, @SuppressWarnings("rawtypes") Function conversion) {
+		return new IConverter() {
+
+			@Override
+			public Object getFromType() {
+				return fromType;
+			}
+
+			@Override
+			public Object getToType() {
+				return toType;
+			}
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public Object convert(Object fromObject) {
+				return conversion.apply(fromObject);
+			}
+		};
+	}
 }

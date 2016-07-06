@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2009 Matthew Hall and others.
+ * Copyright (c) 2008, 2015 Matthew Hall and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -217,6 +217,10 @@ public abstract class ObservableCollectionTreeContentProvider implements
 				asyncUpdateRunnable = new Runnable() {
 					@Override
 					public void run() {
+						// If we've been disposed, exit early
+						if (knownElements == null) {
+							return;
+						}
 						asyncUpdatePending = false;
 						if (realizedElements != null) {
 							realizedElements.addAll(knownElements);

@@ -1,5 +1,5 @@
 /***************************************************************************************************
- * Copyright (c) 2006 IBM Corporation and others. All rights reserved. This program and the
+ * Copyright (c) 2006, 2016 IBM Corporation and others. All rights reserved. This program and the
  * accompanying materials are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
@@ -11,7 +11,7 @@ package org.eclipse.ui.intro.config;
 
 import java.util.Map;
 
-import org.eclipse.ui.internal.intro.impl.IntroPlugin;
+import org.eclipse.ui.internal.intro.impl.model.IntroModelRoot;
 import org.eclipse.ui.intro.IIntroSite;
 
 
@@ -33,8 +33,10 @@ public abstract class IntroConfigurer {
 	 */
 	public static final String TB_ADDITIONS = "additions"; //$NON-NLS-1$
 
-	protected Map themeProperties;
+	protected Map<String, String> themeProperties;
 	protected IIntroSite site;
+
+	private IntroModelRoot model;
 
 	/**
 	 * Provides the opportunity for the configurer to contribute to the action bars and to fetch
@@ -47,9 +49,24 @@ public abstract class IntroConfigurer {
 	 *            <code>null</code> if no theme is currently active or the active theme has no
 	 *            properties.
 	 */
-	public void init(IIntroSite site, Map themeProperties) {
+	public void init(IIntroSite site, Map<String, String> themeProperties) {
 		this.themeProperties = themeProperties;
 		this.site = site;
+	}
+
+	/**
+	 * Internal method to associate the corresponding intro configuration model. May be called
+	 * independently of {@link #init(IIntroSite, Map)}.
+	 * 
+	 * @noreference
+	 */
+	final public void bind(IntroModelRoot model) {
+		// The configurer may vary its returned results based on the theme
+		// properties
+		this.model = model;
+		if (model != null && model.getTheme() != null) {
+			themeProperties = model.getTheme().getProperties();
+		}
 	}
 
 	/**
@@ -65,8 +82,8 @@ public abstract class IntroConfigurer {
 		if (themeProperties == null)
 			return null;
 		String value = (String)themeProperties.get(name);
-		if (value!=null)
-			value = IntroPlugin.getDefault().getIntroModelRoot().resolveVariables(value);
+		if (value != null && model != null)
+			value = model.resolveVariables(value);
 		return value;
 	}
 
@@ -135,4 +152,18 @@ public abstract class IntroConfigurer {
 	public String getMixinStyle(String pageId, String extensionId) {
 		return null;
 	}
+
+	/**
+	 * Return true if {@code pageId} is the configured start page.
+	 * 
+	 * @param pageId
+	 *            the page identifier
+	 * @since 3.5
+	 */
+	protected boolean isStartPage(String pageId) {
+		return pageId.equals(model.getStartPageId());
+
+	}
+
+
 }

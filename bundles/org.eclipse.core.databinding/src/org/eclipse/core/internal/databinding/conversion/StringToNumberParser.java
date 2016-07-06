@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2010 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -117,12 +117,12 @@ public class StringToNumberParser {
 		if (errorIndex < value.length()) {
 			return BindingMessages.formatString(
 					BindingMessages.VALIDATE_NUMBER_PARSE_ERROR, new Object[] {
-							value, new Integer(errorIndex + 1),
+							value, Integer.valueOf(errorIndex + 1),
 							new Character(value.charAt(errorIndex)) });
 		}
 		return BindingMessages.formatString(
 				BindingMessages.VALIDATE_NUMBER_PARSE_ERROR_NO_CHARACTER,
-				new Object[] { value, new Integer(errorIndex + 1) });
+				new Object[] { value, Integer.valueOf(errorIndex + 1) });
 	}
 
 	/**

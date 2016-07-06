@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,14 +18,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class IndexDocumentReader extends DocumentReader {
-	
+
+	@Override
 	protected void prepareDocument(Document document) {
 		prune(document.getDocumentElement());
 	}
 
 	private void prune(Node element) {
 		NodeList nodes = element.getChildNodes();
-		Node node = nodes.item(0); 
+		Node node = nodes.item(0);
 		while (node != null) {
 			short nodeType = node.getNodeType();
 			if (nodeType == Node.TEXT_NODE || nodeType == Node.COMMENT_NODE) {

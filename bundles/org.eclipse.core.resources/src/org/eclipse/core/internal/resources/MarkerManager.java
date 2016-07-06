@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -45,10 +46,10 @@ public class MarkerManager implements IManager {
 		this.workspace = workspace;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * Adds the given markers to the given resource.
-	 * 
-	 * @see IResource#createMarker(String) 
+	 *
+	 * @see IResource#createMarker(String)
 	 */
 	public void add(IResource resource, MarkerInfo newMarker) throws CoreException {
 		Resource target = (Resource) resource;
@@ -73,7 +74,7 @@ public class MarkerManager implements IManager {
 
 	/**
 	 * Adds the new markers to the given set of markers.  If added, the markers
-	 * are associated with the specified resource.IMarkerDeltas for Added markers 
+	 * are associated with the specified resource.IMarkerDeltas for Added markers
 	 * are generated.
 	 */
 	private void basicAdd(IResource resource, MarkerSet markers, MarkerInfo newMarker) throws CoreException {
@@ -96,7 +97,7 @@ public class MarkerManager implements IManager {
 		int size = markers.size();
 		if (size <= 0)
 			return NO_MARKER_INFO;
-		List<MarkerInfo> result = new ArrayList<MarkerInfo>(size);
+		List<MarkerInfo> result = new ArrayList<>(size);
 		IMarkerSetElement[] elements = markers.elements();
 		for (int i = 0; i < elements.length; i++) {
 			MarkerInfo marker = (MarkerInfo) elements[i];
@@ -183,7 +184,7 @@ public class MarkerManager implements IManager {
 			info = workspace.getResourceInfo(path, false, true);
 			//Concurrency: copy the marker set on modify
 			markers = info.getMarkers(true);
-			// remove all the matching markers and also the whole 
+			// remove all the matching markers and also the whole
 			// set if there are no remaining markers
 			if (markers.size() == matching.length) {
 				info.setMarkers(null);
@@ -263,7 +264,7 @@ public class MarkerManager implements IManager {
 	 * for all types (i.e., <code>null</code> is a wildcard.
 	 */
 	public IMarker[] findMarkers(IResource target, final String type, final boolean includeSubtypes, int depth) {
-		ArrayList<IMarker> result = new ArrayList<IMarker>();
+		ArrayList<IMarker> result = new ArrayList<>();
 		doFindMarkers(target, result, type, includeSubtypes, depth);
 		if (result.size() == 0)
 			return NO_MARKERS;
@@ -271,7 +272,7 @@ public class MarkerManager implements IManager {
 	}
 
 	/**
-	 * Fills the provided list with all markers of the specified type on the given target, 
+	 * Fills the provided list with all markers of the specified type on the given target,
 	 * with option to search the target's children.
 	 * Passing <code>null</code> for the type specifies a match
 	 * for all types (i.e., <code>null</code> is a wildcard.
@@ -285,7 +286,7 @@ public class MarkerManager implements IManager {
 	}
 
 	/**
-	 * Finds the max severity across all problem markers on the given target, 
+	 * Finds the max severity across all problem markers on the given target,
 	 * with option to search the target's children.
 	 */
 	public int findMaxProblemSeverity(IResource target, String type, boolean includeSubtypes, int depth) {
@@ -475,7 +476,7 @@ public class MarkerManager implements IManager {
 	}
 
 	/**
-	 * Removes the specified marker 
+	 * Removes the specified marker
 	 */
 	public void removeMarker(IResource resource, long id) {
 		MarkerInfo markerInfo = findMarkerInfo(resource, id);
@@ -578,9 +579,6 @@ public class MarkerManager implements IManager {
 		writer.save(info, requestor, output, list);
 	}
 
-	/* (non-Javadoc)
-	 * @see IManager#shutdown(IProgressMonitor)
-	 */
 	@Override
 	public void shutdown(IProgressMonitor monitor) {
 		// do nothing
@@ -590,9 +588,6 @@ public class MarkerManager implements IManager {
 		writer.snap(info, requestor, output);
 	}
 
-	/* (non-Javadoc)
-	 * @see IManager#startup(IProgressMonitor)
-	 */
 	@Override
 	public void startup(IProgressMonitor monitor) {
 		// do nothing

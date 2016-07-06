@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Steven Spungin <steven@spungin.tv> - Bug 391061
+ *     Lars.Vogel <Lars.Vogel@vogella.com> - Bug 472654
+ *     Alex Blewitt <alex.blewitt@gmail.com> - Bug 476364
  *******************************************************************************/
 package org.eclipse.e4.core.di.internal.extensions;
 
@@ -30,9 +32,20 @@ import org.eclipse.e4.core.di.suppliers.IRequestor;
 import org.osgi.framework.FrameworkUtil;
 
 /**
- * Note: we do not support byte arrays in preferences at this time.
+ * Note: we do not support byte arrays in preferences at this time. This class
+ * is instantiated and wired by declarative services, in OSGI-INF/preference.xml
  */
 public class PreferencesObjectSupplier extends ExtendedObjectSupplier {
+
+	private IPreferencesService preferencesService;
+
+	public IPreferencesService getPreferencesService() {
+		return preferencesService;
+	}
+
+	public void setPreferencesService(IPreferencesService preferenceService) {
+		this.preferencesService = preferenceService;
+	}
 
 	static private class PrefInjectionListener implements IPreferenceChangeListener {
 
@@ -46,6 +59,7 @@ public class PreferencesObjectSupplier extends ExtendedObjectSupplier {
 			this.requestor = requestor;
 		}
 
+		@Override
 		public void preferenceChange(final PreferenceChangeEvent event) {
 			if (!requestor.isValid()) {
 				node.removePreferenceChangeListener(this);
@@ -70,11 +84,7 @@ public class PreferencesObjectSupplier extends ExtendedObjectSupplier {
 	}
 
 	// Hash (nodePath -> Hash (key -> list))
-	private Map<String, HashMap<String, List<PrefInjectionListener>>> listenerCache = new HashMap<String, HashMap<String, List<PrefInjectionListener>>>();
-
-	public PreferencesObjectSupplier() {
-		DIEActivator.getDefault().registerPreferencesSupplier(this);
-	}
+	private Map<String, HashMap<String, List<PrefInjectionListener>>> listenerCache = new HashMap<>();
 
 	@Override
 	public Object get(IObjectDescriptor descriptor, IRequestor requestor, boolean track, boolean group) {
@@ -155,10 +165,6 @@ public class PreferencesObjectSupplier extends ExtendedObjectSupplier {
 		return nodePath;
 	}
 
-	private IPreferencesService getPreferencesService() {
-		return DIEActivator.getDefault().getPreferencesService();
-	}
-
 	private void addListener(String nodePath, String key, final IRequestor requestor) {
 		if (requestor == null)
 			return;
@@ -181,12 +187,12 @@ public class PreferencesObjectSupplier extends ExtendedObjectSupplier {
 		synchronized (listenerCache) {
 			HashMap<String, List<PrefInjectionListener>> map = listenerCache.get(nodePath);
 			if (map == null) {
-				map = new HashMap<String, List<PrefInjectionListener>>();
+				map = new HashMap<>();
 				listenerCache.put(nodePath, map);
 			}
 			List<PrefInjectionListener> listeningRequestors = map.get(key);
 			if (listeningRequestors == null) {
-				listeningRequestors = new ArrayList<PrefInjectionListener>();
+				listeningRequestors = new ArrayList<>();
 				map.put(key, listeningRequestors);
 			}
 			listeningRequestors.add(listener);

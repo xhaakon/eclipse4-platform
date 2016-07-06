@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@
  *     		[Workbench] Project copy doesn't validate location and uses invalid location as default
  *     Oakland Software Incorporated (Francis Upton) <francisu@ieee.org>
  *		    Bug 224997 [Workbench] Impossible to copy project
+ *     Mickael Istria (Red Hat Inc.) - Bug 486901
  *******************************************************************************/
 package org.eclipse.ui.dialogs;
 
@@ -30,7 +31,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -177,12 +177,9 @@ public class ProjectLocationSelectionDialog extends SelectionStatusDialog {
 	 */
 	private void createNameListener() {
 
-		Listener listener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				setLocationForSelection();
-				applyValidationResult(checkValid(), false);
-			}
+		Listener listener = event -> {
+			setLocationForSelection();
+			applyValidationResult(checkValid(), false);
 		};
 
 		this.projectNameField.addListener(SWT.Modify, listener);
@@ -238,9 +235,7 @@ public class ProjectLocationSelectionDialog extends SelectionStatusDialog {
 		while (true) {
 			String nameSegment;
 			if (counter > 1) {
-				nameSegment = NLS.bind(
-						IDEWorkbenchMessages.CopyProjectAction_copyNameTwoArgs,
-						new Integer(counter), projectName);
+				nameSegment = NLS.bind(IDEWorkbenchMessages.CopyProjectAction_copyNameTwoArgs, counter, projectName);
 			} else {
 				nameSegment = NLS.bind(
 						IDEWorkbenchMessages.CopyProjectAction_copyNameOneArg,
@@ -276,12 +271,9 @@ public class ProjectLocationSelectionDialog extends SelectionStatusDialog {
 	 * @return IErrorMessageReporter
 	 */
 	private IErrorMessageReporter getErrorReporter() {
-		return new IErrorMessageReporter() {
-			@Override
-			public void reportError(String errorMessage, boolean infoOnly) {
-				setMessage(errorMessage);
-				applyValidationResult(errorMessage, infoOnly);
-			}
+		return (errorMessage, infoOnly) -> {
+			setMessage(errorMessage);
+			applyValidationResult(errorMessage, infoOnly);
 		};
 	}
 }

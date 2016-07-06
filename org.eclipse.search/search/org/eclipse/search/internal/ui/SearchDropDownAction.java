@@ -24,6 +24,7 @@ import org.eclipse.jface.action.IMenuCreator;
 /**
  * @deprecated old search
  */
+@Deprecated
 class SearchDropDownAction extends Action implements IMenuCreator {
 
 
@@ -38,6 +39,7 @@ class SearchDropDownAction extends Action implements IMenuCreator {
 		setMenuCreator(this);
 	}
 
+	@Override
 	public void dispose() {
 		if (fMenu != null)  {
 			fMenu.dispose();
@@ -45,21 +47,23 @@ class SearchDropDownAction extends Action implements IMenuCreator {
 		}
 	}
 
+	@Override
 	public Menu getMenu(Menu parent) {
 		return null;
 	}
 
+	@Override
 	public Menu getMenu(Control parent) {
 		if (fMenu != null)
 			fMenu.dispose();
 
 		fMenu= new Menu(parent);
 		boolean checkedOne= false;
-		Iterator iter= SearchManager.getDefault().getPreviousSearches().iterator();
+		Iterator<Search> iter= SearchManager.getDefault().getPreviousSearches().iterator();
 		Search selected= SearchManager.getDefault().getCurrentSearch();
 		int i= 0;
 		while (iter.hasNext() && i++ < RESULTS_IN_DROP_DOWN) {
-			Search search= (Search)iter.next();
+			Search search= iter.next();
 			ShowSearchAction action= new ShowSearchAction(search);
 			action.setChecked(search.equals(selected));
 			if (search.equals(selected))
@@ -81,6 +85,7 @@ class SearchDropDownAction extends Action implements IMenuCreator {
 		item.fill(parent, -1);
 	}
 
+	@Override
 	public void run() {
 			new ShowSearchesAction().run(true);
 	}

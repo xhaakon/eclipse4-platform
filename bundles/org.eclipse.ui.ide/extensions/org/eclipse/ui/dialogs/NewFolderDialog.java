@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ package org.eclipse.ui.dialogs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -27,10 +28,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -45,9 +46,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
@@ -171,12 +170,9 @@ public class NewFolderDialog extends SelectionStatusDialog {
 			});
 		}
 		linkedResourceGroup = new CreateLinkedResourceGroup(IResource.FOLDER,
-				new Listener() {
-					@Override
-					public void handleEvent(Event e) {
-						validateLinkedResource();
-						firstLinkCheck = false;
-					}
+				e -> {
+					validateLinkedResource();
+					firstLinkCheck = false;
 				}, new CreateLinkedResourceGroup.IStringValue() {
 					@Override
 					public void setValue(String string) {
@@ -231,12 +227,7 @@ public class NewFolderDialog extends SelectionStatusDialog {
 		data.widthHint = IDialogConstants.ENTRY_FIELD_WIDTH;
 		folderNameField.setLayoutData(data);
 		folderNameField.setFont(font);
-		folderNameField.addListener(SWT.Modify, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validateLinkedResource();
-			}
-		});
+		folderNameField.addListener(SWT.Modify, event -> validateLinkedResource());
 	}
 
 	/**
@@ -269,25 +260,11 @@ public class NewFolderDialog extends SelectionStatusDialog {
 		WorkspaceModifyOperation operation = new WorkspaceModifyOperation() {
 			@Override
 			public void execute(IProgressMonitor monitor) throws CoreException {
-				try {
-					monitor
-							.beginTask(
-									IDEWorkbenchMessages.NewFolderDialog_progress,
-									2000);
-					if (monitor.isCanceled()) {
-						throw new OperationCanceledException();
-					}
-					if (linkTarget == null) {
-						folderHandle.create(false, true, monitor);
-					} else {
-						folderHandle.createLink(linkTarget,
-								IResource.ALLOW_MISSING_LOCAL, monitor);
-					}
-					if (monitor.isCanceled()) {
-						throw new OperationCanceledException();
-					}
-				} finally {
-					monitor.done();
+				SubMonitor subMonitor = SubMonitor.convert(monitor, IDEWorkbenchMessages.NewFolderDialog_progress, 1);
+				if (linkTarget == null) {
+					folderHandle.create(false, true, subMonitor.split(1));
+				} else {
+					folderHandle.createLink(linkTarget, IResource.ALLOW_MISSING_LOCAL, subMonitor.split(1));
 				}
 			}
 		};

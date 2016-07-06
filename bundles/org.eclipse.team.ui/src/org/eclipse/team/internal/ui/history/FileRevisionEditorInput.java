@@ -31,53 +31,61 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 
 	private final Object fileRevision;
 	private final IStorage storage;
-	
+
 	/**
 	 * Creates FileRevisionEditorInput on the given revision.
 	 * @param revision the file revision
-	 * @param monitor 
+	 * @param monitor
 	 * @return a file revision editor input
-	 * @throws CoreException 
+	 * @throws CoreException
 	 */
 	public static FileRevisionEditorInput createEditorInputFor(IFileRevision revision, IProgressMonitor monitor) throws CoreException {
 		IStorage storage = revision.getStorage(monitor);
 		return new FileRevisionEditorInput(revision, storage);
 	}
-	
+
 	private static IStorage wrapStorage(final IStorage storage,
 			final String charset) {
 		if (charset == null)
 			return storage;
 		if (storage instanceof IFileState) {
 			return new IFileState() {
+				@Override
 				public Object getAdapter(Class adapter) {
 					return storage.getAdapter(adapter);
 				}
 
+				@Override
 				public boolean isReadOnly() {
 					return storage.isReadOnly();
 				}
 
+				@Override
 				public String getName() {
 					return storage.getName();
 				}
 
+				@Override
 				public IPath getFullPath() {
 					return storage.getFullPath();
 				}
 
+				@Override
 				public InputStream getContents() throws CoreException {
 					return storage.getContents();
 				}
 
+				@Override
 				public String getCharset() throws CoreException {
 					return charset;
 				}
 
+				@Override
 				public boolean exists() {
 					return ((IFileState) storage).exists();
 				}
 
+				@Override
 				public long getModificationTime() {
 					return ((IFileState) storage).getModificationTime();
 				}
@@ -85,32 +93,38 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 		}
 
 		return new IEncodedStorage() {
+			@Override
 			public Object getAdapter(Class adapter) {
 				return storage.getAdapter(adapter);
 			}
 
+			@Override
 			public boolean isReadOnly() {
 				return storage.isReadOnly();
 			}
 
+			@Override
 			public String getName() {
 				return storage.getName();
 			}
 
+			@Override
 			public IPath getFullPath() {
 				return storage.getFullPath();
 			}
 
+			@Override
 			public InputStream getContents() throws CoreException {
 				return storage.getContents();
 			}
 
+			@Override
 			public String getCharset() throws CoreException {
 				return charset;
 			}
 		};
 	}
-	
+
 	/**
 	 * Creates FileRevisionEditorInput on the given revision.
 	 * @param revision the file revision
@@ -122,27 +136,31 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 		this.fileRevision = revision;
 		this.storage = storage;
 	}
-	
+
 	public FileRevisionEditorInput(IFileState state) {
 		this(state, state);
 	}
-	
+
 	public FileRevisionEditorInput(Object revision, IStorage storage, String charset) {
 		this(revision, wrapStorage(storage, charset));
 	}
 
+	@Override
 	public IStorage getStorage() throws CoreException {
 		return storage;
 	}
 
+	@Override
 	public boolean exists() {
 		return true;
 	}
 
+	@Override
 	public ImageDescriptor getImageDescriptor() {
 		return null;
 	}
 
+	@Override
 	public String getName() {
 		IFileRevision rev = (IFileRevision)getAdapter(IFileRevision.class);
 		if (rev != null)
@@ -151,18 +169,21 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 		if (state != null)
 			return state.getName() +  " " + DateFormat.getInstance().format(new Date(state.getModificationTime())) ; //$NON-NLS-1$
 		return storage.getName();
-		
+
 	}
 
+	@Override
 	public IPersistableElement getPersistable() {
 		//can't persist
 		return null;
 	}
 
+	@Override
 	public String getToolTipText() {
 		return storage.getFullPath().toString();
 	}
 
+	@Override
 	public Object getAdapter(Class adapter) {
 		if (adapter == IWorkbenchAdapter.class)
 			return this;
@@ -174,14 +195,17 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 		return Utils.getAdapter(fileRevision, adapter);
 	}
 
+	@Override
 	public Object[] getChildren(Object o) {
 		return new Object[0];
 	}
 
+	@Override
 	public ImageDescriptor getImageDescriptor(Object object) {
 		return null;
 	}
 
+	@Override
 	public String getLabel(Object o) {
 		IFileRevision rev = (IFileRevision)getAdapter(IFileRevision.class);
 		if (rev != null)
@@ -189,10 +213,12 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 		return storage.getName();
 	}
 
+	@Override
 	public Object getParent(Object o) {
 		return null;
 	}
-	
+
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof FileRevisionEditorInput) {
 			FileRevisionEditorInput other = (FileRevisionEditorInput) obj;
@@ -200,7 +226,8 @@ public class FileRevisionEditorInput extends PlatformObject implements IWorkbenc
 		}
 		return false;
 	}
-	
+
+	@Override
 	public int hashCode() {
 		return fileRevision.hashCode();
 	}

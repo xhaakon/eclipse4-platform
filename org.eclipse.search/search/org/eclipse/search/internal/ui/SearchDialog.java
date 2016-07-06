@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -99,6 +99,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 
 
 	private class TabFolderLayout extends Layout {
+		@Override
 		protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache) {
 			if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
 				return new Point(wHint, hHint);
@@ -122,6 +123,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 				y= hHint;
 			return new Point(x, y);
 		}
+		@Override
 		protected void layout(Composite composite, boolean flushCache) {
 			Rectangle rect= composite.getClientArea();
 
@@ -141,13 +143,13 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	private String fInitialPageId;
 	private int fCurrentIndex;
 
-	private List fDescriptors;
+	private List<SearchPageDescriptor> fDescriptors;
 	private Point fMinSize;
 	private ScopePart[] fScopeParts;
 	private boolean fLastEnableState;
 	private Button fCustomizeButton;
 	private Button fReplaceButton;
-	private ListenerList fPageChangeListeners;
+	private ListenerList<IPageChangedListener> fPageChangeListeners;
 
 	private final IWorkbenchWindow fWorkbenchWindow;
 	private final ISelection fCurrentSelection;
@@ -174,9 +176,9 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	}
 
 	public static String evaluateEnclosingProject(IAdaptable adaptable) {
-		IProject project= (IProject) adaptable.getAdapter(IProject.class);
+		IProject project= adaptable.getAdapter(IProject.class);
 		if (project == null) {
-			IResource resource= (IResource) adaptable.getAdapter(IResource.class);
+			IResource resource= adaptable.getAdapter(IResource.class);
 			if (resource != null) {
 				project= resource.getProject();
 			}
@@ -195,8 +197,8 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 				return new String[] { name };
 			}
 		} else if (selection instanceof IStructuredSelection) {
-			HashSet res= new HashSet();
-			for (Iterator iter= ((IStructuredSelection) selection).iterator(); iter.hasNext();) {
+			HashSet<String> res= new HashSet<>();
+			for (Iterator<?> iter= ((IStructuredSelection) selection).iterator(); iter.hasNext();) {
 				Object curr= iter.next();
 				if (curr instanceof IWorkingSet) {
 					IWorkingSet workingSet= (IWorkingSet) curr;
@@ -225,19 +227,18 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 				}
 			}
 			if (!res.isEmpty()) {
-				return (String[]) res.toArray(new String[res.size()]);
+				return res.toArray(new String[res.size()]);
 			}
 		}
 		return new String[0];
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#getDialogBoundsSettings()
-	 */
+	@Override
 	protected IDialogSettings getDialogBoundsSettings() {
 		return SearchPlugin.getDefault().getDialogSettingsSection("DialogBounds_SearchDialog"); //$NON-NLS-1$
 	}
 
+	@Override
 	protected Point getInitialSize() {
 		Point requiredSize= getShell().computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
 		Point lastSize= super.getInitialSize();
@@ -247,9 +248,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		return lastSize;
 	}
 
-	/* (non-Javadoc)
-	 * Method declared in Window.
-	 */
+	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
 		shell.setText(SearchMessages.SearchDialog_title);
@@ -260,6 +259,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		return fWorkbenchWindow;
 	}
 
+	@Override
 	public ISelection getSelection() {
 		return fCurrentSelection;
 	}
@@ -288,6 +288,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	 * @deprecated old ('classic') search is deprecated
 	 * @since 3.7
 	 */
+	@Deprecated
 	private static boolean isOldSearchView(IWorkbenchPart part) {
 		return org.eclipse.search.ui.SearchUI.SEARCH_RESULT_VIEW_ID.equals(part.getSite().getId());
 	}
@@ -297,6 +298,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Overrides method from Window
 	 */
+	@Override
 	public void create() {
 		super.create();
 		if (fCurrentPage != null) {
@@ -305,16 +307,18 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	}
 
 	private void handleCustomizePressed() {
-		List input= SearchPlugin.getDefault().getSearchPageDescriptors();
+		List<SearchPageDescriptor> input= SearchPlugin.getDefault().getSearchPageDescriptors();
 		input= filterByActivities(input);
 
-		final ArrayList createdImages= new ArrayList(input.size());
+		final ArrayList<Image> createdImages= new ArrayList<>(input.size());
 		ILabelProvider labelProvider= new LabelProvider() {
+			@Override
 			public String getText(Object element) {
 				if (element instanceof SearchPageDescriptor)
 					return LegacyActionTools.removeMnemonics(((SearchPageDescriptor)element).getLabel());
 				return null;
 			}
+			@Override
 			public Image getImage(Object element) {
 				if (element instanceof SearchPageDescriptor) {
 					ImageDescriptor imageDesc= ((SearchPageDescriptor)element).getImage();
@@ -334,16 +338,19 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		ListSelectionDialog dialog= new ListSelectionDialog(getShell(), input, new ArrayContentProvider(), labelProvider, message) {
 			Button fLastUsedPageButton;
 			
+			@Override
 			public void create() {
 				super.create();
 				final CheckboxTableViewer viewer= getViewer();
 				final Button okButton= this.getOkButton();
 				viewer.addCheckStateListener(new ICheckStateListener() {
+					@Override
 					public void checkStateChanged(CheckStateChangedEvent event) {
 						okButton.setEnabled(viewer.getCheckedElements().length > 0);
 					}
 				});
 				SelectionListener listener = new SelectionAdapter() {
+					@Override
 					public void widgetSelected(SelectionEvent e) {
 						okButton.setEnabled(viewer.getCheckedElements().length > 0);
 					}
@@ -352,6 +359,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 				this.getButton(IDialogConstants.DESELECT_ALL_ID).addSelectionListener(listener);
 			}
 
+			@Override
 			protected Control createDialogArea(Composite parent) {
 				Composite control= (Composite)super.createDialogArea(parent);
 				fLastUsedPageButton= new Button(control, SWT.CHECK);
@@ -360,6 +368,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 				return control;
 			}
 			
+			@Override
 			protected void okPressed() {
 				fDialogSettings.put(STORE_IS_OPEN_PREVIOUS_PAGE, fLastUsedPageButton.getSelection());
 				super.okPressed();
@@ -374,6 +383,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 			if (display != null && !display.isDisposed()) {
 				display.asyncExec(
 						new Runnable() {
+							@Override
 							public void run() {
 								new OpenSearchDialogAction().run();
 							}
@@ -383,10 +393,10 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		destroyImages(createdImages);
 	}
 
-	private List filterByActivities(List input) {
-		ArrayList filteredList= new ArrayList(input.size());
-		for (Iterator descriptors= input.iterator(); descriptors.hasNext();) {
-			SearchPageDescriptor descriptor= (SearchPageDescriptor) descriptors.next();
+	private List<SearchPageDescriptor> filterByActivities(List<SearchPageDescriptor> input) {
+		ArrayList<SearchPageDescriptor> filteredList= new ArrayList<>(input.size());
+		for (Iterator<SearchPageDescriptor> descriptors= input.iterator(); descriptors.hasNext();) {
+			SearchPageDescriptor descriptor= descriptors.next();
 			if (!WorkbenchActivityHelper.filterItem(descriptor))
 			    filteredList.add(descriptor);
 
@@ -394,15 +404,16 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		return filteredList;
 	}
 
-	private void destroyImages(List images) {
-		Iterator iter= images.iterator();
+	private void destroyImages(List<Image> images) {
+		Iterator<Image> iter= images.iterator();
 		while (iter.hasNext()) {
-			Image image= (Image)iter.next();
+			Image image= iter.next();
 			if (image != null && !image.isDisposed())
 				image.dispose();
 		}
 	}
 
+	@Override
 	protected Control createPageArea(Composite parent) {
 		int numPages= fDescriptors.size();
 		fScopeParts= new ScopePart[numPages];
@@ -438,6 +449,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 			item.setData("descriptor", descriptor); //$NON-NLS-1$
 			item.setText(descriptor.getLabel());
 			item.addDisposeListener(new DisposeListener() {
+				@Override
 				public void widgetDisposed(DisposeEvent e) {
 					item.setData("descriptor", null); //$NON-NLS-1$
 					if (item.getImage() != null)
@@ -458,6 +470,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		}
 
 		folder.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				turnToPage(event);
 			}
@@ -468,6 +481,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		return composite;
 	}
 
+	@Override
 	protected Control createButtonBar(Composite parent) {
 		Composite composite= new Composite(parent, SWT.NONE);
 		GridLayout layout= new GridLayout();
@@ -499,6 +513,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		return composite;
 	}
 
+	@Override
 	protected boolean performAction(int actionID) {
 		switch (actionID) {
 			case CUSTOMIZE_ID:
@@ -529,7 +544,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	}
 
 	private SearchPageDescriptor getDescriptorAt(int index) {
-		return (SearchPageDescriptor) fDescriptors.get(index);
+		return fDescriptors.get(index);
 	}
 
 	private Point getMinSize() {
@@ -601,7 +616,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		int level= ISearchPageScoreComputer.LOWEST;
 		int size= fDescriptors.size();
 		for (int i= 0; i < size; i++) {
-			SearchPageDescriptor descriptor= (SearchPageDescriptor) fDescriptors.get(i);
+			SearchPageDescriptor descriptor= fDescriptors.get(i);
 			if (fInitialPageId != null && fInitialPageId.equals(descriptor.getId()))
 				return i;
 
@@ -617,6 +632,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Implements method from ISearchPageContainer
 	 */
+	@Override
 	public IRunnableContext getRunnableContext() {
 		return this;
 	}
@@ -624,6 +640,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Implements method from ISearchPageContainer
 	 */
+	@Override
 	public int getSelectedScope() {
 		if (fScopeParts[fCurrentIndex] == null)
 			// safe code - should not happen
@@ -635,6 +652,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Implements method from ISearchPageContainer
 	 */
+	@Override
 	public IWorkingSet[] getSelectedWorkingSets() {
 		if (fScopeParts[fCurrentIndex] == null)
 			// safe code - should not happen
@@ -648,6 +666,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	}
 
 
+	@Override
 	public String[] getSelectedProjectNames() {
 		if (getSelectedScope() == SELECTED_PROJECTS_SCOPE) {
 			return getEnclosingProjectNames();
@@ -658,6 +677,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Implements method from ISearchPageContainer
 	 */
+	@Override
 	public void setSelectedScope(int scope) {
 		if (fScopeParts[fCurrentIndex] != null)
 			fScopeParts[fCurrentIndex].setSelectedScope(scope);
@@ -667,15 +687,13 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	 * @see org.eclipse.search.ui.ISearchPageContainer#allowsActiveEditorAsScope(boolean)
 	 * @since 3.7
 	 */
+	@Override
 	public void setActiveEditorCanProvideScopeSelection(boolean state) {
 		if (fScopeParts[fCurrentIndex] != null)
 			fScopeParts[fCurrentIndex].setActiveEditorCanProvideScopeSelection(state);
 	}
 
-	/*
-	 * @see org.eclipse.search.ui.ISearchPageContainer#getActiveEditorInput()
-	 * @since 3.7
-	 */
+	@Override
 	public IEditorInput getActiveEditorInput() {
 		IEditorPart editor= getActiveEditor();
 		if (editor == null)
@@ -696,6 +714,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Implements method from ISearchPageContainer
 	 */
+	@Override
 	public boolean hasValidScope() {
 		return getSelectedScope() != WORKING_SET_SCOPE || getSelectedWorkingSets() != null;
 	}
@@ -703,6 +722,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Implements method from ISearchPageContainer
 	 */
+	@Override
 	public void setSelectedWorkingSets(IWorkingSet[] workingSets) {
 		if (fScopeParts[fCurrentIndex] != null)
 			fScopeParts[fCurrentIndex].setSelectedWorkingSets(workingSets);
@@ -711,6 +731,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 	/*
 	 * Overrides method from ExtendedDialogWindow
 	 */
+	@Override
 	public void setPerformActionEnabled(boolean state) {
 		fLastEnableState= state;
 		super.setPerformActionEnabled(state && hasValidScope());
@@ -738,8 +759,10 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		applyDialogFont(pageWrapper);
 
 		BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
+			@Override
 			public void run() {
 				SafeRunner.run(new ISafeRunnable() {
+					@Override
 					public void run() throws Exception {
 						// create page and control
 						ISearchPage page= descriptor.createObject(SearchDialog.this);
@@ -747,6 +770,7 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 							page.createControl(pageWrapper);
 						}
 					}
+					@Override
 					public void handleException(Throwable ex) {
 						if (ex instanceof CoreException) {
 							ExceptionHandler.handle((CoreException) ex, getShell(), SearchMessages.Search_Error_createSearchPage_title, Messages.format(SearchMessages.Search_Error_createSearchPage_message, descriptor.getLabel()));
@@ -807,37 +831,29 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		return currentSize.x < newSize.x || currentSize.y < newSize.y;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#close()
-	 */
+	@Override
 	public boolean close() {
 		for (int i= 0; i < fDescriptors.size(); i++) {
-			SearchPageDescriptor desc= (SearchPageDescriptor) fDescriptors.get(i);
+			SearchPageDescriptor desc= fDescriptors.get(i);
 			desc.dispose();
 		}
 		return super.close();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.IPageChangeProvider#getSelectedPage()
-	 */
+	@Override
 	public Object getSelectedPage() {
 		return fCurrentPage;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.IPageChangeProvider#addPageChangedListener(org.eclipse.jface.dialogs.IPageChangedListener)
-	 */
+	@Override
 	public void addPageChangedListener(IPageChangedListener listener) {
 		if (fPageChangeListeners == null) {
-			fPageChangeListeners= new ListenerList();
+			fPageChangeListeners= new ListenerList<>();
 		}
 		fPageChangeListeners.add(listener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.IPageChangeProvider#removePageChangedListener(org.eclipse.jface.dialogs.IPageChangedListener)
-	 */
+	@Override
 	public void removePageChangedListener(IPageChangedListener listener) {
 		fPageChangeListeners.remove(listener);
 	}
@@ -846,10 +862,9 @@ public class SearchDialog extends ExtendedDialogWindow implements ISearchPageCon
 		if (fPageChangeListeners != null && !fPageChangeListeners.isEmpty()) {
 			// Fires the page change event
 			final PageChangedEvent event= new PageChangedEvent(this, getSelectedPage());
-			Object[] listeners= fPageChangeListeners.getListeners();
-			for (int i= 0; i < listeners.length; ++i) {
-				final IPageChangedListener l= (IPageChangedListener) listeners[i];
+			for (IPageChangedListener l : fPageChangeListeners) {
 				SafeRunner.run(new SafeRunnable() {
+					@Override
 					public void run() {
 						l.pageChanged(event);
 					}

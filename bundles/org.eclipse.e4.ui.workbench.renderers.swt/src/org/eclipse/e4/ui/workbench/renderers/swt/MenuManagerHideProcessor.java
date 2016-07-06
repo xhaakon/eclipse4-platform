@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Marco Descher <marco@descher.at> - Bug 403081, 403083
  *     Bruce Skingle <Bruce.Skingle@immutify.com> - Bug 442570
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 472654
  *******************************************************************************/
 package org.eclipse.e4.ui.workbench.renderers.swt;
 
@@ -72,7 +73,7 @@ public class MenuManagerHideProcessor implements IMenuListener2 {
 	private void processDynamicElements(final MenuManager menuManager, Menu menu, final MMenu menuModel) {
 		// We need to make a copy of the dynamic items which need to be removed
 		// because the actual remove happens asynchronously.
-		final Map<MDynamicMenuContribution, ArrayList<MMenuElement>> toBeHidden = new HashMap<MDynamicMenuContribution, ArrayList<MMenuElement>>();
+		final Map<MDynamicMenuContribution, ArrayList<MMenuElement>> toBeHidden = new HashMap<>();
 
 		for (MMenuElement currentMenuElement : menuModel.getChildren()) {
 			if (currentMenuElement instanceof MDynamicMenuContribution) {
@@ -115,8 +116,6 @@ public class MenuManagerHideProcessor implements IMenuListener2 {
 								item.setVisible(false);
 							}
 						}
-						currentMenuElement.getTransientData()
-								.remove(MenuManagerShowProcessor.DYNAMIC_ELEMENT_STORAGE_KEY);
 					}
 				}
 			});

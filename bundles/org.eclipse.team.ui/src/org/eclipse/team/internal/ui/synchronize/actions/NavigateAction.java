@@ -28,7 +28,7 @@ import org.eclipse.ui.actions.ActionFactory;
 public class NavigateAction extends Action {
 	private final boolean next;
 	private ISynchronizePageConfiguration configuration;
-	
+
 	public NavigateAction(ISynchronizePageConfiguration configuration, boolean next) {
 		this.configuration = configuration;
 		this.next = next;
@@ -45,11 +45,12 @@ public class NavigateAction extends Action {
 				bars.setGlobalActionHandler(ActionFactory.PREVIOUS.getId(), this);
 		}
 	}
-	
+
 	/**
 	 * Two types of navigation is supported: navigation that is specific to coordinating between a view
 	 * and a compare editor and navigation simply using the configured navigator.
  	 */
+	@Override
 	public void run() {
 		ICompareNavigator nav = (ICompareNavigator)configuration.getProperty(SynchronizePageConfiguration.P_NAVIGATOR);
 		nav.selectChange(next);

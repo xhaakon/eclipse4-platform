@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
  *     Tom Hochstein (Freescale) - Bug 409996 - 'Restore Defaults' does not work properly on Project Properties > Resource tab
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -27,17 +28,17 @@ import org.osgi.service.prefs.Preferences;
 
 /**
  * Manages user-defined encodings as preferences in the project content area.
- * 
+ *
  * @since 3.0
  */
 public class CharsetManager implements IManager {
 	/**
 	 * This job implementation is used to allow the resource change listener
-	 * to schedule operations that need to modify the workspace. 
+	 * to schedule operations that need to modify the workspace.
 	 */
 	private class CharsetManagerJob extends Job {
 		private static final int CHARSET_UPDATE_DELAY = 500;
-		private List<Map.Entry<IProject, Boolean>> asyncChanges = new ArrayList<Map.Entry<IProject, Boolean>>();
+		private List<Map.Entry<IProject, Boolean>> asyncChanges = new ArrayList<>();
 
 		public CharsetManagerJob() {
 			super(Messages.resources_charsetUpdating);
@@ -61,9 +62,6 @@ public class CharsetManager implements IManager {
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.internal.jobs.InternalJob#run(org.eclipse.core.runtime.IProgressMonitor)
-		 */
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			MultiStatus result = new MultiStatus(ResourcesPlugin.PI_RESOURCES, IResourceStatus.FAILED_SETTING_CHARSET, Messages.resources_updatingEncoding, null);
@@ -90,7 +88,7 @@ public class CharsetManager implements IManager {
 								flushPreferences(getPreferences(project, false, true, true), shouldDisableCharsetDeltaJob);
 							}
 						} catch (BackingStoreException e) {
-							// we got an error saving					
+							// we got an error saving
 							String detailMessage = Messages.resources_savingEncoding;
 							result.add(new ResourceStatus(IResourceStatus.FAILED_SETTING_CHARSET, project.getFullPath(), detailMessage, e));
 						}
@@ -110,9 +108,6 @@ public class CharsetManager implements IManager {
 			return result;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.runtime.jobs.Job#shouldRun()
-		 */
 		@Override
 		public boolean shouldRun() {
 			synchronized (asyncChanges) {
@@ -164,7 +159,7 @@ public class CharsetManager implements IManager {
 			IProject currentProject = (IProject) projectDelta.getResource();
 			Preferences projectRegularPrefs = getPreferences(currentProject, false, false, true);
 			Preferences projectDerivedPrefs = getPreferences(currentProject, false, true, true);
-			Map<Boolean, String[]> affectedResourcesMap = new HashMap<Boolean, String[]>();
+			Map<Boolean, String[]> affectedResourcesMap = new HashMap<>();
 			try {
 				// no regular preferences for this project
 				if (projectRegularPrefs == null)
@@ -234,9 +229,9 @@ public class CharsetManager implements IManager {
 				return;
 			IResourceDelta[] projectDeltas = delta.getAffectedChildren();
 			// process each project in the delta
-			Map<IProject, Boolean> projectsToSave = new HashMap<IProject, Boolean>();
+			Map<IProject, Boolean> projectsToSave = new HashMap<>();
 			for (int i = 0; i < projectDeltas.length; i++)
-				//nothing to do if a project has been added/removed/moved				
+				//nothing to do if a project has been added/removed/moved
 				if (projectDeltas[i].getKind() == IResourceDelta.CHANGED && (projectDeltas[i].getFlags() & IResourceDelta.OPEN) == 0)
 					processEntryChanges(projectDeltas[i], projectsToSave);
 			job.addChanges(projectsToSave);
@@ -268,11 +263,11 @@ public class CharsetManager implements IManager {
 	}
 
 	/**
-	 * Returns the charset explicitly set by the user for the given resource, 
-	 * or <code>null</code>. If no setting exists for the given resource and 
-	 * <code>recurse</code> is <code>true</code>, every parent up to the 
+	 * Returns the charset explicitly set by the user for the given resource,
+	 * or <code>null</code>. If no setting exists for the given resource and
+	 * <code>recurse</code> is <code>true</code>, every parent up to the
 	 * workspace root will be checked until a charset setting can be found.
-	 * 
+	 *
 	 * @param resourcePath the path for the resource
 	 * @param recurse whether the parent should be queried
 	 * @return the charset setting for the given resource
@@ -285,8 +280,8 @@ public class CharsetManager implements IManager {
 		Preferences derivedPrefs = getPreferences(project, false, true);
 
 		if (prefs == null && derivedPrefs == null)
-			// no preferences found - for performance reasons, short-circuit 
-			// lookup by falling back to workspace's default setting			
+			// no preferences found - for performance reasons, short-circuit
+			// lookup by falling back to workspace's default setting
 			return recurse ? ResourcesPlugin.getEncoding() : null;
 
 		return internalGetCharsetFor(prefs, derivedPrefs, resourcePath, recurse);
@@ -400,7 +395,7 @@ public class CharsetManager implements IManager {
 				prefsChanged = true;
 			}
 			if (prefsChanged) {
-				Map<IProject, Boolean> projectsToSave = new HashMap<IProject, Boolean>();
+				Map<IProject, Boolean> projectsToSave = new HashMap<>();
 				// this is internal change so do not notify charset delta job
 				projectsToSave.put(project, Boolean.TRUE);
 				job.addChanges(projectsToSave);
@@ -484,7 +479,7 @@ public class CharsetManager implements IManager {
 				}
 			}
 			if (prefsChanged) {
-				Map<IProject, Boolean> projectsToSave = new HashMap<IProject, Boolean>();
+				Map<IProject, Boolean> projectsToSave = new HashMap<>();
 				// this is internal change so do not notify charset delta job
 				projectsToSave.put(project, Boolean.TRUE);
 				job.addChanges(projectsToSave);

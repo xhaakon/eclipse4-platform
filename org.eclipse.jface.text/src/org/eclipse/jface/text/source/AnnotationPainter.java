@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
@@ -105,12 +105,10 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 * @since 3.0
 	 * @deprecated As of 3.4, replaced by {@link AnnotationPainter.UnderlineStrategy}
 	 */
+	@Deprecated
 	public static class SquigglesStrategy implements IDrawingStrategy {
 
-		/*
-		 * @see org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy#draw(org.eclipse.jface.text.source.Annotation, org.eclipse.swt.graphics.GC, org.eclipse.swt.custom.StyledText, int, int, org.eclipse.swt.graphics.Color)
-		 * @since 3.0
-		 */
+		@Override
 		public void draw(Annotation annotation, GC gc, StyledText textWidget, int offset, int length, Color color) {
 			if (gc != null) {
 
@@ -191,10 +189,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 */
 	public static final class NullStrategy implements IDrawingStrategy {
 
-		/*
-		 * @see org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy#draw(org.eclipse.jface.text.source.Annotation, org.eclipse.swt.graphics.GC, org.eclipse.swt.custom.StyledText, int, int, org.eclipse.swt.graphics.Color)
-		 * @since 3.0
-		 */
+		@Override
 		public void draw(Annotation annotation, GC gc, StyledText textWidget, int offset, int length, Color color) {
 			// do nothing
 		}
@@ -224,6 +219,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 * @since 3.4
 	 */
 	public static final class HighlightingStrategy implements ITextStyleStrategy {
+		@Override
 		public void applyTextStyle(StyleRange styleRange, Color annotationColor) {
 			styleRange.background= annotationColor;
 		}
@@ -244,6 +240,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 			fUnderlineStyle= style;
 		}
 
+		@Override
 		public void applyTextStyle(StyleRange styleRange, Color annotationColor) {
 			styleRange.underline= true;
 			styleRange.underlineStyle= fUnderlineStyle;
@@ -266,6 +263,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 			fBorderStyle= style;
 		}
 
+		@Override
 		public void applyTextStyle(StyleRange styleRange, Color annotationColor) {
 			styleRange.borderStyle= fBorderStyle;
 			styleRange.borderColor= annotationColor;
@@ -357,12 +355,12 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 * The map with decorations
 	 * @since 3.0
 	 */
-	private Map fDecorationsMap= new HashMap(); // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=50767
+	private Map<Annotation, Decoration> fDecorationsMap= new HashMap<>(); // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=50767
 	/**
 	 * The map with of highlighted decorations.
 	 * @since 3.0
 	 */
-	private Map fHighlightedDecorationsMap= new HashMap(); // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=50767
+	private Map<Annotation, Decoration> fHighlightedDecorationsMap= new HashMap<>(); // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=50767
 	/**
 	 * Mutex for highlighted decorations map.
 	 * @since 3.0
@@ -378,13 +376,13 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 *
 	 * @see #setAnnotationTypeColor(Object, Color)
 	 */
-	private Map fAnnotationType2Color= new HashMap();
+	private Map<Object, Color> fAnnotationType2Color= new HashMap<>();
 
 	/**
 	 * Cache that maps the annotation type to its color.
 	 * @since 3.4
 	 */
-	private Map fCachedAnnotationType2Color= new HashMap();
+	private Map<Object, Color> fCachedAnnotationType2Color= new HashMap<>();
 	/**
 	 * The range in which the current highlight annotations can be found.
 	 * @since 3.0
@@ -423,19 +421,19 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 * @see #addAnnotationType(Object, Object)
 	 * @since 3.0
 	 */
-	private Map fAnnotationType2PaintingStrategyId= new HashMap();
+	private Map<Object, Object> fAnnotationType2PaintingStrategyId= new HashMap<>();
 	/**
 	 * Maps annotation types to painting strategy identifiers.
 	 * @since 3.4
 	 */
-	private Map fCachedAnnotationType2PaintingStrategy= new HashMap();
+	private Map<String, Object> fCachedAnnotationType2PaintingStrategy= new HashMap<>();
 
 	/**
 	 * Maps painting strategy identifiers to painting strategies.
 	 *
 	 * @since 3.0
 	 */
-	private Map fPaintingStrategyId2PaintingStrategy= new HashMap();
+	private Map<Object, Object> fPaintingStrategyId2PaintingStrategy= new HashMap<>();
 
 	/**
 	 * Reuse this region for performance reasons.
@@ -554,31 +552,31 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		int drawRangeStart= Integer.MAX_VALUE;
 		int drawRangeEnd= -1;
 
-		Map decorationsMap;
-		Map highlightedDecorationsMap;
+		Map<Annotation, Decoration> decorationsMap;
+		Map<Annotation, Decoration> highlightedDecorationsMap;
 
 		// Clone decoration maps
 		synchronized (fDecorationMapLock) {
-			decorationsMap= new HashMap(fDecorationsMap);
+			decorationsMap= new HashMap<>(fDecorationsMap);
 		}
 		synchronized (fHighlightedDecorationsMapLock) {
-			highlightedDecorationsMap= new HashMap(fHighlightedDecorationsMap);
+			highlightedDecorationsMap= new HashMap<>(fHighlightedDecorationsMap);
 		}
 
 		boolean isWorldChange= false;
 
-		Iterator e;
+		Iterator<Annotation> e;
 		if (event == null || event.isWorldChange()) {
 			isWorldChange= true;
 
 			if (DEBUG && event == null)
 				System.out.println("AP: INTERNAL CHANGE"); //$NON-NLS-1$
 
-			Iterator iter= decorationsMap.entrySet().iterator();
+			Iterator<Entry<Annotation, Decoration>> iter= decorationsMap.entrySet().iterator();
 			while (iter.hasNext()) {
-				Map.Entry entry= (Map.Entry)iter.next();
-				Annotation annotation= (Annotation)entry.getKey();
-				Decoration decoration= (Decoration)entry.getValue();
+				Entry<Annotation, Decoration> entry= iter.next();
+				Annotation annotation= entry.getKey();
+				Decoration decoration= entry.getValue();
 				drawDecoration(decoration, null, annotation, clippingRegion, document);
 			}
 
@@ -595,7 +593,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 			Annotation[] removedAnnotations= event.getRemovedAnnotations();
 			for (int i= 0, length= removedAnnotations.length; i < length; i++) {
 				Annotation annotation= removedAnnotations[i];
-				Decoration decoration= (Decoration)highlightedDecorationsMap.remove(annotation);
+				Decoration decoration= highlightedDecorationsMap.remove(annotation);
 				if (decoration != null) {
 					Position position= decoration.fPosition;
 					if (position != null) {
@@ -603,7 +601,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 						highlightAnnotationRangeEnd= Math.max(highlightAnnotationRangeEnd, position.offset + position.length);
 					}
 				}
-				decoration= (Decoration)decorationsMap.remove(annotation);
+				decoration= decorationsMap.remove(annotation);
 				if (decoration != null) {
 					drawDecoration(decoration, null, annotation, clippingRegion, document);
 					Position position= decoration.fPosition;
@@ -622,14 +620,14 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 
 				boolean isHighlighting= false;
 
-				Decoration decoration= (Decoration)highlightedDecorationsMap.get(annotation);
+				Decoration decoration= highlightedDecorationsMap.get(annotation);
 
 				if (decoration != null) {
 					isHighlighting= true;
 					// The call below updates the decoration - no need to create new decoration
 					decoration= getDecoration(annotation, decoration);
 					if (decoration == null) {
-						Decoration removedDecoration= (Decoration)highlightedDecorationsMap.remove(annotation);
+						Decoration removedDecoration= highlightedDecorationsMap.remove(annotation);
 						if (removedDecoration != null) {
 							highlightAnnotationRangeStart= Math.min(highlightAnnotationRangeStart, removedDecoration.fPosition.offset);
 							highlightAnnotationRangeEnd= Math.max(highlightAnnotationRangeEnd, removedDecoration.fPosition.offset + removedDecoration.fPosition.length);
@@ -662,7 +660,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 						drawRangeEnd= Math.max(drawRangeEnd, position.offset + position.length);
 					}
 				} else {
-					Decoration removedDecoration= (Decoration)highlightedDecorationsMap.remove(annotation);
+					Decoration removedDecoration= highlightedDecorationsMap.remove(annotation);
 					if (removedDecoration != null) {
 						highlightAnnotationRangeStart= Math.min(highlightAnnotationRangeStart, removedDecoration.fPosition.offset);
 						highlightAnnotationRangeEnd= Math.max(highlightAnnotationRangeEnd, removedDecoration.fPosition.offset + removedDecoration.fPosition.length);
@@ -670,7 +668,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 				}
 
 				if (usesDrawingStrategy) {
-					Decoration oldDecoration= (Decoration)decorationsMap.get(annotation);
+					Decoration oldDecoration= decorationsMap.get(annotation);
 					if (oldDecoration != null) {
 						drawDecoration(oldDecoration, null, annotation, clippingRegion, document);
 						if (decoration != null)
@@ -686,7 +684,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 
 		// Add new annotations
 		while (e.hasNext()) {
-			Annotation annotation= (Annotation)e.next();
+			Annotation annotation= e.next();
 			Decoration pp= getDecoration(annotation, null);
 			if (pp != null) {
 				if (pp.fPaintingStrategy instanceof IDrawingStrategy) {
@@ -912,11 +910,11 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 * @since 3.0
 	 */
 	private Color getColor(final Object annotationType) {
-		Color color= (Color)fCachedAnnotationType2Color.get(annotationType);
+		Color color= fCachedAnnotationType2Color.get(annotationType);
 		if (color != null)
 			return color;
 
-		color= (Color)fAnnotationType2Color.get(annotationType);
+		color= fAnnotationType2Color.get(annotationType);
 		if (color != null) {
 			fCachedAnnotationType2Color.put(annotationType, color);
 			return color;
@@ -927,7 +925,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 			Object[] superTypes= extension.getSupertypes(annotationType);
 			if (superTypes != null) {
 				for (int i= 0; i < superTypes.length; i++) {
-					color= (Color)fAnnotationType2Color.get(superTypes[i]);
+					color= fAnnotationType2Color.get(superTypes[i]);
 					if (color != null) {
 						fCachedAnnotationType2Color.put(annotationType, color);
 						return color;
@@ -976,18 +974,15 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextPresentationListener#applyTextPresentation(org.eclipse.jface.text.TextPresentation)
-	 * @since 3.0
-	 */
+	@Override
 	public void applyTextPresentation(TextPresentation tp) {
-		Set decorations;
+		Set<Entry<Annotation, Decoration>> decorations;
 
 		synchronized (fHighlightedDecorationsMapLock) {
 			if (fHighlightedDecorationsMap == null || fHighlightedDecorationsMap.isEmpty())
 				return;
 
-			decorations= new HashSet(fHighlightedDecorationsMap.entrySet());
+			decorations= new HashSet<>(fHighlightedDecorationsMap.entrySet());
 		}
 
 		IRegion region= tp.getExtent();
@@ -997,14 +992,14 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 
 		for (int layer= 0, maxLayer= 1;	layer < maxLayer; layer++) {
 
-			for (Iterator iter= decorations.iterator(); iter.hasNext();) {
-				Map.Entry entry= (Map.Entry)iter.next();
+			for (Iterator<Entry<Annotation, Decoration>> iter= decorations.iterator(); iter.hasNext();) {
+				Entry<Annotation, Decoration> entry= iter.next();
 
-				Annotation a= (Annotation)entry.getKey();
+				Annotation a= entry.getKey();
 				if (a.isMarkedDeleted())
 					continue;
 
-				Decoration pp = (Decoration)entry.getValue();
+				Decoration pp = entry.getValue();
 
 				maxLayer= Math.max(maxLayer, pp.fLayer + 1); // dynamically update layer maximum
 				if (pp.fLayer != layer)	// wrong layer: skip annotation
@@ -1033,9 +1028,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationModelListener#modelChanged(org.eclipse.jface.text.source.IAnnotationModel)
-	 */
+	@Override
 	public synchronized void modelChanged(final IAnnotationModel model) {
 		if (DEBUG)
 			System.err.println("AP: OLD API of AnnotationModelListener called"); //$NON-NLS-1$
@@ -1043,9 +1036,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		modelChanged(new AnnotationModelEvent(model));
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IAnnotationModelListenerExtension#modelChanged(org.eclipse.jface.text.source.AnnotationModelEvent)
-	 */
+	@Override
 	public void modelChanged(final AnnotationModelEvent event) {
 		Display textWidgetDisplay;
 		try {
@@ -1082,6 +1073,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 			// now and running the posted runnable, the position information
 			// is not accurate any longer.
 			textWidgetDisplay.asyncExec(new Runnable() {
+				@Override
 				public void run() {
 					if (fTextWidget != null && !fTextWidget.isDisposed())
 						updatePainting(event);
@@ -1114,6 +1106,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 	 *             {@link #addTextStyleStrategy(Object, AnnotationPainter.ITextStyleStrategy)} and
 	 *             {@link UnderlineStrategy}
 	 */
+	@Deprecated
 	public void addAnnotationType(Object annotationType) {
 		addAnnotationType(annotationType, SQUIGGLES);
 	}
@@ -1135,16 +1128,12 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		if (fTextInputListener == null) {
 			fTextInputListener= new ITextInputListener() {
 
-				/*
-				 * @see org.eclipse.jface.text.ITextInputListener#inputDocumentAboutToBeChanged(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.IDocument)
-				 */
+				@Override
 				public void inputDocumentAboutToBeChanged(IDocument oldInput, IDocument newInput) {
 					fInputDocumentAboutToBeChanged= true;
 				}
 
-				/*
-				 * @see org.eclipse.jface.text.ITextInputListener#inputDocumentChanged(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.IDocument)
-				 */
+				@Override
 				public void inputDocumentChanged(IDocument oldInput, IDocument newInput) {
 					fInputDocumentAboutToBeChanged= false;
 				}
@@ -1266,9 +1255,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		return !fAnnotationType2PaintingStrategyId.isEmpty();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IPainter#dispose()
-	 */
+	@Override
 	public void dispose() {
 
 		if (fAnnotationType2Color != null) {
@@ -1347,9 +1334,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		return -1;
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.PaintListener#paintControl(org.eclipse.swt.events.PaintEvent)
-	 */
+	@Override
 	public void paintControl(PaintEvent event) {
 		if (fTextWidget != null)
 			handleDrawRequest(event);
@@ -1377,9 +1362,9 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		final GC gc= event != null ? event.gc : null;
 
 		// Clone decorations
-		Collection decorations;
+		Collection<Entry<Annotation, Decoration>> decorations;
 		synchronized (fDecorationMapLock) {
-			decorations= new ArrayList(fDecorationsMap.size());
+			decorations= new ArrayList<>(fDecorationsMap.size());
 			decorations.addAll(fDecorationsMap.entrySet());
 		}
 
@@ -1387,27 +1372,27 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		 * Create a new list of annotations to be drawn, since removing from decorations is more
 		 * expensive. One bucket per drawing layer. Use linked lists as addition is cheap here.
 		 */
-		ArrayList toBeDrawn= new ArrayList(10);
-		for (Iterator e = decorations.iterator(); e.hasNext();) {
-			Map.Entry entry= (Map.Entry)e.next();
+		ArrayList<LinkedList<Entry<Annotation, Decoration>>> toBeDrawn= new ArrayList<>(10);
+		for (Iterator<Entry<Annotation, Decoration>> e = decorations.iterator(); e.hasNext();) {
+			Entry<Annotation, Decoration> entry= e.next();
 
-			Annotation a= (Annotation)entry.getKey();
-			Decoration pp = (Decoration)entry.getValue();
+			Annotation a= entry.getKey();
+			Decoration pp = entry.getValue();
 			// prune any annotation that is not drawable or does not need drawing
 			if (!(a.isMarkedDeleted() || skip(a) || !regionsTouchOrOverlap(pp.fPosition.getOffset(), pp.fPosition.getLength(), vOffset, vLength))) {
 				// ensure sized appropriately
 				for (int i= toBeDrawn.size(); i <= pp.fLayer; i++)
-					toBeDrawn.add(new LinkedList());
-				((List) toBeDrawn.get(pp.fLayer)).add(entry);
+					toBeDrawn.add(new LinkedList<>());
+				toBeDrawn.get(pp.fLayer).add(entry);
 			}
 		}
 		IDocument document= fSourceViewer.getDocument();
-		for (Iterator it= toBeDrawn.iterator(); it.hasNext();) {
-			List layer= (List) it.next();
-			for (Iterator e = layer.iterator(); e.hasNext();) {
-				Map.Entry entry= (Map.Entry)e.next();
-				Annotation a= (Annotation)entry.getKey();
-				Decoration pp = (Decoration)entry.getValue();
+		for (Iterator<LinkedList<Entry<Annotation, Decoration>>> it= toBeDrawn.iterator(); it.hasNext();) {
+			LinkedList<Entry<Annotation, Decoration>> layer= it.next();
+			for (Iterator<Entry<Annotation, Decoration>> e = layer.iterator(); e.hasNext();) {
+				Entry<Annotation, Decoration> entry= e.next();
+				Annotation a= entry.getKey();
+				Decoration pp = entry.getValue();
 				drawDecoration(pp, gc, a, clippingRegion, document);
 			}
 		}
@@ -1601,9 +1586,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		return (offset1 <= offset2+length2) && (offset2 <= offset1+length1);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IPainter#deactivate(boolean)
-	 */
+	@Override
 	public void deactivate(boolean redraw) {
 		if (fIsActive) {
 			fIsActive= false;
@@ -1637,9 +1620,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IPainter#paint(int)
-	 */
+	@Override
 	public void paint(int reason) {
 		if (fSourceViewer.getDocument() == null) {
 			deactivate(false);
@@ -1656,9 +1637,7 @@ public class AnnotationPainter implements IPainter, PaintListener, IAnnotationMo
 			updatePainting(null);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IPainter#setPositionManager(org.eclipse.jface.text.IPaintPositionManager)
-	 */
+	@Override
 	public void setPositionManager(IPaintPositionManager manager) {
 	}
 }

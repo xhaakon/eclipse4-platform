@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,14 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugException;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationType;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.IDebugHelpContextIds;
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants;
@@ -29,6 +35,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.PlatformUI;
@@ -79,7 +86,22 @@ public class LaunchAction extends Action {
 	public void run() {
 		DebugUITools.launch(fConfiguration, fMode);
 	}
-	
+
+	private void terminateIfPreferred(boolean isShift) {
+		if (DebugUIPlugin.getDefault().getPreferenceStore().getBoolean(IInternalDebugUIConstants.PREF_TERMINATE_AND_RELAUNCH_LAUNCH_ACTION) != isShift) {
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+			ILaunch[] launches = launchManager.getLaunches();
+			for (ILaunch iLaunch : launches) {
+				if (fConfiguration.contentsEqual(iLaunch.getLaunchConfiguration())) {
+					try {
+						iLaunch.terminate();
+					} catch (DebugException e) {
+						DebugUIPlugin.log(new Status(IStatus.ERROR, DebugUIPlugin.getUniqueIdentifier(), NLS.bind(ActionMessages.TerminateAndLaunchFailure, iLaunch.getLaunchConfiguration().getName()), e));
+					}
+				}
+			}
+		}
+	}
 	/**
 	 * If the user has control-clicked the launch history item, open the launch
 	 * configuration dialog on the launch configuration, rather than running it.
@@ -122,6 +144,7 @@ public class LaunchAction extends Action {
 			}
 		} 
 		else {
+			terminateIfPreferred(((event.stateMask & SWT.SHIFT) > 0) ? true : false);
 			run();
 		}
 	}

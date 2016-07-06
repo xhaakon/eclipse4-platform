@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 IBM Corporation and others.
+ * Copyright (c) 2010, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * Contributors:
  *     Serge Beauchamp (Freescale Semiconductor) - initial API and implementation
  *     Lars Vogel <Lars.Vogel@gmail.com> - Bug 430694
+ *     Mickael Istria (Red Hat Inc.) - Bug 486901
+ *     Patrik Suzzi <psuzzi@gmail.com> - Bug 490700
  ******************************************************************************/
 
 package org.eclipse.ui.internal.ide.dialogs;
@@ -27,14 +29,12 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -45,11 +45,9 @@ import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
@@ -207,7 +205,7 @@ public class LinkedResourceEditor {
         Label variableLabel = new Label(pageComponent, SWT.LEFT);
         variableLabel.setText(NLS
 				.bind(IDEWorkbenchMessages.LinkedResourceEditor_descriptionBlock,
-						fProject != null? fProject.getName():new String()));
+				fProject != null ? fProject.getName() : "")); //$NON-NLS-1$
 
         data = new GridData();
         data.horizontalAlignment = GridData.FILL;
@@ -223,12 +221,7 @@ public class LinkedResourceEditor {
 
 		fTree = new TreeViewer(treeComposite, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
 
-		fTree.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateSelection();
-			}
-		});
+		fTree.addSelectionChangedListener(event -> updateSelection());
 
 		data = new GridData(GridData.FILL_BOTH);
 		data.heightHint = fTree.getTree().getItemHeight() * 10;
@@ -443,18 +436,11 @@ public class LinkedResourceEditor {
 																		 * >
 																		 */();
 			try {
-				fProject.accept(new IResourceVisitor() {
-					/**
-					 * @throws CoreException
-					 */
-					@Override
-					public boolean visit(IResource resource)
-							throws CoreException {
-						if (resource.isLinked() && !resource.isVirtual())
-							resources.add(resource);
-						return true;
-					}
-				});
+				fProject.accept(resource -> {
+if (resource.isLinked() && !resource.isVirtual())
+				resources.add(resource);
+return true;
+});
 			} catch (CoreException e) {
 			}
 			projectFiles = (IResource[]) resources.toArray(new IResource[0]);
@@ -561,32 +547,21 @@ public class LinkedResourceEditor {
 				IDEWorkbenchMessages.LinkedResourceEditor_removeTitle,
 				IDEWorkbenchMessages.LinkedResourceEditor_removeMessage)) {
 			final IResource[] selectedResources = getSelectedResource();
-			final ArrayList/*<IResource>*/ removedResources = new ArrayList();
+			final ArrayList<IResource> removedResources = new ArrayList<>();
 
-			IRunnableWithProgress op = new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) {
+			IRunnableWithProgress op = monitor -> {
+				SubMonitor subMonitor = SubMonitor.convert(monitor,
+						IDEWorkbenchMessages.LinkedResourceEditor_removingMessage, selectedResources.length);
+				for (int i = 0; i < selectedResources.length; i++) {
+					String fullPath = selectedResources[i].getFullPath().toPortableString();
 					try {
-						monitor.beginTask(
-								IDEWorkbenchMessages.LinkedResourceEditor_removingMessage,
-								selectedResources.length);
-						for (int i = 0; i < selectedResources.length; i++) {
-							if (monitor.isCanceled())
-								break;
-							String fullPath = selectedResources[i]
-									.getFullPath().toPortableString();
-							try {
-								selectedResources[i].delete(true, new SubProgressMonitor(monitor, 1));
-								removedResources.add(selectedResources[i]);
-								fBrokenResources.remove(fullPath);
-								fFixedResources.remove(fullPath);
-								fAbsoluteResources.remove(fullPath);
-							} catch (CoreException e) {
-								e.printStackTrace();
-							}
-						}
-					} finally {
-						monitor.done();
+						selectedResources[i].delete(true, subMonitor.split(1));
+						removedResources.add(selectedResources[i]);
+						fBrokenResources.remove(fullPath);
+						fFixedResources.remove(fullPath);
+						fAbsoluteResources.remove(fullPath);
+					} catch (CoreException e) {
+						e.printStackTrace();
 					}
 				}
 			};
@@ -667,12 +642,9 @@ public class LinkedResourceEditor {
 				message.append("\n"); //$NON-NLS-1$
 		}
 		final String resultMessage = message.toString();
-		MessageDialog dialog = new MessageDialog(fConvertAbsoluteButton
-				.getShell(), title, null,
-				IDEWorkbenchMessages.LinkedResourceEditor_convertionResults,
-				MessageDialog.INFORMATION,
-				new String[] { IDEWorkbenchMessages.linkedResourceEditor_OK },
-				0) {
+		MessageDialog dialog = new MessageDialog(fConvertAbsoluteButton.getShell(), title, null,
+				IDEWorkbenchMessages.LinkedResourceEditor_convertionResults, MessageDialog.INFORMATION, 0,
+				IDEWorkbenchMessages.linkedResourceEditor_OK) {
 
 			@Override
 			protected boolean isResizable() {

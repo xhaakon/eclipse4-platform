@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,11 +24,13 @@ public class LimitedSizeCharArrayWriter extends CharArrayWriter {
 		this.maxSize = maxSize;
 	}
 
+	@Override
 	public void write(char[] c, int off, int len) {
         size += len;
 		super.write(c, off, len);
 	}
 
+	@Override
 	public void write(char[] cbuf) throws IOException {
 		size += cbuf.length;
 		if (size < maxSize) {
@@ -36,6 +38,7 @@ public class LimitedSizeCharArrayWriter extends CharArrayWriter {
 		}
 	}
 
+	@Override
 	public void write(String str, int off, int len) {
         size += len;
         if (size < maxSize) {
@@ -43,6 +46,7 @@ public class LimitedSizeCharArrayWriter extends CharArrayWriter {
         }
 	}
 
+	@Override
 	public void write(int c) {
 		size += 1;
 		if (size < maxSize) {
@@ -50,6 +54,7 @@ public class LimitedSizeCharArrayWriter extends CharArrayWriter {
 		}
 	}
 
+	@Override
 	public void write(String str) throws IOException {
 		size += str.length();
 		if (size < maxSize) {

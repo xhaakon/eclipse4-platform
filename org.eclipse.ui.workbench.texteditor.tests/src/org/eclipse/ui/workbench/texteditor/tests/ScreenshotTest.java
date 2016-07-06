@@ -13,7 +13,9 @@ package org.eclipse.ui.workbench.texteditor.tests;
 import java.io.File;
 import java.io.PrintStream;
 
-import org.eclipse.test.OrderedTestSuite;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
@@ -32,24 +34,17 @@ import org.eclipse.jface.util.Util;
 
 import org.eclipse.ui.PlatformUI;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
+public class ScreenshotTest {
 
-public class ScreenshotTest extends TestCase {
+	@Rule
+	public TestName testName = new TestName();
 
-	public ScreenshotTest(String name) {
-		super(name);
-	}
-
-	public static Test suite() {
-		return new OrderedTestSuite(ScreenshotTest.class);
-	}
-
-
+	@Test
 	public void testScreenshot() throws Exception {
-		takeScreenshot(ScreenshotTest.class, getName(), System.out);
+		takeScreenshot(ScreenshotTest.class, testName.getMethodName(), System.out);
 	}
 
+	@Test
 	public void testWindowsTaskManagerScreenshots() throws Exception {
 		if (! Util.isWindows())
 			return;
@@ -75,7 +70,7 @@ public class ScreenshotTest extends TestCase {
         System.out.println("* CTRL up " + display.post(event));
         
         runEventQueue();
-        takeScreenshot(ScreenshotTest.class, getName() + 2, System.out);
+        takeScreenshot(ScreenshotTest.class, testName.getMethodName() + 2, System.out);
         
         event.type= SWT.KeyDown;
         event.character= SWT.ESC;
@@ -85,7 +80,7 @@ public class ScreenshotTest extends TestCase {
         System.out.println("* ESC up " + display.post(event));
         
         runEventQueue();
-        takeScreenshot(ScreenshotTest.class, getName() + 3, System.out);
+        takeScreenshot(ScreenshotTest.class, testName.getMethodName() + 3, System.out);
 	}
 	
 	/**
@@ -96,7 +91,7 @@ public class ScreenshotTest extends TestCase {
 	 * @param out print stream to use for diagnostics.
 	 * @return file system path to the screenshot file
 	 */
-	public static String takeScreenshot(Class testClass, String name, PrintStream out) {
+	public static String takeScreenshot(Class<?> testClass, String name, PrintStream out) {
 		File resultsHtmlDir= getJunitReportOutput(); // ends up in testresults/linux.gtk.x86_6.0/<class>.<test>.png
 		
 		if (resultsHtmlDir == null) { // Fallback. Warning: uses same file location on all test platforms:

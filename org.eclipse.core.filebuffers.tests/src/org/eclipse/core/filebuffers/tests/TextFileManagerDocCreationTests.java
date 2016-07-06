@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.core.filebuffers.tests;
 
+import org.junit.Before;
+
 import org.eclipse.core.internal.filebuffers.TextFileBufferManager;
 
 import org.eclipse.core.filebuffers.LocationKind;
@@ -20,10 +22,12 @@ import org.eclipse.core.filebuffers.LocationKind;
  */
 public class TextFileManagerDocCreationTests extends AbstractFileBufferDocCreationTests {
 
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() {
 		fManager= new TextFileBufferManager();
 	}
 
+	@Override
 	protected void assertDocumentContent(String expectedContent, String path, LocationKind locKind) {
 		if (locKind != LocationKind.IFILE) {
 			/**  {@link TextFileBufferManager} does not deal with {@link LocationKind#IFILE} */
@@ -31,6 +35,7 @@ public class TextFileManagerDocCreationTests extends AbstractFileBufferDocCreati
 		}
 	}
 
+	@Override
 	protected LocationKind[] getSupportLocationKinds() {
 		return new LocationKind[] {LocationKind.LOCATION, LocationKind.NORMALIZE};
 	}

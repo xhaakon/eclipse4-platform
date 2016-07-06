@@ -10,7 +10,13 @@
  *******************************************************************************/
 package org.eclipse.jface.text.tests;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
@@ -23,10 +29,11 @@ import org.eclipse.jface.text.IUndoManager;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextViewer;
 
+
 /**
  * Tests for DefaultUndoManager.
  */
-public abstract class AbstractUndoManagerTest extends TestCase {
+public abstract class AbstractUndoManagerTest {
 
 	/** The maximum undo level. */
 	private static final int MAX_UNDO_LEVEL= 256;
@@ -51,17 +58,8 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 	private static final boolean DEBUG= false;
 
 
-	/*
-	 * @see TestCase#TestCase(String)
-	 */
-	public AbstractUndoManagerTest(final String name) {
-		super(name);
-	}
-
-	/*
-	 *  @see TestCase#setUp()
-	 */
-	protected void setUp() {
+	@Before
+	public void setUp() {
 		fShell= new Shell();
 		fUndoManager= createUndoManager(MAX_UNDO_LEVEL);
 		fTextViewer= new TextViewer(fShell, SWT.NONE);
@@ -71,10 +69,8 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 
 	abstract protected IUndoManager createUndoManager(int maxUndoLevel);
 
-	/*
-	 *  @see TestCase#tearDown()
-	 */
-	protected void tearDown() {
+	@After
+	public void tearDown() {
 		fUndoManager.disconnect();
 		fUndoManager= null;
 		fShell.dispose();
@@ -85,6 +81,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 	/**
 	 * Test for line delimiter conversion.
 	 */
+	@Test
 	public void testConvertLineDelimiters() {
 		final String original= "a\r\nb\r\n";
 		final IDocument document= new Document(original);
@@ -110,6 +107,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 	/**
 	 * Randomly applies document changes.
 	 */
+	@Test
 	public void testRandomAccess() {
 		final int RANDOM_STRING_LENGTH= 50;
 		final int RANDOM_REPLACE_COUNT= 100;
@@ -187,6 +185,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testLoopRandomAccessAsCompound() {
 		int i= 0;
 		while (i < LOOP_COUNT) {
@@ -196,6 +195,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testLoopRandomAccess() {
 		int i= 0;
 		while (i < LOOP_COUNT) {
@@ -205,6 +205,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testLoopRandomAccessAsUnclosedCompound() {
 		int i= 0;
 		while (i < LOOP_COUNT) {
@@ -214,6 +215,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testLoopConvertLineDelimiters() {
 		int i= 0;
 		while (i < LOOP_COUNT) {
@@ -223,6 +225,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testLoopRandomAccessWithMixedCompound() {
 		int i= 0;
 		while (i < LOOP_COUNT) {
@@ -232,6 +235,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testRandomAccessAsCompound() {
 		final int RANDOM_STRING_LENGTH= 50;
 		final int RANDOM_REPLACE_COUNT= 100;
@@ -260,6 +264,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 	/**
 	 * Test case for https://bugs.eclipse.org/bugs/show_bug.cgi?id=88172
 	 */
+	@Test
 	public void testRandomAccessAsUnclosedCompound() {
 
 		final int RANDOM_STRING_LENGTH= 50;
@@ -287,6 +292,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		assertEquals(original, reverted);
 	}
 
+	@Test
 	public void testRandomAccessWithMixedCompound() {
 
 		final int RANDOM_STRING_LENGTH= 50;
@@ -322,6 +328,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		assertEquals(original, reverted);
 	}
 
+	@Test
 	public void testRepeatableAccess() {
 		assertTrue(REPLACEMENTS.length <= MAX_UNDO_LEVEL);
 
@@ -339,6 +346,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		assertEquals(INITIAL_DOCUMENT_CONTENT, reverted);
 	}
 
+	@Test
 	public void testRepeatableAccessAsCompound() {
 		assertTrue(REPLACEMENTS.length <= MAX_UNDO_LEVEL);
 
@@ -359,6 +367,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		assertEquals(INITIAL_DOCUMENT_CONTENT, reverted);
 	}
 
+	@Test
 	public void testRepeatableAccessAsUnclosedCompound() {
 		assertTrue(REPLACEMENTS.length <= MAX_UNDO_LEVEL);
 
@@ -377,6 +386,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		assertEquals(INITIAL_DOCUMENT_CONTENT, reverted);
 	}
 
+	@Test
 	public void testRepeatableAccessWithMixedAndEmptyCompound() {
 		assertTrue(REPLACEMENTS.length + 2 <= MAX_UNDO_LEVEL);
 
@@ -405,6 +415,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 		assertEquals(INITIAL_DOCUMENT_CONTENT, reverted);
 	}
 
+	@Test
 	public void testDocumentStamp() {
 		final Document document= new Document(INITIAL_DOCUMENT_CONTENT);
 		fTextViewer.setDocument(document);
@@ -416,6 +427,7 @@ public abstract class AbstractUndoManagerTest extends TestCase {
 	}
 
 	// See https://bugs.eclipse.org/bugs/show_bug.cgi?id=109104
+	@Test
 	public void testDocumentStamp2() throws BadLocationException {
 		final Document document= new Document("");
 		final int stringLength= 13;

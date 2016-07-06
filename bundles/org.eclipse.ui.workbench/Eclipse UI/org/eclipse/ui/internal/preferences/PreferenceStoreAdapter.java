@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 package org.eclipse.ui.internal.preferences;
 
 import java.util.Set;
-
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -34,33 +33,21 @@ public final class PreferenceStoreAdapter extends PropertyMapAdapter {
         this.store = toConvert;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.PropertyMapAdapter#attachListener()
-     */
     @Override
 	protected void attachListener() {
         store.addPropertyChangeListener(listener);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.PropertyMapAdapter#detachListener()
-     */
     @Override
 	protected void detachListener() {
         store.removePropertyChangeListener(listener);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#keySet()
-     */
     @Override
 	public Set keySet() {
         throw new UnsupportedOperationException();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#getValue(java.lang.String, java.lang.Class)
-     */
     @Override
 	public Object getValue(String propertyId, Class propertyType) {
         if (propertyType.isAssignableFrom(String.class)) {
@@ -80,7 +67,7 @@ public final class PreferenceStoreAdapter extends PropertyMapAdapter {
         }
 
         if (propertyType == Integer.class) {
-            return new Integer(store.getInt(propertyId));
+			return Integer.valueOf(store.getInt(propertyId));
         }
 
         if (propertyType == Long.class) {
@@ -90,17 +77,11 @@ public final class PreferenceStoreAdapter extends PropertyMapAdapter {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#propertyExists(java.lang.String)
-     */
     @Override
 	public boolean propertyExists(String propertyId) {
         return store.contains(propertyId);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#setValue(java.lang.String, java.lang.Object)
-     */
     @Override
 	public void setValue(String propertyId, Object newValue) {
         if (newValue instanceof String) {

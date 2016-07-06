@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -91,7 +91,7 @@ public class PartTester {
 
         // Test equals
 		Assert.isTrue(part.equals(part), "A part must be equal to itself"); //$NON-NLS-1$
-		Assert.isTrue(!part.equals(new Integer(32)),
+		Assert.isTrue(!part.equals(Integer.valueOf(32)),
 				"A part must have a meaningful equals method"); //$NON-NLS-1$
 
         // Test getAdapter

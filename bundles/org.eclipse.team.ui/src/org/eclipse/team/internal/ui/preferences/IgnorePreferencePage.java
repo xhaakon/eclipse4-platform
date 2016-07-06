@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.team.internal.ui.preferences;
 
- 
+
 import org.eclipse.jface.dialogs.*;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.PreferencePage;
@@ -30,17 +30,19 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 	private Table ignoreTable;
 	private Button addButton;
 	private Button removeButton;
+	@Override
 	public void init(IWorkbench workbench) {
-		setDescription(TeamUIMessages.IgnorePreferencePage_description); 
+		setDescription(TeamUIMessages.IgnorePreferencePage_description);
 	}
-	
+
 	/**
 	 * Creates preference page controls on demand.
 	 *
 	 * @param ancestor  the parent for the preference page
 	 */
+	@Override
 	protected Control createContents(Composite ancestor) {
-		
+
 		Composite parent = new Composite(ancestor, SWT.NULL);
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
@@ -51,43 +53,46 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 		data.verticalAlignment = GridData.FILL;
 		data.horizontalAlignment = GridData.FILL;
 		parent.setLayoutData(data);
-		
+
 		Label l1 = new Label(parent, SWT.NULL);
-		l1.setText(TeamUIMessages.IgnorePreferencePage_ignorePatterns); 
+		l1.setText(TeamUIMessages.IgnorePreferencePage_ignorePatterns);
 		data = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
 		data.horizontalSpan = 2;
 		l1.setLayoutData(data);
-		
+
 		ignoreTable = new Table(parent, SWT.CHECK | SWT.BORDER | SWT.MULTI);
 		GridData gd = new GridData(GridData.FILL_BOTH);
 		//gd.widthHint = convertWidthInCharsToPixels(30);
 		gd.heightHint = 300;
 		ignoreTable.setLayoutData(gd);
 		ignoreTable.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(Event e) {
 				handleSelection();
 			}
 		});
-		
+
 		Composite buttons = new Composite(parent, SWT.NULL);
 		buttons.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING));
 		layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		buttons.setLayout(layout);
-		
+
 		addButton = new Button(buttons, SWT.PUSH);
-		addButton.setText(TeamUIMessages.IgnorePreferencePage_add); 
+		addButton.setText(TeamUIMessages.IgnorePreferencePage_add);
 		addButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(Event e) {
 				addIgnore();
 			}
 		});
-		
+
 		removeButton = new Button(buttons, SWT.PUSH);
-		removeButton.setText(TeamUIMessages.IgnorePreferencePage_remove); 
+		removeButton.setText(TeamUIMessages.IgnorePreferencePage_remove);
 		removeButton.setEnabled(false);
 		removeButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(Event e) {
 				removeIgnore();
 			}
@@ -96,10 +101,10 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 		Dialog.applyDialogFont(ancestor);
 		setButtonLayoutData(addButton);
 		setButtonLayoutData(removeButton);
-        
+
         // set F1 help
         PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), IHelpContextIds.IGNORE_PREFERENCE_PAGE);
-        
+
 		return parent;
 	}
 	/**
@@ -107,6 +112,7 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 	 *
 	 * @return whether it is okay to close the preference page
 	 */
+	@Override
 	public boolean performOk() {
 		int count = ignoreTable.getItemCount();
 		String[] patterns = new String[count];
@@ -120,14 +126,15 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 		TeamUIPlugin.broadcastPropertyChange(new PropertyChangeEvent(this, TeamUI.GLOBAL_IGNORES_CHANGED, null, null));
 		return true;
 	}
-	
+
+	@Override
 	protected void performDefaults() {
 		super.performDefaults();
 		ignoreTable.removeAll();
 		IIgnoreInfo[] ignore = Team.getDefaultIgnores();
 		fillTable(ignore);
 	}
-	
+
 	/**
 	 * @param ignore
 	 */
@@ -137,12 +144,13 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 			TableItem item = new TableItem(ignoreTable, SWT.NONE);
 			item.setText(TextProcessor.process(info.getPattern(), ".*")); //$NON-NLS-1$
 			item.setChecked(info.getEnabled());
-		}		
+		}
 	}
 
 	private void addIgnore() {
-		
+
 		InputDialog dialog = new InputDialog(getShell(), TeamUIMessages.IgnorePreferencePage_enterPatternShort, TeamUIMessages.IgnorePreferencePage_enterPatternLong, null, null) {
+			@Override
 			protected Control createDialogArea(Composite parent) {
 				Control control = super.createDialogArea(parent);
 				PlatformUI.getWorkbench().getHelpSystem().setHelp(control, IHelpContextIds.IGNORE_PREFERENCE_PAGE);
@@ -166,7 +174,7 @@ public class IgnorePreferencePage extends PreferencePage implements IWorkbenchPr
 		item.setText(TextProcessor.process(pattern, ".*")); //$NON-NLS-1$
 		item.setChecked(true);
 	}
-	
+
 	private void removeIgnore() {
 		int[] selection = ignoreTable.getSelectionIndices();
 		ignoreTable.remove(selection);

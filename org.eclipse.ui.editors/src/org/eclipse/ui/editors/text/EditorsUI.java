@@ -152,6 +152,7 @@ public final class EditorsUI {
 	 * @see org.eclipse.core.runtime.Plugin#getPluginPreferences()
 	 * @deprecated As of 3.5, replaced by {@link #getPreferenceStore()}
 	 */
+	@Deprecated
 	public static org.eclipse.core.runtime.Preferences getPluginPreferences() {
 		return EditorsPlugin.getDefault().getPluginPreferences();
 	}
@@ -238,7 +239,7 @@ public final class EditorsUI {
 		if (!getPreferenceStore().getBoolean(AbstractDecoratedTextEditorPreferenceConstants.EDITOR_SHOW_TEXT_HOVER_AFFORDANCE))
 			return null;
 
-		IBindingService bindingService= (IBindingService)PlatformUI.getWorkbench().getAdapter(IBindingService.class);
+		IBindingService bindingService= PlatformUI.getWorkbench().getAdapter(IBindingService.class);
 		if (bindingService == null)
 			return null;
 

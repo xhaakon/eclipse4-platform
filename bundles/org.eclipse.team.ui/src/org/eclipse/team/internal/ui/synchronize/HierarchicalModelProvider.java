@@ -37,32 +37,35 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
  * changes and the model shown to the user. This happens in the ui thread.
  * </ol>
  * NOT ON DEMAND - model is created then maintained!
- * 
+ *
  * @since 3.0
  */
 public class HierarchicalModelProvider extends SynchronizeModelProvider {
-	
+
 	public static class HierarchicalModelProviderDescriptor implements ISynchronizeModelProviderDescriptor {
 		public static final String ID = TeamUIPlugin.ID + ".modelprovider_hierarchical"; //$NON-NLS-1$
+		@Override
 		public String getId() {
 			return ID;
-		}		
+		}
+		@Override
 		public String getName() {
-			return TeamUIMessages.HierarchicalModelProvider_0; 
-		}		
+			return TeamUIMessages.HierarchicalModelProvider_0;
+		}
+		@Override
 		public ImageDescriptor getImageDescriptor() {
 			return TeamImages.getImageDescriptor(ITeamUIImages.IMG_HIERARCHICAL);
 		}
 	}
 	private static final HierarchicalModelProviderDescriptor hierarchicalDescriptor = new HierarchicalModelProviderDescriptor();
-	
+
 	/**
 	 * Create an input based on the provide sync set. The input is not
 	 * initialized until <code>prepareInput</code> is called.
-	 * 
+	 *
 	 * @param configuration
 	 *            the synchronize page configuration
-	 * 
+	 *
 	 * @param set
 	 *            the sync set used as the basis for the model created by this
 	 *            input.
@@ -77,14 +80,16 @@ public class HierarchicalModelProvider extends SynchronizeModelProvider {
             ISynchronizePageConfiguration configuration, SyncInfoSet set) {
         super(parentProvider, modelRoot, configuration, set);
     }
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.ISynchronizeModelProvider#getDescriptor()
 	 */
+	@Override
 	public ISynchronizeModelProviderDescriptor getDescriptor() {
 		return hierarchicalDescriptor;
 	}
-	
+
+	@Override
 	public ViewerSorter getViewerSorter() {
 		return new SynchronizeModelElementSorter();
 	}
@@ -114,7 +119,7 @@ public class HierarchicalModelProvider extends SynchronizeModelProvider {
 			for (int i = 0; i < children.length; i++) {
 				nodes[i] = createModelObject(container, children[i]);
 			}
-			return nodes;	
+			return nodes;
 		}
 		return new IDiffElement[0];
 	}
@@ -170,6 +175,7 @@ public class HierarchicalModelProvider extends SynchronizeModelProvider {
     /* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.viewers.SynchronizeModelProvider#buildModelObjects(org.eclipse.team.ui.synchronize.viewers.SynchronizeModelElement)
 	 */
+	@Override
 	protected IDiffElement[] buildModelObjects(ISynchronizeModelElement node) {
 		IDiffElement[] children = createModelObjects(node);
 		for (int i = 0; i < children.length; i++) {
@@ -184,6 +190,7 @@ public class HierarchicalModelProvider extends SynchronizeModelProvider {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.viewers.SynchronizeModelProvider#handleResourceAdditions(org.eclipse.team.core.synchronize.ISyncInfoTreeChangeEvent)
 	 */
+	@Override
 	protected void handleResourceAdditions(ISyncInfoTreeChangeEvent event) {
 		SyncInfo[] infos = event.getAddedResources();
 		HashSet set = new HashSet();
@@ -199,6 +206,7 @@ public class HierarchicalModelProvider extends SynchronizeModelProvider {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.viewers.SynchronizeModelProvider#handleResourceRemovals(org.eclipse.team.core.synchronize.ISyncInfoTreeChangeEvent)
 	 */
+	@Override
 	protected void handleResourceRemovals(ISyncInfoTreeChangeEvent event) {
 		// Remove the removed subtrees
 		IResource[] removedRoots = event.getRemovedSubtreeRoots();
@@ -220,14 +228,16 @@ public class HierarchicalModelProvider extends SynchronizeModelProvider {
     /* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelProvider#createModelObject(org.eclipse.team.ui.synchronize.ISynchronizeModelElement, org.eclipse.team.core.synchronize.SyncInfo)
      */
-    protected ISynchronizeModelElement createModelObject(ISynchronizeModelElement parent, SyncInfo info) {
+    @Override
+	protected ISynchronizeModelElement createModelObject(ISynchronizeModelElement parent, SyncInfo info) {
         return createModelObject(parent, info.getLocal());
     }
 
     /* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelProvider#addResource(org.eclipse.team.core.synchronize.SyncInfo)
      */
-    protected void addResource(SyncInfo info) {
+    @Override
+	protected void addResource(SyncInfo info) {
         addResource(info.getLocal());
     }
 }

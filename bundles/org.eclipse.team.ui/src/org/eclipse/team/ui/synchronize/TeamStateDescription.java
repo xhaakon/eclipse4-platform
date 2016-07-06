@@ -39,6 +39,7 @@ public class TeamStateDescription implements ITeamStateDescription {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateDescription#getStateFlags()
 	 */
+	@Override
 	public int getStateFlags() {
 		return state;
 	}
@@ -46,6 +47,7 @@ public class TeamStateDescription implements ITeamStateDescription {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateDescription#getKind()
 	 */
+	@Override
 	public int getKind() {
 		return getStateFlags() & Diff.KIND_MASK;
 	}
@@ -53,6 +55,7 @@ public class TeamStateDescription implements ITeamStateDescription {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateDescription#getDirection()
 	 */
+	@Override
 	public int getDirection() {
 		return getStateFlags() & IThreeWayDiff.DIRECTION_MASK;
 	}
@@ -60,17 +63,19 @@ public class TeamStateDescription implements ITeamStateDescription {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamStateDescription#getProperties()
 	 */
+	@Override
 	public String[] getPropertyNames() {
 		return (String[]) properties.keySet().toArray(new String[properties.size()]);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamStateDescription#getProperty(java.lang.String)
 	 */
+	@Override
 	public Object getProperty(String property) {
 		return properties.get(property);
 	}
-	
+
 	/**
 	 * Set the given property to the given value
 	 * @param property the property
@@ -79,10 +84,11 @@ public class TeamStateDescription implements ITeamStateDescription {
 	public void setProperty(String property, Object value) {
 		properties.put(property, value);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof TeamStateDescription) {
 			TeamStateDescription dsd = (TeamStateDescription) obj;

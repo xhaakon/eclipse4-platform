@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2012 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -29,7 +29,7 @@ public class InstancePreferences extends EclipsePreferences {
 	private IEclipsePreferences loadLevel;
 	private IPath location;
 	// cache which nodes have been loaded from disk
-	private static Set loadedNodes = Collections.synchronizedSet(new HashSet());
+	private static Set<String> loadedNodes = Collections.synchronizedSet(new HashSet<String>());
 	private static boolean initialized = false;
 	private static IPath baseLocation;
 
@@ -71,10 +71,12 @@ public class InstancePreferences extends EclipsePreferences {
 		// accessed before the instance location is set.
 	}
 
+	@Override
 	protected boolean isAlreadyLoaded(IEclipsePreferences node) {
 		return loadedNodes.contains(node.name());
 	}
 
+	@Override
 	protected void loaded() {
 		loadedNodes.add(name());
 	}
@@ -84,6 +86,7 @@ public class InstancePreferences extends EclipsePreferences {
 	 * doesn't exist then assume that conversion has already occurred
 	 * and do nothing.
 	 */
+	@Override
 	protected void loadLegacy() {
 		IPath path = new Path(absolutePath());
 		if (path.segmentCount() != 2)
@@ -127,6 +130,11 @@ public class InstancePreferences extends EclipsePreferences {
 			if (EclipsePreferences.DEBUG_PREFERENCE_GENERAL)
 				PrefsMessages.message("IOException encountered loading legacy preference file " + prefFile); //$NON-NLS-1$
 			return;
+		} catch (IllegalArgumentException e) {
+			// problems loading preference store - quietly ignore
+			if (EclipsePreferences.DEBUG_PREFERENCE_GENERAL)
+				PrefsMessages.message("IllegalArgumentException encountered loading legacy preference file " + prefFile); //$NON-NLS-1$
+			return;
 		} finally {
 			if (input != null) {
 				try {
@@ -142,7 +150,7 @@ public class InstancePreferences extends EclipsePreferences {
 		}
 
 		// Store values in the preferences object
-		for (Iterator i = values.keySet().iterator(); i.hasNext();) {
+		for (Iterator<?> i = values.keySet().iterator(); i.hasNext();) {
 			String key = (String) i.next();
 			String value = values.getProperty(key);
 			// value shouldn't be null but check just in case...
@@ -156,13 +164,14 @@ public class InstancePreferences extends EclipsePreferences {
 			}
 		}
 
-		// Delete the old file so we don't try and load it next time. 
+		// Delete the old file so we don't try and load it next time.
 		if (!prefFile.delete())
 			//Only print out message in failure case if we are debugging.
 			if (EclipsePreferences.DEBUG_PREFERENCE_GENERAL)
 				PrefsMessages.message("Unable to delete legacy preferences file: " + prefFile); //$NON-NLS-1$
 	}
 
+	@Override
 	protected IPath getLocation() {
 		if (location == null)
 			location = computeLocation(getBaseLocation(), qualifier);
@@ -172,6 +181,7 @@ public class InstancePreferences extends EclipsePreferences {
 	/*
 	 * Return the node at which these preferences are loaded/saved.
 	 */
+	@Override
 	protected IEclipsePreferences getLoadLevel() {
 		if (loadLevel == null) {
 			if (qualifier == null)
@@ -205,6 +215,7 @@ public class InstancePreferences extends EclipsePreferences {
 		}
 	}
 
+	@Override
 	protected EclipsePreferences internalCreate(EclipsePreferences nodeParent, String nodeName, Object context) {
 		return new InstancePreferences(nodeParent, nodeName);
 	}

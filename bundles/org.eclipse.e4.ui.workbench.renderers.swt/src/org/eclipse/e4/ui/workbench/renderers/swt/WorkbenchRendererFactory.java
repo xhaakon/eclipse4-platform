@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IBM Corporation and others.
+ * Copyright (c) 2013, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,7 +38,6 @@ public class WorkbenchRendererFactory implements IRendererFactory {
 	private AreaRenderer areaRenderer;
 	private MenuManagerRenderer menuRenderer;
 	private ToolBarManagerRenderer toolbarRenderer;
-	// private ToolItemRenderer toolItemRenderer;
 	private SeparatorRenderer separatorRenderer;
 	private ContributedPartRenderer contributedPartRenderer;
 	private ElementReferenceRenderer elementRefRenderer;
@@ -51,8 +50,6 @@ public class WorkbenchRendererFactory implements IRendererFactory {
 	private WBWRenderer wbwRenderer;
 
 	private IEclipseContext context;
-
-	// private RenderedToolBarRenderer renderedToolbarRenderer;
 
 	@Override
 	public AbstractPartRenderer getRenderer(MUIElement uiElement, Object parent) {
@@ -149,8 +146,7 @@ public class WorkbenchRendererFactory implements IRendererFactory {
 	@PostConstruct
 	public void init(IEclipseContext context) {
 		this.context = context;
-		this.context.set(SHARED_ELEMENTS_STORE,
-				new HashMap<MUIElement, Set<MPlaceholder>>());
+		this.context.set(SHARED_ELEMENTS_STORE, new HashMap<MUIElement, Set<MPlaceholder>>());
 	}
 
 }

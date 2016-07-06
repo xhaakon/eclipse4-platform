@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 IBM Corporation and others.
+ * Copyright (c) 2010, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,11 +9,11 @@
  *     IBM Corporation - initial API and implementation
  *     Marco Descher <marco@descher.at> - Bug 389063,398865,398866,403081,403083
  *     Bruce Skingle <Bruce.Skingle@immutify.com> - Bug 442570
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 472654
  *******************************************************************************/
 package org.eclipse.e4.ui.workbench.renderers.swt;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import javax.inject.Inject;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
@@ -68,8 +68,6 @@ public class MenuManagerShowProcessor implements IMenuListener2 {
 	@Optional
 	private Logger logger;
 
-	private HashMap<Menu, Runnable> pendingCleanup = new HashMap<Menu, Runnable>();
-
 	@Override
 	public void menuAboutToShow(IMenuManager manager) {
 		if (!(manager instanceof MenuManager)) {
@@ -80,7 +78,13 @@ public class MenuManagerShowProcessor implements IMenuListener2 {
 		final Menu menu = menuManager.getMenu();
 
 		if (menuModel != null && menuManager != null) {
-			cleanUp(menu, menuModel, menuManager);
+			cleanUp(menuModel, menuManager);
+			if (menuManager.getRemoveAllWhenShown()) {
+				// This needs to be done or else menu items get added multiple
+				// times to MenuModel which results in incorrect behavior and
+				// memory leak - bug 486474
+				menuModel.getChildren().removeAll(menuModel.getChildren());
+			}
 		}
 		if (menuModel instanceof MPopupMenu) {
 			showPopup(menu, (MPopupMenu) menuModel, menuManager);
@@ -147,7 +151,7 @@ public class MenuManagerShowProcessor implements IMenuListener2 {
 
 				IEclipseContext dynamicMenuContext = EclipseContextFactory
 						.create();
-				ArrayList<MMenuElement> mel = new ArrayList<MMenuElement>();
+				ArrayList<MMenuElement> mel = new ArrayList<>();
 				dynamicMenuContext.set(List.class, mel);
 				IEclipseContext parentContext = modelService
 						.getContainingContext(currentMenuElement);
@@ -193,17 +197,15 @@ public class MenuManagerShowProcessor implements IMenuListener2 {
 		}
 	}
 
-	private void cleanUp(final Menu menu, MMenu menuModel,
-			MenuManager menuManager) {
-		trace("cleanUp", menu, null); //$NON-NLS-1$
-		if (pendingCleanup.isEmpty()) {
-			return;
-		}
-		Runnable cleanUp = pendingCleanup.remove(menu);
-		if (cleanUp != null) {
-			trace("cleanUp.run()", menu, null); //$NON-NLS-1$
-			cleanUp.run();
-		}
+	/**
+	 * Remove all of the items created by any dynamic contributions on the
+	 * menuModel.
+	 *
+	 * @param menuModel
+	 * @param menuManager
+	 */
+	private void cleanUp(MMenu menuModel, MenuManager menuManager) {
+		renderer.removeDynamicMenuContributions(menuManager, menuModel);
 	}
 
 	private void showPopup(final Menu menu, final MPopupMenu menuModel,

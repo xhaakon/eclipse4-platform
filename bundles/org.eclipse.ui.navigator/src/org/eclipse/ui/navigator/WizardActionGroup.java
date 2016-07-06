@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -205,9 +206,9 @@ public final class WizardActionGroup extends ActionGroup {
 			Map<String, SortedSet> groups = findGroups();
 			SortedSet sortedWizards = null;
 			String menuGroupId = null;
-			for (Iterator<String> menuGroupItr = groups.keySet().iterator(); menuGroupItr.hasNext();) {
-				menuGroupId = menuGroupItr.next();
-				sortedWizards = groups.get(menuGroupId);
+			for (Entry<String, SortedSet> entry : groups.entrySet()) {
+				menuGroupId = entry.getKey();
+				sortedWizards = entry.getValue();
 				menu.add(new Separator(menuGroupId));
 				for (Iterator wizardItr = sortedWizards.iterator(); wizardItr.hasNext();) {
 					menu.add((IAction) wizardItr.next());

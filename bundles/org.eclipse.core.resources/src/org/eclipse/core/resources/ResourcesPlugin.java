@@ -1,16 +1,17 @@
 /*******************************************************************************
- *  Copyright (c) 2000, 2014 IBM Corporation and others.
+ *  Copyright (c) 2000, 2015 IBM Corporation and others.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
  *  http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  *  Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [252996] add PT_FILTER_PROVIDERS
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] add PT_VARIABLE_PROVIDERS
  *     James Blackburn (Broadcom Corp.) - ongoing development
  *     Tom Hochstein (Freescale) - Bug 409996 - 'Restore Defaults' does not work properly on Project Properties > Resource tab
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.resources;
 
@@ -33,7 +34,7 @@ import org.osgi.framework.*;
  * to call <code>ResourcesPlugin.getWorkspace()</code>.
  * Doing so would cause this plug-in to be activated and the workspace
  * (if any) to be loaded from disk and initialized.
- * 
+ *
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class ResourcesPlugin extends Plugin {
@@ -74,7 +75,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Simple identifier constant (value <code>"moveDeleteHook"</code>)
 	 * for the move/delete hook extension point.
-	 * 
+	 *
 	 * @since 2.0
 	 */
 	public static final String PT_MOVE_DELETE_HOOK = "moveDeleteHook"; //$NON-NLS-1$
@@ -82,7 +83,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Simple identifier constant (value <code>"teamHook"</code>)
 	 * for the team hook extension point.
-	 * 
+	 *
 	 * @since 2.1
 	 */
 	public static final String PT_TEAM_HOOK = "teamHook"; //$NON-NLS-1$
@@ -90,7 +91,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Simple identifier constant (value <code>"refreshProviders"</code>)
 	 * for the auto-refresh refresh providers extension point.
-	 * 
+	 *
 	 * @since 3.0
 	 */
 	public static final String PT_REFRESH_PROVIDERS = "refreshProviders"; //$NON-NLS-1$
@@ -98,7 +99,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Simple identifier constant (value <code>"modelProviders"</code>)
 	 * for the model providers extension point.
-	 * 
+	 *
 	 * @since 3.2
 	 */
 	public static final String PT_MODEL_PROVIDERS = "modelProviders"; //$NON-NLS-1$
@@ -106,7 +107,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Simple identifier constant (value <code>"variableProviders"</code>)
 	 * for the variable providers extension point.
-	 * 
+	 *
 	 * @since 3.6
 	 */
 	public static final String PT_VARIABLE_PROVIDERS = "variableResolvers"; //$NON-NLS-1$
@@ -114,14 +115,14 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Simple identifier constant (value <code>"filterMatchers"</code>)
 	 * for the filter matchers extension point.
-	 * 
+	 *
 	 * @since 3.6
 	 */
 	public static final String PT_FILTER_MATCHERS = "filterMatchers"; //$NON-NLS-1$
 
 	/**
 	 * Constant identifying the job family identifier for the background autobuild job.
-	 * 
+	 *
 	 * @see IJobManager#join(Object, IProgressMonitor)
 	 * @since 3.0
 	 */
@@ -129,7 +130,7 @@ public final class ResourcesPlugin extends Plugin {
 
 	/**
 	 * Constant identifying the job family identifier for the background auto-refresh job.
-	 * 
+	 *
 	 * @see IJobManager#join(Object, IProgressMonitor)
 	 * @since 3.1
 	 */
@@ -139,7 +140,7 @@ public final class ResourcesPlugin extends Plugin {
 	 * Constant identifying the job family identifier for a background build job. All clients
 	 * that schedule background jobs for performing builds should include this job
 	 * family in their implementation of <code>belongsTo</code>.
-	 * 
+	 *
 	 * @see IJobManager#join(Object, IProgressMonitor)
 	 * @see Job#belongsTo(Object)
 	 * @since 3.0
@@ -150,7 +151,7 @@ public final class ResourcesPlugin extends Plugin {
 	 * Constant identifying the job family identifier for a background refresh job. All clients
 	 * that schedule background jobs for performing refreshing should include this job
 	 * family in their implementation of <code>belongsTo</code>.
-	 * 
+	 *
 	 * @see IJobManager#join(Object, IProgressMonitor)
 	 * @see Job#belongsTo(Object)
 	 * @since 3.4
@@ -158,28 +159,28 @@ public final class ResourcesPlugin extends Plugin {
 	public static final Object FAMILY_MANUAL_REFRESH = new Object();
 
 	/**
-	 * Name of a preference indicating the encoding to use when reading text 
-	 * files in the workspace.  The value is a string, and may 
+	 * Name of a preference indicating the encoding to use when reading text
+	 * files in the workspace.  The value is a string, and may
 	 * be the default empty string, indicating that the file system encoding should
 	 * be used instead.  The file system encoding can be retrieved using
 	 * <code>System.getProperty("file.encoding")</code>.
 	 * There is also a convenience method <code>getEncoding</code> which returns
-	 * the value of this preference, or the file system encoding if this 
+	 * the value of this preference, or the file system encoding if this
 	 * preference is not set.
 	 * <p>
 	 * Note that there is no guarantee that the value is a supported encoding.
 	 * Callers should be prepared to handle <code>UnsupportedEncodingException</code>
 	 * where this encoding is used.
 	 * </p>
-	 * 
+	 *
 	 * @see #getEncoding()
 	 * @see java.io.UnsupportedEncodingException
 	 */
 	public static final String PREF_ENCODING = "encoding"; //$NON-NLS-1$
 
-	/** 
+	/**
 	 * Common prefix for workspace preference names.
-	 * @since 2.1 
+	 * @since 2.1
 	 */
 	private static final String PREF_DESCRIPTION_PREFIX = "description."; //$NON-NLS-1$
 
@@ -193,7 +194,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Name of a preference for configuring whether the workspace performs auto-
 	 * builds.
-	 * 
+	 *
 	 * @see IWorkspaceDescription#isAutoBuilding()
 	 * @see IWorkspaceDescription#setAutoBuilding(boolean)
 	 * @since 2.1
@@ -203,7 +204,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Name of a preference for configuring the order projects in the workspace
 	 * are built.
-	 * 
+	 *
 	 * @see IWorkspaceDescription#getBuildOrder()
 	 * @see IWorkspaceDescription#setBuildOrder(String[])
 	 * @since 2.1
@@ -221,7 +222,7 @@ public final class ResourcesPlugin extends Plugin {
 	 * Name of a preference for configuring the maximum number of times that the
 	 * workspace should rebuild when builders affect projects that have already
 	 * been built.
-	 * 
+	 *
 	 * @see IWorkspaceDescription#getMaxBuildIterations()
 	 * @see IWorkspaceDescription#setMaxBuildIterations(int)
 	 * @since 2.1
@@ -230,7 +231,7 @@ public final class ResourcesPlugin extends Plugin {
 
 	/**
 	 * Name of a preference for configuring whether to apply the specified history size policy.
-	 * 
+	 *
 	 * @see IWorkspaceDescription#isApplyFileStatePolicy()
 	 * @see IWorkspaceDescription#setApplyFileStatePolicy(boolean)
 	 * @since 3.6
@@ -240,7 +241,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Name of a preference for configuring the maximum number of milliseconds a
 	 * file state should be kept in the local history
-	 * 
+	 *
 	 * @see IWorkspaceDescription#getFileStateLongevity()
 	 * @see IWorkspaceDescription#setFileStateLongevity(long)
 	 * @since 2.1
@@ -250,7 +251,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Name of a preference for configuring the maximum permitted size of a file
 	 * to be stored in the local history
-	 * 
+	 *
 	 * @see IWorkspaceDescription#getMaxFileStateSize()
 	 * @see IWorkspaceDescription#setMaxFileStateSize(long)
 	 * @since 2.1
@@ -260,21 +261,21 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Name of a preference for configuring the maximum number of states per
 	 * file that can be stored in the local history.
-	 * 
+	 *
 	 * @see IWorkspaceDescription#getMaxFileStates()
 	 * @see IWorkspaceDescription#setMaxFileStates(int)
 	 * @since 2.1
 	 */
-	public static final String PREF_MAX_FILE_STATES = PREF_DESCRIPTION_PREFIX + "maxfilestates"; //$NON-NLS-1$	
+	public static final String PREF_MAX_FILE_STATES = PREF_DESCRIPTION_PREFIX + "maxfilestates"; //$NON-NLS-1$
 	/**
 	 * Name of a preference for configuring the amount of time in milliseconds
 	 * between automatic workspace snapshots
-	 * 
+	 *
 	 * @see IWorkspaceDescription#getSnapshotInterval()
 	 * @see IWorkspaceDescription#setSnapshotInterval(long)
 	 * @since 2.1
 	 */
-	public static final String PREF_SNAPSHOT_INTERVAL = PREF_DESCRIPTION_PREFIX + "snapshotinterval"; //$NON-NLS-1$	
+	public static final String PREF_SNAPSHOT_INTERVAL = PREF_DESCRIPTION_PREFIX + "snapshotinterval"; //$NON-NLS-1$
 
 	/**
 	 * Name of a preference for turning off support for linked resources.  When
@@ -297,7 +298,7 @@ public final class ResourcesPlugin extends Plugin {
 	 * asynchronously refreshed, when discovered to be out-of-sync by the workspace.
 	 * <p>
 	 * This preference suppresses out-of-sync CoreException for some read methods, including:
-	 * {@link IFile#getContents()} & {@link IFile#getContentDescription()}. 
+	 * {@link IFile#getContents()} & {@link IFile#getContentDescription()}.
 	 * </p>
 	 * <p>
 	 * In the future the workspace may enable other lightweight auto-refresh mechanisms when this
@@ -313,14 +314,14 @@ public final class ResourcesPlugin extends Plugin {
 	 * Name of a preference for configuring whether encodings for derived
 	 * resources within the project should be stored in a separate derived
 	 * preference file.
-	 * 
+	 *
 	 * @since 3.7
 	 */
 	public static final String PREF_SEPARATE_DERIVED_ENCODINGS = "separateDerivedEncodings"; //$NON-NLS-1$
 
 	/**
 	 * Default setting for {@value #PREF_SEPARATE_DERIVED_ENCODINGS}.
-	 * 
+	 *
 	 * @since 3.9
 	 */
 	public static final boolean DEFAULT_PREF_SEPARATE_DERIVED_ENCODINGS = false;
@@ -339,10 +340,10 @@ public final class ResourcesPlugin extends Plugin {
 	private ServiceRegistration<IWorkspace> workspaceRegistration;
 	private ServiceRegistration<DebugOptionsListener> debugRegistration;
 
-	/** 
+	/**
 	 * Constructs an instance of this plug-in runtime class.
 	 * <p>
-	 * An instance of this plug-in runtime class is automatically created 
+	 * An instance of this plug-in runtime class is automatically created
 	 * when the facilities provided by the Resources plug-in are required.
 	 * <b>Clients must never explicitly instantiate a plug-in runtime class.</b>
 	 * </p>
@@ -354,7 +355,7 @@ public final class ResourcesPlugin extends Plugin {
 	/**
 	 * Constructs a brand new workspace structure at the location in the local file system
 	 * identified by the given path and returns a new workspace object.
-	 * 
+	 *
 	 * @exception CoreException if the workspace structure could not be constructed.
 	 * Reasons include:
 	 * <ul>
@@ -376,9 +377,9 @@ public final class ResourcesPlugin extends Plugin {
 	 * if the preference is not set.
 	 * <p>
 	 * Note that this method does not check whether the result is a supported
-	 * encoding.  Callers should be prepared to handle 
+	 * encoding.  Callers should be prepared to handle
 	 * <code>UnsupportedEncodingException</code> where this encoding is used.
-	 * 
+	 *
 	 * @return  the encoding to use when reading text files in the workspace
 	 * @see java.io.UnsupportedEncodingException
 	 */
@@ -448,7 +449,7 @@ public final class ResourcesPlugin extends Plugin {
 		super.start(context);
 
 		// register debug options listener
-		Hashtable<String, String> properties = new Hashtable<String, String>(2);
+		Hashtable<String, String> properties = new Hashtable<>(2);
 		properties.put(DebugOptions.LISTENER_SYMBOLICNAME, PI_RESOURCES);
 		debugRegistration = context.registerService(DebugOptionsListener.class, Policy.RESOURCES_DEBUG_OPTIONS_LISTENER, properties);
 
@@ -467,13 +468,13 @@ public final class ResourcesPlugin extends Plugin {
 	}
 
 	/*
-	 * Add the project scope to the preference service's default look-up order so 
+	 * Add the project scope to the preference service's default look-up order so
 	 * people get it for free
 	 */
 	private void initializePreferenceLookupOrder() {
 		PreferencesService service = PreferencesService.getDefault();
 		String[] original = service.getDefaultDefaultLookupOrder();
-		List<String> newOrder = new ArrayList<String>();
+		List<String> newOrder = new ArrayList<>();
 		// put the project scope first on the list
 		newOrder.add(ProjectScope.SCOPE);
 		for (String entry : original)

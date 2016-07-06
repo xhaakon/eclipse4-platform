@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -206,9 +206,6 @@ public class WorkingSetRegistry implements IExtensionChangeHandler {
         reader.readWorkingSets(Platform.getExtensionRegistry(), this);
     }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.dynamichelpers.IExtensionChangeHandler#addExtension(org.eclipse.core.runtime.dynamichelpers.IExtensionTracker, org.eclipse.core.runtime.IExtension)
-	 */
 	@Override
 	public void addExtension(IExtensionTracker tracker, IExtension extension) {
 		WorkingSetRegistryReader reader = new WorkingSetRegistryReader(this);
@@ -218,9 +215,6 @@ public class WorkingSetRegistry implements IExtensionChangeHandler {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.dynamichelpers.IExtensionChangeHandler#removeExtension(org.eclipse.core.runtime.IExtension, java.lang.Object[])
-	 */
 	@Override
 	public void removeExtension(IExtension extension, Object[] objects) {
 		for (int i = 0; i < objects.length; i++) {

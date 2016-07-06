@@ -29,6 +29,7 @@ import org.eclipse.help.internal.util.ProductPreferences;
 import org.eclipse.help.internal.util.SequenceResolver;
 import org.eclipse.jface.action.Action;
 import org.eclipse.ui.internal.intro.impl.model.ExtensionMap;
+import org.eclipse.ui.internal.intro.impl.model.IntroTheme;
 import org.eclipse.ui.internal.intro.universal.contentdetect.ContentDetector;
 import org.eclipse.ui.internal.intro.universal.util.ImageUtil;
 import org.eclipse.ui.internal.intro.universal.util.PreferenceArbiter;
@@ -48,12 +49,13 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 	
 	private IntroData primaryIntroData;
 	private IntroData[] secondaryIntroData;
-	private SequenceResolver sequenceResolver;
+	private SequenceResolver<IntroElement> sequenceResolver;
 
 	public UniversalIntroConfigurer() {
 		loadData();
 	}
 
+	@Override
 	public String getVariable(String variableName) {
 		if (variableName.equals(HIGH_CONTRAST)) {
 			boolean highContrast = ImageUtil.isHighContrast();
@@ -100,6 +102,7 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 	 * 
 	 * @see org.eclipse.ui.intro.config.IntroConfigurer#getMixinStyle(java.lang.String)
 	 */
+	@Override
 	public String getMixinStyle(String pageId, String extensionId) {
 		// if active product has a preference, use it
 		if (primaryIntroData != null) {
@@ -175,27 +178,56 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 	}
 
 	private String resolveVariable(Bundle bundle, String value) {
-		if (value != null) {
-			String path = null;
+		if (value == null) {
+			return null;
+		}
+		try {
 			if (value.startsWith("intro:")) { //$NON-NLS-1$
 				bundle = UniversalIntroPlugin.getDefault().getBundle();
-				path = value.substring(6);
+				return resolveFile(bundle, value.substring(6));
 			} else if (value.startsWith("product:")) { //$NON-NLS-1$
-				path = value.substring(8);
-			} else
-				return value;
-			try {
-				URL url = bundle.getEntry(path);
-				if (url != null) {
-					URL localURL = FileLocator.toFileURL(url);
-					return localURL.toString();
-				}
-			} catch (IOException e) {
-				// just use the value as-is
-				return value;
+				return resolveFile(bundle, value.substring(8));
 			}
+		} catch (IOException e) {
+			// just use the value as-is
+		}
+		return value;
+	}
+
+	private String resolveFile(Bundle bundle, String path) throws IOException {
+		String prefixedPath = getThemePrefixedPath(path);
+		URL url = null;
+		if (prefixedPath != null) {
+			url = bundle.getEntry(prefixedPath);
+		}
+		if (url == null) {
+			url = bundle.getEntry(path);
+		}
+		if (url != null) {
+			URL localURL = FileLocator.toFileURL(url);
+			return localURL.toString();
 		}
 		return null;
+	}
+
+	/**
+	 * Prefix the file component of the given path with the theme's id. For
+	 * example, with theme <code>org.eclipse.ui.intro.universal.solstice</code>:
+	 * <ul>
+	 * <li>foo &rarr; org.eclipse.ui.intro.universal.solstice/foo
+	 * </ul>
+	 * 
+	 * @param path
+	 *            the path
+	 * @return same path with a prefixed theme directory component
+	 */
+	private String getThemePrefixedPath(String path) {
+		String prefix = themeProperties != null ? themeProperties.get(IntroTheme.ATT_ID) : null;
+		prefix = prefix == null ? "" : prefix.trim(); //$NON-NLS-1$
+		if (prefix.length() == 0) {
+			return null;
+		}
+		return prefix + Path.SEPARATOR + path;
 	}
 
 	private String getProductProperty(IProduct product, String variableName) {
@@ -208,32 +240,26 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 		return value;
 	}
 
+	@Override
 	public IntroElement[] getGroupChildren(String pageId, String groupId) {
-		if (pageId.equals(ID_ROOT)) {
-			if (groupId.equals(DIV_PAGE_LINKS))
+		// root-like pages have more details on the page and action links
+		boolean rootLike = pageId.equals(ID_ROOT) || isStartPage(pageId) || pageId.equals(ID_STANDBY);
+		if (rootLike && groupId.equals(DIV_PAGE_LINKS))
 				return getRootPageLinks(false);
-			if (groupId.equals(DIV_ACTION_LINKS))
+		if (rootLike && groupId.equals(DIV_ACTION_LINKS))
 				return getRootPageActionLinks(false);
-		} else if (pageId.equals(ID_STANDBY)) {
-			if (groupId.equals(DIV_PAGE_LINKS))
-				return getRootPageLinks(true);
-			if (groupId.equals(DIV_ACTION_LINKS))
-				return getRootPageActionLinks(true);
-		} else {
-			// other pages
-			if (groupId.equals(DIV_PAGE_LINKS))
-				return getNavLinks(pageId);
-			if (groupId.equals(DIV_LAYOUT_TOP_LEFT)
-					|| groupId.equals(DIV_LAYOUT_TOP_RIGHT)
-					|| groupId.equals(DIV_LAYOUT_BOTTOM_LEFT)
-					|| groupId.equals(DIV_LAYOUT_BOTTOM_RIGHT))
-				return getContent(pageId, groupId);
-		}
+		// other pages
+		if (groupId.equals(DIV_PAGE_LINKS))
+			return getNavLinks(pageId);
+		if (groupId.equals(DIV_LAYOUT_TOP_LEFT) || groupId.equals(DIV_LAYOUT_TOP_RIGHT)
+				|| groupId.equals(DIV_LAYOUT_BOTTOM_LEFT) || groupId.equals(DIV_LAYOUT_BOTTOM_RIGHT))
+			return getContent(pageId, groupId);
 		return new IntroElement[0];
 	}
 
+	@Override
 	public IntroElement[] getLaunchBarShortcuts() {
-		ArrayList links = new ArrayList();
+		ArrayList<IntroElement> links = new ArrayList<>();
 		String ids = getVariable(VAR_INTRO_ROOT_PAGES);
 		if (ids != null) {
 			StringTokenizer stok = new StringTokenizer(ids, ","); //$NON-NLS-1$
@@ -244,11 +270,11 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 					links.add(page);
 			}
 		}
-		return (IntroElement[]) links.toArray(new IntroElement[links.size()]);
+		return links.toArray(new IntroElement[links.size()]);
 	}
 
 	private IntroElement[] getRootPageLinks(boolean standby) {
-		ArrayList links = new ArrayList();
+		ArrayList<IntroElement> links = new ArrayList<>();
 		String ids = getVariable(VAR_INTRO_ROOT_PAGES);
 		if (ids != null) {
 			StringTokenizer stok = new StringTokenizer(ids, ","); //$NON-NLS-1$
@@ -266,7 +292,7 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 			if (page !=null)
 				links.add(page);
 		}
-		return (IntroElement[]) links.toArray(new IntroElement[links.size()]);
+		return links.toArray(new IntroElement[links.size()]);
 	}
 
 	private IntroElement[] getRootPageActionLinks(boolean standby) {
@@ -282,7 +308,7 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 	}
 
 	private IntroElement[] getNavLinks(String pageId) {
-		ArrayList links = new ArrayList();
+		ArrayList<IntroElement> links = new ArrayList<>();
 		String ids = getVariable(VAR_INTRO_ROOT_PAGES);		
 		/*
 		 * In high contrast mode the workbench link must be generated in the nav links 
@@ -302,7 +328,7 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 			}
 		}
 
-		return (IntroElement[]) links.toArray(new IntroElement[links.size()]);
+		return links.toArray(new IntroElement[links.size()]);
 	}
 
 	private IntroElement createRootPageLink(String id, boolean standby) {
@@ -508,7 +534,7 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 			}
 		}
 		// load all other installed (but not running) products' intro data
-		List result = new ArrayList();
+		List<IntroData> result = new ArrayList<>();
 		Properties[] prefs = ProductPreferences.getProductPreferences(false);
 		for (int i=0;i<prefs.length;++i) {
 			String key = UniversalIntroPlugin.PLUGIN_ID + '/' + VAR_INTRO_DATA;
@@ -523,18 +549,18 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 				}
 			}
 		}
-		secondaryIntroData = (IntroData[])result.toArray(new IntroData[result.size()]);
+		secondaryIntroData = result.toArray(new IntroData[result.size()]);
 	}
 
 	private IntroElement[] getContent(String pageId, String groupId) {
-		List result = new ArrayList();
+		List<IntroElement> result = new ArrayList<>();
 		if (!ContentDetector.getNewContributors().isEmpty()) {
 			// Add a new content fallback anchor
 			IntroElement fallback = new IntroElement("anchor"); //$NON-NLS-1$
 			fallback.setAttribute("id", NEW_CONTENT_ANCHOR); //$NON-NLS-1$
 			result.add(fallback);
 		}
-		List anchors = getAnchors(pageId, groupId);
+		List<IntroElement> anchors = getAnchors(pageId, groupId);
 		if (anchors != null) {
 			result.addAll(anchors);
 		}
@@ -542,42 +568,44 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 		IntroElement fallback = new IntroElement("anchor"); //$NON-NLS-1$
 		fallback.setAttribute("id", DEFAULT_ANCHOR); //$NON-NLS-1$
 		result.add(fallback);
-		return (IntroElement[]) result.toArray(new IntroElement[result.size()]);
+		return result.toArray(new IntroElement[result.size()]);
 	}
 
-	private List getAnchors(String pageId, String groupId) {
-		List primaryAnchors = null;
+	private List<IntroElement> getAnchors(String pageId, String groupId) {
+		List<IntroElement> primaryAnchors = null;
 		if (primaryIntroData != null) {
 			primaryAnchors = getAnchors(primaryIntroData, pageId, groupId);
 		}
 		if (primaryAnchors == null) {
-			primaryAnchors = Collections.EMPTY_LIST;
+			primaryAnchors = Collections.emptyList();
 		}
-		List secondaryAnchorsList = new ArrayList();
+		List<List<IntroElement>> secondaryAnchorsList = new ArrayList<>();
 		for (int i=0;i<secondaryIntroData.length;++i) {
 			IntroData idata = secondaryIntroData[i];
-			List anchors = getAnchors(idata, pageId, groupId);
+			List<IntroElement> anchors = getAnchors(idata, pageId, groupId);
 			if (anchors != null) {
 				secondaryAnchorsList.add(anchors);
 			}
 		}
-		List[] secondaryAnchors = (List[])secondaryAnchorsList.toArray(new List[secondaryAnchorsList.size()]);
+
+		List<IntroElement>[] secondaryAnchors = secondaryAnchorsList.toArray(new List[secondaryAnchorsList.size()]);
 		if (sequenceResolver == null) {
-			sequenceResolver = new SequenceResolver();
+			sequenceResolver = new SequenceResolver<>();
 		}
 		return sequenceResolver.getSequence(primaryAnchors, secondaryAnchors);
 	}
 	
-	private List getAnchors(IntroData data, String pageId, String groupId) {
+	private List<IntroElement> getAnchors(IntroData data, String pageId, String groupId) {
 		PageData pdata = data.getPage(pageId);
 		if (pdata != null) {
-			List anchors = new ArrayList();
+			List<IntroElement> anchors = new ArrayList<>();
 			pdata.addAnchors(anchors, groupId);
 			return anchors;
 		}
 		return null;
 	}
 	
+	@Override
 	public String resolvePath(String extensionId, String path) {
 		boolean extensionRelativePath = false;
 		IPath ipath = new Path(path);
@@ -672,7 +700,8 @@ public class UniversalIntroConfigurer extends IntroConfigurer implements
 		return false;
 	}
 
-	public void init(IIntroSite site, Map themeProperties) {
+	@Override
+	public void init(IIntroSite site, Map<String, String> themeProperties) {
 		super.init(site, themeProperties);
 		Action customizeAction = new CustomizeAction(site);
 		customizeAction.setText(Messages.SharedIntroConfigurer_customize_label);

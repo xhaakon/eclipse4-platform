@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -82,6 +82,7 @@ public class Eclipse extends Thread {
 	/**
 	 * Launches Eclipse process and waits for it.
 	 */
+	@Override
 	public void run() {
 		try {
 			prepareCommand();
@@ -133,6 +134,7 @@ public class Eclipse extends Thread {
 			this.setDaemon(true);
 			bReader = new BufferedReader(new InputStreamReader(inputStream));
 		}
+		@Override
 		public void run() {
 			try {
 				String line;

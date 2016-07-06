@@ -25,7 +25,7 @@ import org.eclipse.team.ui.synchronize.*;
 
 /**
  * A synchronize page for displaying a {@link ModelSynchronizeParticipant}.
- * 
+ *
  * @since 3.2
  **/
 public class ModelSynchronizePage extends AbstractSynchronizePage {
@@ -39,8 +39,8 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 	public ModelSynchronizePage(ISynchronizePageConfiguration configuration) {
 		super(configuration);
 		this.participant = (ModelSynchronizeParticipant)configuration.getParticipant();
-		configuration.setComparisonType(isThreeWay() 
-						? ISynchronizePageConfiguration.THREE_WAY 
+		configuration.setComparisonType(isThreeWay()
+						? ISynchronizePageConfiguration.THREE_WAY
 						: ISynchronizePageConfiguration.TWO_WAY);
 		configuration.addActionContribution(new RefreshActionContribution());
 	}
@@ -52,6 +52,7 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizePage#reset()
 	 */
+	@Override
 	public void reset() {
 		// TODO Auto-generated method stub
 
@@ -60,6 +61,7 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizePage#updateMode(int)
 	 */
+	@Override
 	protected void updateMode(int mode) {
 		// Nothing to do
 	}
@@ -75,20 +77,23 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizePage#createViewerAdvisor(org.eclipse.swt.widgets.Composite)
 	 */
+	@Override
 	protected AbstractViewerAdvisor createViewerAdvisor(Composite parent) {
 		CommonViewerAdvisor commonViewerAdvisor = new CommonViewerAdvisor(parent, getConfiguration());
 		commonViewerAdvisor.addEmptyTreeListener((DiffTreeChangesSection)getChangesSection());
 		updateMode(getConfiguration().getMode());
 		return commonViewerAdvisor;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizePage#createChangesSection()
 	 */
+	@Override
 	protected ChangesSection createChangesSection(Composite parent) {
 		return new DiffTreeChangesSection(parent, this, getConfiguration());
 	}
-	
+
+	@Override
 	public void init(ISynchronizePageSite site) {
 		super.init(site);
 		IDialogSettings pageSettings = site.getPageSettings();
@@ -103,7 +108,8 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 			}
 		}
 	}
-	
+
+	@Override
 	public boolean aboutToChangeProperty(ISynchronizePageConfiguration configuration, String key, Object newValue) {
 		if (key.equals(ModelSynchronizeParticipant.P_VISIBLE_MODEL_PROVIDER)) {
 			if (!(newValue instanceof String)) {
@@ -112,7 +118,7 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 			String currentSetting = (String)configuration.getProperty(ModelSynchronizeParticipant.P_VISIBLE_MODEL_PROVIDER);
 			if (currentSetting != null && currentSetting.equals(newValue))
 				return false;
-			
+
 			Object input = getViewerInput(configuration,(String) newValue);
 			if (input instanceof ModelProvider) {
 				ModelProvider provider = (ModelProvider) input;
@@ -140,7 +146,7 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 			String currentSetting = (String)configuration.getProperty(ITeamContentProviderManager.PROP_PAGE_LAYOUT);
 			if (currentSetting != null && currentSetting.equals(newValue))
 				return false;
-			
+
 			IDialogSettings pageSettings = configuration.getSite().getPageSettings();
 			if(pageSettings != null) {
 				pageSettings.put(ITeamContentProviderManager.PROP_PAGE_LAYOUT, (String) newValue);
@@ -162,7 +168,7 @@ public class ModelSynchronizePage extends AbstractSynchronizePage {
 			ModelProvider provider = getModelProvider(providerId);
 			if (provider != null) {
 				input = provider;
-			}	
+			}
 		} else {
 			input = (ISynchronizationContext)configuration.getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_CONTEXT);
 		}

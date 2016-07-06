@@ -29,16 +29,18 @@ public class OpenFileInSystemEditorAction extends OpenFileAction {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.actions.SelectionListenerAction#getSelectedResources()
 	 */
+	@Override
 	protected List getSelectedResources() {
 		IStructuredSelection selection = getStructuredSelection();
 		IResource[] resources = Utils.getResources(selection.toArray());
 		return Arrays.asList(resources);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.actions.SelectionListenerAction#getSelectedNonResources()
 	 */
-	protected List getSelectedNonResources() {		
+	@Override
+	protected List getSelectedNonResources() {
 		return Collections.EMPTY_LIST;
 	}
 }

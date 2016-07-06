@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -66,9 +66,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 		 */
 			protected abstract void execute(IProgressMonitor monitor) throws CoreException;
 
-			/*
-			 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
-			 */
+			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				try {
 					execute(monitor);
@@ -125,6 +123,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 			 * and if the documents of the two element infos are equal.
 			 * @see Object#equals(java.lang.Object)
 			 */
+			@Override
 			public boolean equals(Object o) {
 				if (o instanceof ElementInfo) {
 					ElementInfo e= (ElementInfo) o;
@@ -133,25 +132,19 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 				return false;
 			}
 
-			/*
-			 * @see Object#hashCode()
-			 */
+			@Override
 			public int hashCode() {
 				return fDocument.hashCode();
 			}
 
-			/*
-			 * @see IDocumentListener#documentChanged(DocumentEvent)
-			 */
+			@Override
 			public void documentChanged(DocumentEvent event) {
 				fCanBeSaved= true;
 				removeUnchangedElementListeners(fElement, this);
 				fireElementDirtyStateChanged(fElement, fCanBeSaved);
 			}
 
-			/*
-			 * @see IDocumentListener#documentAboutToBeChanged(DocumentEvent)
-			 */
+			@Override
 			public void documentAboutToBeChanged(DocumentEvent event) {
 			}
 		}
@@ -182,6 +175,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @since 2.0
 	 * @deprecated As of 3.6, replaced by {@link Status#OK_STATUS}
 	 */
+	@Deprecated
 	static final protected IStatus STATUS_OK= new Status(IStatus.OK, TextEditorPlugin.PLUGIN_ID, IStatus.OK, EditorMessages.AbstractDocumentProvider_ok, null);
 
 	/**
@@ -192,9 +186,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 
 
 	/** Element information of all connected elements */
-	private Map fElementInfoMap= new HashMap();
+	private Map<Object, ElementInfo> fElementInfoMap= new HashMap<>();
 	/** The element state listeners */
-	private List fElementStateListeners= new ArrayList();
+	private List<IElementStateListener> fElementStateListeners= new ArrayList<>();
 	/**
 	 * The current progress monitor
 	 * @since 2.1
@@ -312,7 +306,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @return the element info object, or <code>null</code> if none
 	 */
 	protected ElementInfo getElementInfo(Object element) {
-		return (ElementInfo) fElementInfoMap.get(element);
+		return fElementInfoMap.get(element);
 	}
 
 	/**
@@ -380,21 +374,19 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	/**
 	 * Enumerates the elements connected via this document provider.
 	 *
-	 * @return the list of elements (element type: <code>Object</code>)
+	 * @return the list of elements
 	 */
-	protected Iterator getConnectedElements() {
-		Set s= new HashSet();
-		Set keys= fElementInfoMap.keySet();
+	protected Iterator<Object> getConnectedElements() {
+		Set<Object> s= new HashSet<>();
+		Set<Object> keys= fElementInfoMap.keySet();
 		if (keys != null)
 			s.addAll(keys);
 		return s.iterator();
 	}
 
-	/*
-	 * @see IDocumentProvider#connect(Object)
-	 */
+	@Override
 	public final void connect(Object element) throws CoreException {
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		if (info == null) {
 
 			info= createElementInfo(element);
@@ -424,8 +416,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	/*
 	 * @see IDocumentProvider#disconnect
 	 */
+	@Override
 	public final void disconnect(Object element) {
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 
 		if (info == null)
 			return;
@@ -452,51 +445,43 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	protected void disconnected() {
 	}
 
-	/*
-	 * @see IDocumentProvider#getDocument(Object)
-	 */
+	@Override
 	public IDocument getDocument(Object element) {
 
 		if (element == null)
 			return null;
 
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		return (info != null ? info.fDocument : null);
 	}
 
-	/*
-	 * @see IDocumentProvider#mustSaveDocument(Object)
-	 */
+	@Override
 	public boolean mustSaveDocument(Object element) {
 
 		if (element == null)
 			return false;
 
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		return (info != null ? info.fCount == 1 && info.fCanBeSaved : false);
 	}
 
-	/*
-	 * @see IDocumentProvider#getAnnotationModel(Object)
-	 */
+	@Override
 	public IAnnotationModel getAnnotationModel(Object element) {
 
 		if (element == null)
 			return null;
 
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		return (info != null ? info.fModel : null);
 	}
 
-	/*
-	 * @see IDocumentProvider#canSaveDocument(Object)
-	 */
+	@Override
 	public boolean canSaveDocument(Object element) {
 
 		if (element == null)
 			return false;
 
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		return (info != null ? info.fCanBeSaved : false);
 	}
 
@@ -509,7 +494,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @since 3.0
 	 */
 	protected void doResetDocument(Object element, IProgressMonitor monitor) throws CoreException {
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		if (info != null) {
 
 			IDocument original= null;
@@ -563,9 +548,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 		}
 	}
 
-	/*
-	 * @see IDocumentProvider#resetDocument(Object)
-	 */
+	@Override
 	public final void resetDocument(final Object element) throws CoreException {
 
 		if (element == null)
@@ -573,10 +556,12 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 
 		class ResetOperation extends DocumentProviderOperation implements ISchedulingRuleProvider {
 
+			@Override
 			protected void execute(IProgressMonitor monitor) throws CoreException {
 				doResetDocument(element, monitor);
 			}
 
+			@Override
 			public ISchedulingRule getSchedulingRule() {
 				return getResetRule(element);
 			}
@@ -586,9 +571,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	}
 
 
-	/*
-	 * @see IDocumentProvider#saveDocument(IProgressMonitor, Object, IDocument, boolean)
-	 */
+	@Override
 	public final void saveDocument(IProgressMonitor monitor, final Object element, final IDocument document, final boolean overwrite) throws CoreException {
 
 		if (element == null)
@@ -596,11 +579,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 
 		class SaveOperation extends DocumentProviderOperation implements ISchedulingRuleProvider {
 
-			/*
-			 * @see org.eclipse.ui.texteditor.AbstractDocumentProvider.DocumentProviderOperation#execute(org.eclipse.core.runtime.IProgressMonitor)
-			 */
+			@Override
 			protected void execute(IProgressMonitor pm) throws CoreException {
-				ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+				ElementInfo info= fElementInfoMap.get(element);
 				if (info != null) {
 					if (info.fDocument != document) {
 						Status status= new Status(IStatus.WARNING, TextEditorPlugin.PLUGIN_ID, IStatus.ERROR, EditorMessages.AbstractDocumentProvider_error_save_inuse, null);
@@ -621,6 +602,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 				}
 			}
 
+			@Override
 			public ISchedulingRule getSchedulingRule() {
 				return getSaveRule(element);
 			}
@@ -636,6 +618,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 *
 	 * @param element the element
 	 */
+	@Override
 	public void aboutToChange(Object element) {
 	}
 
@@ -646,21 +629,18 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 *
 	 * @param element the element
 	 */
+	@Override
 	public void changed(Object element) {
 	}
 
-	/*
-	 * @see IDocumentProvider#addElementStateListener(IElementStateListener)
-	 */
+	@Override
 	public void addElementStateListener(IElementStateListener listener) {
 		Assert.isNotNull(listener);
 		if (!fElementStateListeners.contains(listener))
 			fElementStateListeners.add(listener);
 	}
 
-	/*
-	 * @see IDocumentProvider#removeElementStateListener(IElementStateListener)
-	 */
+	@Override
 	public void removeElementStateListener(IElementStateListener listener) {
 		Assert.isNotNull(listener);
 		fElementStateListeners.remove(listener);
@@ -675,9 +655,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @see IElementStateListener#elementDirtyStateChanged(Object, boolean)
 	 */
 	protected void fireElementDirtyStateChanged(Object element, boolean isDirty) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
-			IElementStateListener l= (IElementStateListener) e.next();
+			IElementStateListener l= e.next();
 			l.elementDirtyStateChanged(element, isDirty);
 		}
 	}
@@ -690,9 +670,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @see IElementStateListener#elementContentAboutToBeReplaced(Object)
 	 */
 	protected void fireElementContentAboutToBeReplaced(Object element) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
-			IElementStateListener l= (IElementStateListener) e.next();
+			IElementStateListener l= e.next();
 			l.elementContentAboutToBeReplaced(element);
 		}
 	}
@@ -705,9 +685,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @see IElementStateListener#elementContentReplaced(Object)
 	 */
 	protected void fireElementContentReplaced(Object element) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
-			IElementStateListener l= (IElementStateListener) e.next();
+			IElementStateListener l= e.next();
 			l.elementContentReplaced(element);
 		}
 	}
@@ -720,9 +700,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @see IElementStateListener#elementDeleted(Object)
 	 */
 	protected void fireElementDeleted(Object element) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
-			IElementStateListener l= (IElementStateListener) e.next();
+			IElementStateListener l= e.next();
 			l.elementDeleted(element);
 		}
 	}
@@ -735,49 +715,34 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @see IElementStateListener#elementMoved(Object, Object)
 	 */
 	protected void fireElementMoved(Object originalElement, Object movedElement) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
-			IElementStateListener l= (IElementStateListener) e.next();
+			IElementStateListener l= e.next();
 			l.elementMoved(originalElement, movedElement);
 		}
 	}
 
-	/*
-	 * @see IDocumentProvider#getModificationStamp(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public long getModificationStamp(Object element) {
 		return 0;
 	}
 
-	/*
-	 * @see IDocumentProvider#getSynchronizationStamp(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public long getSynchronizationStamp(Object element) {
 		return 0;
 	}
 
-	/*
-	 * @see IDocumentProvider#isDeleted(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public boolean isDeleted(Object element) {
 		return false;
 	}
 
-	/*
-	 * @see IDocumentProviderExtension#isReadOnly(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public boolean isReadOnly(Object element) {
 		return true;
 	}
 
-	/*
-	 * @see IDocumentProviderExtension#isModifiable(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public boolean isModifiable(Object element) {
 		return false;
 	}
@@ -790,8 +755,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @return whether <code>validateState</code> has been called for the given element
 	 * @since 2.0
 	 */
+	@Override
 	public boolean isStateValidated(Object element) {
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		if (info != null)
 			return info.fIsStateValidated;
 		return false;
@@ -809,18 +775,16 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	protected void doValidateState(Object  element, Object computationContext) throws CoreException {
 	}
 
-	/*
-	 * @see IDocumentProviderExtension#validateState(Object, Object)
-	 * @since 2.0
-	 */
+	@Override
 	public void validateState(final Object element, final Object computationContext) throws CoreException {
 		if (element == null)
 			return;
 
 		class ValidateStateOperation extends DocumentProviderOperation implements ISchedulingRuleProvider {
 
+			@Override
 			protected void execute(IProgressMonitor monitor) throws CoreException {
-				ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+				ElementInfo info= fElementInfoMap.get(element);
 				if (info == null)
 					return;
 
@@ -831,6 +795,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 				fireElementStateValidationChanged(element, true);
 			}
 
+			@Override
 			public ISchedulingRule getSchedulingRule() {
 				return getValidateStateRule(element);
 			}
@@ -867,12 +832,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 		return readOnlyChanged;
 	}
 
-	/*
-	 * @see IDocumentProviderExtension#updateStateCache(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public final void updateStateCache(Object element) throws CoreException {
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		if (info != null) {
 			boolean wasReadOnly= isReadOnly(element);
 			doUpdateStateCache(element);
@@ -883,13 +845,10 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 		}
 	}
 
-	/*
-	 * @see IDocumentProviderExtension#setCanSaveDocument(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public void setCanSaveDocument(Object element) {
 		if (element != null) {
-			ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+			ElementInfo info= fElementInfoMap.get(element);
 			if (info != null) {
 				info.fCanBeSaved= true;
 				removeUnchangedElementListeners(element, info);
@@ -908,7 +867,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @since 2.0
 	 */
 	protected void fireElementStateValidationChanged(Object element, boolean isStateValidated) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
 			Object o= e.next();
 			if (o instanceof IElementStateListenerExtension) {
@@ -927,7 +886,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @since 2.0
 	 */
 	protected void fireElementStateChanging(Object element) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
 			Object o= e.next();
 			if (o instanceof IElementStateListenerExtension) {
@@ -946,7 +905,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	 * @since 2.0
 	 */
 	protected void fireElementStateChangeFailed(Object element) {
-		Iterator e= new ArrayList(fElementStateListeners).iterator();
+		Iterator<IElementStateListener> e= new ArrayList<>(fElementStateListeners).iterator();
 		while (e.hasNext()) {
 			Object o= e.next();
 			if (o instanceof IElementStateListenerExtension) {
@@ -956,12 +915,9 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 		}
 	}
 
-	/*
-	 * @see IDocumentProviderExtension#getStatus(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public IStatus getStatus(Object element) {
-		ElementInfo info= (ElementInfo) fElementInfoMap.get(element);
+		ElementInfo info= fElementInfoMap.get(element);
 		if (info != null) {
 			if (info.fStatus != null)
 				return info.fStatus;
@@ -982,10 +938,7 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 	protected void doSynchronize(Object element, IProgressMonitor monitor) throws CoreException {
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDocumentProviderExtension#synchronize(Object)
-	 * @since 2.0
-	 */
+	@Override
 	public final void synchronize(final Object element) throws CoreException {
 
 		if (element == null)
@@ -993,10 +946,12 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 
 		class SynchronizeOperation extends DocumentProviderOperation implements ISchedulingRuleProvider {
 
+			@Override
 			protected void execute(IProgressMonitor monitor) throws CoreException {
 				doSynchronize(element, monitor);
 			}
 
+			@Override
 			public ISchedulingRule getSchedulingRule() {
 				return getSynchronizeRule(element);
 			}
@@ -1005,42 +960,27 @@ public abstract class AbstractDocumentProvider implements IDocumentProvider, IDo
 		executeOperation(new SynchronizeOperation(), getProgressMonitor());
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDocumentProviderExtension2#getProgressMonitor()
-	 * @since 2.1
-	 */
+	@Override
 	public IProgressMonitor getProgressMonitor() {
 		return fProgressMonitor == null ? new NullProgressMonitor() : fProgressMonitor;
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDocumentProviderExtension2#setProgressMonitor(org.eclipse.core.runtime.IProgressMonitor)
-	 * @since 2.1
-	 */
+	@Override
 	public void setProgressMonitor(IProgressMonitor progressMonitor) {
 		fProgressMonitor= progressMonitor;
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDocumentProviderExtension3#isSynchronized(java.lang.Object)
-	 * @since 3.0
-	 */
+	@Override
 	public boolean isSynchronized(Object element) {
 		return true;
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDocumentProviderExtension5#isNotSynchronizedException(Object, CoreException)
-	 * @since 3.2
-	 */
+	@Override
 	public boolean isNotSynchronizedException(Object element, CoreException ex) {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDocumentProviderExtension4#getContentType(java.lang.Object)
-	 * @since 3.1
-	 */
+	@Override
 	public IContentType getContentType(Object element) throws CoreException {
 		return null;
 	}

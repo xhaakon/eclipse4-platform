@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2011 IBM Corporation and others.
+ * Copyright (c) 2008, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,7 +40,7 @@ public class CompositeMetadataRepository extends AbstractMetadataRepository impl
 
 	static final public boolean ATOMIC_LOADING_DEFAULT = Boolean.parseBoolean(Activator.getContext().getProperty("eclipse.p2.atomic.composite.loading.default")); //$NON-NLS-1$
 
-	static final private Integer REPOSITORY_VERSION = new Integer(1);
+	static final private Integer REPOSITORY_VERSION = 1;
 	static final public String XML_EXTENSION = ".xml"; //$NON-NLS-1$
 	static final private String JAR_EXTENSION = ".jar"; //$NON-NLS-1$
 
@@ -410,10 +410,15 @@ public class CompositeMetadataRepository extends AbstractMetadataRepository impl
 		if (repoProperties != null) {
 			String value = repoProperties.get(PROP_ATOMIC_LOADING);
 			if (value != null) {
-				failOnChildFailure = Boolean.valueOf(value).booleanValue();
+				failOnChildFailure = Boolean.parseBoolean(value);
 			}
 		}
 		return failOnChildFailure;
+	}
+
+	@Override
+	public String toString() {
+		return getChildren().toString();
 	}
 
 }

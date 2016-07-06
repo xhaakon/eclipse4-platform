@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,11 +47,6 @@ public final class PreferencePageParameterValues implements IParameterValues {
 		Platform.getExtensionRegistry().addRegistryChangeListener(
 				new IRegistryChangeListener() {
 
-					/*
-					 * (non-Javadoc)
-					 *
-					 * @see org.eclipse.core.runtime.IRegistryChangeListener#registryChanged(org.eclipse.core.runtime.IRegistryChangeEvent)
-					 */
 					@Override
 					public void registryChanged(IRegistryChangeEvent event) {
 						if (event.getExtensionDeltas(PlatformUI.PLUGIN_ID,

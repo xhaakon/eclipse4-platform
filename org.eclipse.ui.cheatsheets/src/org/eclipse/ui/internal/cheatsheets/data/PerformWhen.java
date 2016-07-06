@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,11 +12,12 @@ package org.eclipse.ui.internal.cheatsheets.data;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+
 import org.eclipse.ui.internal.cheatsheets.views.CheatSheetManager;
 
 public class PerformWhen implements IExecutableItem  {
 	private String condition;
-	private ArrayList executables;
+	private ArrayList<AbstractExecutable> executables;
 	private AbstractExecutable selectedExecutable;
 
 	/**
@@ -30,7 +31,7 @@ public class PerformWhen implements IExecutableItem  {
 		super();
 		this.condition = condition;
 	}
-	
+
 	/**
 	 * Returns the condition.
 	 * @return String
@@ -50,16 +51,16 @@ public class PerformWhen implements IExecutableItem  {
 	/**
 	 * @return Returns the executables.
 	 */
-	public ArrayList getExecutables() {
+	public ArrayList<AbstractExecutable> getExecutables() {
 		return executables;
 	}
-	
+
 	/**
 	 * @param executable the AbstractExecutable to add.
 	 */
 	public void addExecutable(AbstractExecutable executable) {
 		if(executables == null) {
-			executables = new ArrayList();
+			executables = new ArrayList<>();
 		}
 		executables.add(executable);
 	}
@@ -69,6 +70,7 @@ public class PerformWhen implements IExecutableItem  {
 	 * This method always returns <code>null</code>, it is only here aid in parsing.
 	 * @return Returns the executables.
 	 */
+	@Override
 	public AbstractExecutable getExecutable() {
 		return null;
 	}
@@ -77,6 +79,7 @@ public class PerformWhen implements IExecutableItem  {
 	 * Delegate to the addAbstractExecutable metod.
 	 * @param executable the AbstractExecutable to add.
 	 */
+	@Override
 	public void setExecutable(AbstractExecutable executable) {
 		addExecutable(executable);
 	}
@@ -88,8 +91,8 @@ public class PerformWhen implements IExecutableItem  {
 	public void setSelectedExecutable(CheatSheetManager csm) {
 		String conditionValue = csm.getVariableData(condition);
 
-		for (Iterator iter = executables.iterator(); iter.hasNext();) {
-			AbstractExecutable executable = (AbstractExecutable) iter.next();
+		for (Iterator<AbstractExecutable> iter = executables.iterator(); iter.hasNext();) {
+			AbstractExecutable executable = iter.next();
 			if(executable.getWhen() != null && executable.getWhen().equals(conditionValue)) {
 				selectedExecutable = executable;
 				break;

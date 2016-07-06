@@ -31,10 +31,10 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 	private IRunnableContext runnableContext;
 	private ISchedulingRule schedulingRule;
 	private boolean postponeBuild;
-	
+
 	public ProgressDialogRunnableContext() {
 	}
-	
+
 	/**
 	 * Set whether the auto-build will be postponed while this
 	 * context is executing a runnable.
@@ -43,7 +43,7 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 	public void setPostponeBuild(boolean postponeBuild) {
 		this.postponeBuild = postponeBuild;
 	}
-	
+
 	/**
 	 * Set the scheduling rule that will be obtained before the context
 	 * executes a runnable or <code>null</code> if no scheduling rule is to be onbtained.
@@ -61,10 +61,11 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 	public void setRunnableContext(IRunnableContext runnableContext) {
 		this.runnableContext = runnableContext;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.actions.ITeamRunnableContext#run(org.eclipse.jface.operation.IRunnableWithProgress)
 	 */
+	@Override
 	public void run(IRunnableWithProgress runnable) throws InvocationTargetException, InterruptedException {
 		getRunnableContext().run(true /* fork */, true /* cancelable */, wrapRunnable(runnable));
 	}
@@ -72,6 +73,7 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 	private IRunnableContext getRunnableContext() {
 		if (runnableContext == null) {
 			return new IRunnableContext() {
+				@Override
 				public void run(boolean fork, boolean cancelable, IRunnableWithProgress runnable)
 						throws InvocationTargetException, InterruptedException {
 					IProgressService manager = PlatformUI.getWorkbench().getProgressService();
@@ -88,6 +90,7 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 	 */
 	private IRunnableWithProgress wrapRunnable(final IRunnableWithProgress runnable) {
 		return new IRunnableWithProgress() {
+			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				try {
 					if (schedulingRule == null && !postponeBuild) {
@@ -95,6 +98,7 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 					} else {
 						final Exception[] exception = new Exception[] { null };
 						ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+							@Override
 							public void run(IProgressMonitor pm) throws CoreException {
 								try {
 									runnable.run(pm);
@@ -109,7 +113,7 @@ public class ProgressDialogRunnableContext implements ITeamRunnableContext {
 							if (exception[0] instanceof InvocationTargetException) {
 								throw (InvocationTargetException)exception[0];
 							} else if (exception[0] instanceof InterruptedException) {
-								throw (InterruptedException)exception[0];	
+								throw (InterruptedException)exception[0];
 							}
 						}
 					}

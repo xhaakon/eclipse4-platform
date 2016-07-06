@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Alex Blewitt <alex.blewitt@gmail.com> - Replace new Boolean with Boolean.valueOf - https://bugs.eclipse.org/470244
  *******************************************************************************/
 package org.eclipse.search.internal.ui.util;
 
@@ -46,7 +47,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 
 	private Control fContents;
 	private Button fCancelButton;
-	private List fActionButtons;
+	private List<Button> fActionButtons;
 	// The number of long running operation executed from the dialog.
 	private long fActiveRunningOperations;
 
@@ -59,13 +60,10 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 
 	public ExtendedDialogWindow(Shell shell) {
 		super(shell);
-		fActionButtons= new ArrayList();
+		fActionButtons= new ArrayList<>();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#isResizable()
-	 * @since 3.4
-	 */
+	@Override
 	protected boolean isResizable() {
 		return true;
 	}
@@ -118,6 +116,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 	 *
 	 * @param parent the button bar composite
 	 */
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		fCancelButton= createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
 	}
@@ -134,6 +133,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 	 * 	@param parent The parent composite
 	 * @return The created control
 	 */
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite result= (Composite) super.createDialogArea(parent);
 
@@ -154,6 +154,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 		return result;
 	}
 
+	@Override
 	protected void buttonPressed(int buttonId) {
 		switch (buttonId) {
 			case IDialogConstants.CANCEL_ID:
@@ -173,8 +174,8 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 	 * @param state The new state
 	 */
 	public void setPerformActionEnabled(boolean state) {
-		for (Iterator buttons = fActionButtons.iterator(); buttons.hasNext(); ) {
-			Button element = (Button) buttons.next();
+		for (Iterator<Button> buttons = fActionButtons.iterator(); buttons.hasNext(); ) {
+			Button element = buttons.next();
 			element.setEnabled(state);
 		}
 	}
@@ -182,9 +183,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 	//---- Operation stuff ------------------------------------------------------
 
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.operation.IRunnableContext#run(boolean, boolean, org.eclipse.jface.operation.IRunnableWithProgress)
-	 */
+	@Override
 	public void run(boolean fork, boolean cancelable, IRunnableWithProgress runnable) throws InvocationTargetException, InterruptedException {
 		// The operation can only be canceled if it is executed in a separate thread.
 		// Otherwise the UI is blocked anyway.
@@ -212,7 +211,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 	 * @return The saved UI state.
 	 */
 	protected synchronized Object aboutToStart(boolean enableCancelButton) {
-		HashMap savedState= null;
+		HashMap<Object, Object> savedState= null;
 		Shell shell= getShell();
 		if (shell != null) {
 			Display d= shell.getDisplay();
@@ -258,7 +257,8 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 				fProgressMonitorPart.removeFromCancelComponent(fCancelButton);
 			}
 
-			HashMap state= (HashMap)savedState;
+			@SuppressWarnings("unchecked")
+			HashMap<Object, Object> state= (HashMap<Object, Object>)savedState;
 			restoreUIState(state);
 
 			setDisplayCursor(shell.getDisplay(), null);
@@ -277,10 +277,10 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 
 	//---- UI state save and restoring ---------------------------------------------
 
-	private void restoreUIState(HashMap state) {
+	private void restoreUIState(HashMap<Object, Object> state) {
 		restoreEnableState(fCancelButton, state);
-		for (Iterator actionButtons = fActionButtons.iterator(); actionButtons.hasNext(); ) {
-			Button button = (Button) actionButtons.next();
+		for (Iterator<Button> actionButtons = fActionButtons.iterator(); actionButtons.hasNext(); ) {
+			Button button = actionButtons.next();
 			restoreEnableState(button, state);
 		}
 		ControlEnableState pageState= (ControlEnableState)state.get("tabForm"); //$NON-NLS-1$
@@ -290,7 +290,7 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 	/*
 	 * Restores the enable state of the given control.
 	 */
-	protected void restoreEnableState(Control w, HashMap h) {
+	protected void restoreEnableState(Control w, HashMap<Object, Object> h) {
 		if (!w.isDisposed()) {
 			Boolean b= (Boolean)h.get(w);
 			if (b != null)
@@ -298,11 +298,11 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 		}
 	}
 
-	private HashMap saveUIState(boolean keepCancelEnabled) {
-		HashMap savedState= new HashMap(10);
+	private HashMap<Object, Object> saveUIState(boolean keepCancelEnabled) {
+		HashMap<Object, Object> savedState= new HashMap<>(10);
 		saveEnableStateAndSet(fCancelButton, savedState, keepCancelEnabled);
-		for (Iterator actionButtons = fActionButtons.iterator(); actionButtons.hasNext(); ) {
-			Button button = (Button) actionButtons.next();
+		for (Iterator<Button> actionButtons = fActionButtons.iterator(); actionButtons.hasNext(); ) {
+			Button button = actionButtons.next();
 			saveEnableStateAndSet(button, savedState, false);
 		}
 		savedState.put("tabForm", ControlEnableState.disable(fContents)); //$NON-NLS-1$
@@ -310,13 +310,14 @@ public abstract class ExtendedDialogWindow extends TrayDialog implements IRunnab
 		return savedState;
 	}
 
-	private void saveEnableStateAndSet(Control w, HashMap h, boolean enabled) {
+	private void saveEnableStateAndSet(Control w, HashMap<Object, Object> h, boolean enabled) {
 		if (!w.isDisposed()) {
-			h.put(w, new Boolean(w.isEnabled()));
+			h.put(w, Boolean.valueOf(w.isEnabled()));
 			w.setEnabled(enabled);
 		}
 	}
 
+	@Override
 	protected void handleShellCloseEvent() {
 		if (okToClose())
 			super.handleShellCloseEvent();

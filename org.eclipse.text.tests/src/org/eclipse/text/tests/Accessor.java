@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.AssertionFailedException;
 
 
 /**
@@ -28,7 +29,7 @@ import org.eclipse.core.runtime.Assert;
 public class Accessor {
 
 	/** The class to access. */
-	private Class fClass;
+	private Class<?> fClass;
 	/** The instance to access. */
 	private Object fInstance;
 
@@ -40,8 +41,8 @@ public class Accessor {
 	 * @param instance the instance
 	 * @param clazz the class
 	 */
-	public Accessor(Object instance, Class clazz) {
-		org.eclipse.core.runtime.Assert.isNotNull(instance);
+	public Accessor(Object instance, Class<?> clazz) {
+		Assert.isNotNull(instance);
 		Assert.isNotNull(clazz);
 		fInstance= instance;
 		fClass= clazz;
@@ -64,9 +65,9 @@ public class Accessor {
 		try {
 			fClass= Class.forName(className, true, classLoader);
 		} catch (ClassNotFoundException e) {
-			fail();
+			fail(e);
 		} catch (ExceptionInInitializerError e) {
-			fail();
+			fail(e);
 		}
 	}
 
@@ -94,34 +95,34 @@ public class Accessor {
 	 * @param constructorTypes the types of the constructor arguments
 	 * @param constructorArgs the constructor arguments
 	 */
-	public Accessor(String className, ClassLoader classLoader, Class[] constructorTypes, Object[] constructorArgs) {
+	public Accessor(String className, ClassLoader classLoader, Class<?>[] constructorTypes, Object[] constructorArgs) {
 		try {
 			fClass= Class.forName(className, true, classLoader);
 		} catch (ClassNotFoundException e) {
-			fail();
+			fail(e);
 		} catch (ExceptionInInitializerError e) {
-			fail();
+			fail(e);
 		}
-		Constructor constructor= null;
+		Constructor<?> constructor= null;
 		try {
 			constructor= fClass.getDeclaredConstructor(constructorTypes);
-		} catch (SecurityException e2) {
-			fail();
-		} catch (NoSuchMethodException e2) {
-			fail();
+		} catch (SecurityException e) {
+			fail(e);
+		} catch (NoSuchMethodException e) {
+			fail(e);
 		}
 		Assert.isNotNull(constructor);
 		constructor.setAccessible(true);
 		try {
 			fInstance= constructor.newInstance(constructorArgs);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (InvocationTargetException e) {
-			fail();
+			fail(e);
 		} catch (InstantiationException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 	}
 
@@ -138,9 +139,9 @@ public class Accessor {
 		try {
 			fClass= Class.forName(className, true, classLoader);
 		} catch (ClassNotFoundException e) {
-			fail();
+			fail(e);
 		} catch (ExceptionInInitializerError e) {
-			fail();
+			fail(e);
 		}
 	}
 
@@ -168,25 +169,25 @@ public class Accessor {
 	 * @param arguments the method arguments
 	 * @return the method return value
 	 */
-	public Object invoke(String methodName, Class[] types, Object[] arguments) {
+	public Object invoke(String methodName, Class<?>[] types, Object[] arguments) {
 		Method method= null;
 		try {
 			method= fClass.getDeclaredMethod(methodName, types);
 		} catch (SecurityException e) {
-			fail();
-		} catch (NoSuchMethodException ex) {
-			fail();
+			fail(e);
+		} catch (NoSuchMethodException e) {
+			fail(e);
 		}
 		Assert.isNotNull(method);
 		method.setAccessible(true);
 		try {
 			return method.invoke(fInstance, arguments);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (InvocationTargetException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 		return null;
 	}
@@ -202,9 +203,9 @@ public class Accessor {
 		try {
 			field.set(fInstance, value);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 	}
 
@@ -219,9 +220,9 @@ public class Accessor {
 		try {
 			field.setBoolean(fInstance, value);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 	}
 
@@ -236,9 +237,9 @@ public class Accessor {
 		try {
 			field.setInt(fInstance, value);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 	}
 
@@ -253,9 +254,9 @@ public class Accessor {
 		try {
 			return field.get(fInstance);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 		// Unreachable code
 		return null;
@@ -272,9 +273,9 @@ public class Accessor {
 		try {
 			return field.getBoolean(fInstance);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 		// Unreachable code
 		return false;
@@ -291,9 +292,9 @@ public class Accessor {
 		try {
 			return field.getInt(fInstance);
 		} catch (IllegalArgumentException e) {
-			fail();
+			fail(e);
 		} catch (IllegalAccessException e) {
-			fail();
+			fail(e);
 		}
 		// Unreachable code
 		return 0;
@@ -304,20 +305,20 @@ public class Accessor {
 		try {
 			field= fClass.getDeclaredField(fieldName);
 		} catch (SecurityException e) {
-			fail();
+			fail(e);
 		} catch (NoSuchFieldException e) {
-			fail();
+			fail(e);
 		}
 		field.setAccessible(true);
 		return field;
 	}
 
-	private static Class[] getTypes(Object[] objects) {
+	private static Class<?>[] getTypes(Object[] objects) {
 		if (objects == null)
 			return null;
 
 		int length= objects.length;
-		Class[] classes= new Class[length];
+		Class<?>[] classes= new Class[length];
 		for (int i= 0; i < length; i++) {
 			Assert.isNotNull(objects[i]);
 			classes[i]= objects[i].getClass();
@@ -325,7 +326,9 @@ public class Accessor {
 		return classes;
 	}
 
-	private void fail() {
-		Assert.isTrue(false);
+	private void fail(Throwable e) {
+		AssertionFailedException afe= new AssertionFailedException(e.getLocalizedMessage());
+		afe.initCause(e);
+		throw afe;
 	}
 }

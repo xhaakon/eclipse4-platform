@@ -30,7 +30,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 	private String jobName;
 	private ISchedulingRule schedulingRule;
 	private boolean postponeBuild;
-	
+
 	/*
 	 * Interface that provides access to the runnable of the job so
 	 * that subclasses can do belongsTo family checking.
@@ -38,7 +38,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 	public interface IContextJob {
 	    IRunnableWithProgress getRunnable();
 	}
-	
+
 	/*
 	 * Class that provides a basic job (i.e. no resource specific interactions)
 	 */
@@ -48,17 +48,20 @@ public class JobRunnableContext implements ITeamRunnableContext {
             super(name);
             this.runnable = runnable;
         }
-        public IStatus run(IProgressMonitor monitor) {
+        @Override
+		public IStatus run(IProgressMonitor monitor) {
 			return JobRunnableContext.this.run(runnable, monitor);
 		}
+		@Override
 		public boolean belongsTo(Object family) {
 		    return JobRunnableContext.this.belongsTo(this, family);
 		}
-        public IRunnableWithProgress getRunnable() {
+        @Override
+		public IRunnableWithProgress getRunnable() {
             return runnable;
         }
 	}
-	
+
 	/*
 	 * Class that provides a resource job (i.e. resource specific interactions)
 	 */
@@ -68,13 +71,16 @@ public class JobRunnableContext implements ITeamRunnableContext {
             super(name);
             this.runnable = runnable;
         }
-        public IStatus runInWorkspace(IProgressMonitor monitor) {
+        @Override
+		public IStatus runInWorkspace(IProgressMonitor monitor) {
 			return JobRunnableContext.this.run(runnable, monitor);
 		}
+		@Override
 		public boolean belongsTo(Object family) {
 		    return JobRunnableContext.this.belongsTo(this, family);
 		}
-        public IRunnableWithProgress getRunnable() {
+        @Override
+		public IRunnableWithProgress getRunnable() {
             return runnable;
         }
 	}
@@ -87,6 +93,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ccvs.ui.operations.ITeamRunnableContext#run(java.lang.String, boolean, org.eclipse.jface.operation.IRunnableWithProgress)
 	 */
+	@Override
 	public void run(IRunnableWithProgress runnable) {
 		Job job;
 		if (schedulingRule == null && !postponeBuild) {
@@ -100,7 +107,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 		configureJob(job);
 		Utils.schedule(job, site);
 	}
-	
+
 	/**
 	 * Configure the job. By default, the job is configured to be a user
 	 * job meaning that it will make use of the progress service.
@@ -113,7 +120,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 		}
 	    job.setUser(isUser());
 	}
-    
+
 	/**
 	 * Set whether the auto-build will be postponed while this
 	 * context is executing a runnable.
@@ -122,14 +129,14 @@ public class JobRunnableContext implements ITeamRunnableContext {
 	public void setPostponeBuild(boolean postponeBuild) {
 		this.postponeBuild = postponeBuild;
 	}
-	
+
 	/**
 	 * Return whether this job context is user initiated. Subclasses may override.
 	 */
 	protected boolean isUser() {
 		return true;
 	}
-	
+
 	/**
 	 * Set the scheduling rule that will be obtained before the context
 	 * executes a runnable or <code>null</code> if no scheduling rule is to be onbtained.
@@ -138,7 +145,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 	public void setSchedulingRule(ISchedulingRule schedulingRule) {
 		this.schedulingRule = schedulingRule;
 	}
-	
+
 	/* private */ IStatus run(IRunnableWithProgress runnable, IProgressMonitor monitor) {
 		try {
 			runnable.run(monitor);
@@ -149,7 +156,7 @@ public class JobRunnableContext implements ITeamRunnableContext {
 		}
 		return getCompletionStatus();
 	}
-    
+
 	/**
 	 * Return the completions status for the job.
 	 * By default, <code>Status.OK_STATUS</code>

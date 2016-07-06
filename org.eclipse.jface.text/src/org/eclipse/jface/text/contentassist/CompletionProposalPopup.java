@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,6 @@ package org.eclipse.jface.text.contentassist;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.osgi.util.TextProcessor;
@@ -139,10 +138,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			fOperationCode= operationCode;
 		}
 
-		/*
-		 * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
-		 * @since 3.4
-		 */
+		@Override
 		public Object execute(ExecutionEvent event) throws ExecutionException {
 			int itemCount= fProposalTable.getItemCount();
 			int selectionIndex= fProposalTable.getSelectionIndex();
@@ -176,76 +172,57 @@ class CompletionProposalPopup implements IContentAssistListener {
 
 		String fDisplayString;
 		int fOffset;
-		/*
-		 * @see ICompletionProposal#apply(IDocument)
-		 */
+		@Override
 		public void apply(IDocument document) {
 		}
 
-		/*
-		 * @see ICompletionProposal#getSelection(IDocument)
-		 */
+		@Override
 		public Point getSelection(IDocument document) {
 			return new Point(fOffset, 0);
 		}
 
-		/*
-		 * @see ICompletionProposal#getContextInformation()
-		 */
+		@Override
 		public IContextInformation getContextInformation() {
 			return null;
 		}
 
-		/*
-		 * @see ICompletionProposal#getImage()
-		 */
+		@Override
 		public Image getImage() {
 			return null;
 		}
 
-		/*
-		 * @see ICompletionProposal#getDisplayString()
-		 */
+		@Override
 		public String getDisplayString() {
 			return fDisplayString;
 		}
 
-		/*
-		 * @see ICompletionProposal#getAdditionalProposalInfo()
-		 */
+		@Override
 		public String getAdditionalProposalInfo() {
 			return null;
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.contentassist.ICompletionProposalExtension#apply(org.eclipse.jface.text.IDocument, char, int)
-		 */
+		@Override
 		public void apply(IDocument document, char trigger, int offset) {
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.contentassist.ICompletionProposalExtension#isValidFor(org.eclipse.jface.text.IDocument, int)
-		 */
+		@Override
 		public boolean isValidFor(IDocument document, int offset) {
 			return false;
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.contentassist.ICompletionProposalExtension#getTriggerCharacters()
-		 */
+		@Override
 		public char[] getTriggerCharacters() {
 			return null;
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.contentassist.ICompletionProposalExtension#getContextInformationPosition()
-		 */
+		@Override
 		public int getContextInformationPosition() {
 			return -1;
 		}
 	}
 
 	private final class ProposalSelectionListener implements KeyListener {
+		@Override
 		public void keyPressed(KeyEvent e) {
 			if (!Helper.okToUse(fProposalShell))
 				return;
@@ -258,6 +235,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			}
 		}
 
+		@Override
 		public void keyReleased(KeyEvent e) {
 			if (!Helper.okToUse(fProposalShell))
 				return;
@@ -278,6 +256,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			fCommandSequence= keySequence;
 		}
 
+		@Override
 		public void keyPressed(KeyEvent e) {
 			if (!Helper.okToUse(fProposalShell))
 				return;
@@ -311,7 +290,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 	/** The key listener to control navigation. */
 	private ProposalSelectionListener fKeyListener;
 	/** List of document events used for filtering proposals. */
-	private final List fDocumentEvents= new ArrayList();
+	private final List<DocumentEvent> fDocumentEvents= new ArrayList<>();
 	/** Listener filling the document event queue. */
 	private IDocumentListener fDocumentListener;
 	/** The filter list of proposals. */
@@ -365,6 +344,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 	 * @since 3.1.1
 	 */
 	private final Runnable fFilterRunnable= new Runnable() {
+		@Override
 		public void run() {
 			if (!fIsFilterPending)
 				return;
@@ -448,6 +428,14 @@ class CompletionProposalPopup implements IContentAssistListener {
 	private ICompletionProposalSorter fSorter;
 
 	/**
+	 * Set to true by {@link #computeProposals(int)} when initial sorting is performed on the
+	 * computed proposals using {@link #fSorter}.
+	 * 
+	 * @since 3.11
+	 */
+	private boolean fIsInitialSort;
+
+	/**
 	 * Creates a new completion proposal popup for the given elements.
 	 *
 	 * @param contentAssistant the content assistant feeding this popup
@@ -497,6 +485,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			fContentAssistSubjectControlAdapter.addKeyListener(fKeyListener);
 
 			BusyIndicator.showWhile(control.getDisplay(), new Runnable() {
+				@Override
 				public void run() {
 
 					fInvocationOffset= fContentAssistSubjectControlAdapter.getSelectedRange().x;
@@ -561,16 +550,25 @@ class CompletionProposalPopup implements IContentAssistListener {
 	}
 
 	/**
-	 * Returns the completion proposal available at the given offset of the
-	 * viewer's document. Delegates the work to the content assistant.
+	 * Returns the completion proposals available at the given offset of the viewer's document.
+	 * Delegates the work to the content assistant. Sorts the computed proposals if sorting is
+	 * requested with {@link #fSorter}.
 	 *
 	 * @param offset the offset
 	 * @return the completion proposals available at this offset
 	 */
 	private ICompletionProposal[] computeProposals(int offset) {
-		if (fContentAssistSubjectControl != null)
-			return fContentAssistant.computeCompletionProposals(fContentAssistSubjectControl, offset);
-		return fContentAssistant.computeCompletionProposals(fViewer, offset);
+		ICompletionProposal[] proposals;
+		if (fContentAssistSubjectControl != null) {
+			proposals= fContentAssistant.computeCompletionProposals(fContentAssistSubjectControl, offset);
+		} else {
+			proposals= fContentAssistant.computeCompletionProposals(fViewer, offset);
+		}
+		if (fSorter != null) {
+			sortProposals(proposals);
+			fIsInitialSort= true;
+		}
+		return proposals;
 	}
 
 	/**
@@ -596,6 +594,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			fProposalTable= new Table(fProposalShell, SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL);
 
 			Listener listener= new Listener() {
+				@Override
 				public void handleEvent(Event event) {
 					handleSetData(event);
 				}
@@ -644,8 +643,10 @@ class CompletionProposalPopup implements IContentAssistListener {
 
 		fProposalShell.addControlListener(new ControlListener() {
 
+			@Override
 			public void controlMoved(ControlEvent e) {}
 
+			@Override
 			public void controlResized(ControlEvent e) {
 				if (fAdditionalInfoController != null) {
 					// reset the cached resize constraints
@@ -668,8 +669,10 @@ class CompletionProposalPopup implements IContentAssistListener {
 
 		fProposalTable.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				insertSelectedProposalWithMask(e.stateMask);
 			}
@@ -678,6 +681,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 		fPopupCloser.install(fContentAssistant, fProposalTable, fAdditionalInfoController);
 
 		fProposalShell.addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				unregister(); // but don't dispose the shell, since we're being called from its disposal event!
 			}
@@ -718,7 +722,8 @@ class CompletionProposalPopup implements IContentAssistListener {
     	if (commandSequence != null && !commandSequence.isEmpty() && fContentAssistant.isRepeatedInvocationMode()) {
     		control.addFocusListener(new FocusListener() {
     			private CommandKeyListener fCommandKeyListener;
-    			public void focusGained(FocusEvent e) {
+    			@Override
+				public void focusGained(FocusEvent e) {
     				if (Helper.okToUse(control)) {
     					if (fCommandKeyListener == null) {
     						fCommandKeyListener= new CommandKeyListener(commandSequence);
@@ -726,7 +731,8 @@ class CompletionProposalPopup implements IContentAssistListener {
     					}
     				}
     			}
-    			public void focusLost(FocusEvent e) {
+    			@Override
+				public void focusLost(FocusEvent e) {
     				if (fCommandKeyListener != null) {
     					control.removeKeyListener(fCommandKeyListener);
     					fCommandKeyListener= null;
@@ -737,11 +743,13 @@ class CompletionProposalPopup implements IContentAssistListener {
     	if (fAdditionalInfoController != null) {
 	    	control.addFocusListener(new FocusListener() {
 	    		private TraverseListener fTraverseListener;
-	    		public void focusGained(FocusEvent e) {
+	    		@Override
+				public void focusGained(FocusEvent e) {
 	    			if (Helper.okToUse(control)) {
 	    				if (fTraverseListener == null) {
 	    					fTraverseListener= new TraverseListener() {
-	    						public void keyTraversed(TraverseEvent event) {
+	    						@Override
+								public void keyTraversed(TraverseEvent event) {
 	    							if (event.detail == SWT.TRAVERSE_TAB_NEXT) {
 	    								IInformationControl iControl= fAdditionalInfoController.getCurrentInformationControl2();
 	    								if (fAdditionalInfoController.getInternalAccessor().canReplace(iControl)) {
@@ -755,7 +763,8 @@ class CompletionProposalPopup implements IContentAssistListener {
 	    				}
 	    			}
 	    		}
-	    		public void focusLost(FocusEvent e) {
+	    		@Override
+				public void focusLost(FocusEvent e) {
 	    			if (fTraverseListener != null) {
 	    				control.removeTraverseListener(fTraverseListener);
 	    				fTraverseListener= null;
@@ -819,12 +828,14 @@ class CompletionProposalPopup implements IContentAssistListener {
 			if (fContentAssistant.isRepeatedInvocationMode()) {
 				fMessageText.setCursor(fProposalShell.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 				fMessageText.addMouseListener(new MouseAdapter() {
+					@Override
 					public void mouseUp(MouseEvent e) {
 						fLastCompletionOffset= fFilterOffset;
 						fProposalTable.setFocus();
 						handleRepeatedInvocation();
 					}
 
+					@Override
 					public void mouseDown(MouseEvent e) {
 					}
 				});
@@ -846,12 +857,23 @@ class CompletionProposalPopup implements IContentAssistListener {
 			StyleRange[] styleRanges= null;
 			Image image= null;
 			try {
-				if (fIsColoredLabelsSupportEnabled && current instanceof ICompletionProposalExtension6) {
-					StyledString styledString= ((ICompletionProposalExtension6)current).getStyledDisplayString();
+				if (fIsColoredLabelsSupportEnabled && current instanceof ICompletionProposalExtension7 && Helper.okToUse(fProposalShell)) {
+					BoldStylerProvider boldStylerProvider= fContentAssistant.getBoldStylerProvider();
+					if (boldStylerProvider == null) {
+						boldStylerProvider= new BoldStylerProvider(fProposalShell.getFont());
+						fContentAssistant.setBoldStylerProvider(boldStylerProvider);
+					}
+					StyledString styledString= ((ICompletionProposalExtension7) current).getStyledDisplayString(fContentAssistSubjectControlAdapter.getDocument(), fFilterOffset,
+							boldStylerProvider);
 					displayString= styledString.getString();
 					styleRanges= styledString.getStyleRanges();
-				} else
+				} else if (fIsColoredLabelsSupportEnabled && current instanceof ICompletionProposalExtension6) {
+					StyledString styledString= ((ICompletionProposalExtension6) current).getStyledDisplayString();
+					displayString= styledString.getString();
+					styleRanges= styledString.getStyleRanges();
+				} else {
 					displayString= current.getDisplayString();
+				}
 			} catch (RuntimeException e) {
 				// On failures to retrieve the proposal's text, insert a dummy entry and log the error.
 				displayString= JFaceTextMessages.getString("CompletionProposalPopup.error_retrieving_proposal"); //$NON-NLS-1$
@@ -930,10 +952,12 @@ class CompletionProposalPopup implements IContentAssistListener {
 		IRewriteTarget target= null;
 		IEditingSupport helper= new IEditingSupport() {
 
+			@Override
 			public boolean isOriginator(DocumentEvent event, IRegion focus) {
 				return focus.getOffset() <= offset && focus.getOffset() + focus.getLength() >= offset;
 			}
 
+			@Override
 			public boolean ownsFocusShell() {
 				return false;
 			}
@@ -1141,14 +1165,16 @@ class CompletionProposalPopup implements IContentAssistListener {
 				proposals= new ICompletionProposal[] { fEmptyProposal };
 			}
 
-			if (fSorter != null)
+			if (fSorter != null && !fIsInitialSort) {
 				sortProposals(proposals);
+			}
+			fIsInitialSort= false;
 
 			fFilteredProposals= proposals;
 			final int newLen= proposals.length;
 			if (USE_VIRTUAL) {
-				fProposalTable.setItemCount(newLen);
 				fProposalTable.clearAll();
+				fProposalTable.setItemCount(newLen);
 			} else {
 				fProposalTable.setRedraw(false);
 				fProposalTable.setItemCount(newLen);
@@ -1221,10 +1247,12 @@ class CompletionProposalPopup implements IContentAssistListener {
 			if (fFocusHelper == null) {
 				fFocusHelper= new IEditingSupport() {
 
+					@Override
 					public boolean isOriginator(DocumentEvent event, IRegion focus) {
 						return false; // this helper just covers the focus change to the proposal shell, no remote editions
 					}
 
+					@Override
 					public boolean ownsFocusShell() {
 						return true;
 					}
@@ -1265,11 +1293,13 @@ class CompletionProposalPopup implements IContentAssistListener {
 	private void ensureDocumentListenerInstalled() {
 		if (fDocumentListener == null) {
 			fDocumentListener=  new IDocumentListener()  {
+				@Override
 				public void documentAboutToBeChanged(DocumentEvent event) {
 					if (!fInserting)
 						fDocumentEvents.add(event);
 				}
 
+				@Override
 				public void documentChanged(DocumentEvent event) {
 					if (!fInserting)
 						filterProposals();
@@ -1281,9 +1311,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 		}
 	}
 
-	/*
-	 * @see IContentAssistListener#verifyKey(VerifyEvent)
-	 */
+	@Override
 	public boolean verifyKey(VerifyEvent e) {
 		if (!Helper.okToUse(fProposalShell))
 			return true;
@@ -1454,9 +1482,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 		return false;
 	}
 
-	/*
-	 * @see IEventConsumer#processEvent(VerifyEvent)
-	 */
+	@Override
 	public void processEvent(VerifyEvent e) {
 	}
 
@@ -1512,7 +1538,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 
 		IDocument document= fContentAssistSubjectControlAdapter.getDocument();
 		int length= proposals.length;
-		List filtered= new ArrayList(length);
+		List<Object> filtered= new ArrayList<>(length);
 		for (int i= 0; i < length; i++) {
 
 			if (proposals[i] instanceof ICompletionProposalExtension2) {
@@ -1543,7 +1569,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			}
 		}
 
-		return (ICompletionProposal[]) filtered.toArray(new ICompletionProposal[filtered.size()]);
+		return filtered.toArray(new ICompletionProposal[filtered.size()]);
 	}
 
 	/**
@@ -1602,6 +1628,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 				fContentAssistSubjectControlAdapter.addKeyListener(fKeyListener);
 
 			BusyIndicator.showWhile(control.getDisplay(), new Runnable() {
+				@Override
 				public void run() {
 
 					fInvocationOffset= fContentAssistSubjectControlAdapter.getSelectedRange().x;
@@ -1660,7 +1687,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 
 		// contains the common postfix in the case that there are any proposals matching our LHS
 		StringBuffer rightCasePostfix= null;
-		List rightCase= new ArrayList();
+		List<ICompletionProposal> rightCase= new ArrayList<>();
 
 		boolean isWrongCaseMatch= false;
 
@@ -1670,41 +1697,63 @@ class CompletionProposalPopup implements IContentAssistListener {
 		int wrongCasePrefixStart= 0;
 		// contains the common postfix of all case-insensitive matches
 		StringBuffer wrongCasePostfix= null;
-		List wrongCase= new ArrayList();
+		List<ICompletionProposal> wrongCase= new ArrayList<>();
 
+		boolean hasMixedProposals= hasMixedProposals();
 		for (int i= 0; i < fFilteredProposals.length; i++) {
 			ICompletionProposal proposal= fFilteredProposals[i];
 
 			if (!(proposal instanceof ICompletionProposalExtension3))
 				return false;
 
-			int start= ((ICompletionProposalExtension3)proposal).getPrefixCompletionStart(fContentAssistSubjectControlAdapter.getDocument(), fFilterOffset);
-			CharSequence insertion= ((ICompletionProposalExtension3)proposal).getPrefixCompletionText(fContentAssistSubjectControlAdapter.getDocument(), fFilterOffset);
+			int start= ((ICompletionProposalExtension3)proposal).getPrefixCompletionStart(document, fFilterOffset);
+			CharSequence insertion= ((ICompletionProposalExtension3)proposal).getPrefixCompletionText(document, fFilterOffset);
 			if (insertion == null)
 				insertion= TextProcessor.deprocess(proposal.getDisplayString());
 			try {
 				int prefixLength= fFilterOffset - start;
 				int relativeCompletionOffset= Math.min(insertion.length(), prefixLength);
 				String prefix= document.get(start, prefixLength);
-				if (!isWrongCaseMatch && insertion.toString().startsWith(prefix)) {
+				if (!isWrongCaseMatch && insertion.toString().startsWith(prefix) && !hasMixedProposals) {
 					isWrongCaseMatch= false;
 					rightCase.add(proposal);
 					CharSequence newPostfix= insertion.subSequence(relativeCompletionOffset, insertion.length());
 					if (rightCasePostfix == null)
 						rightCasePostfix= new StringBuffer(newPostfix.toString());
 					else
-						truncatePostfix(rightCasePostfix, newPostfix);
+						truncatePostfix(rightCasePostfix, newPostfix, false);
 				} else if (i == 0 || isWrongCaseMatch) {
-					CharSequence newPrefix= insertion.subSequence(0, relativeCompletionOffset);
-					if (isPrefixCompatible(wrongCasePrefix, wrongCasePrefixStart, newPrefix, start, document)) {
+					String insertionStrLowerCase= insertion.toString().toLowerCase();
+					String prefixLowerCase= prefix.toLowerCase();
+					boolean isSubstringMatch= !insertionStrLowerCase.startsWith(prefixLowerCase) && insertionStrLowerCase.contains(prefixLowerCase);
+
+					CharSequence newPrefix;
+					if (isSubstringMatch) {
+						int subStrStart= insertionStrLowerCase.indexOf(prefixLowerCase);
+						newPrefix= insertion.subSequence(subStrStart, subStrStart + relativeCompletionOffset);
+					} else {
+						newPrefix= insertion.subSequence(0, relativeCompletionOffset);
+					}
+					if (isPrefixCompatible(wrongCasePrefix, wrongCasePrefixStart, newPrefix, start, document, hasMixedProposals)) {
 						isWrongCaseMatch= true;
-						wrongCasePrefix= newPrefix;
+						if (insertionStrLowerCase.isEmpty()) {
+							newPrefix= prefix;
+						}
+						if (wrongCasePrefix == null || !hasMixedProposals || !wrongCasePrefix.toString().equalsIgnoreCase(newPrefix.toString())) {
+							wrongCasePrefix= newPrefix; // ignore casing when there are mixed proposals - don't update if newPrefix differs only in case
+						}
 						wrongCasePrefixStart= start;
-						CharSequence newPostfix= insertion.subSequence(relativeCompletionOffset, insertion.length());
+						CharSequence newPostfix;
+						if (isSubstringMatch) {
+							int subStrStart= insertionStrLowerCase.indexOf(prefixLowerCase);
+							newPostfix= insertion.subSequence(subStrStart + prefixLength, insertion.length());
+						} else {
+							newPostfix= insertion.subSequence(relativeCompletionOffset, insertion.length());
+						}
 						if (wrongCasePostfix == null)
 							wrongCasePostfix= new StringBuffer(newPostfix.toString());
 						else
-							truncatePostfix(wrongCasePostfix, newPostfix);
+							truncatePostfix(wrongCasePostfix, newPostfix, hasMixedProposals);
 						wrongCase.add(proposal);
 					} else {
 						return false;
@@ -1723,7 +1772,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 		// 2: replace single proposals
 
 		if (rightCase.size() == 1) {
-			ICompletionProposal proposal= (ICompletionProposal) rightCase.get(0);
+			ICompletionProposal proposal= rightCase.get(0);
 			if (canAutoInsert(proposal) && rightCasePostfix.length() > 0) {
 				insertProposal(proposal, (char) 0, 0, fInvocationOffset);
 				hide();
@@ -1731,7 +1780,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			}
 			return false;
 		} else if (isWrongCaseMatch && wrongCase.size() == 1) {
-			ICompletionProposal proposal= (ICompletionProposal) wrongCase.get(0);
+			ICompletionProposal proposal= wrongCase.get(0);
 			if (canAutoInsert(proposal)) {
 				insertProposal(proposal, (char) 0, 0, fInvocationOffset);
 				hide();
@@ -1761,7 +1810,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 			// 4: check if parts of the postfix are already in the document
 			int to= Math.min(document.getLength(), fFilterOffset + postfix.length());
 			StringBuffer inDocument= new StringBuffer(document.get(fFilterOffset, to - fFilterOffset));
-			truncatePostfix(inDocument, postfix);
+			truncatePostfix(inDocument, postfix, hasMixedProposals);
 
 			// 5: replace and reveal
 			document.replace(fFilterOffset - prefix.length(), prefix.length() + inDocument.length(), prefix.toString() + postfix.toString());
@@ -1778,10 +1827,52 @@ class CompletionProposalPopup implements IContentAssistListener {
 		}
 	}
 
+	/**
+	 * Checks if {@link #fFilteredProposals} list contains proposals based on different rules
+	 * (prefix and substring match rules). While extracting the common prefix, if substring
+	 * proposals are also present along with prefix proposals (i.e. <code>fFilteredProposals</code>
+	 * list has mixed proposals) then casing of substring matches is ignored for the computation of
+	 * common prefix.
+	 * 
+	 * @return <code>true</code> if <code>fFilteredProposals</code> list contains proposals based on
+	 *         different rules
+	 */
+	private boolean hasMixedProposals() {
+		IDocument document= fContentAssistSubjectControlAdapter.getDocument();
+		boolean hasSubstringMatch= false;
+		boolean hasPrefixMatch= false;
+		for (ICompletionProposal proposal : fFilteredProposals) {
+			if (!(proposal instanceof ICompletionProposalExtension3))
+				return false;
+
+			int start= ((ICompletionProposalExtension3) proposal).getPrefixCompletionStart(document, fFilterOffset);
+			CharSequence insertion= ((ICompletionProposalExtension3) proposal).getPrefixCompletionText(document, fFilterOffset);
+			if (insertion == null) {
+				insertion= TextProcessor.deprocess(proposal.getDisplayString());
+			}
+			int prefixLength= fFilterOffset - start;
+			try {
+				String prefix= document.get(start, prefixLength);
+				String insertionString= insertion.toString();
+				if (insertionString.isEmpty() || insertionString.toLowerCase().startsWith(prefix.toLowerCase())) {
+					hasPrefixMatch= true;
+				} else if (insertionString.toLowerCase().contains(prefix.toLowerCase())) {
+					hasSubstringMatch= true;
+				}
+			} catch (BadLocationException e) {
+				return false;
+			}
+			if (hasPrefixMatch && hasSubstringMatch) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/*
 	 * @since 3.1
 	 */
-	private boolean isPrefixCompatible(CharSequence oneSequence, int oneOffset, CharSequence twoSequence, int twoOffset, IDocument document) throws BadLocationException {
+	private boolean isPrefixCompatible(CharSequence oneSequence, int oneOffset, CharSequence twoSequence, int twoOffset, IDocument document, boolean ignoreCase) throws BadLocationException {
 		if (oneSequence == null || twoSequence == null)
 			return true;
 
@@ -1792,7 +1883,7 @@ class CompletionProposalPopup implements IContentAssistListener {
 		String one= document.get(oneOffset, min - oneOffset) + oneSequence + document.get(oneEnd, Math.min(fFilterOffset, fFilterOffset - oneEnd));
 		String two= document.get(twoOffset, min - twoOffset) + twoSequence + document.get(twoEnd, Math.min(fFilterOffset, fFilterOffset - twoEnd));
 
-		return one.equals(two);
+		return ignoreCase ? one.equalsIgnoreCase(two) : one.equals(two);
 	}
 
 	/**
@@ -1801,12 +1892,19 @@ class CompletionProposalPopup implements IContentAssistListener {
 	 *
 	 * @param buffer the common postfix to truncate
 	 * @param sequence the characters to truncate with
+	 * @param ignoreCase <code>true</code> to ignore case while comparing
 	 */
-	private void truncatePostfix(StringBuffer buffer, CharSequence sequence) {
+	private void truncatePostfix(StringBuffer buffer, CharSequence sequence, boolean ignoreCase) {
 		// find common prefix
 		int min= Math.min(buffer.length(), sequence.length());
 		for (int c= 0; c < min; c++) {
-			if (sequence.charAt(c) != buffer.charAt(c)) {
+			boolean matches;
+			if (ignoreCase) {
+				matches= Character.toUpperCase(sequence.charAt(c)) == Character.toUpperCase(buffer.charAt(c));
+			} else {
+				matches= sequence.charAt(c) == buffer.charAt(c);
+			}
+			if (!matches) {
 				buffer.delete(c, buffer.length());
 				return;
 			}
@@ -1906,11 +2004,6 @@ class CompletionProposalPopup implements IContentAssistListener {
 	 * @since 3.8
 	 */
 	private void sortProposals(final ICompletionProposal[] proposals) {
-		Arrays.sort(proposals, new Comparator() {
-			public int compare(Object o1, Object o2) {
-				return fSorter.compare((ICompletionProposal)o1,
-						(ICompletionProposal)o2);
-			}
-		});
+		Arrays.sort(proposals, fSorter::compare);
 	}
 }

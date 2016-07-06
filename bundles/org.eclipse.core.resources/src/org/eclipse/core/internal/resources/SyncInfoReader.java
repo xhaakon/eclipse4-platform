@@ -1,13 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -45,14 +47,14 @@ public class SyncInfoReader {
 			case 3 :
 				return new SyncInfoReader_3(workspace, synchronizer);
 			default :
-				throw new IOException(NLS.bind(Messages.resources_format, new Integer(formatVersion)));
+				throw new IOException(NLS.bind(Messages.resources_format, formatVersion));
 		}
 	}
 
 	public void readPartners(DataInputStream input) throws CoreException {
 		try {
 			int size = input.readInt();
-			Set<QualifiedName> registry = new HashSet<QualifiedName>(size);
+			Set<QualifiedName> registry = new HashSet<>(size);
 			for (int i = 0; i < size; i++) {
 				String qualifier = input.readUTF();
 				String local = input.readUTF();

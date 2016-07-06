@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,8 +17,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Plugin;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FontFieldEditor;
@@ -29,7 +28,7 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import org.eclipse.ui.texteditor.AbstractTextEditor;
 
@@ -44,6 +43,7 @@ import org.eclipse.ui.texteditor.AbstractTextEditor;
  * </p>
  * @deprecated As of 2.1, fonts are managed by the workbench, no longer supported
  */
+@Deprecated
 public class TextEditorPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
 	/**
@@ -60,31 +60,21 @@ public class TextEditorPreferencePage extends FieldEditorPreferencePage implemen
 		super(GRID);
 
 		setDescription(TextEditorMessages.PreferencePage_description);
-		Plugin plugin= Platform.getPlugin("org.eclipse.ui.workbench"); //$NON-NLS-1$
-		if (plugin instanceof AbstractUIPlugin) {
-			AbstractUIPlugin uiPlugin= (AbstractUIPlugin) plugin;
-			setPreferenceStore(uiPlugin.getPreferenceStore());
-		}
+		setPreferenceStore(new ScopedPreferenceStore(InstanceScope.INSTANCE, "org.eclipse.ui.workbench")); //$NON-NLS-1$
 	}
 
-	/*
-	 * @see IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	public void createControl(Composite parent) {
 		super.createControl(parent);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), ITextEditorHelpContextIds.TEXT_EDITOR_PREFERENCE_PAGE);
 	}
 
-	/*
-	 * @see FieldEditorPreferencePage#createFieldEditors()
-	 */
+	@Override
 	public void createFieldEditors() {
 		addField(new FontFieldEditor(JFaceResources.TEXT_FONT, TextEditorMessages.PreferencePage_fontEditor, getFieldEditorParent()));
 	}
 
-	/*
-	 * @see IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
-	 */
+	@Override
 	public void init(IWorkbench workbench) {
 	}
 

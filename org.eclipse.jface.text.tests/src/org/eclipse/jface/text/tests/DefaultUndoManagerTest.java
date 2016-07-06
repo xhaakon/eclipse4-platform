@@ -10,9 +10,6 @@
  *******************************************************************************/
 package org.eclipse.jface.text.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import org.eclipse.jface.text.DefaultUndoManager;
 import org.eclipse.jface.text.IUndoManager;
 
@@ -23,21 +20,7 @@ import org.eclipse.jface.text.IUndoManager;
  */
 public class DefaultUndoManagerTest extends AbstractUndoManagerTest {
 
-	public static Test suite() {
-		return new TestSuite(DefaultUndoManagerTest.class);
-	}
-
-	/*
-	 * @see TestCase#TestCase(String)
-	 */
-	public DefaultUndoManagerTest(final String name) {
-		super(name);
-	}
-
-	/*
-	 * @see org.eclipse.jface.text.tests.AbstractUndoManagerTest#createUndoManager(int)
-	 * @since 3.2
-	 */
+	@Override
 	protected IUndoManager createUndoManager(int maxUndoLevel) {
 		return new DefaultUndoManager(maxUndoLevel);
 	}

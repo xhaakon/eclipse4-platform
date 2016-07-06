@@ -12,6 +12,8 @@
  *     Serge Beauchamp (Freescale Semiconductor) - [252996] add resource filtering
  *     Martin Oberhuber (Wind River) - [292267] OutOfMemoryError due to leak in UnifiedTree
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Sergey Prigogin (Google) -  ongoing development
  *******************************************************************************/
 package org.eclipse.core.internal.localstore;
 
@@ -39,22 +41,22 @@ public class UnifiedTree {
 	/** special node to mark the beginning of a level in the tree */
 	protected static final UnifiedTreeNode levelMarker = new UnifiedTreeNode(null, null, null, null, false);
 
-	private static final IFileInfo[] NO_CHILDREN = new IFileInfo[0];
+	private static final IFileInfo[] NO_CHILDREN = {};
 
 	/** Singleton to indicate no local children */
-	private static final IResource[] NO_RESOURCES = new IResource[0];
+	private static final IResource[] NO_RESOURCES = {};
 
 	/**
 	 * True if the level of the children of the current node are valid according
 	 * to the requested refresh depth, false otherwise
 	 */
-	protected boolean childLevelValid = false;
+	protected boolean childLevelValid;
 
 	/** an IFileTree which can be used to build a unified tree*/
-	protected IFileTree fileTree = null;
+	protected IFileTree fileTree;
 
 	/** Spare node objects available for reuse */
-	protected ArrayList<UnifiedTreeNode> freeNodes = new ArrayList<UnifiedTreeNode>();
+	protected ArrayList<UnifiedTreeNode> freeNodes = new ArrayList<>();
 	/** tree's actual level */
 	protected int level;
 	/** our queue */
@@ -321,7 +323,7 @@ public class UnifiedTree {
 			return EMPTY_ITERATOR;
 
 		/* create an enumeration with node's children */
-		List<UnifiedTreeNode> result = new ArrayList<UnifiedTreeNode>(10);
+		List<UnifiedTreeNode> result = new ArrayList<>(10);
 		while (true) {
 			UnifiedTreeNode child = queue.elementAt(index);
 			if (isChildrenMarker(child))
@@ -365,12 +367,12 @@ public class UnifiedTree {
 	protected void initializeQueue() {
 		//initialize the queue
 		if (queue == null)
-			queue = new Queue<UnifiedTreeNode>(100, false);
+			queue = new Queue<>(100, false);
 		else
 			queue.reset();
 		//initialize the free nodes list
 		if (freeNodes == null)
-			freeNodes = new ArrayList<UnifiedTreeNode>(100);
+			freeNodes = new ArrayList<>(100);
 		else
 			freeNodes.clear();
 		addRootToQueue();
@@ -470,8 +472,8 @@ public class UnifiedTree {
 				return false;
 			//get canonical path for both child and parent
 			java.io.File childFile = new java.io.File(parentFile, localInfo.getName());
-			String parentPath = parentFile.getCanonicalPath() + '/';
-			String childPath = childFile.getCanonicalPath() + '/';
+			String parentPath = parentFile.toPath().toRealPath().toString() + java.io.File.separatorChar;
+			String childPath = childFile.toPath().toRealPath().toString() + java.io.File.separatorChar;
 			//get or instantiate the prefix and root path histories.
 			//Might be done earlier - for now, do it on demand.
 			initLinkHistoriesIfNeeded();

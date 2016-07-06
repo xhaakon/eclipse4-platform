@@ -4,9 +4,10 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Sergey Prigogin (Google) - [482064] Incorrect SubMonitor usage in RefreshLocalVisitor.visit
  *******************************************************************************/
 package org.eclipse.core.internal.localstore;
 
@@ -29,27 +30,17 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 	protected static final int RL_IN_SYNC = 1;
 	protected static final int RL_NOT_IN_SYNC = 2;
 
-	/*
-	 * Fields for progress monitoring algorithm.
-	 * Initially, give progress for every 4 resources, double
-	 * this value at halfway point, then reset halfway point
-	 * to be half of remaining work.  (this gives an infinite
-	 * series that converges at total work after an infinite
-	 * number of resources).
-	 */
-	public static final int TOTAL_WORK = 250;
-	private int currentIncrement = 4;
-	private int halfWay = TOTAL_WORK / 2;
-	private int nextProgress = currentIncrement;
-	private int worked = 0;
+	// Progress monitor will initially move by 1. / TOTAL_WORK per resource but will gradually slow down
+	// as more resources are discovered.
+	public static final int TOTAL_WORK = 1000;
 
 	protected MultiStatus errors;
-	protected IProgressMonitor monitor;
+	protected SubMonitor monitor;
 	protected boolean resourceChanged;
 	protected Workspace workspace;
 
 	public RefreshLocalVisitor(IProgressMonitor monitor) {
-		this.monitor = monitor;
+		this.monitor = SubMonitor.convert(monitor);
 		workspace = (Workspace) ResourcesPlugin.getWorkspace();
 		resourceChanged = false;
 		String msg = Messages.resources_errorMultiRefresh;
@@ -124,7 +115,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 		else {
 			if (!target.exists(flags, false)) {
 				target = (Resource) workspace.getRoot().getFile(target.getFullPath());
-				// Use the basic file creation protocol since we don't want to 
+				// Use the basic file creation protocol since we don't want to
 				// create any content on disk.
 				workspace.createResource(target, false);
 			}
@@ -137,7 +128,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 	/**
 	 * Returns the status of the nodes visited so far.  This will be a multi-status
 	 * that describes all problems that have occurred, or an OK status if everything
-	 * went smoothly.  
+	 * went smoothly.
 	 */
 	public IStatus getErrorStatus() {
 		return errors;
@@ -162,7 +153,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 			return;
 		target.getLocalManager().updateLocalSync(info, node.getLastModified());
 		info.incrementContentId();
-		// forget content-related caching flags		
+		// forget content-related caching flags
 		info.clear(ICoreConstants.M_CONTENT_CACHE);
 		workspace.updateModificationStamp(info);
 	}
@@ -175,7 +166,7 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 	 * deletion or creation -- Returns:
 	 * 	- RL_IN_SYNC - the resource is in-sync with the file system
 	 * 	- RL_NOT_IN_SYNC - the resource is not in-sync with file system
-	 * 	- RL_UNKNOWN - couldn't determine the sync status for this resource 
+	 * 	- RL_UNKNOWN - couldn't determine the sync status for this resource
 	 */
 	protected int synchronizeExistence(UnifiedTreeNode node, Resource target) throws CoreException {
 		if (node.existsInWorkspace()) {
@@ -316,19 +307,8 @@ public class RefreshLocalVisitor implements IUnifiedTreeVisitor, ILocalStoreCons
 			}
 			return true;
 		} finally {
-			if (--nextProgress <= 0) {
-				//we have exhausted the current increment, so report progress
-				monitor.worked(1);
-				worked++;
-				if (worked >= halfWay) {
-					//we have passed the current halfway point, so double the
-					//increment and reset the halfway point.
-					currentIncrement *= 2;
-					halfWay += (TOTAL_WORK - halfWay) / 2;
-				}
-				//reset the progress counter to another full increment
-				nextProgress = currentIncrement;
-			}
+			// The monitor will asymptotically approach 100% as the number of processed resources increases.
+			monitor.setWorkRemaining(TOTAL_WORK).worked(1);
 		}
 	}
 }

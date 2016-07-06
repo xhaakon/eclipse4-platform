@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -49,8 +49,7 @@ import org.eclipse.ui.part.Page;
  * <code>IContentOutlinePage</code> directly rather than subclassing this class.
  * </p>
  */
-public abstract class ContentOutlinePage extends Page implements
-        IContentOutlinePage, ISelectionChangedListener {
+public abstract class ContentOutlinePage extends Page implements IContentOutlinePage, ISelectionChangedListener {
     private ListenerList selectionChangedListeners = new ListenerList();
 
     private TreeViewer treeViewer;
@@ -104,8 +103,8 @@ public abstract class ContentOutlinePage extends Page implements
 
         // fire the event
         Object[] listeners = selectionChangedListeners.getListeners();
-        for (int i = 0; i < listeners.length; ++i) {
-            final ISelectionChangedListener l = (ISelectionChangedListener) listeners[i];
+        for (Object listener : listeners) {
+            final ISelectionChangedListener l = (ISelectionChangedListener) listener;
             SafeRunner.run(new SafeRunnable() {
                 @Override
 				public void run() {
@@ -148,8 +147,7 @@ public abstract class ContentOutlinePage extends Page implements
     }
 
     @Override
-	public void removeSelectionChangedListener(
-            ISelectionChangedListener listener) {
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
         selectionChangedListeners.remove(listener);
     }
 

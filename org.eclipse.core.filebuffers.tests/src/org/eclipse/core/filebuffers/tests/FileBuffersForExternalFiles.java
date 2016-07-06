@@ -10,7 +10,11 @@
  *******************************************************************************/
 package org.eclipse.core.filebuffers.tests;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
+
+import org.junit.After;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -22,23 +26,22 @@ import org.eclipse.core.resources.IProject;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 
+import org.eclipse.jface.text.source.IAnnotationModel;
+
 /**
  * FileBuffersForExternalFiles
  */
 public class FileBuffersForExternalFiles extends FileBufferFunctions {
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#tearDown()
-	 */
-	protected void tearDown() throws Exception {
+	@Override
+	@After
+	public void tearDown() {
 		FileTool.delete(getPath());
 		FileTool.delete(FileBuffers.getSystemFileAtLocation(getPath()).getParentFile());
 		super.tearDown();
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#createPath(org.eclipse.core.resources.IProject)
-	 */
+	@Override
 	protected IPath createPath(IProject project) throws Exception {
 		File sourceFile= FileTool.getFileInPlugin(FileBuffersTestPlugin.getDefault(), new Path("testResources/ExternalFile"));
 		File externalFile= FileTool.createTempFileInPlugin(FileBuffersTestPlugin.getDefault(), new Path("externalResources/ExternalFile"));
@@ -46,44 +49,35 @@ public class FileBuffersForExternalFiles extends FileBufferFunctions {
 		return new Path(externalFile.getAbsolutePath());
 	}
 
+	@Override
 	protected void setReadOnly(boolean state) throws Exception {
 		IFileStore fileStore= FileBuffers.getFileStoreAtLocation(getPath());
 		assertNotNull(fileStore);
 		fileStore.fetchInfo().setAttribute(EFS.ATTRIBUTE_READ_ONLY, state);
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#isStateValidationSupported()
-	 */
+	@Override
 	protected boolean isStateValidationSupported() {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#deleteUnderlyingFile()
-	 */
+	@Override
 	protected boolean deleteUnderlyingFile() throws Exception {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#moveUnderlyingFile()
-	 */
+	@Override
 	protected IPath moveUnderlyingFile() throws Exception {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#modifyUnderlyingFile()
-	 */
+	@Override
 	protected boolean modifyUnderlyingFile() throws Exception {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#getAnnotationModelClass()
-	 */
-	protected Class getAnnotationModelClass() throws Exception {
+	@Override
+	protected Class<IAnnotationModel> getAnnotationModelClass() throws Exception {
 		return null;
 	}
 }

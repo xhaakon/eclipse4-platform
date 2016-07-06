@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,8 +29,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
@@ -109,13 +107,7 @@ public class ChooseWorkspaceWithSettingsDialog extends ChooseWorkspaceDialog {
 	 */
 	private void createSettingsControls(Composite workArea) {
 		final FormToolkit toolkit = new FormToolkit(workArea.getDisplay());
-		workArea.addDisposeListener(new DisposeListener() {
-
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				toolkit.dispose();
-
-			}});
+		workArea.addDisposeListener(e -> toolkit.dispose());
 		final ScrolledForm form = toolkit.createScrolledForm(workArea);
 		form.setBackground(workArea.getBackground());
 		form.getBody().setLayout(new GridLayout());

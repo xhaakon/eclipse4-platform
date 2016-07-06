@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import java.util.List;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
@@ -29,7 +30,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
-import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -38,8 +38,6 @@ import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -110,13 +108,7 @@ public class ResourceWorkingSetPage extends WizardPage implements
         IPath containerPath = container.getFullPath();
 
         for (int i = 0; i < elements.length; i++) {
-            IResource resource = null;
-
-            if (elements[i] instanceof IResource) {
-				resource = (IResource) elements[i];
-			} else {
-				resource = elements[i].getAdapter(IResource.class);
-			}
+			IResource resource = Adapters.adapt(elements[i], IResource.class);
 
             if (resource != null) {
                 IPath resourcePath = resource.getFullPath();
@@ -153,12 +145,7 @@ public class ResourceWorkingSetPage extends WizardPage implements
         text = new Text(composite, SWT.SINGLE | SWT.BORDER);
         text.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL
                 | GridData.HORIZONTAL_ALIGN_FILL));
-        text.addModifyListener(new ModifyListener() {
-            @Override
-			public void modifyText(ModifyEvent e) {
-                validateInput();
-            }
-        });
+        text.addModifyListener(e -> validateInput());
         text.setFocus();
 
         label = new Label(composite, SWT.WRAP);
@@ -184,12 +171,7 @@ public class ResourceWorkingSetPage extends WizardPage implements
         data.widthHint = SIZING_SELECTION_WIDGET_WIDTH;
         tree.getControl().setLayoutData(data);
 
-        tree.addCheckStateListener(new ICheckStateListener() {
-            @Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-                handleCheckStateChange(event);
-            }
-        });
+        tree.addCheckStateListener(event -> handleCheckStateChange(event));
 
         tree.addTreeListener(new ITreeViewerListener() {
             @Override
@@ -201,13 +183,8 @@ public class ResourceWorkingSetPage extends WizardPage implements
                 final Object element = event.getElement();
                 if (tree.getGrayed(element) == false) {
 					BusyIndicator.showWhile(getShell().getDisplay(),
-                            new Runnable() {
-                                @Override
-								public void run() {
-                                    setSubtreeChecked((IContainer) element,
-                                            tree.getChecked(element), false);
-                                }
-                            });
+                            () -> setSubtreeChecked((IContainer) element,
+							        tree.getChecked(element), false));
 				}
             }
         });
@@ -228,14 +205,11 @@ public class ResourceWorkingSetPage extends WizardPage implements
 			@Override
 			public void widgetSelected(SelectionEvent selectionEvent) {
 				BusyIndicator.showWhile(getShell().getDisplay(),
-						new Runnable() {
-							@Override
-							public void run() {
-								tree.setCheckedElements(treeContentProvider
-										.getElements(tree.getInput()));
-								setSubtreeChecked((IContainer) tree.getInput(),
-										true, false);
-							}
+						() -> {
+							tree.setCheckedElements(treeContentProvider
+									.getElements(tree.getInput()));
+							setSubtreeChecked((IContainer) tree.getInput(),
+									true, false);
 						});
 				validateInput();
 			}
@@ -248,13 +222,9 @@ public class ResourceWorkingSetPage extends WizardPage implements
 		deselectAllButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent selectionEvent) {
-				BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-
-					@Override
-					public void run() {
-						tree.setCheckedElements(treeContentProvider.getElements(tree.getInput()));
-						setSubtreeChecked((IContainer)tree.getInput(), false, false);
-					}
+				BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+					tree.setCheckedElements(treeContentProvider.getElements(tree.getInput()));
+					setSubtreeChecked((IContainer)tree.getInput(), false, false);
 				});
 				validateInput();
 			}
@@ -350,20 +320,17 @@ public class ResourceWorkingSetPage extends WizardPage implements
      * @param event the checked state change event.
      */
     private void handleCheckStateChange(final CheckStateChangedEvent event) {
-        BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-            @Override
-			public void run() {
-                IResource resource = (IResource) event.getElement();
-                boolean state = event.getChecked();
+        BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+		    IResource resource = (IResource) event.getElement();
+		    boolean state = event.getChecked();
 
-                tree.setGrayed(resource, false);
-                if (resource instanceof IContainer) {
-                    setSubtreeChecked((IContainer) resource, state, true);
-                }
-                updateParentState(resource);
-                validateInput();
-            }
-        });
+		    tree.setGrayed(resource, false);
+		    if (resource instanceof IContainer) {
+		        setSubtreeChecked((IContainer) resource, state, true);
+		    }
+		    updateParentState(resource);
+		    validateInput();
+		});
     }
 
     /**
@@ -392,65 +359,52 @@ public class ResourceWorkingSetPage extends WizardPage implements
      * working set, if any.
      */
     private void initializeCheckedState() {
-        BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-            @Override
-			public void run() {
-            	Object[] items = null;
-            	if (workingSet == null) {
+        BusyIndicator.showWhile(getShell().getDisplay(), () -> {
+			Object[] items = null;
+			if (workingSet == null) {
 
-            		IWorkbenchPage page = IDEWorkbenchPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage();
-            		if(page == null) {
-            			return;
-            		}
-            		IWorkbenchPart part = page.getActivePart();
-            		if(part == null) {
-            			return;
-            		}
-            		ISelection selection = page.getSelection();
-            		if(selection instanceof IStructuredSelection) {
-            			items = ((IStructuredSelection)selection).toArray();
-            		}
+				IWorkbenchPage page = IDEWorkbenchPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				if(page == null) {
+					return;
+				}
+				IWorkbenchPart part = page.getActivePart();
+				if(part == null) {
+					return;
+				}
+				ISelection selection = page.getSelection();
+				if(selection instanceof IStructuredSelection) {
+					items = ((IStructuredSelection)selection).toArray();
+				}
 
-        		} else {
-        			items = workingSet.getElements();
-        		}
-            	if(items == null) {
-            		return;
-            	}
-                tree.setCheckedElements(items);
-                for (int i = 0; i < items.length; i++) {
-                	IAdaptable item = null;
-                	if(!(items[i] instanceof IAdaptable)) {
-                		continue;
-                	}
-                	item = (IAdaptable)items[i];
-                    IContainer container = null;
-                    IResource resource = null;
+			} else {
+				items = workingSet.getElements();
+			}
+			if(items == null) {
+				return;
+			}
+		    tree.setCheckedElements(items);
+		    for (int i = 0; i < items.length; i++) {
+		    	IAdaptable item = null;
+		    	if(!(items[i] instanceof IAdaptable)) {
+		    		continue;
+		    	}
+		    	item = (IAdaptable)items[i];
+				IContainer container = Adapters.adapt(item, IContainer.class);
 
-                    if (item instanceof IContainer) {
-                        container = (IContainer) item;
-                    } else {
-                        container = item.getAdapter(IContainer.class);
-                    }
-                    if (container != null) {
-                        setSubtreeChecked(container, true, true);
-                    }
-                    if (item instanceof IResource) {
-                        resource = (IResource) item;
-                    } else {
-                        resource = item.getAdapter(IResource.class);
-                    }
-                    if (resource != null && resource.isAccessible() == false) {
-                        IProject project = resource.getProject();
-                        if (tree.getChecked(project) == false) {
-							tree.setGrayChecked(project, true);
-						}
-                    } else {
-                        updateParentState(resource);
-                    }
-                }
-            }
-        });
+		        if (container != null) {
+		            setSubtreeChecked(container, true, true);
+		        }
+				IResource resource = Adapters.adapt(item, IResource.class);
+		        if (resource != null && resource.isAccessible() == false) {
+		            IProject project = resource.getProject();
+		            if (tree.getChecked(project) == false) {
+						tree.setGrayChecked(project, true);
+					}
+		        } else {
+		            updateParentState(resource);
+		        }
+		    }
+		});
     }
 
     /**

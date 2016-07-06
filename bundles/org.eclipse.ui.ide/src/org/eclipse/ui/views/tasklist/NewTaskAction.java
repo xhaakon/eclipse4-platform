@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -73,13 +73,8 @@ class NewTaskAction extends TaskAction {
             // Need to do this in an asyncExec, even though we're in the UI thread here,
             // since the task list updates itself with the addition in an asyncExec,
             // which hasn't been processed yet.
-            getShell().getDisplay().asyncExec(new Runnable() {
-                @Override
-				public void run() {
-                    getTaskList().setSelection(new StructuredSelection(marker),
-                            true);
-                }
-            });
+            getShell().getDisplay().asyncExec(() -> getTaskList().setSelection(new StructuredSelection(marker),
+			        true));
         } else {
             MessageDialog.openInformation(getShell(), TaskListMessages.NewTask_notShownTitle,
                     TaskListMessages.NewTask_notShownMsg);

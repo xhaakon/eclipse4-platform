@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,9 +40,6 @@ public class E4Util {
 	public static void unsupported(String msg) throws UnsupportedOperationException {
 		if (DEBUG_E4)
 			WorkbenchPlugin.log("unsupported: " + msg); //$NON-NLS-1$
-		// UnsupportedOperationException ex = new
-		// UnsupportedOperationException(msg);
-		// throw ex;
 	}
 
 	public static void message(String msg) throws UnsupportedOperationException {

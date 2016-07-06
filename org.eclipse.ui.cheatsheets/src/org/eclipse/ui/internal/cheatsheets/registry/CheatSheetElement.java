@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2007 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,13 +10,19 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.cheatsheets.registry;
 
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IPluginContribution;
 import org.eclipse.ui.cheatsheets.CheatSheetListener;
-import org.eclipse.ui.internal.cheatsheets.*;
-import org.eclipse.ui.model.WorkbenchAdapter;
+import org.eclipse.ui.internal.cheatsheets.CheatSheetPlugin;
+import org.eclipse.ui.internal.cheatsheets.ICheatSheetResource;
+import org.eclipse.ui.internal.cheatsheets.Messages;
 import org.eclipse.ui.model.IWorkbenchAdapter;
+import org.eclipse.ui.model.WorkbenchAdapter;
 import org.osgi.framework.Bundle;
 
 /**
@@ -48,15 +54,17 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 	 * associated with this object. Returns <code>null</code> if
 	 * no such object can be found.
 	 */
-	public Object getAdapter(Class adapter) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getAdapter(Class<T> adapter) {
 		if (adapter == IWorkbenchAdapter.class) {
-			return this;
+			return (T) this;
 		}
 		return Platform.getAdapterManager().getAdapter(this, adapter);
 	}
 
 	/**
-	 * 
+	 *
 	 * @return IConfigurationElement
 	 */
 	public IConfigurationElement getConfigurationElement() {
@@ -93,6 +101,7 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 	/**
 	 * Returns the name of this cheatsheet element.
 	 */
+	@Override
 	public String getLabel(Object element) {
 		return name;
 	}
@@ -105,7 +114,7 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 	}
 
 	/**
-	 * 
+	 *
 	 * @param newConfigurationElement IConfigurationElement
 	 */
 	public void setConfigurationElement(IConfigurationElement newConfigurationElement) {
@@ -172,7 +181,7 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 			IStatus status = new Status(IStatus.ERROR, ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID, IStatus.OK, message, e);
 			CheatSheetPlugin.getPlugin().getLog().log(status);
 		}
-		
+
 		if (listener != null){
 			return listener;
 		}
@@ -180,14 +189,16 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 		return null;
 	}
 
+	@Override
 	public String getLocalId() {
 		return id;
 	}
 
+	@Override
 	public String getPluginId() {
 		return configurationElement.getContributor().getName();
 	}
-	
+
 	public void setComposite(boolean composite) {
 		this.composite = composite;
 	}
@@ -197,7 +208,7 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 	}
 
 	/**
-	 * Get a URL which is saved with the state so the cheatsheet can later be 
+	 * Get a URL which is saved with the state so the cheatsheet can later be
 	 * reopened from the state file.
 	 * @return null if the cheatsheet was opened from the registry otherwise
 	 * the URL of the content file.
@@ -218,9 +229,9 @@ public class CheatSheetElement extends WorkbenchAdapter implements IAdaptable, I
 	}
 
 	public void setContentXml(String xml) {
-		this.contentXml = xml;	
+		this.contentXml = xml;
 	}
-	
+
 	public String getContentXml() {
 		return contentXml;
 	}

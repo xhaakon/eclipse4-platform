@@ -28,30 +28,32 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 
 	private ICompareNavigator nav;
 	private INavigatable navigatable;
-	
+
 	/**
 	 * Interface used to implement navigation for tree viewers. This interface is used by
-	 * {@link TreeViewerAdvisor#navigate(TreeViewer, boolean, boolean, boolean) to open} 
+	 * {@link TreeViewerAdvisor#navigate(TreeViewer, boolean, boolean, boolean) to open}
 	 * selections and navigate.
 	 */
 	public interface ITreeViewerAccessor {
 		public void createChildren(TreeItem item);
 		public void openSelection();
 	}
-	
+
 	private class TreeCompareNavigator extends CompareNavigator {
-		
+
 		/* (non-Javadoc)
 		 * @see org.eclipse.compare.CompareNavigator#getNavigatables()
 		 */
+		@Override
 		protected INavigatable[] getNavigatables() {
 			INavigatable navigatable = getNavigatable();
 			return new INavigatable[] { navigatable };
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.eclipse.compare.CompareNavigator#selectChange(boolean)
 		 */
+		@Override
 		public boolean selectChange(boolean next) {
 			if (getSubNavigator() != null) {
 				if (getSubNavigator().hasChange(next)) {
@@ -70,7 +72,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 			}
 			return noNextChange;
 		}
-		
+
 		private boolean hasCompareInput(Object selectedObject) {
 			SyncInfo syncInfo = getSyncInfo(selectedObject);
 			if(syncInfo != null) {
@@ -95,6 +97,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 		/* (non-Javadoc)
 		 * @see org.eclipse.compare.CompareNavigator#hasChange(boolean)
 		 */
+		@Override
 		public boolean hasChange(boolean next) {
 			if (getSubNavigator() != null) {
 				if (getSubNavigator().hasChange(next)) {
@@ -110,7 +113,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 				Object selectedObject = AbstractTreeViewerAdvisor.this.getFirstElement((IStructuredSelection)getViewer().getSelection());
 				IEditorPart editor = OpenInCompareAction.findOpenCompareEditor((IWorkbenchPartSite)ws, selectedObject, getConfiguration().getParticipant());
 				if(editor != null) {
-					// if an existing editor is open on the current selection, use it			 
+					// if an existing editor is open on the current selection, use it
 					CompareEditorInput input = (CompareEditorInput)editor.getEditorInput();
 					ICompareNavigator navigator = input.getNavigator();
 					if (navigator instanceof TreeCompareNavigator) {
@@ -120,15 +123,15 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 					}
 					if (navigator instanceof CompareNavigator) {
 						return (CompareNavigator) navigator;
-						
+
 					}
 				}
 			}
 			return null;
 		}
-		
+
 	}
-	
+
 	private static boolean hasNextPrev(TreeViewer viewer, TreeItem item, boolean next) {
 		if (item == null || !(viewer instanceof ITreeViewerAccessor))
 			return false;
@@ -172,7 +175,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 		}
 		return false;
 	}
-	
+
 	private static TreeItem findNextPrev(TreeViewer viewer, TreeItem item, boolean next) {
 		if (item == null || !(viewer instanceof ITreeViewerAccessor))
 			return null;
@@ -264,12 +267,12 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 	 * Selects the next (or previous) node of the current selection.
 	 * If there is no current selection the first (last) node in the tree is selected.
 	 * Wraps around at end or beginning.
-	 * Clients may not override. 
-	 * @param viewer 
+	 * Clients may not override.
+	 * @param viewer
 	 *
 	 * @param next if <code>true</code> the next node is selected, otherwise the previous node
-	 * @param fireOpen 
-	 * @param expandOnly 
+	 * @param fireOpen
+	 * @param expandOnly
 	 * @return <code>true</code> if at end (or beginning)
 	 */
 	public static boolean navigate(TreeViewer viewer, boolean next, boolean fireOpen, boolean expandOnly) {
@@ -281,7 +284,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 			setSelection(viewer, item, fireOpen, expandOnly);
 		return item == null;
 	}
-		
+
 	private static TreeItem getNextItem(TreeViewer viewer, boolean next) {
 		TreeItem item = getCurrentItem(viewer);
 		if (item != null) {
@@ -312,7 +315,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 		}
 		return item;
 	}
-	
+
 	private static boolean hasChange(TreeViewer viewer, boolean next) {
 		TreeItem item = getCurrentItem(viewer);
 		if (item != null) {
@@ -332,7 +335,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 
 	/**
 	 * Allow navigation in tree viewers.
-	 * 
+	 *
 	 * @param next if <code>true</code> then navigate forwards, otherwise navigate
 	 * backwards.
 	 * @return <code>true</code> if the end is reached, and <code>false</code> otherwise.
@@ -340,7 +343,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 	public boolean navigate(boolean next) {
 		return navigate((TreeViewer)getViewer(), next, false, false);
 	}
-	
+
 	protected boolean hasChange(boolean next) {
 		return hasChange((TreeViewer)getViewer(), next);
 	}
@@ -350,6 +353,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
  	 * navigation between several objects.
 	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
 	 */
+	@Override
 	public Object getAdapter(Class adapter) {
 		if(adapter == ICompareNavigator.class) {
 			if(nav == null) {
@@ -366,6 +370,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 	private synchronized INavigatable getNavigatable() {
 		if(navigatable == null) {
 			navigatable = new INavigatable() {
+				@Override
 				public boolean selectChange(int flag) {
 					if (flag == INavigatable.FIRST_CHANGE) {
 						getViewer().setSelection(StructuredSelection.EMPTY);
@@ -376,7 +381,8 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 					}
 					return navigate((TreeViewer)getViewer(), flag == INavigatable.NEXT_CHANGE, true, false);
 				}
-			
+
+				@Override
 				public boolean openSelectedChange() {
 					Viewer v = getViewer();
 					if (v instanceof ITreeViewerAccessor && !v.getControl().isDisposed()) {
@@ -386,13 +392,15 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 					}
 					return false;
 				}
+				@Override
 				public boolean hasChange(int changeFlag) {
 					return AbstractTreeViewerAdvisor.this.hasChange(changeFlag == INavigatable.NEXT_CHANGE);
 				}
+				@Override
 				public Object getInput() {
 					return getViewer().getInput();
 				}
-			
+
 			};
 		}
 		return navigatable;
@@ -400,10 +408,11 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 
 	/**
 	 * Handles a double-click event from the viewer. Expands or collapses a folder when double-clicked.
-	 * 
+	 *
 	 * @param viewer the viewer
 	 * @param event the double-click event
 	 */
+	@Override
 	protected boolean handleDoubleClick(StructuredViewer viewer, DoubleClickEvent event) {
 		if (super.handleDoubleClick(viewer, event)) return true;
 		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
@@ -429,7 +438,7 @@ public abstract class AbstractTreeViewerAdvisor extends StructuredViewerAdvisor 
 		Object element = selection.getFirstElement();
 		return element;
 	}
-	
+
 	private Object getFirstElement(IStructuredSelection selection) {
 		Object element = getFirstElementOrPath(selection);
 		if (element instanceof TreePath) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,6 +21,7 @@ public class IndexerJob extends Job {
 	public IndexerJob() {
 		super(HelpBaseResources.IndexerJob_name);
 	}
+	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		SearchIndexWithIndexingProgress index = BaseHelpSystem.getLocalSearchManager().getIndex(Platform.getNL());
 		try {
@@ -42,6 +43,7 @@ public class IndexerJob extends Job {
 			return new Status(IStatus.ERROR, HelpBasePlugin.PLUGIN_ID, IStatus.OK, HelpBaseResources.IndexerJob_error, e);
 		}
 	}
+	@Override
 	public boolean belongsTo(Object family) {
 		return FAMILY.equals(family);
 	}

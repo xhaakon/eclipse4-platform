@@ -4,11 +4,12 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Serge Beauchamp (Freescale Semiconductor) - initial API and implementation
  *     IBM Corporation - ongoing development
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -69,7 +70,7 @@ public class ProjectPathVariableManager implements IPathVariableManager, IManage
 	 */
 	@Override
 	public String[] getPathVariableNames() {
-		List<String> result = new LinkedList<String>();
+		List<String> result = new LinkedList<>();
 		HashMap<String, VariableDescription> map;
 		try {
 			map = ((ProjectDescription) resource.getProject().getDescription()).getVariables();
@@ -103,7 +104,7 @@ public class ProjectPathVariableManager implements IPathVariableManager, IManage
 	/**
 	 * If the variable is not listed in the project description, we fall back on
 	 * the workspace variables.
-	 * 
+	 *
 	 * @see org.eclipse.core.resources.IPathVariableManager#getURIValue(String)
 	 */
 	@Override
@@ -209,7 +210,7 @@ public class ProjectPathVariableManager implements IPathVariableManager, IManage
 	}
 
 	public URI resolveVariable(String variable) {
-		LinkedList<String> variableStack = new LinkedList<String>();
+		LinkedList<String> variableStack = new LinkedList<>();
 
 		String value = resolveVariable(variable, variableStack);
 		if (value != null) {
@@ -224,7 +225,7 @@ public class ProjectPathVariableManager implements IPathVariableManager, IManage
 
 	public String resolveVariable(String value, LinkedList<String> variableStack) {
 		if (variableStack == null)
-			variableStack = new LinkedList<String>();
+			variableStack = new LinkedList<>();
 
 		String tmp = internalGetValue(value);
 		if (tmp == null) {
@@ -445,7 +446,7 @@ public class ProjectPathVariableManager implements IPathVariableManager, IManage
 	}
 
 	/**
-	 * @throws CoreException 
+	 * @throws CoreException
 	 * @see IPathVariableManager#convertToRelative(URI, boolean, String)
 	 */
 	@Override
@@ -476,11 +477,6 @@ public class ProjectPathVariableManager implements IPathVariableManager, IManage
 		getWorkspaceManager().removeChangeListener(listener, resource.getProject());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see IPathVariableManager#getVariableRelativePathLocation(IResource, URI)
-	 */
 	@Override
 	public URI getVariableRelativePathLocation(URI location) {
 		try {

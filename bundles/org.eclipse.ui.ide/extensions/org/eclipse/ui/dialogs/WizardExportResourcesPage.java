@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Mickael Istria (Red Hat Inc.) - Bug 486901
  *******************************************************************************/
 package org.eclipse.ui.dialogs;
 
@@ -23,7 +24,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -80,6 +80,8 @@ public abstract class WizardExportResourcesPage extends WizardDataTransferPage {
 
     // widgets
     private ResourceTreeAndListGroup resourceGroup;
+
+    private boolean showLinkedResources;
 
     private final static String SELECT_TYPES_TITLE = IDEWorkbenchMessages.WizardTransferPage_selectTypes;
 
@@ -143,7 +145,7 @@ public abstract class WizardExportResourcesPage extends WizardDataTransferPage {
         GridData buttonData = new GridData(GridData.FILL_HORIZONTAL);
         button.setLayoutData(buttonData);
 
-        button.setData(new Integer(id));
+        button.setData(id);
         button.setText(label);
         button.setFont(parent.getFont());
 
@@ -224,9 +226,6 @@ public abstract class WizardExportResourcesPage extends WizardDataTransferPage {
 
     }
 
-    /** (non-Javadoc)
-     * Method declared on IDialogPage.
-     */
     @Override
 	public void createControl(Composite parent) {
 
@@ -286,19 +285,15 @@ public abstract class WizardExportResourcesPage extends WizardDataTransferPage {
 			}
         }
 
+        showLinkedResources = getShowLinkedResources();
         this.resourceGroup = new ResourceTreeAndListGroup(parent, input,
-                getResourceProvider(IResource.FOLDER | IResource.PROJECT),
+                getResourceProvider(IResource.FOLDER | IResource.PROJECT, showLinkedResources),
                 WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider(),
-                getResourceProvider(IResource.FILE), WorkbenchLabelProvider
-                        .getDecoratingWorkbenchLabelProvider(), SWT.NONE,
+                getResourceProvider(IResource.FILE, showLinkedResources),
+                WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider(), SWT.NONE,
                 DialogUtil.inRegularFontMode(parent));
 
-        ICheckStateListener listener = new ICheckStateListener() {
-            @Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-                updateWidgetEnablements();
-            }
-        };
+        ICheckStateListener listener = event -> updateWidgetEnablements();
 
         this.resourceGroup.addCheckStateListener(listener);
     }
@@ -345,40 +340,89 @@ public abstract class WizardExportResourcesPage extends WizardDataTransferPage {
         return result;
     }
 
+    private static class ResourceProvider extends WorkbenchContentProvider {
+        private static final Object[] EMPTY = new Object[0];
+        private int resourceType;
+        private boolean showLinkedResources;
+
+        public ResourceProvider(int resourceType, boolean showLinkedResources) {
+            super();
+            this.resourceType = resourceType;
+            this.showLinkedResources = showLinkedResources;
+        }
+
+        @Override
+		public Object[] getChildren(Object o) {
+            if (o instanceof IContainer) {
+                IContainer container = (IContainer) o;
+                if (!showLinkedResources && container.isLinked(IResource.CHECK_ANCESTORS)) {
+                    // just return an empty set of children
+                    return EMPTY;
+                }
+                IResource[] members = null;
+                try {
+                    members = container.members();
+                } catch (CoreException e) {
+                    // just return an empty set of children
+                    return EMPTY;
+                }
+
+                // filter out the desired resource types
+                List<IResource> results = new ArrayList<>();
+                for (int i = 0; i < members.length; i++) {
+                    // And the test bits with the resource types to see if they
+                    // are what we want
+                    IResource resource = members[i];
+                    if (!showLinkedResources && resource.isLinked()) {
+                        continue;
+                    }
+                    if ((resource.getType() & resourceType) > 0) {
+                        results.add(resource);
+                    }
+                }
+                return results.toArray();
+            }
+            // input element case
+            if (o instanceof ArrayList) {
+                return ((List<?>) o).toArray();
+            }
+            return EMPTY;
+        }
+    }
+
     /**
      * Returns a content provider for <code>IResource</code>s that returns
      * only children of the given resource type.
      */
-    private ITreeContentProvider getResourceProvider(final int resourceType) {
-        return new WorkbenchContentProvider() {
-            @Override
-			public Object[] getChildren(Object o) {
-                if (o instanceof IContainer) {
-                    IResource[] members = null;
-                    try {
-                        members = ((IContainer) o).members();
-                    } catch (CoreException e) {
-                        //just return an empty set of children
-                        return new Object[0];
-                    }
+    private ITreeContentProvider getResourceProvider(int resourceType, boolean showLinkedResources) {
+        return new ResourceProvider(resourceType, showLinkedResources);
+    }
 
-                    //filter out the desired resource types
-                    ArrayList results = new ArrayList();
-                    for (int i = 0; i < members.length; i++) {
-                        //And the test bits with the resource types to see if they are what we want
-                        if ((members[i].getType() & resourceType) > 0) {
-                            results.add(members[i]);
-                        }
-                    }
-                    return results.toArray();
-                }
-                //input element case
-                if (o instanceof ArrayList) {
-                    return ((ArrayList) o).toArray();
-                }
-                return new Object[0];
-            }
-        };
+    /**
+     * Returns {<code>true</code> if the page tree and list providers should
+     * show linked resources. Default is false.
+     *
+     * @since 3.12
+     */
+    protected boolean getShowLinkedResources() {
+        return showLinkedResources;
+    }
+
+    /**
+     * Updates the resources tree to show or hide linked resources
+     *
+     * @param showLinked
+     *            {<code>true</code> if the page should show linked resources
+     * @since 3.12
+     */
+    protected void updateContentProviders(boolean showLinked) {
+        showLinkedResources = showLinked;
+        resourceGroup.setTreeProviders(
+                getResourceProvider(IResource.FOLDER | IResource.PROJECT, showLinkedResources),
+                WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
+
+        resourceGroup.setListProviders(getResourceProvider(IResource.FILE, showLinkedResources),
+                WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
     }
 
     /**
@@ -555,34 +599,31 @@ public abstract class WizardExportResourcesPage extends WizardDataTransferPage {
      */
     private void setupSelectionsBasedOnSelectedTypes() {
 
-        Runnable runnable = new Runnable() {
-            @Override
-			public void run() {
-                Map selectionMap = new Hashtable();
-                //Only get the white selected ones
-                Iterator resourceIterator = resourceGroup
-                        .getAllWhiteCheckedItems().iterator();
-                while (resourceIterator.hasNext()) {
-                    //handle the files here - white checked containers require recursion
-                    IResource resource = (IResource) resourceIterator.next();
-                    if (resource.getType() == IResource.FILE) {
-                        if (hasExportableExtension(resource.getName())) {
-                            List resourceList = new ArrayList();
-                            IContainer parent = resource.getParent();
-                            if (selectionMap.containsKey(parent)) {
-								resourceList = (List) selectionMap.get(parent);
-							}
-                            resourceList.add(resource);
-                            selectionMap.put(parent, resourceList);
-                        }
-                    } else {
-						setupSelectionsBasedOnSelectedTypes(selectionMap,
-                                (IContainer) resource);
-					}
-                }
-                resourceGroup.updateSelections(selectionMap);
-            }
-        };
+        Runnable runnable = () -> {
+		    Map selectionMap = new Hashtable();
+		    //Only get the white selected ones
+		    Iterator resourceIterator = resourceGroup
+		            .getAllWhiteCheckedItems().iterator();
+		    while (resourceIterator.hasNext()) {
+		        //handle the files here - white checked containers require recursion
+		        IResource resource = (IResource) resourceIterator.next();
+		        if (resource.getType() == IResource.FILE) {
+		            if (hasExportableExtension(resource.getName())) {
+		                List resourceList = new ArrayList();
+		                IContainer parent = resource.getParent();
+		                if (selectionMap.containsKey(parent)) {
+							resourceList = (List) selectionMap.get(parent);
+						}
+		                resourceList.add(resource);
+		                selectionMap.put(parent, resourceList);
+		            }
+		        } else {
+					setupSelectionsBasedOnSelectedTypes(selectionMap,
+		                    (IContainer) resource);
+				}
+		    }
+		    resourceGroup.updateSelections(selectionMap);
+		};
 
         BusyIndicator.showWhile(getShell().getDisplay(), runnable);
 

@@ -64,10 +64,8 @@ public class ReplaceConfigurationPage extends UserInputWizardPage {
 		fReplaceRefactoring= refactoring;
     }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
-	 */
-    public void createControl(Composite parent) {
+    @Override
+	public void createControl(Composite parent) {
     	Composite result= new Composite(parent, SWT.NONE);
     	GridLayout layout= new GridLayout(2, false);
 		result.setLayout(layout);
@@ -106,6 +104,7 @@ public class ReplaceConfigurationPage extends UserInputWizardPage {
 		fTextField.setLayoutData(gd);
 		fTextField.setFocus();
 		fTextField.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				updateOKStatus();
 			}
@@ -133,6 +132,7 @@ public class ReplaceConfigurationPage extends UserInputWizardPage {
 		fReplaceWithRegex= new Button(result, SWT.CHECK);
 		fReplaceWithRegex.setText(SearchMessages.ReplaceConfigurationPage_isRegex_label);
 		fReplaceWithRegex.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				setContentAssistsEnablement(fReplaceWithRegex.getSelection());
 			}
@@ -180,18 +180,14 @@ public class ReplaceConfigurationPage extends UserInputWizardPage {
 		fTextFieldContentAssist.setEnabled(enable);
 	}
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ltk.ui.refactoring.UserInputWizardPage#performFinish()
-     */
-    protected boolean performFinish() {
+    @Override
+	protected boolean performFinish() {
 		initializeRefactoring();
 		storeSettings();
 		return super.performFinish();
 	}
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ltk.ui.refactoring.UserInputWizardPage#getNextPage()
-     */
+	@Override
 	public IWizardPage getNextPage() {
 		initializeRefactoring();
 		storeSettings();
@@ -200,7 +196,7 @@ public class ReplaceConfigurationPage extends UserInputWizardPage {
 
 	private void storeSettings() {
 		String[] items= fTextField.getItems();
-		ArrayList history= new ArrayList();
+		ArrayList<String> history= new ArrayList<>();
 		history.add(fTextField.getText());
 		int historySize= Math.min(items.length, 6);
 		for (int i= 0; i < historySize; i++) {
@@ -210,7 +206,7 @@ public class ReplaceConfigurationPage extends UserInputWizardPage {
 			}
 		}
 		IDialogSettings settings= SearchPlugin.getDefault().getDialogSettings().addNewSection(SETTINGS_GROUP);
-		settings.put(SETTINGS_REPLACE_WITH, (String[]) history.toArray(new String[history.size()]));
+		settings.put(SETTINGS_REPLACE_WITH, history.toArray(new String[history.size()]));
 
     }
 

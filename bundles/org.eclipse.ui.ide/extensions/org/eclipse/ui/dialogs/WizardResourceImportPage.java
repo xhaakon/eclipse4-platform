@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,14 +21,13 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.equinox.bidi.StructuredTextTypeHandlerFactory;
 import org.eclipse.jface.util.BidiUtils;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -119,13 +118,7 @@ public abstract class WizardResourceImportPage extends WizardDataTransferPage {
         currentResourceSelection = null;
         if (selection.size() == 1) {
             Object firstElement = selection.getFirstElement();
-            if (firstElement instanceof IAdaptable) {
-                Object resource = ((IAdaptable) firstElement)
-                        .getAdapter(IResource.class);
-                if (resource != null) {
-					currentResourceSelection = (IResource) resource;
-				}
-            }
+			currentResourceSelection = Adapters.adapt(firstElement, IResource.class);
         }
 
         if (currentResourceSelection != null) {
@@ -150,9 +143,6 @@ public abstract class WizardResourceImportPage extends WizardDataTransferPage {
         return true;
     }
 
-    /** (non-Javadoc)
-     * Method declared on IDialogPage.
-     */
     @Override
 	public void createControl(Composite parent) {
 
@@ -234,12 +224,7 @@ public abstract class WizardResourceImportPage extends WizardDataTransferPage {
                 getFileProvider(), new WorkbenchLabelProvider(), SWT.NONE,
                 DialogUtil.inRegularFontMode(parent));
 
-        ICheckStateListener listener = new ICheckStateListener() {
-            @Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-                updateWidgetEnablements();
-            }
-        };
+        ICheckStateListener listener = event -> updateWidgetEnablements();
 
         WorkbenchViewerComparator comparator = new WorkbenchViewerComparator();
         this.selectionGroup.setTreeComparator(comparator);
@@ -492,12 +477,7 @@ public abstract class WizardResourceImportPage extends WizardDataTransferPage {
      */
     protected void updateSelections(final Map map) {
 
-        Runnable runnable = new Runnable() {
-            @Override
-			public void run() {
-                selectionGroup.updateSelections(map);
-            }
-        };
+        Runnable runnable = () -> selectionGroup.updateSelections(map);
 
         BusyIndicator.showWhile(getShell().getDisplay(), runnable);
     }

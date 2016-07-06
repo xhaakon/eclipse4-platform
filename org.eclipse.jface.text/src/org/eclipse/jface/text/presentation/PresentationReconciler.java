@@ -77,9 +77,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 		 */
 		private boolean fCachedRedrawState= true;
 
-		/*
-		 * @see ITextInputListener#inputDocumentAboutToBeChanged(IDocument, IDocument)
-		 */
+		@Override
 		public void inputDocumentAboutToBeChanged(IDocument oldDocument, IDocument newDocument) {
 			if (oldDocument != null) {
 				try {
@@ -100,6 +98,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 		/*
 		 * @see ITextInputListener#inputDocumenChanged(IDocument, IDocument)
 		 */
+		@Override
 		public void inputDocumentChanged(IDocument oldDocument, IDocument newDocument) {
 
 			fDocumentChanging= false;
@@ -120,9 +119,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 			}
 		}
 
-		/*
-		 * @see IDocumentPartitioningListener#documentPartitioningChanged(IDocument)
-		 */
+		@Override
 		public void documentPartitioningChanged(IDocument document) {
 			if (!fDocumentChanging && fCachedRedrawState)
 				processDamage(new Region(0, document.getLength()), document);
@@ -130,10 +127,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 				fDocumentPartitioningChanged= true;
 		}
 
-		/*
-		 * @see IDocumentPartitioningListenerExtension#documentPartitioningChanged(IDocument, IRegion)
-		 * @since 2.0
-		 */
+		@Override
 		public void documentPartitioningChanged(IDocument document, IRegion changedRegion) {
 			if (!fDocumentChanging && fCachedRedrawState) {
 				processDamage(new Region(changedRegion.getOffset(), changedRegion.getLength()), document);
@@ -143,19 +137,14 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 			}
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.IDocumentPartitioningListenerExtension2#documentPartitioningChanged(org.eclipse.jface.text.DocumentPartitioningChangedEvent)
-		 * @since 3.0
-		 */
+		@Override
 		public void documentPartitioningChanged(DocumentPartitioningChangedEvent event) {
 			IRegion changedRegion= event.getChangedRegion(getDocumentPartitioning());
 			if (changedRegion != null)
 				documentPartitioningChanged(event.getDocument(), changedRegion);
 		}
 
-		/*
-		 * @see IDocumentListener#documentAboutToBeChanged(DocumentEvent)
-		 */
+		@Override
 		public void documentAboutToBeChanged(DocumentEvent e) {
 
 			fDocumentChanging= true;
@@ -173,9 +162,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 			}
 		}
 
-		/*
-		 * @see IDocumentListener#documentChanged(DocumentEvent)
-		 */
+		@Override
 		public void documentChanged(DocumentEvent e) {
 			if (fCachedRedrawState) {
 				try {
@@ -187,9 +174,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 			fDocumentChanging= false;
 		}
 
-		/*
-		 * @see ITextListener#textChanged(TextEvent)
-		 */
+		@Override
 		public void textChanged(TextEvent e) {
 
 			fCachedRedrawState= e.getViewerRedrawState();
@@ -255,9 +240,9 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 	}
 
 	/** The map of presentation damagers. */
-	private Map fDamagers;
+	private Map<String, IPresentationDamager> fDamagers;
 	/** The map of presentation repairers. */
-	private Map fRepairers;
+	private Map<String, IPresentationRepairer> fRepairers;
 	/** The target viewer. */
 	private ITextViewer fViewer;
 	/** The internal listener. */
@@ -305,6 +290,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 	 * @see org.eclipse.jface.text.presentation.IPresentationReconcilerExtension#geDocumenttPartitioning()
 	 * @since 3.0
 	 */
+	@Override
 	public String getDocumentPartitioning() {
 		return fPartitioning;
 	}
@@ -322,7 +308,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 		Assert.isNotNull(contentType);
 
 		if (fDamagers == null)
-			fDamagers= new HashMap();
+			fDamagers= new HashMap<>();
 
 		if (damager == null)
 			fDamagers.remove(contentType);
@@ -343,7 +329,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 		Assert.isNotNull(contentType);
 
 		if (fRepairers == null)
-			fRepairers= new HashMap();
+			fRepairers= new HashMap<>();
 
 		if (repairer == null)
 			fRepairers.remove(contentType);
@@ -351,9 +337,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 			fRepairers.put(contentType, repairer);
 	}
 
-	/*
-	 * @see IPresentationReconciler#install(ITextViewer)
-	 */
+	@Override
 	public void install(ITextViewer viewer) {
 		Assert.isNotNull(viewer);
 
@@ -365,9 +349,7 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 			fInternalListener.inputDocumentChanged(null, document);
 	}
 
-	/*
-	 * @see IPresentationReconciler#uninstall()
-	 */
+	@Override
 	public void uninstall() {
 		fViewer.removeTextInputListener(fInternalListener);
 
@@ -375,26 +357,22 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 		fInternalListener.inputDocumentAboutToBeChanged(fViewer.getDocument(), null);
 	}
 
-	/*
-	 * @see IPresentationReconciler#getDamager(String)
-	 */
+	@Override
 	public IPresentationDamager getDamager(String contentType) {
 
 		if (fDamagers == null)
 			return null;
 
-		return (IPresentationDamager) fDamagers.get(contentType);
+		return fDamagers.get(contentType);
 	}
 
-	/*
-	 * @see IPresentationReconciler#getRepairer(String)
-	 */
+	@Override
 	public IPresentationRepairer getRepairer(String contentType) {
 
 		if (fRepairers == null)
 			return null;
 
-		return (IPresentationRepairer) fRepairers.get(contentType);
+		return fRepairers.get(contentType);
 	}
 
 	/**
@@ -404,9 +382,9 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 	 */
 	protected void setDocumentToDamagers(IDocument document) {
 		if (fDamagers != null) {
-			Iterator e= fDamagers.values().iterator();
+			Iterator<IPresentationDamager> e= fDamagers.values().iterator();
 			while (e.hasNext()) {
-				IPresentationDamager damager= (IPresentationDamager) e.next();
+				IPresentationDamager damager= e.next();
 				damager.setDocument(document);
 			}
 		}
@@ -419,9 +397,9 @@ public class PresentationReconciler implements IPresentationReconciler, IPresent
 	 */
 	protected void setDocumentToRepairers(IDocument document) {
 		if (fRepairers != null) {
-			Iterator e= fRepairers.values().iterator();
+			Iterator<IPresentationRepairer> e= fRepairers.values().iterator();
 			while (e.hasNext()) {
-				IPresentationRepairer repairer= (IPresentationRepairer) e.next();
+				IPresentationRepairer repairer= e.next();
 				repairer.setDocument(document);
 			}
 		}

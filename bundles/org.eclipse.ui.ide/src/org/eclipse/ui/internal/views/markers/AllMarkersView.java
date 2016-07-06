@@ -1,6 +1,6 @@
 package org.eclipse.ui.internal.views.markers;
 /*******************************************************************************
- * Copyright (c) 2008, 2011 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,11 +30,6 @@ public class AllMarkersView extends MarkerSupportView {
 		super(MarkerSupportRegistry.ALL_MARKERS_GENERATOR);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.internal.views.markers.ExtendedMarkersView#getUndoContext()
-	 * @since 3.7
-	 */
 	@Override
 	protected IUndoContext getUndoContext() {
 		ObjectUndoContext context= new ObjectUndoContext(new Object(), "All Markers Context"); //$NON-NLS-1$

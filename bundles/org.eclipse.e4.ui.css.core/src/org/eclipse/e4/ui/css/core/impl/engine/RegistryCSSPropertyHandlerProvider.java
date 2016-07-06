@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Brian de Alwis and others.
+ * Copyright (c) 2012, 2015 Brian de Alwis and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -152,16 +152,6 @@ public class RegistryCSSPropertyHandlerProvider extends
 		return handlers;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.e4.ui.css.core.dom.properties.providers.
-	 * AbstractCSSPropertyHandlerProvider
-	 * #getDefaultCSSStyleDeclaration(org.eclipse
-	 * .e4.ui.css.core.engine.CSSEngine,
-	 * org.eclipse.e4.ui.css.core.dom.CSSStylableElement,
-	 * org.w3c.dom.css.CSSStyleDeclaration)
-	 */
 	@Override
 	protected CSSStyleDeclaration getDefaultCSSStyleDeclaration(
 			CSSEngine engine, CSSStylableElement stylableElement,

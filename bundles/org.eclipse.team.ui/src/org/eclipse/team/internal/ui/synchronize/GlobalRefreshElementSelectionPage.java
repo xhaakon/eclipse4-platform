@@ -31,30 +31,30 @@ import org.eclipse.ui.dialogs.IWorkingSetSelectionDialog;
 public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 
 	private boolean scopeCheckingElement = false;
-	
+
 	// Set of scope hint to determine the initial selection
 	private Button participantScope;
 	private Button selectedResourcesScope;
 	private Button workingSetScope;
-	
+
 	// The checked tree viewer
 	private ContainerCheckedTreeViewer fViewer;
-	
+
 	// Working set label and holder
 	private Text workingSetLabel;
 	private IWorkingSet[] workingSets;
 	private IDialogSettings settings;
-	
+
 	// dialog settings
-	/** 
+	/**
 	 * Settings constant for section name (value <code>SynchronizeResourceSelectionDialog</code>).
 	 */
 	private static final String STORE_SECTION = "SynchronizeResourceSelectionDialog"; //$NON-NLS-1$
-	/** 
+	/**
 	 * Settings constant for working sets (value <code>SynchronizeResourceSelectionDialog.STORE_WORKING_SET</code>).
 	 */
 	private static final String STORE_WORKING_SETS = "SynchronizeResourceSelectionDialog.STORE_WORKING_SETS"; //$NON-NLS-1$
-	
+
 	protected GlobalRefreshElementSelectionPage(String pageName) {
 		super(pageName);
 		IDialogSettings s = TeamUIPlugin.getPlugin().getDialogSettings();
@@ -67,6 +67,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
 	 */
+	@Override
 	public void createControl(Composite parent2) {
 		Composite top = new Composite(parent2, SWT.NULL);
 		top.setLayout(new GridLayout());
@@ -78,9 +79,9 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		setControl(top);
 
         PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), IHelpContextIds.SYNC_RESOURCE_SELECTION_PAGE);
-		
+
 		Label l = new Label(top, SWT.NULL);
-		l.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_5); 
+		l.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_5);
 
 		// The viewer
 		fViewer = createViewer(top);
@@ -96,9 +97,10 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		selectGroup.setLayoutData(data);
 
 		Button selectAll = new Button(selectGroup, SWT.NULL);
-		selectAll.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_12); 
+		selectAll.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_12);
 		selectAll.addSelectionListener(new SelectionAdapter() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				participantScope.setSelection(true);
 				selectedResourcesScope.setSelection(false);
@@ -112,9 +114,10 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		setButtonLayoutData(selectAll);
 
 		Button deSelectAll = new Button(selectGroup, SWT.NULL);
-		deSelectAll.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_13); 
+		deSelectAll.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_13);
 		deSelectAll.addSelectionListener(new SelectionAdapter() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				fViewer.setCheckedElements(new Object[0]);
 				updateOKStatus();
@@ -124,7 +127,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 
 		// Scopes
 		Group scopeGroup = new Group(top, SWT.NULL);
-		scopeGroup.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_6); 
+		scopeGroup.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_6);
 		layout = new GridLayout();
 		layout.numColumns = 3;
 		layout.makeColumnsEqualWidth = false;
@@ -134,18 +137,20 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		scopeGroup.setLayoutData(data);
 
 		participantScope = new Button(scopeGroup, SWT.RADIO);
-		participantScope.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_7); 
+		participantScope.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_7);
 		participantScope.addSelectionListener(new SelectionAdapter() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateParticipantScope();
 			}
 		});
 
 		selectedResourcesScope = new Button(scopeGroup, SWT.RADIO);
-		selectedResourcesScope.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_8); 
+		selectedResourcesScope.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_8);
 		selectedResourcesScope.addSelectionListener(new SelectionAdapter() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateSelectedResourcesScope();
 			}
@@ -155,9 +160,10 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		selectedResourcesScope.setLayoutData(data);
 
 		workingSetScope = new Button(scopeGroup, SWT.RADIO);
-		workingSetScope.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_10); 
+		workingSetScope.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_10);
 		workingSetScope.addSelectionListener(new SelectionAdapter() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (isWorkingSetSelected()) {
 					updateWorkingSetScope();
@@ -171,9 +177,10 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		workingSetLabel.setLayoutData(data);
 
 		Button selectWorkingSetButton = new Button(scopeGroup, SWT.NULL);
-		selectWorkingSetButton.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_11); 
+		selectWorkingSetButton.setText(TeamUIMessages.GlobalRefreshResourceSelectionPage_11);
 		selectWorkingSetButton.addSelectionListener(new SelectionAdapter() {
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				selectWorkingSetAction();
 			}
@@ -187,12 +194,12 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 	}
 
 	protected abstract ContainerCheckedTreeViewer createViewer(Composite top);
-	
+
 	/**
 	 * Allow the finish button to be pressed if there are checked resources.
 	 *
 	 */
-	protected void updateOKStatus() {	
+	protected void updateOKStatus() {
 		if(fViewer != null) {
 			if(! scopeCheckingElement) {
 				if(! selectedResourcesScope.getSelection()) {
@@ -207,7 +214,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 			setPageComplete(false);
 		}
 	}
-	
+
 	/**
 	 * Returns <code>true</code> if any of the root resources are grayed.
 	 */
@@ -221,10 +228,10 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Return the list of top-most resources that have been checked.
-	 * 
+	 *
 	 * @return  the list of top-most resources that have been checked or an
 	 * empty list if nothing is selected.
 	 */
@@ -237,7 +244,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		}
 		return checked.toArray(new Object[checked.size()]);
 	}
-	
+
 	protected void initializeScopingHint() {
 		String working_sets = settings.get(STORE_WORKING_SETS);
 		if (working_sets == null || working_sets.equals("")) { //$NON-NLS-1$
@@ -259,17 +266,18 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 			if(! ws.isEmpty()) {
 				this.workingSets = (IWorkingSet[]) ws.toArray(new IWorkingSet[ws.size()]);
 				updateWorkingSetScope();
-				updateWorkingSetLabel();			
+				updateWorkingSetLabel();
 				participantScope.setSelection(false);
 				selectedResourcesScope.setSelection(false);
 				workingSetScope.setSelection(true);
 			}
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.IDialogPage#dispose()
 	 */
+	@Override
 	public void dispose() {
 		if(workingSets != null && isWorkingSetSelected()) {
 			String concatsWorkingSets = makeWorkingSetLabel();
@@ -278,7 +286,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 			settings.put(STORE_WORKING_SETS, (String)null);
 		}
 	}
-	
+
 	private void updateParticipantScope() {
 		if(isWorkspaceSelected()) {
 			scopeCheckingElement = true;
@@ -289,11 +297,11 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 	}
 
 	protected abstract void checkAll();
-	
+
 	private void updateSelectedResourcesScope() {
 		setPageComplete(getRootElement().length > 0);
 	}
-	
+
 	private void selectWorkingSetAction() {
 		IWorkingSetManager manager = PlatformUI.getWorkbench().getWorkingSetManager();
 		IWorkingSetSelectionDialog dialog = manager.createWorkingSetSelectionDialog(getShell(), true);
@@ -307,12 +315,12 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		}
 		updateWorkingSetScope();
 		updateWorkingSetLabel();
-		
+
 		participantScope.setSelection(false);
 		selectedResourcesScope.setSelection(false);
 		workingSetScope.setSelection(true);
 	}
-	
+
 	private void updateWorkingSetScope() {
 		if(workingSets != null) {
 			scopeCheckingElement = true;
@@ -328,7 +336,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 	}
 
 	protected abstract boolean checkWorkingSetElements();
-	
+
 	private void collectCheckedItems(TreeItem item, List checked) {
 		if(item.getChecked() && !item.getGrayed()) {
 			checked.add(item.getData());
@@ -340,10 +348,10 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 			}
 		}
 	}
-	
+
 	private void updateWorkingSetLabel() {
 		if (workingSets == null || workingSets.length == 0) {
-			workingSetLabel.setText(TeamUIMessages.StatisticsPanel_noWorkingSet); 
+			workingSetLabel.setText(TeamUIMessages.StatisticsPanel_noWorkingSet);
 		} else {
 			workingSetLabel.setText(makeWorkingSetLabel());
 		}
@@ -359,11 +367,11 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 		}
 		return buffer.toString();
 	}
-	
+
 	protected boolean isWorkspaceSelected() {
 		return participantScope.getSelection();
 	}
-	
+
 	protected void setWorkspaceSelected(boolean selected) {
 		 workingSetScope.setSelection(!selected);
 		 selectedResourcesScope.setSelection(!selected);
@@ -381,7 +389,7 @@ public abstract class GlobalRefreshElementSelectionPage extends WizardPage {
 	public ContainerCheckedTreeViewer getViewer() {
 		return fViewer;
 	}
-	
+
 	protected boolean isSelectedResourcesSelected() {
 		return selectedResourcesScope.getSelection();
 	}

@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Project Path Variable Support
@@ -12,6 +12,7 @@
  *     Francis Lynch (Wind River) - [301563] Save and load tree snapshots
  *     Markus Schorn (Wind River) - [306575] Save snapshot location with project
  *     Broadcom Corporation - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -82,7 +83,7 @@ public class Project extends Container implements IProject {
 		// set the build order before setting the references or the natures
 		current.setBuildSpec(description.getBuildSpec(true));
 
-		// set the references before the natures 
+		// set the references before the natures
 		boolean flushOrder = false;
 		IProject[] oldReferences = current.getReferencedProjects();
 		IProject[] newReferences = description.getReferencedProjects();
@@ -170,40 +171,34 @@ public class Project extends Container implements IProject {
 
 	@Override
 	public void close(IProgressMonitor monitor) throws CoreException {
-		monitor = Policy.monitorFor(monitor);
+		String msg = NLS.bind(Messages.resources_closing_1, getName());
+		SubMonitor subMonitor = SubMonitor.convert(monitor, msg, 100);
+		final ISchedulingRule rule = workspace.getRuleFactory().modifyRule(this);
 		try {
-			String msg = NLS.bind(Messages.resources_closing_1, getName());
-			monitor.beginTask(msg, Policy.totalWork);
-			final ISchedulingRule rule = workspace.getRuleFactory().modifyRule(this);
-			try {
-				workspace.prepareOperation(rule, monitor);
-				ResourceInfo info = getResourceInfo(false, false);
-				int flags = getFlags(info);
-				checkExists(flags, true);
-				monitor.subTask(msg);
-				if (!isOpen(flags))
-					return;
-				// Signal that this resource is about to be closed.  Do this at the very 
-				// beginning so that infrastructure pieces have a chance to do clean up 
-				// while the resources still exist.
-				workspace.beginOperation(true);
-				workspace.broadcastEvent(LifecycleEvent.newEvent(LifecycleEvent.PRE_PROJECT_CLOSE, this));
-				// flush the build order early in case there is a problem
-				workspace.flushBuildOrder();
-				IProgressMonitor sub = Policy.subMonitorFor(monitor, Policy.opWork / 2, SubProgressMonitor.SUPPRESS_SUBTASK_LABEL);
-				IStatus saveStatus = workspace.getSaveManager().save(ISaveContext.PROJECT_SAVE, this, sub);
-				internalClose();
-				monitor.worked(Policy.opWork / 2);
-				if (saveStatus != null && !saveStatus.isOK())
-					throw new ResourceException(saveStatus);
-			} catch (OperationCanceledException e) {
-				workspace.getWorkManager().operationCanceled();
-				throw e;
-			} finally {
-				workspace.endOperation(rule, true, Policy.subMonitorFor(monitor, Policy.endOpWork));
-			}
+			workspace.prepareOperation(rule, subMonitor.newChild(1));
+			ResourceInfo info = getResourceInfo(false, false);
+			int flags = getFlags(info);
+			checkExists(flags, true);
+			subMonitor.subTask(msg);
+			if (!isOpen(flags))
+				return;
+			// Signal that this resource is about to be closed.  Do this at the very
+			// beginning so that infrastructure pieces have a chance to do clean up
+			// while the resources still exist.
+			workspace.beginOperation(true);
+			workspace.broadcastEvent(LifecycleEvent.newEvent(LifecycleEvent.PRE_PROJECT_CLOSE, this));
+			// flush the build order early in case there is a problem
+			workspace.flushBuildOrder();
+			IProgressMonitor sub = subMonitor.newChild(49, SubMonitor.SUPPRESS_SUBTASK);
+			IStatus saveStatus = workspace.getSaveManager().save(ISaveContext.PROJECT_SAVE, this, sub);
+			internalClose(subMonitor.newChild(49));
+			if (saveStatus != null && !saveStatus.isOK())
+				throw new ResourceException(saveStatus);
+		} catch (OperationCanceledException e) {
+			workspace.getWorkManager().operationCanceled();
+			throw e;
 		} finally {
-			monitor.done();
+			workspace.endOperation(rule, true, subMonitor.newChild(1));
 		}
 	}
 
@@ -341,7 +336,7 @@ public class Project extends Container implements IProject {
 	@Override
 	protected void fixupAfterMoveSource() throws CoreException {
 		workspace.deleteResource(this);
-		// check if we deleted a preferences file 
+		// check if we deleted a preferences file
 		ProjectPreferences.deleted(this);
 	}
 
@@ -477,7 +472,7 @@ public class Project extends Container implements IProject {
 	@Override
 	public IProject[] getReferencingProjects() {
 		IProject[] projects = workspace.getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
-		List<IProject> result = new ArrayList<IProject>(projects.length);
+		List<IProject> result = new ArrayList<>(projects.length);
 		for (int i = 0; i < projects.length; i++) {
 			Project project = (Project) projects[i];
 			if (!project.isAccessible())
@@ -531,7 +526,7 @@ public class Project extends Container implements IProject {
 	 * Implements all build methods on IProject.
 	 */
 	protected void internalBuild(final IBuildConfiguration config, final int trigger, final String builderName, final Map<String, String> args, IProgressMonitor monitor) throws CoreException {
-		workspace.run(new IWorkspaceRunnable() {
+		workspace.run(new ICoreRunnable() {
 			@Override
 			public void run(IProgressMonitor innerMonitor) throws CoreException {
 				innerMonitor = Policy.monitorFor(innerMonitor);
@@ -576,7 +571,7 @@ public class Project extends Container implements IProject {
 			}
 
 			/**
-			 * Returns whether this project should be built for a given trigger. 
+			 * Returns whether this project should be built for a given trigger.
 			 * @return <code>true</code> if the build should proceed, and <code>false</code> otherwise.
 			 */
 			private boolean shouldBuild() {
@@ -595,15 +590,19 @@ public class Project extends Container implements IProject {
 	 * to read the project description.  Since it is called during workspace restore,
 	 * it cannot start any operations.
 	 */
-	protected void internalClose() throws CoreException {
+	protected void internalClose(IProgressMonitor monitor) throws CoreException {
+		SubMonitor subMonitor = SubMonitor.convert(monitor, 2);
 		workspace.flushBuildOrder();
 		getMarkerManager().removeMarkers(this, IResource.DEPTH_INFINITE);
-		// remove each member from the resource tree. 
+		subMonitor.worked(1);
+		// remove each member from the resource tree.
 		// DO NOT use resource.delete() as this will delete it from disk as well.
 		IResource[] members = members(IContainer.INCLUDE_PHANTOMS | IContainer.INCLUDE_TEAM_PRIVATE_MEMBERS | IContainer.INCLUDE_HIDDEN);
+		subMonitor.setWorkRemaining(members.length);
 		for (int i = 0; i < members.length; i++) {
 			Resource member = (Resource) members[i];
 			workspace.deleteResource(member);
+			subMonitor.worked(1);
 		}
 		// finally mark the project as closed.
 		ResourceInfo info = getResourceInfo(false, true);
@@ -771,7 +770,7 @@ public class Project extends Container implements IProject {
 	public IBuildConfiguration[] internalGetReferencedBuildConfigs(String configName, boolean includeMissing) {
 		ProjectDescription description = internalGetDescription();
 		IBuildConfiguration[] refs = description.getAllBuildConfigReferences(configName, false);
-		Collection<IBuildConfiguration> configs = new LinkedHashSet<IBuildConfiguration>(refs.length);
+		Collection<IBuildConfiguration> configs = new LinkedHashSet<>(refs.length);
 		for (int i = 0; i < refs.length; i++) {
 			try {
 				configs.add((((BuildConfiguration) refs[i]).getBuildConfig()));
@@ -913,8 +912,8 @@ public class Project extends Container implements IProject {
 	 * Loads a snapshot of project meta-data from the given location URI.
 	 * Like {@link IProject#loadSnapshot(int, URI, IProgressMonitor)} but can be
 	 * called when the project is open.
-	 * 
-	 * @see IProject#saveSnapshot(int, URI, IProgressMonitor) 
+	 *
+	 * @see IProject#saveSnapshot(int, URI, IProgressMonitor)
 	 */
 	private void internalLoadSnapshot(int options, URI snapshotLocation, IProgressMonitor monitor) throws CoreException {
 		if ((options & SNAPSHOT_TREE) != 0) {
@@ -1094,7 +1093,7 @@ public class Project extends Container implements IProject {
 	 * links to bring the links in sync with those described in the project description.
 	 * @param newDescription the new project description that may have
 	 * 	changed link descriptions.
-	 * @return status ok if everything went well, otherwise an ERROR multi-status 
+	 * @return status ok if everything went well, otherwise an ERROR multi-status
 	 * 	describing the problems encountered.
 	 */
 	public IStatus reconcileLinksAndGroups(ProjectDescription newDescription) {
@@ -1135,7 +1134,7 @@ public class Project extends Container implements IProject {
 		if (newLinks == null)
 			return status;
 		//sort links to avoid creating nested links before their parents
-		TreeSet<LinkDescription> newLinksAndGroups = new TreeSet<LinkDescription>(new Comparator<LinkDescription>() {
+		TreeSet<LinkDescription> newLinksAndGroups = new TreeSet<>(new Comparator<LinkDescription>() {
 			@Override
 			public int compare(LinkDescription arg0, LinkDescription arg1) {
 				int numberOfSegments0 = arg0.getProjectRelativePath().segmentCount();
@@ -1215,7 +1214,7 @@ public class Project extends Container implements IProject {
 	public void setDescription(IProjectDescription description, int updateFlags, IProgressMonitor monitor) throws CoreException {
 		// FIXME - update flags should be honored:
 		//    KEEP_HISTORY means capture .project file in local history
-		//    FORCE means overwrite any existing .project file 
+		//    FORCE means overwrite any existing .project file
 		monitor = Policy.monitorFor(monitor);
 		try {
 			monitor.beginTask(Messages.resources_setDesc, Policy.totalWork);
@@ -1282,7 +1281,7 @@ public class Project extends Container implements IProject {
 	}
 
 	/**
-	 * Restore the non-persisted state for the project.  For example, read and set 
+	 * Restore the non-persisted state for the project.  For example, read and set
 	 * the description from the local meta area.  Also, open the property store etc.
 	 * This method is used when an open project is restored and so emulates
 	 * the behaviour of open().
@@ -1317,8 +1316,8 @@ public class Project extends Container implements IProject {
 	}
 
 	/**
-	 * The project description file on disk is better than the description in memory.  
-	 * Make sure the project description in memory is synchronized with the 
+	 * The project description file on disk is better than the description in memory.
+	 * Make sure the project description in memory is synchronized with the
 	 * description file contents.
 	 */
 	protected void updateDescription() throws CoreException {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2011 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM - Initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -17,7 +18,7 @@ import org.eclipse.core.runtime.IPath;
 /**
  * The notification mechanism can request marker deltas for several overlapping intervals
  * of time. This class maintains a history of marker deltas, and upon request can
- * generate a map of marker deltas for any interval.  This is done by maintaining 
+ * generate a map of marker deltas for any interval.  This is done by maintaining
  * batches of marker deltas keyed by the change Id at the start of that batch.
  * When the delta factory requests a delta, it specifies the start generation, and
  * this class assembles the deltas for all generations between then and the most
@@ -85,7 +86,7 @@ class MarkerDeltaManager {
 			batches = newBatches;
 		}
 		startIds[nextFree] = start;
-		batches[nextFree] = new HashMap<IPath, MarkerSet>(11);
+		batches[nextFree] = new HashMap<>(11);
 		return batches[nextFree++];
 	}
 }

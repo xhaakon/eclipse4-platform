@@ -22,7 +22,7 @@ public class SynchronizeParticipantRegistry extends RegistryReader {
 	public static final String PT_SYNCPARTICIPANTS = "synchronizeParticipants"; //$NON-NLS-1$
 	private static final String TAG_SYNCPARTICIPANT = "participant"; //$NON-NLS-1$
 	private Map participants = new HashMap();
-	
+
 	public SynchronizeParticipantRegistry() {
 		super();
 	}
@@ -30,6 +30,7 @@ public class SynchronizeParticipantRegistry extends RegistryReader {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.registry.RegistryReader#readElement(org.eclipse.core.runtime.IConfigurationElement)
 	 */
+	@Override
 	protected boolean readElement(IConfigurationElement element) {
 		if (element.getName().equals(TAG_SYNCPARTICIPANT)) {
 			String descText = getDescription(element);
@@ -44,7 +45,7 @@ public class SynchronizeParticipantRegistry extends RegistryReader {
 		}
 		return false;
 	}
-	
+
 	public SynchronizeParticipantDescriptor find(String id) {
 		return (SynchronizeParticipantDescriptor)participants.get(id);
 	}

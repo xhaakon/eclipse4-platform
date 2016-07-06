@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ import org.eclipse.ui.PlatformUI;
 /**
  * A command handler to open a <code>MessageDialog</code> and return the
  * result.
- * 
+ *
  * @since 3.2
  */
 public class OpenMessageDialogHandler extends AbstractHandler {
@@ -39,11 +39,12 @@ public class OpenMessageDialogHandler extends AbstractHandler {
 	private static final String PARAM_ID_BUTTON_LABEL_PREFIX = "buttonLabel"; //$NON-NLS-1$
 
 	private static final int BUTTON_LABEL_COUNT = 4;
-	
+
 	private static final String PARAM_ID_CANCEL_RETURNS = "cancelReturns"; //$NON-NLS-1$
 
 	private static final int CANCEL_RETURN_CODE = -1;
-	
+
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
 		String title = event.getParameter(PARAM_ID_TITLE);
@@ -72,7 +73,7 @@ public class OpenMessageDialogHandler extends AbstractHandler {
 		MessageDialog dialog = new MessageDialog(shell, title, null, message,
 				imageType, buttonLabels, defaultValue);
 		int returnCode = dialog.open();
-		
+
 		if (returnCode == CANCEL_RETURN_CODE) {
 			String cancelReturns = event.getParameter(PARAM_ID_CANCEL_RETURNS);
 			if (cancelReturns != null)
@@ -80,13 +81,13 @@ public class OpenMessageDialogHandler extends AbstractHandler {
 			else
 				throw new ExecutionException("dialog canceled"); //$NON-NLS-1$
 		}
-		
+
 		return buttonLabels[returnCode];
 	}
 
 	private String[] collectButtonLabels(ExecutionEvent event) {
 
-		ArrayList buttonLabelList = new ArrayList();
+		ArrayList<String> buttonLabelList = new ArrayList<>();
 
 		for (int i = 0; i < BUTTON_LABEL_COUNT; i++) {
 			String buttonLabelParamId = PARAM_ID_BUTTON_LABEL_PREFIX
@@ -100,7 +101,7 @@ public class OpenMessageDialogHandler extends AbstractHandler {
 			buttonLabelList.add(buttonLabel);
 		}
 
-		return (String[]) buttonLabelList.toArray(new String[buttonLabelList
+		return buttonLabelList.toArray(new String[buttonLabelList
 				.size()]);
 	}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -88,9 +88,6 @@ class FullDecoratorDefinition extends DecoratorDefinition {
         return decorator;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.decorators.DecoratorDefinition#refreshDecorator()
-     */
     @Override
 	protected void refreshDecorator() {
         //Only do something if disabled so as to prevent
@@ -150,18 +147,12 @@ class FullDecoratorDefinition extends DecoratorDefinition {
         return decorator;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.decorators.DecoratorDefinition#internalGetLabelProvider()
-     */
     @Override
 	protected IBaseLabelProvider internalGetLabelProvider()
             throws CoreException {
         return internalGetDecorator();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.decorators.DecoratorDefinition#isFull()
-     */
     @Override
 	public boolean isFull() {
         return true;

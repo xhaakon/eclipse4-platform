@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008, 2010 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -103,10 +103,12 @@ public abstract class ElementContainerImpl<T extends MUIElement> extends UIEleme
 				 */
 				private static final long serialVersionUID = 1L;
 
+				@Override
 				protected boolean isInstance(Object object) {
 					return super.isInstance(object) && (clazz == null || clazz.isInstance(object));
 				}
 
+				@Override
 				protected T validate(int index, T object) {
 					if( isInstance(object) ) {
 						return object;

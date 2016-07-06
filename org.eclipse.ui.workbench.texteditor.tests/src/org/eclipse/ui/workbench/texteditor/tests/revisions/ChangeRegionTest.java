@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,44 +10,46 @@
  *******************************************************************************/
 package org.eclipse.ui.workbench.texteditor.tests.revisions;
 
+import static org.junit.Assert.*;
+
 import java.util.Date;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.swt.graphics.RGB;
 
 import org.eclipse.jface.internal.text.revisions.ChangeRegion;
 import org.eclipse.jface.internal.text.revisions.Hunk;
+import org.eclipse.jface.internal.text.revisions.Range;
 
 import org.eclipse.jface.text.revisions.Revision;
-import org.eclipse.jface.text.source.ILineRange;
 import org.eclipse.jface.text.source.LineRange;
 
 /**
  *
  * @since 3.2
  */
-public class ChangeRegionTest extends TestCase {
-	public static Test suite() {
-		return new TestSuite(ChangeRegionTest.class);
-	}
+public class ChangeRegionTest {
 
 	public static final class TestRevision extends Revision {
+		@Override
 		public Object getHoverInfo() {
 			return null;
 		}
 
+		@Override
 		public RGB getColor() {
 			return null;
 		}
 
+		@Override
 		public String getId() {
 			return null;
 		}
 
+		@Override
 		public Date getDate() {
 			return null;
 		}
@@ -55,13 +57,12 @@ public class ChangeRegionTest extends TestCase {
 
 	private Revision fRevision;
 
-	/*
-	 * @see junit.framework.TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		fRevision= new TestRevision();
 	}
 
+	@Test
 	public void testCreation() throws Exception {
 		try {
 			new ChangeRegion(fRevision, null);
@@ -83,38 +84,41 @@ public class ChangeRegionTest extends TestCase {
 
 		ChangeRegion r= new ChangeRegion(fRevision, new LineRange(12, 3));
 		assertEquals(fRevision, r.getRevision());
-		RangeUtil.assertEqualRange(new LineRange(12, 3), (ILineRange) r.getAdjustedRanges().get(0));
+		RangeUtil.assertEqualRange(new LineRange(12, 3), r.getAdjustedRanges().get(0));
 		RangeUtil.assertEqualRange(new LineRange(12, 3), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkAfter() throws Exception {
 		ChangeRegion r= new ChangeRegion(fRevision, new LineRange(12, 3));
-		List before= RangeUtil.deepClone(r.getAdjustedRanges());
+		List<Range> before= RangeUtil.deepClone(r.getAdjustedRanges());
 		r.adjustTo(new Hunk(16, 3, 2));
 		RangeUtil.assertEqualRanges(before, r.getAdjustedRanges());
-		RangeUtil.assertEqualRange((ILineRange) before.get(0), r.getAdjustedCoverage());
+		RangeUtil.assertEqualRange(before.get(0), r.getAdjustedCoverage());
 
 		r= new ChangeRegion(fRevision, new LineRange(12, 3));
 		before= RangeUtil.deepClone(r.getAdjustedRanges());
 		r.adjustTo(new Hunk(16, -33, 2));
 		RangeUtil.assertEqualRanges(before, r.getAdjustedRanges());
-		RangeUtil.assertEqualRange((ILineRange) before.get(0), r.getAdjustedCoverage());
+		RangeUtil.assertEqualRange(before.get(0), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkRightAfter() throws Exception {
 		ChangeRegion r= new ChangeRegion(fRevision, new LineRange(12, 3));
-		List before= RangeUtil.deepClone(r.getAdjustedRanges());
+		List<Range> before= RangeUtil.deepClone(r.getAdjustedRanges());
 		r.adjustTo(new Hunk(15, 3, 2));
 		RangeUtil.assertEqualRanges(before, r.getAdjustedRanges());
-		RangeUtil.assertEqualRange((ILineRange) before.get(0), r.getAdjustedCoverage());
+		RangeUtil.assertEqualRange(before.get(0), r.getAdjustedCoverage());
 
 		r= new ChangeRegion(fRevision, new LineRange(12, 3));
 		before= RangeUtil.deepClone(r.getAdjustedRanges());
 		r.adjustTo(new Hunk(15, -3, 2));
 		RangeUtil.assertEqualRanges(before, r.getAdjustedRanges());
-		RangeUtil.assertEqualRange((ILineRange) before.get(0), r.getAdjustedCoverage());
+		RangeUtil.assertEqualRange(before.get(0), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkBefore() throws Exception {
 		ChangeRegion r;
 
@@ -144,6 +148,7 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualRange(new LineRange(9, 3), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkRightBefore() throws Exception {
 		ChangeRegion r;
 
@@ -178,6 +183,7 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualRange(new LineRange(15, 3), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkAtStart() throws Exception {
 		ChangeRegion r;
 
@@ -207,6 +213,7 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualRange(new LineRange(17, 5), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkAtEnd() throws Exception {
 		ChangeRegion r;
 
@@ -230,7 +237,8 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualSingleRange(new LineRange(12, 5), r.getAdjustedRanges());
 		RangeUtil.assertEqualRange(new LineRange(12, 5), r.getAdjustedCoverage());
 	}
-
+	
+	@Test
 	public void testHunkOverStart() throws Exception {
 		ChangeRegion r;
 
@@ -250,6 +258,7 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualRange(new LineRange(13, 4), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkOverEnd() throws Exception {
 		ChangeRegion r;
 
@@ -284,6 +293,7 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualRange(new LineRange(12, 5), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkCovering() throws Exception {
 		ChangeRegion r;
 
@@ -363,6 +373,7 @@ public class ChangeRegionTest extends TestCase {
 		RangeUtil.assertEqualRange(new LineRange(12, 0), r.getAdjustedCoverage());
 	}
 
+	@Test
 	public void testHunkInBetween() throws Exception {
 		// TODO require merging of adjacent ranges?
 		ChangeRegion r;

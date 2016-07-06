@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2012 IBM Corporation and others.
+ * Copyright (c) 2001, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -947,8 +947,6 @@ public class TabbedPropertyList
 		widgetNormalShadow = Display.getCurrent().getSystemColor(
 				SWT.COLOR_WIDGET_NORMAL_SHADOW);
 
-		RGB infoBackground = Display.getCurrent().getSystemColor(
-				SWT.COLOR_INFO_BACKGROUND).getRGB();
 		RGB white = Display.getCurrent().getSystemColor(SWT.COLOR_WHITE)
 				.getRGB();
 		RGB black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK)
@@ -956,16 +954,16 @@ public class TabbedPropertyList
 
 		/*
 		 * gradient in the default tab: start colour WIDGET_NORMAL_SHADOW 100% +
-		 * white 20% + INFO_BACKGROUND 60% end colour WIDGET_NORMAL_SHADOW 100% +
-		 * INFO_BACKGROUND 40%
+		 * white 20% + WIDGET_BACKGROUND 60% end colour WIDGET_NORMAL_SHADOW
+		 * 100% + WIDGET_BACKGROUND 40%
 		 */
 		defaultGradientStart = factory.getColors().createColor(
 				"TabbedPropertyList.defaultTabGradientStart", //$NON-NLS-1$
-				FormColors.blend(infoBackground, FormColors.blend(white,
+				FormColors.blend(widgetBackground.getRGB(), FormColors.blend(white,
 						widgetNormalShadow.getRGB(), 20), 60));
 		defaultGradientEnd = factory.getColors().createColor(
 				"TabbedPropertyList.defaultTabGradientEnd", //$NON-NLS-1$
-				FormColors.blend(infoBackground, widgetNormalShadow.getRGB(),
+				FormColors.blend(widgetBackground.getRGB(), widgetNormalShadow.getRGB(),
 						40));
 
 		navigationElementShadowStroke = factory.getColors().createColor(

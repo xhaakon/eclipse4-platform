@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2008 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,6 +34,7 @@ public class IURIEditorInputAdapterFactory implements IAdapterFactory {
 		/*
 		 * @see org.eclipse.ui.editors.text.ILocationProvider#getLocation(java.lang.Object)
 		 */
+		@Override
 		public IPath getPath(Object element) {
 			URI uri= getURI(element);
 			if (uri != null)
@@ -41,9 +42,7 @@ public class IURIEditorInputAdapterFactory implements IAdapterFactory {
 			return null;
 		}
 
-		/*
-		 * @see org.eclipse.ui.editors.text.ILocationProviderExtension#getURI(java.lang.Object)
-		 */
+		@Override
 		public URI getURI(Object element) {
 			if (element instanceof IURIEditorInput) {
 				IURIEditorInput input= (IURIEditorInput)element;
@@ -55,26 +54,23 @@ public class IURIEditorInputAdapterFactory implements IAdapterFactory {
 
 
 	/** The list of provided adapters. */
-	private static final Class[] ADAPTER_LIST= new Class[] { ILocationProvider.class };
+	private static final Class<?>[] ADAPTER_LIST= new Class[] { ILocationProvider.class };
 
 	/** The provided location provider */
 	private ILocationProvider fLocationProvider= new LocationProvider();
 
-	/*
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
-	public Object getAdapter(Object adaptableObject, Class adapterType) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getAdapter(Object adaptableObject, Class<T> adapterType) {
 		if (ILocationProvider.class.equals(adapterType)) {
 			if (adaptableObject instanceof IURIEditorInput)
-				return fLocationProvider;
+				return (T) fLocationProvider;
 		}
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
-	public Class[] getAdapterList() {
+	@Override
+	public Class<?>[] getAdapterList() {
 		return ADAPTER_LIST;
 	}
 }

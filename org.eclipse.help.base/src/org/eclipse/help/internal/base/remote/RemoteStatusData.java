@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2011 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Alex Blewitt - Bug 474070
  *******************************************************************************/
 package org.eclipse.help.internal.base.remote;
 
@@ -55,7 +56,7 @@ public class RemoteStatusData {
 	 */
 	public static ArrayList<URL> checkSitesConnectivity(ArrayList<URL> sites)
 	{
-		ArrayList<URL> badSites = new ArrayList<URL>();
+		ArrayList<URL> badSites = new ArrayList<>();
 
 		for (int i=0;i<sites.size();i++)
 			if (!isConnected(sites.get(i)))
@@ -87,7 +88,7 @@ public class RemoteStatusData {
 	 */
 	public static ArrayList<URL> getRemoteSites()
 	{
-		ArrayList<URL> sites = new ArrayList<URL>();
+		ArrayList<URL> sites = new ArrayList<>();
 
 		boolean remoteHelpEnabled =
 			Platform.getPreferencesService().getBoolean(
@@ -137,7 +138,7 @@ public class RemoteStatusData {
 
 		private ConnectionCache(){
 
-			cache = new Hashtable<URL, Boolean>();
+			cache = new Hashtable<>();
 			resetTimer();
 		}
 
@@ -178,7 +179,7 @@ public class RemoteStatusData {
 
 		public void put(URL url,boolean connected)
 		{
-			cache.put(url,new Boolean(connected));
+			cache.put(url,Boolean.valueOf(connected));
 		}
 	}
 

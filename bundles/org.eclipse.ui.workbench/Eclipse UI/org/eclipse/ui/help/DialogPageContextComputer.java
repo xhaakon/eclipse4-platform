@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 package org.eclipse.ui.help;
 
 import java.util.ArrayList;
-
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.help.IContext;
 import org.eclipse.jface.dialogs.IDialogPage;
@@ -23,7 +22,9 @@ import org.eclipse.swt.widgets.Control;
  * <p>
  * This class may be instantiated; it is not intended to be subclassed.
  * </p>
- * @deprecated nested contexts are no longer supported by the help support system
+ *
+ * @deprecated marked for deletion, see Bug 442961, nested contexts are no
+ *             longer supported by the help support system
  * @noextend This class is not intended to be subclassed by clients.
  */
 @Deprecated
@@ -96,9 +97,6 @@ public class DialogPageContextComputer implements IContextComputer {
         addContexts(object, event);
     }
 
-    /* (non-Javadoc)
-     * Method declared on IContextComputer.
-     */
     @Override
 	public Object[] computeContexts(HelpEvent event) {
         contextList = new ArrayList();
@@ -116,9 +114,6 @@ public class DialogPageContextComputer implements IContextComputer {
         return contextList.toArray();
     }
 
-    /* (non-Javadoc)
-     * Method declared on IContextComputer.
-     */
     @Override
 	public Object[] getLocalContexts(HelpEvent event) {
         return new Object[] { context };

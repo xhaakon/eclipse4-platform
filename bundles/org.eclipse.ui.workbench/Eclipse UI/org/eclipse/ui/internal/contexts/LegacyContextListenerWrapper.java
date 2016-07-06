@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2005 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -82,11 +82,6 @@ public class LegacyContextListenerWrapper implements IContextListener,
 		this.context = context;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.core.commands.contexts.IContextListener#contextChanged(org.eclipse.core.commands.contexts.ContextEvent)
-	 */
 	@Override
 	public final void contextChanged(final ContextEvent contextEvent) {
 		wrappedListener

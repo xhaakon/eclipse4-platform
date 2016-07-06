@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -283,11 +283,6 @@ public class DecorationScheduler {
 	private void createDecorationJob() {
 		decorationJob = new Job(
 				WorkbenchMessages.DecorationScheduler_CalculationJobName) {
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
-			 */
 			@Override
 			public IStatus run(IProgressMonitor monitor) {
 
@@ -400,21 +395,11 @@ public class DecorationScheduler {
 				}
 			}
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
 			@Override
 			public boolean belongsTo(Object family) {
 				return DecoratorManager.FAMILY_DECORATE == family;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#shouldRun()
-			 */
 			@Override
 			public boolean shouldRun() {
 				return PlatformUI.isWorkbenchRunning();
@@ -456,22 +441,12 @@ public class DecorationScheduler {
 		Job clear = new Job(
 				WorkbenchMessages.DecorationScheduler_ClearResultsJob) {
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
-			 */
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				resultCache.clear();
 				return Status.OK_STATUS;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#shouldRun()
-			 */
 			@Override
 			public boolean shouldRun() {
 				return PlatformUI.isWorkbenchRunning();
@@ -589,21 +564,11 @@ public class DecorationScheduler {
 				listeners = decoratorManager.getListeners();
 			}
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-			 */
 			@Override
 			public boolean belongsTo(Object family) {
 				return DecoratorManager.FAMILY_DECORATE == family;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.core.runtime.jobs.Job#shouldRun()
-			 */
 			@Override
 			public boolean shouldRun() {
 				return PlatformUI.isWorkbenchRunning();

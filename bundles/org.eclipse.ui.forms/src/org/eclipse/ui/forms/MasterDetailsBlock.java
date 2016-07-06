@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,8 +71,9 @@ public abstract class MasterDetailsBlock {
 	static final int DRAGGER_SIZE = 40;
 
 	class MDSashForm extends SashForm {
-		ArrayList sashes = new ArrayList();
+		ArrayList<Sash> sashes = new ArrayList<>();
 		Listener listener = new Listener () {
+			@Override
 			public void handleEvent(Event e) {
 				switch (e.type) {
 				case SWT.MouseEnter:
@@ -96,11 +97,13 @@ public abstract class MasterDetailsBlock {
 			super(parent, style);
 		}
 
+		@Override
 		public void layout(boolean changed) {
 			super.layout(changed);
 			hookSashListeners();
 		}
 
+		@Override
 		public void layout(Control [] children) {
 			super.layout(children);
 			hookSashListeners();
@@ -109,9 +112,9 @@ public abstract class MasterDetailsBlock {
 		private void hookSashListeners() {
 			purgeSashes();
 			Control [] children = getChildren();
-			for (int i=0; i<children.length; i++) {
-				if (children[i] instanceof Sash) {
-					Sash sash = (Sash)children[i];
+			for (Control element : children) {
+				if (element instanceof Sash) {
+					Sash sash = (Sash)element;
 					if (sashes.contains(sash))
 						continue;
 					sash.addListener(SWT.Paint, listener);
@@ -122,8 +125,8 @@ public abstract class MasterDetailsBlock {
 			}
 		}
 		private void purgeSashes() {
-			for (Iterator iter=sashes.iterator(); iter.hasNext();) {
-				Sash sash = (Sash)iter.next();
+			for (Iterator<Sash> iter=sashes.iterator(); iter.hasNext();) {
+				Sash sash = iter.next();
 				if (sash.isDisposed())
 					iter.remove();
 			}
@@ -208,9 +211,9 @@ public abstract class MasterDetailsBlock {
 	private void hookResizeListener() {
 		Listener listener = ((MDSashForm)sashForm).listener;
 		Control [] children = sashForm.getChildren();
-		for (int i=0; i<children.length; i++) {
-			if (children[i] instanceof Sash) continue;
-			children[i].addListener(SWT.Resize, listener);
+		for (Control element : children) {
+			if (element instanceof Sash) continue;
+			element.addListener(SWT.Resize, listener);
 		}
 	}
 

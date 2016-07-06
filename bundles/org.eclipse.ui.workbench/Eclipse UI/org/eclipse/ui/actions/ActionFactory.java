@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2014 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -336,8 +336,13 @@ public abstract class ActionFactory {
 					.setHelp(action, IWorkbenchHelpContextIds.INTRO_ACTION);
 			IntroDescriptor introDescriptor = ((Workbench) window.getWorkbench())
 					.getIntroDescriptor();
-			if (introDescriptor != null)
+			if (introDescriptor != null) {
 				action.setImageDescriptor(introDescriptor.getImageDescriptor());
+				String labelOverride = introDescriptor.getLabelOverride();
+				if (labelOverride != null) {
+					action.setText(labelOverride);
+				}
+			}
 
 			return action;
         }

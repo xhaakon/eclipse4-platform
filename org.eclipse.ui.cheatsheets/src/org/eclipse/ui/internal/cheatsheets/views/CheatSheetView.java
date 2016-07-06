@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2007 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,22 +32,23 @@ import org.eclipse.ui.internal.cheatsheets.registry.CheatSheetRegistryReader;
 import org.eclipse.ui.part.ViewPart;
 
 public class CheatSheetView extends ViewPart {
-	
+
 	private boolean actionBarContributed = false;
 	private CheatSheetExpandRestoreAction expandRestoreAction;
 	private Action copyAction;
 	private CheatSheetViewer viewer;
 	private IMemento memento;
 	private static final String CHEAT_SHEET_VIEW_HELP_ID = "org.eclipse.ui.cheatsheets.cheatSheetView"; //$NON-NLS-1$
-	
+
 	private void contributeToActionBars() {
 		IActionBars bars = getViewSite().getActionBars();
 		IMenuManager menuManager = bars.getMenuManager();
 		IToolBarManager tbmanager = bars.getToolBarManager();
-	
+
 		expandRestoreAction = new CheatSheetExpandRestoreAction(Messages.COLLAPSE_ALL_BUT_CURRENT_TOOLTIP, false, viewer);
-		
+
 		copyAction = new Action("copy") { //$NON-NLS-1$
+			@Override
 			public void run() {
 				viewer.copy();
 			}
@@ -58,7 +59,7 @@ public class CheatSheetView extends ViewPart {
 
 		viewer.setExpandRestoreAction(expandRestoreAction);
 		viewer.setCopyAction(copyAction);
-	
+
 		CheatSheetMenu cheatsheetMenuMenuItem = new CheatSheetMenu();
 		menuManager.add(cheatsheetMenuMenuItem);
 
@@ -86,13 +87,14 @@ public class CheatSheetView extends ViewPart {
 	 *
 	 * @param parent the parent control
 	 */
+	@Override
 	public void createPartControl(Composite parent) {
 		CheatSheetStopWatch.startStopWatch("CheatSheetView.createPartControl"); //$NON-NLS-1$
 
 		viewer = new CheatSheetViewer(false);
 		viewer.createPartControl(parent);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, CHEAT_SHEET_VIEW_HELP_ID);
-	
+
 		if (!actionBarContributed) {
 			contributeToActionBars();
 			actionBarContributed = true;
@@ -108,10 +110,11 @@ public class CheatSheetView extends ViewPart {
 	/**
 	 * @see org.eclipse.ui.IWorkbenchPart#dispose()
 	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 	}
-	
+
 	public CheatSheetElement getContent() {
 		if(viewer != null) {
 			return viewer.getContent();
@@ -132,17 +135,8 @@ public class CheatSheetView extends ViewPart {
 	public CheatSheetViewer getCheatSheetViewer() {
 		return viewer;
 	}
-	
-	/* (non-Javadoc)
-	 * Initializes this view with the given view site.  A memento is passed to
-	 * the view which contains a snapshot of the views state from a previous
-	 * session.  Where possible, the view should try to recreate that state
-	 * within the part controls.
-	 * <p>
-	 * This implementation will ignore the memento and initialize the view in
-	 * a fresh state.  Subclasses may override the implementation to perform any
-	 * state restoration as needed.
-	 */
+
+	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		init(site);
 		this.memento = memento;
@@ -156,10 +150,10 @@ public class CheatSheetView extends ViewPart {
 		if (contentMemento != null) {
 			String id = contentMemento.getString(ICheatSheetResource.MEMENTO_ID);
 			String name = contentMemento.getString(ICheatSheetResource.MEMENTO_NAME);
-			
+
 			// Using an if/else if here because at a point in time there was a different
 			// attribute used. As a result an if/else could cause setInput(null) to be
-			// invoked but this would throw an IllegalArgumentException. 
+			// invoked but this would throw an IllegalArgumentException.
 			if(name != null) {
 				try {
 				URL fileURL = new URL(contentMemento.getString(ICheatSheetResource.MEMENTO_URL));
@@ -173,15 +167,13 @@ public class CheatSheetView extends ViewPart {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * Method declared on IViewPart.
-	 */
+	@Override
 	public void saveState(IMemento memento) {
 		if(viewer != null) {
 			CheatSheetElement element = viewer.getContent();
 
 			if(element == null) {
-				// Currently no cheat sheet is being displayed so just return 
+				// Currently no cheat sheet is being displayed so just return
 				return;
 			}
 
@@ -204,12 +196,13 @@ public class CheatSheetView extends ViewPart {
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
-	public void setFocus() {		
+	@Override
+	public void setFocus() {
 		if(viewer != null) {
 			viewer.setFocus();
 		}
 	}
-	
+
 	public void setInput(String id) {
 		CheatSheetStopWatch.startStopWatch("CheatSheetView.setInput"); //$NON-NLS-1$
 
@@ -229,6 +222,6 @@ public class CheatSheetView extends ViewPart {
 	public void setInputFromXml(String id, String name, String xml, String basePath) {
 		if(viewer != null) {
 			viewer.setInputFromXml(id, name, xml, basePath);
-		}	
+		}
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.ui.internal;
 
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
@@ -43,7 +44,7 @@ final class ViewIntroAdapterSite implements IIntroSite {
 
     @Override
 	public <T> T getAdapter(Class<T> adapter) {
-        return viewSite.getAdapter(adapter);
+		return Adapters.adapt(viewSite, adapter);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,8 +8,9 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Broadcom Corporation - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
-
 package org.eclipse.core.internal.resources;
 
 import java.util.*;
@@ -19,7 +20,7 @@ import java.util.*;
  * of a reference graph. This algorithm handles cycles in the graph in a reasonable way.
  * In 3.7 this class was enhanced to support computing order of a graph containing an
  * arbitrary type.
- * 
+ *
  * @since 2.1
  */
 class ComputeProjectOrder {
@@ -91,14 +92,14 @@ class ComputeProjectOrder {
 			 * Ordered list of adjacent vertexes. In other words, "this" is the
 			 * "from" vertex and the elements of this list are all "to"
 			 * vertexes.
-			 * 
+			 *
 			 * Element type: <code>Vertex</code>
 			 */
-			public List<Vertex> adjacent = new ArrayList<Vertex>(3);
+			public List<Vertex> adjacent = new ArrayList<>(3);
 
 			/**
 			 * Creates a new vertex with the given id.
-			 * 
+			 *
 			 * @param id the vertex id
 			 */
 			public Vertex(Object id) {
@@ -108,17 +109,17 @@ class ComputeProjectOrder {
 
 		/**
 		 * Ordered list of all vertexes in this graph.
-		 * 
+		 *
 		 * Element type: <code>Vertex</code>
 		 */
-		private List<Vertex> vertexList = new ArrayList<Vertex>(100);
+		private List<Vertex> vertexList = new ArrayList<>(100);
 
 		/**
 		 * Map from id to vertex.
-		 * 
+		 *
 		 * Key type: <code>Object</code>; value type: <code>Vertex</code>
 		 */
-		private Map<Object, Vertex> vertexMap = new HashMap<Object, Vertex>(100);
+		private Map<Object, Vertex> vertexMap = new HashMap<>(100);
 
 		/**
 		 * DFS visit time. Non-negative.
@@ -168,7 +169,7 @@ class ComputeProjectOrder {
 		 * Defines a new vertex with the given id. The depth-first search is
 		 * performed in the relative order in which vertexes were added to the
 		 * graph.
-		 * 
+		 *
 		 * @param id the id of the vertex
 		 * @exception IllegalArgumentException if the vertex id is
 		 * already defined or if the graph is frozen
@@ -192,7 +193,7 @@ class ComputeProjectOrder {
 		 * <code>addVertex</code>. The depth-first search is performed in the
 		 * relative order in which adjacent "to" vertexes were added to a given
 		 * "from" index.
-		 * 
+		 *
 		 * @param fromId the id of the "from" vertex
 		 * @param toId the id of the "to" vertex
 		 * @exception IllegalArgumentException if either vertex is undefined or
@@ -217,7 +218,7 @@ class ComputeProjectOrder {
 		/**
 		 * Returns the ids of the vertexes in this graph ordered by depth-first
 		 * search finish time. The graph must be frozen.
-		 * 
+		 *
 		 * @param increasing <code>true</code> if objects are to be arranged
 		 * into increasing order of depth-first search finish time, and
 		 * <code>false</code> if objects are to be arranged into decreasing
@@ -247,7 +248,7 @@ class ComputeProjectOrder {
 
 		/**
 		 * Returns whether the graph contains cycles. The graph must be frozen.
-		 * 
+		 *
 		 * @return <code>true</code> if this graph contains at least one cycle,
 		 * and <code>false</code> if this graph is cycle free
 		 * @exception IllegalArgumentException if the graph is not frozen
@@ -263,9 +264,9 @@ class ComputeProjectOrder {
 		 * Returns the non-trivial components of this graph. A non-trivial
 		 * component is a set of 2 or more vertexes that were traversed
 		 * together. The graph must be frozen.
-		 * 
+		 *
 		 * @return the possibly empty list of non-trivial components, where
-		 * each component is an array of ids (element type: 
+		 * each component is an array of ids (element type:
 		 * <code>Object[]</code>)
 		 * @exception IllegalArgumentException if the graph is not frozen
 		 */
@@ -275,7 +276,7 @@ class ComputeProjectOrder {
 			}
 			// find the roots of each component
 			// Map<Vertex,List<Object>> components
-			Map<Vertex, List<Object>> components = new HashMap<Vertex, List<Object>>();
+			Map<Vertex, List<Object>> components = new HashMap<>();
 			for (Iterator<Vertex> it = vertexList.iterator(); it.hasNext();) {
 				Vertex vertex = it.next();
 				if (vertex.predecessor == null) {
@@ -289,14 +290,14 @@ class ComputeProjectOrder {
 					}
 					List<Object> component = components.get(root);
 					if (component == null) {
-						component = new ArrayList<Object>(2);
+						component = new ArrayList<>(2);
 						component.add(root.id);
 						components.put(root, component);
 					}
 					component.add(vertex.id);
 				}
 			}
-			List<Object[]> result = new ArrayList<Object[]>(components.size());
+			List<Object[]> result = new ArrayList<>(components.size());
 			for (Iterator<List<Object>> it = components.values().iterator(); it.hasNext();) {
 				List<Object> component = it.next();
 				if (component.size() > 1) {
@@ -316,7 +317,7 @@ class ComputeProjectOrder {
 		//		 * </p>
 		//		 */
 		//		private void recursiveDFS() {
-		//			// initialize 
+		//			// initialize
 		//			// all vertex.color initially Vertex.WHITE;
 		//			// all vertex.predecessor initially null;
 		//			time = 0;
@@ -330,7 +331,7 @@ class ComputeProjectOrder {
 		//
 		//		/**
 		//		 * Helper method. Performs a depth first search of this graph.
-		//		 * 
+		//		 *
 		//		 * @param vertex the vertex to visit
 		//		 */
 		//		private void DFSVisit(Vertex vertex) {
@@ -368,14 +369,14 @@ class ComputeProjectOrder {
 			final int NEXT_ADJACENT = 3;
 			final int AFTER_NEXTED_DFS_VISIT = 4;
 			// use precomputed objects to avoid garbage
-			final Integer NEXT_VERTEX_OBJECT = new Integer(NEXT_VERTEX);
-			final Integer AFTER_NEXTED_DFS_VISIT_OBJECT = new Integer(AFTER_NEXTED_DFS_VISIT);
-			// initialize 
+			final Integer NEXT_VERTEX_OBJECT = NEXT_VERTEX;
+			final Integer AFTER_NEXTED_DFS_VISIT_OBJECT = AFTER_NEXTED_DFS_VISIT;
+			// initialize
 			// all vertex.color initially Vertex.WHITE;
 			// all vertex.predecessor initially null;
 			time = 0;
 			// for a stack, append to the end of an array-based list
-			List<Object> stack = new ArrayList<Object>(Math.max(1, vertexList.size()));
+			List<Object> stack = new ArrayList<>(Math.max(1, vertexList.size()));
 			Iterator<Vertex> allAdjacent = null;
 			Vertex vertex = null;
 			Iterator<Vertex> allV = vertexList.iterator();
@@ -501,7 +502,7 @@ class ComputeProjectOrder {
 	 * Algorithms</it>, McGraw-Hill, 1990. The strongly-connected-components
 	 * algorithm is in section 23.5.
 	 * </p>
-	 * 
+	 *
 	 * @param vertexes a list of vertexes
 	 * @param references a list of pairs [A,B] meaning that A references B
 	 * @return an object describing the resulting order
@@ -599,10 +600,10 @@ class ComputeProjectOrder {
 		}
 
 		// and from the knots list
-		List<Object[]> reducedKnots = new ArrayList<Object[]>(order.knots.length);
+		List<Object[]> reducedKnots = new ArrayList<>(order.knots.length);
 		for (int i = 0; i < order.knots.length; i++) {
 			Object[] knot = order.knots[i];
-			List<Object> knotList = new ArrayList<Object>(knot.length);
+			List<Object> knotList = new ArrayList<>(knot.length);
 			for (int j = 0; j < knot.length; j++) {
 				Object vertex = knot[j];
 				if (!filter.matches(vertex)) {

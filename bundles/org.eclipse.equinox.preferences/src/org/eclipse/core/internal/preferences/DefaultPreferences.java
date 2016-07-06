@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2012 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Gunnar Wagenknecht - Bug 179695 - [prefs] NPE when using Preferences API without a product
@@ -33,7 +33,7 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class DefaultPreferences extends EclipsePreferences {
 	// cache which nodes have been loaded from disk
-	private static Set loadedNodes = Collections.synchronizedSet(new HashSet());
+	private static Set<String> loadedNodes = Collections.synchronizedSet(new HashSet<String>());
 	private static final String KEY_PREFIX = "%"; //$NON-NLS-1$
 	private static final String KEY_DOUBLE_PREFIX = "%%"; //$NON-NLS-1$
 	private static final IPath NL_DIR = new Path("$nl$"); //$NON-NLS-1$
@@ -48,7 +48,7 @@ public class DefaultPreferences extends EclipsePreferences {
 	// cached values
 	private String qualifier;
 	private int segmentCount;
-	private WeakReference pluginReference;
+	private WeakReference<Object> pluginReference;
 
 	public static String pluginCustomizationFile = null;
 
@@ -61,7 +61,7 @@ public class DefaultPreferences extends EclipsePreferences {
 
 	private DefaultPreferences(EclipsePreferences parent, String name, Object context) {
 		this(parent, name);
-		this.pluginReference = new WeakReference(context);
+		this.pluginReference = new WeakReference<>(context);
 	}
 
 	private DefaultPreferences(EclipsePreferences parent, String name) {
@@ -82,7 +82,7 @@ public class DefaultPreferences extends EclipsePreferences {
 
 	/*
 	 * Apply the values set in the bundle's install directory.
-	 * 
+	 *
 	 * In Eclipse 2.1 this is equivalent to:
 	 *		/eclipse/plugins/<pluginID>/prefs.ini
 	 */
@@ -118,7 +118,7 @@ public class DefaultPreferences extends EclipsePreferences {
 	 * 	key=value
 	 */
 	private void applyDefaults(String id, Properties defaultValues, Properties translations) {
-		for (Enumeration e = defaultValues.keys(); e.hasMoreElements();) {
+		for (Enumeration<?> e = defaultValues.keys(); e.hasMoreElements();) {
 			String fullKey = (String) e.nextElement();
 			String value = defaultValues.getProperty(fullKey);
 			if (value == null)
@@ -150,7 +150,7 @@ public class DefaultPreferences extends EclipsePreferences {
 	private boolean containsNode(Properties props, IPath path) {
 		if (props == null)
 			return false;
-		for (Enumeration e = props.keys(); e.hasMoreElements();) {
+		for (Enumeration<?> e = props.keys(); e.hasMoreElements();) {
 			String fullKey = (String) e.nextElement();
 			if (props.getProperty(fullKey) == null)
 				continue;
@@ -162,6 +162,7 @@ public class DefaultPreferences extends EclipsePreferences {
 		return false;
 	}
 
+	@Override
 	public boolean nodeExists(String path) throws BackingStoreException {
 		// use super implementation for empty and absolute paths
 		if (path.length() == 0 || path.charAt(0) == IPath.SEPARATOR)
@@ -181,9 +182,9 @@ public class DefaultPreferences extends EclipsePreferences {
 		if (productCustomization == null) {
 			BundleContext context = Activator.getContext();
 			if (context != null) {
-				ServiceTracker productTracker = new ServiceTracker(context, IProductPreferencesService.class.getName(), null);
+				ServiceTracker<?, IProductPreferencesService> productTracker = new ServiceTracker<>(context, IProductPreferencesService.class, null);
 				productTracker.open();
-				IProductPreferencesService productSpecials = (IProductPreferencesService) productTracker.getService();
+				IProductPreferencesService productSpecials = productTracker.getService();
 				if (productSpecials != null) {
 					productCustomization = productSpecials.getProductCustomization();
 					productTranslation = productSpecials.getProductTranslation();
@@ -209,16 +210,16 @@ public class DefaultPreferences extends EclipsePreferences {
 	}
 
 	/*
-	 * Runtime defaults are the ones which are specified in code at runtime. 
-	 * 
+	 * Runtime defaults are the ones which are specified in code at runtime.
+	 *
 	 * In the Eclipse 2.1 world they were the ones which were specified in the
 	 * over-ridden Plugin#initializeDefaultPluginPreferences() method.
-	 * 
+	 *
 	 * In Eclipse 3.0 they are set in the code which is indicated by the
 	 * extension to the plug-in default customizer extension point.
 	 */
 	private void applyRuntimeDefaults() {
-		WeakReference ref = PreferencesService.getDefault().applyRuntimeDefaults(name(), pluginReference);
+		WeakReference<Object> ref = PreferencesService.getDefault().applyRuntimeDefaults(name(), pluginReference);
 		if (ref != null)
 			pluginReference = ref;
 	}
@@ -226,7 +227,7 @@ public class DefaultPreferences extends EclipsePreferences {
 	/*
 	 * Apply the default values as specified by the file
 	 * in the product extension.
-	 * 
+	 *
 	 * In Eclipse 2.1 this is equivalent to the plugin_customization.ini
 	 * file in the primary feature's plug-in directory.
 	 */
@@ -235,13 +236,13 @@ public class DefaultPreferences extends EclipsePreferences {
 			applyDefaults(null, productCustomization, productTranslation);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.service.prefs.Preferences#flush()
-	 */
+
+	@Override
 	public void flush() {
 		// default values are not persisted
 	}
 
+	@Override
 	protected IEclipsePreferences getLoadLevel() {
 		if (loadLevel == null) {
 			if (qualifier == null)
@@ -257,17 +258,18 @@ public class DefaultPreferences extends EclipsePreferences {
 		return loadLevel;
 	}
 
+	@Override
 	protected EclipsePreferences internalCreate(EclipsePreferences nodeParent, String nodeName, Object context) {
 		return new DefaultPreferences(nodeParent, nodeName, context);
 	}
 
+	@Override
 	protected boolean isAlreadyLoaded(IEclipsePreferences node) {
 		return loadedNodes.contains(node.name());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#load()
-	 */
+
+	@Override
 	protected void load() {
 		setInitializingBundleDefaults();
 		try {
@@ -281,9 +283,8 @@ public class DefaultPreferences extends EclipsePreferences {
 		applyCommandLineDefaults();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#internalPut(java.lang.String, java.lang.String)
-	 */
+
+	@Override
 	protected String internalPut(String key, String newValue) {
 		// set the value in this node
 		String result = super.internalPut(key, newValue);
@@ -327,7 +328,7 @@ public class DefaultPreferences extends EclipsePreferences {
 	}
 
 	/*
-	 * Are we in the middle of initializing defaults from the bundle 
+	 * Are we in the middle of initializing defaults from the bundle
 	 * initializer or found in the bundle itself? Look on the load level in
 	 * case we are in a sub-node.
 	 */
@@ -341,7 +342,7 @@ public class DefaultPreferences extends EclipsePreferences {
 	}
 
 	/*
-	 * Return a path which is relative to the scope of this node. 
+	 * Return a path which is relative to the scope of this node.
 	 * e.g. com.example.foo for /instance/com.example.foo
 	 */
 	protected static String getScopeRelativePath(String absolutePath) {
@@ -363,6 +364,11 @@ public class DefaultPreferences extends EclipsePreferences {
 			input = url.openStream();
 			result.load(input);
 		} catch (IOException e) {
+			if (EclipsePreferences.DEBUG_PREFERENCE_GENERAL) {
+				PrefsMessages.message("Problem opening stream to preference customization file: " + url); //$NON-NLS-1$
+				e.printStackTrace();
+			}
+		} catch (IllegalArgumentException e) {
 			if (EclipsePreferences.DEBUG_PREFERENCE_GENERAL) {
 				PrefsMessages.message("Problem opening stream to preference customization file: " + url); //$NON-NLS-1$
 				e.printStackTrace();
@@ -391,6 +397,10 @@ public class DefaultPreferences extends EclipsePreferences {
 			String message = NLS.bind(PrefsMessages.preferences_loadException, filename);
 			IStatus status = new Status(IStatus.ERROR, PrefsMessages.OWNER_NAME, IStatus.ERROR, message, e);
 			RuntimeLog.log(status);
+		} catch (IllegalArgumentException e) {
+			String message = NLS.bind(PrefsMessages.preferences_loadException, filename);
+			IStatus status = new Status(IStatus.ERROR, PrefsMessages.OWNER_NAME, IStatus.ERROR, message, e);
+			RuntimeLog.log(status);
 		} finally {
 			if (input != null)
 				try {
@@ -402,13 +412,13 @@ public class DefaultPreferences extends EclipsePreferences {
 		return result;
 	}
 
+	@Override
 	protected void loaded() {
 		loadedNodes.add(name());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.service.prefs.Preferences#sync()
-	 */
+
+	@Override
 	public void sync() {
 		// default values are not persisted
 	}

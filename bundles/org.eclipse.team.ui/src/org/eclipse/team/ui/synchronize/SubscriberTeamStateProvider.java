@@ -29,7 +29,7 @@ import org.eclipse.team.ui.mapping.*;
  * provider, they must adapt their {@link RepositoryProviderType} class to an appropriate {@link ITeamStateProvider}.
  * <p>
  * Clients may subclass this class.
- * 
+ *
  * @since 3.2
  */
 public class SubscriberTeamStateProvider extends TeamStateProvider implements ISubscriberChangeListener {
@@ -37,7 +37,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	private Subscriber subscriber;
 
 	/**
-	 * Create a provider that determines the synchronization state 
+	 * Create a provider that determines the synchronization state
 	 * from the subscriber. This method registers this provider as a listener
 	 * on the subscriber in order to know when to fire state change events.
 	 * @param subscriber the subscriber for this provider
@@ -50,6 +50,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.DecoratedStateProvider#isDecorated(java.lang.Object)
 	 */
+	@Override
 	public boolean hasDecoratedState(Object element) throws CoreException {
 		ResourceMapping mapping = Utils.getResourceMapping(element);
 		if (mapping != null) {
@@ -74,7 +75,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	 * ISynchronizationCompareAdapter, then the adapter is used to determine the
 	 * synchronization state. Others, the state is obtained from the subscriber
 	 * using {@link Subscriber#getState(ResourceMapping, int, IProgressMonitor)}
-	 * 
+	 *
 	 * @param element the element
 	 * @param stateMask the state mask that indicates which state flags are desired
 	 * @param monitor a progress monitor
@@ -89,7 +90,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 		}
 		return IDiff.NO_CHANGE;
 	}
-	
+
 	private int getSynchronizationState(ResourceMapping mapping, int stateMask, IProgressMonitor monitor) throws CoreException {
 		ISynchronizationCompareAdapter compareAdapter = (ISynchronizationCompareAdapter)Utils.getAdapter(mapping.getModelProvider(), ISynchronizationCompareAdapter.class);
 		try {
@@ -116,6 +117,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamStateProvider#getStateDescription(java.lang.Object, int, java.lang.String[], org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	public ITeamStateDescription getStateDescription(Object element, int stateMask,
 			String[] properties, IProgressMonitor monitor) throws CoreException {
 		monitor = Policy.monitorFor(monitor);
@@ -127,13 +129,14 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamStateProvider#getResourceMappingContext(java.lang.Object)
 	 */
+	@Override
 	public ResourceMappingContext getResourceMappingContext(Object element) {
 		return new SubscriberResourceMappingContext(subscriber, false);
 	}
-	
+
 	/**
 	 * Return the subscriber associated with this tester.
-	 * 
+	 *
 	 * @return the subscriber associated with this tester.
 	 */
 	protected final Subscriber getSubscriber() {
@@ -152,6 +155,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.core.subscribers.ISubscriberChangeListener#subscriberResourceChanged(org.eclipse.team.core.subscribers.ISubscriberChangeEvent[])
 	 */
+	@Override
 	public void subscriberResourceChanged(ISubscriberChangeEvent[] deltas) {
 		fireStateChangeEvent(new TeamStateChangeEvent(deltas));
 	}
@@ -159,6 +163,7 @@ public class SubscriberTeamStateProvider extends TeamStateProvider implements IS
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ITeamStateProvider#getDecoratedProperties(java.lang.Object)
 	 */
+	@Override
 	public String[] getDecoratedProperties(Object element) {
 		return new String[0];
 	}

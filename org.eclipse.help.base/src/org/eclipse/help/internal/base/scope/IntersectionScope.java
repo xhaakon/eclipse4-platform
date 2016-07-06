@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,6 +32,7 @@ public class IntersectionScope extends AbstractHelpScope {
 		this.scopes = scopes;
 	}
 
+	@Override
 	public boolean inScope(IToc toc) {
 		for (int scope = 0; scope < scopes.length; scope ++) {
 			if (!scopes[scope].inScope(toc)) {
@@ -41,6 +42,7 @@ public class IntersectionScope extends AbstractHelpScope {
 		return true;
 	}
 
+	@Override
 	public boolean inScope(ITopic topic) {
 		for (int scope = 0; scope < scopes.length; scope ++) {
 			if (!scopes[scope].inScope(topic)) {
@@ -50,6 +52,7 @@ public class IntersectionScope extends AbstractHelpScope {
 		return true;
 	}
 
+	@Override
 	public boolean inScope(IIndexEntry entry) {
 		for (int scope = 0; scope < scopes.length; scope ++) {
 			if (!scopes[scope].inScope(entry)) {
@@ -59,6 +62,7 @@ public class IntersectionScope extends AbstractHelpScope {
 		return true;
 	}
 
+	@Override
 	public boolean inScope(IIndexSee see) {
 		for (int scope = 0; scope < scopes.length; scope ++) {
 			if (!scopes[scope].inScope(see)) {
@@ -68,10 +72,12 @@ public class IntersectionScope extends AbstractHelpScope {
 		return true;
 	}
 
+	@Override
 	public String getName(Locale locale) {
 		return null;
 	}
 
+	@Override
 	public boolean isHierarchicalScope() {
 		for (int scope = 0; scope < scopes.length; scope ++) {
 			if (!scopes[scope].isHierarchicalScope()) {
@@ -81,6 +87,7 @@ public class IntersectionScope extends AbstractHelpScope {
 		return true;
 	}
 
+	@Override
 	public String toString()
 	{
 		String str = "("; //$NON-NLS-1$

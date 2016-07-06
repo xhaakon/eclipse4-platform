@@ -25,7 +25,7 @@ import org.eclipse.ui.part.ResourceTransfer;
 /**
  * Drag adapter assistant used for the Common Navigator based viewer for use by a
  * {@link ModelSynchronizePage}.
- * 
+ *
  * @since 3.6
  */
 public class ResourceDragAdapterAssistant extends CommonDragAdapterAssistant {
@@ -38,19 +38,21 @@ public class ResourceDragAdapterAssistant extends CommonDragAdapterAssistant {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.ui.navigator.CommonDragAdapterAssistant#getSupportedTransferTypes()
 	 */
+	@Override
 	public Transfer[] getSupportedTransferTypes() {
 		return SUPPORTED_TRANSFERS;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.ui.navigator.CommonDragAdapterAssistant#setDragData(org.eclipse.swt.dnd.DragSourceEvent,
 	 *      org.eclipse.jface.viewers.IStructuredSelection)
 	 */
+	@Override
 	public boolean setDragData(DragSourceEvent anEvent,
 			IStructuredSelection aSelection) {
 
@@ -64,7 +66,7 @@ public class ResourceDragAdapterAssistant extends CommonDragAdapterAssistant {
 				}
 				return true;
 			}
-				
+
 			if (FileTransfer.getInstance().isSupportedType(anEvent.dataType)) {
 				// Get the path of each file and set as the drag data
 				final int length = resources.length;
@@ -86,7 +88,7 @@ public class ResourceDragAdapterAssistant extends CommonDragAdapterAssistant {
 							fileNames[i] = tempFileNames[i];
 					}
 					anEvent.data = fileNames;
-		
+
 					if (Policy.DEBUG_DND)
 						System.out
 								.println("ResourceDragAdapterAssistant.dragSetData set FileTransfer"); //$NON-NLS-1$

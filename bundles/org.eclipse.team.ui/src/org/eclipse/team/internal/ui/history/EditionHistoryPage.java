@@ -30,7 +30,7 @@ import org.eclipse.team.ui.history.*;
 import org.eclipse.ui.IWorkbenchPage;
 
 /**
- * A history page for a sub-element of a file. 
+ * A history page for a sub-element of a file.
  * <p>
  * If the site is modal, the local edition is created up-front and destroyed when the page is destroyed.
  * Otherwise, the local edition is only created when needed. The {@link #getCompareInput(Object)} and
@@ -38,7 +38,7 @@ import org.eclipse.ui.IWorkbenchPage;
  * methods are only used when the site is modal so they can use the localEdition.
  */
 public class EditionHistoryPage extends LocalHistoryPage {
-	
+
 	private IFile file;
 
 	private Object element;
@@ -48,19 +48,21 @@ public class EditionHistoryPage extends LocalHistoryPage {
 	private Map editions = new HashMap();
 	private ITypedElement localEdition;
 	private String name;
-	
+
 	class CompareEditionAction extends CompareRevisionAction {
-		
+
 		public CompareEditionAction(HistoryPage page) {
 			super(page);
 		}
 
+		@Override
 		protected ITypedElement getElementFor(IResource resource) {
 			if (resource.equals(file))
 				return localFileElement;
 			return super.getElementFor(resource);
 		}
-		
+
+		@Override
 		protected CompareFileRevisionEditorInput createCompareEditorInput(ITypedElement left, ITypedElement right, IWorkbenchPage page) {
 			ITypedElement leftEdition = getEdition(left);
 			boolean leftIsLocal = false;
@@ -80,7 +82,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			return null;
 		}
 	}
-	
+
 	static class CompareEditionsEditorInput extends CompareFileRevisionEditorInput {
 
 		private final ITypedElement leftRevision;
@@ -97,14 +99,16 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			rightRevision = right;
 			this.leftIsLocal = leftIsLocal;
 		}
-		
+
+		@Override
 		public LocalResourceTypedElement getLocalElement() {
 			if (leftRevision instanceof LocalResourceTypedElement) {
 				return (LocalResourceTypedElement) leftRevision;
 			}
 			return super.getLocalElement();
 		}
-		
+
+		@Override
 		protected FileRevisionTypedElement getRightRevision() {
 			if (rightRevision instanceof FileRevisionTypedElement) {
 				return (FileRevisionTypedElement) rightRevision;
@@ -112,18 +116,21 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			return null;
 		}
 
+		@Override
 		protected FileRevisionTypedElement getLeftRevision() {
 			if (leftRevision instanceof FileRevisionTypedElement) {
 				return (FileRevisionTypedElement) leftRevision;
 			}
 			return null;
 		}
+		@Override
 		public Object getAdapter(Class adapter) {
 			if (adapter == IFile.class)
 				return null;
 			return super.getAdapter(adapter);
 		}
-		
+
+		@Override
 		protected void handleDispose() {
 			if (leftIsLocal && structureCreator != null)
 				internalDestroy(structureCreator, getLeft());
@@ -131,7 +138,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			super.handleDispose();
 		}
 	}
-	
+
 	public static ITypedElement getPreviousState(IFile file, Object element) throws TeamException {
 		LocalResourceTypedElement localFileElement= new LocalResourceTypedElement(file);
 		IStructureCreator structureCreator = CompareUI.createStructureCreator(localFileElement);
@@ -159,7 +166,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 		}
 		return null;
 	}
-	
+
 	public EditionHistoryPage(IFile file, Object element) {
 		super(ON | ALWAYS);
 		setInput(file, element);
@@ -174,6 +181,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 		structureCreator = CompareUI.createStructureCreator(localFileElement);
 	}
 
+	@Override
 	public void setSite(IHistoryPageSite site) {
 		super.setSite(site);
 		// If the site is modal, create the local edition
@@ -181,10 +189,11 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			localEdition = createLocalEdition(structureCreator, localFileElement, element);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#getFile()
 	 */
+	@Override
 	protected IFile getFile() {
 		return file;
 	}
@@ -192,6 +201,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#update(org.eclipse.team.core.history.IFileRevision[], org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected void update(IFileRevision[] revisions, IProgressMonitor monitor) {
 		monitor.beginTask(null, 100);
 		ITypedElement te = null;
@@ -234,9 +244,10 @@ public class EditionHistoryPage extends LocalHistoryPage {
 		}
 		return (IFileRevision[]) result.toArray(new IFileRevision[result.size()]);
 	}
-	
+
 	private static void sortDescending(IFileRevision[] revisions) {
 		Arrays.sort(revisions, new Comparator() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				IFileRevision d1= (IFileRevision) o1;
 				IFileRevision d2= (IFileRevision) o2;
@@ -262,6 +273,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#getCompareInput(java.lang.Object)
 	 */
+	@Override
 	public ICompareInput getCompareInput(Object object) {
 		ITypedElement edition = getEditionFor(object);
 		if (edition != null && localEdition != null)
@@ -272,7 +284,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 	public ITypedElement getEditionFor(Object object) {
 		return (ITypedElement)editions.get(object);
 	}
-	
+
 	private static ITypedElement createLocalEdition(IStructureCreator creator, ITypedElement input, Object element) {
 		if (creator == null)
 			return null;
@@ -290,11 +302,11 @@ public class EditionHistoryPage extends LocalHistoryPage {
 		}
 		return result;
 	}
-	
+
 	private ITypedElement createEdition(ITypedElement input) {
 		return createEdition(structureCreator, element, input);
 	}
-	
+
 	private static ITypedElement createEdition(IStructureCreator creator, Object element, ITypedElement input) {
 		if (creator == null)
 			return null;
@@ -303,18 +315,20 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			return (ITypedElement) edition;
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#isValidInput(java.lang.Object)
 	 */
+	@Override
 	public boolean isValidInput(Object object) {
 		// This page doesn't support input changes
 		return object.equals(element);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#dispose()
 	 */
+	@Override
 	public void dispose() {
 		try {
 			disconnect();
@@ -322,7 +336,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			super.dispose();
 		}
 	}
-	
+
 	private void disconnect() {
 		if (localFileElement != null)
 			localFileElement.discardBuffer();
@@ -337,7 +351,7 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			sc2.destroy(te);
 		}
 	}
-	
+
 	private static void destroyLocalEdition(
 			IStructureCreator structureCreator, LocalResourceTypedElement localFileElement, ITypedElement localEdition) {
 		if (localFileElement != null)
@@ -347,16 +361,18 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			sc2.destroy(localEdition);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#getNoChangesMessage()
 	 */
+	@Override
 	protected String getNoChangesMessage() {
 		if (name != null)
 			return NLS.bind(TeamUIMessages.EditionHistoryPage_0, name);
 		return TeamUIMessages.EditionHistoryPage_1;
 	}
-	
+
+	@Override
 	protected Image getImage(Object object) {
 		if (object == localEdition)
 			return localEdition.getImage();
@@ -365,7 +381,8 @@ public class EditionHistoryPage extends LocalHistoryPage {
 			return super.getImage(revision);
 		return super.getImage(object);
 	}
-	
+
+	@Override
 	protected String getLabel(Object object) {
 		Object revision = getRevisionFor(object);
 		if (revision != null)
@@ -384,28 +401,31 @@ public class EditionHistoryPage extends LocalHistoryPage {
 		}
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#getName()
 	 */
+	@Override
 	public String getName() {
 		if (name != null)
 			return name;
 		return super.getName();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#getDescription()
 	 */
+	@Override
 	public String getDescription() {
 		if (name != null)
 			return NLS.bind(TeamUIMessages.EditionHistoryPage_2, name);
 		return super.getDescription();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.history.LocalHistoryPage#createCompareAction()
 	 */
+	@Override
 	protected CompareRevisionAction createCompareAction() {
 		return new CompareEditionAction(this);
 	}

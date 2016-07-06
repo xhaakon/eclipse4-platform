@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,7 +38,7 @@ import com.ibm.icu.text.Collator;
 /*
  * Reads and processes product preferences by considering not only the active
  * product, but all installed products.
- * 
+ *
  * For example, help orders the books in the table of contents in such a way that
  * satisfies the currently running product's preferred order, and as many other product's
  * preferred orderings.
@@ -47,35 +46,36 @@ import com.ibm.icu.text.Collator;
 public class ProductPreferences {
 
 	private static Properties[] productPreferences;
-	private static SequenceResolver orderResolver;
-	private static Map preferencesToPluginIdMap;
-	private static Map preferencesToProductIdMap;
-	private static List primaryTocOrdering;
-	private static List[] secondaryTocOrderings;	
-	private static final String PLUGINS_ROOT_SLASH = "PLUGINS_ROOT/"; //$NON-NLS-1$	
+	private static SequenceResolver<String> orderResolver;
+	private static Map<Properties, String> preferencesToPluginIdMap;
+	private static Map<Properties, String> preferencesToProductIdMap;
+	private static List<String> primaryTocOrdering;
+	private static List<String>[] secondaryTocOrderings;
+	private static final String PLUGINS_ROOT_SLASH = "PLUGINS_ROOT/"; //$NON-NLS-1$
 	private static boolean rtl;
 	private static boolean directionInitialized = false;
-	
+
 	/*
 	 * Returns the recommended order to display the given toc entries in. Each
 	 * toc entry is a String, either the id of the toc contribution or the
 	 * id of the category of tocs.
 	 */
-	public static List getTocOrder(List itemsToOrder, Map nameIdMap) {
-		List primaryOrdering = getPrimaryTocOrdering();
-		List[] secondaryOrdering = new List[0];
+	public static List<String> getTocOrder(List<String> itemsToOrder, Map<String, String> nameIdMap) {
+		List<String> primaryOrdering = getPrimaryTocOrdering();
+		@SuppressWarnings("unchecked")
+		List<String>[] secondaryOrdering = new List[0];
 		if (primaryOrdering == null || primaryOrdering.size() == 0) {
 			secondaryOrdering = getSecondaryTocOrderings();
 		}
 		return getOrderedList(itemsToOrder, primaryOrdering, secondaryOrdering, nameIdMap);
 	}
-	
+
 	/*
 	 * Returns the primary toc ordering. This is the preferred order for the active
 	 * product (either specified via help data xml file or deprecated comma-separated
 	 * list in plugin_customization.ini). Help data takes precedence.
 	 */
-	public static List getPrimaryTocOrdering() {
+	public static List<String> getPrimaryTocOrdering() {
 		if (primaryTocOrdering == null) {
 			IProduct product = Platform.getProduct();
 			String pluginId = null;
@@ -87,30 +87,32 @@ public class ProductPreferences {
 			primaryTocOrdering = getTocOrdering(pluginId, helpDataFile, baseTOCS);
 			// active product has no preference for toc order
 			if (primaryTocOrdering == null) {
-				primaryTocOrdering = new ArrayList();
+				primaryTocOrdering = new ArrayList<>();
 			}
 		}
 		return primaryTocOrdering;
 	}
-	
+
 	/*
 	 * Returns all secondary toc ordering. These are the preferred toc orders of all
 	 * defined products except the active product.
 	 */
-	public static List[] getSecondaryTocOrderings() {
+	@SuppressWarnings("unchecked")
+	public static List<String>[] getSecondaryTocOrderings() {
 		if (secondaryTocOrderings == null) {
-			List list = new ArrayList();
+			List<List<String>> list = new ArrayList<>();
 			Properties[] productPreferences = getProductPreferences(false);
 			for (int i=0;i<productPreferences.length;++i) {
-				String pluginId = (String)preferencesToPluginIdMap.get(productPreferences[i]);
+				String pluginId = preferencesToPluginIdMap.get(productPreferences[i]);
 				String helpDataFile = (String)productPreferences[i].get(HelpPlugin.PLUGIN_ID + '/' + HelpPlugin.HELP_DATA_KEY);
 				String baseTOCS = (String)productPreferences[i].get(HelpPlugin.PLUGIN_ID + '/' + HelpPlugin.BASE_TOCS_KEY);
-				List ordering = getTocOrdering(pluginId, helpDataFile, baseTOCS);
+				List<String> ordering = getTocOrdering(pluginId, helpDataFile, baseTOCS);
 				if (ordering != null) {
 					list.add(ordering);
 				}
 			}
-			secondaryTocOrderings = (List[])list.toArray(new List[list.size()]);
+			// can't instantiate arrays of generic type
+			secondaryTocOrderings = list.toArray(new List[list.size()]);
 		}
 		return secondaryTocOrderings;
 	}
@@ -120,7 +122,7 @@ public class ProductPreferences {
 	 * plug-in that has the given helpDataFile and baseTOCS specified (these last
 	 * two may be null if not specified).
 	 */
-	public static List getTocOrdering(String pluginId, String helpDataFile, String baseTOCS) {
+	public static List<String> getTocOrdering(String pluginId, String helpDataFile, String baseTOCS) {
 		if (helpDataFile != null && helpDataFile.length() > 0) {
 			String helpDataPluginId = pluginId;
 			String helpDataPath = helpDataFile;
@@ -148,11 +150,11 @@ public class ProductPreferences {
 		}
 		return null;
 	}
-	
+
 	/*
 	 * Uses the preference service to get the preference. This has changed slightly in Eclipse 3.5.
 	 * The old behavior was undocumented and I think incorrect - CG.
-	 * 
+	 *
 	 * Previous behavior:
 	 * Returns the boolean preference for the given key by consulting every
 	 * product's preferences. If any of the products want the preference to
@@ -187,7 +189,7 @@ public class ProductPreferences {
 	 * but not present are skipped, and items present but not ordered are added
 	 * at the end.
 	 */
-	public static List getOrderedList(List items, List order) {
+	public static List getOrderedList(List<String> items, List<String> order) {
 		return getOrderedList(items, order, null, null);
 	}
 
@@ -196,23 +198,22 @@ public class ProductPreferences {
 	 * The primary ordering must be satisfied in all cases. As many secondary orderings
 	 * as reasonably possible will be satisfied.
 	 */
-	public static List getOrderedList(List items, List primary, List[] secondary, Map nameIdMap) {
-		List result = new ArrayList();
-		List set = new ArrayList(items);
+	public static List<String> getOrderedList(List<String> items, List<String> primary, List<String>[] secondary,
+			Map<String, String> nameIdMap) {
+		List<String> result = new ArrayList<>();
+		List<String> set = new ArrayList<>(items);
 		if (orderResolver == null) {
-			orderResolver = new SequenceResolver();
+			orderResolver = new SequenceResolver<>();
 		}
-		List order = orderResolver.getSequence(primary, secondary);
-		Iterator iter = order.iterator();
-		while (iter.hasNext()) {
-			Object obj = iter.next();
+		List<String> order = orderResolver.getSequence(primary, secondary);
+		for (String obj : order) {
 			if (set.contains(obj)) {
 				result.add(obj);
 				set.remove(obj);
 			}
 		}
 		if (HelpData.getProductHelpData().isSortOthers() && nameIdMap != null) {
-			List remaining = new ArrayList();
+			List<String> remaining = new ArrayList<>();
 			remaining.addAll(set);
 			sortByName(remaining, nameIdMap);
 			result.addAll(remaining);
@@ -221,15 +222,17 @@ public class ProductPreferences {
 		}
 		return result;
 	}
-	
-	private static class NameComparator implements Comparator {
 
-		private Map tocNames;
-		public NameComparator(Map tocNames) {
+	private static class NameComparator implements Comparator<String> {
+
+		private Map<String, String> tocNames;
+
+		public NameComparator(Map<String, String> tocNames) {
 			this.tocNames = tocNames;
 		}
-		
-		public int compare(Object o1, Object o2) {
+
+		@Override
+		public int compare(String o1, String o2) {
 			Object name1 = tocNames.get(o1);
 			Object name2 = tocNames.get(o2);
 			if (!(name1 instanceof String)) {
@@ -240,19 +243,19 @@ public class ProductPreferences {
 			}
 			return Collator.getInstance().compare((String)name1, (String)name2);
 		}
-		
+
 	}
 
-	private static void sortByName(List remaining, Map categorized) {
+	private static void sortByName(List<String> remaining, Map<String, String> categorized) {
 		Collections.sort(remaining, new NameComparator(categorized));
 	}
 
 	public static synchronized String getPluginId(Properties prefs) {
-		return (String)preferencesToPluginIdMap.get(prefs);
+		return preferencesToPluginIdMap.get(prefs);
 	}
 
 	public static synchronized String getProductId(Properties prefs) {
-		return (String)preferencesToProductIdMap.get(prefs);
+		return preferencesToProductIdMap.get(prefs);
 	}
 
 	/*
@@ -266,7 +269,7 @@ public class ProductPreferences {
 			if (activeProduct != null) {
 				activeProductId = activeProduct.getId();
 			}
-			Collection collection = new ArrayList();
+			Collection<Properties> collection = new ArrayList<>();
 			IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor("org.eclipse.core.runtime.products"); //$NON-NLS-1$
 			for (int i=0;i<elements.length;++i) {
 				if (elements[i].getName().equals("product")) { //$NON-NLS-1$
@@ -284,11 +287,11 @@ public class ProductPreferences {
 										collection.add(properties);
 									}
 									if (preferencesToPluginIdMap == null) {
-										preferencesToPluginIdMap = new HashMap();
+										preferencesToPluginIdMap = new HashMap<>();
 									}
 									preferencesToPluginIdMap.put(properties, contributor);
 									if (preferencesToProductIdMap == null) {
-										preferencesToProductIdMap = new HashMap();
+										preferencesToProductIdMap = new HashMap<>();
 									}
 									preferencesToProductIdMap.put(properties, productId);
 								}
@@ -297,11 +300,11 @@ public class ProductPreferences {
 					}
 				}
 			}
-			productPreferences = (Properties[])collection.toArray(new Properties[collection.size()]);
+			productPreferences = collection.toArray(new Properties[collection.size()]);
 		}
 		return productPreferences;
 	}
-	
+
 	/*
 	 * Returns the value for the given key by consulting the given properties, but giving
 	 * precedence to the primary properties. If the primary properties has the key, it is
@@ -360,35 +363,35 @@ public class ProductPreferences {
 		}
 		return null;
 	}
-	
+
 	/*
 	 * Tokenizes the given list of items, allowing them to be separated by whitespace, commas,
 	 * and/or semicolons.
-	 * 
+	 *
 	 * e.g. "item1, item2, item3"
 	 * would return a list of strings containing "item1", "item2", and "item3".
 	 */
-	public static List tokenize(String str) {
+	public static List<String> tokenize(String str) {
 		if (str != null) {
 			StringTokenizer tok = new StringTokenizer(str, " \n\r\t;,"); //$NON-NLS-1$
-			List list = new ArrayList();
+			List<String> list = new ArrayList<>();
 			while (tok.hasMoreElements()) {
 				list.add(tok.nextToken());
 			}
 			return list;
 		}
-		return new ArrayList();
+		return new ArrayList<>();
 	}
 
 	public int compare(Object o1, Object o2) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-	
+
 	public static void resetPrimaryTocOrdering() {
 		primaryTocOrdering = null;
 	}
-	
+
 	public static boolean isRTL() {
 		if (!directionInitialized) {
 			directionInitialized = true;
@@ -396,7 +399,7 @@ public class ProductPreferences {
 		}
 		return rtl;
 	}
-	
+
 	private static boolean initializeRTL() {
 		// from property
 		String orientation = System.getProperty("eclipse.orientation"); //$NON-NLS-1$
@@ -462,11 +465,11 @@ public class ProductPreferences {
 		}
 		return path;
 	}
-	
+
 	public static boolean useEnablementFilters() {
 		if (!HelpSystem.isShared()) {
 			return true;
 		}
-		return Platform.getPreferencesService().getBoolean(HelpPlugin.PLUGIN_ID, HelpPlugin.FILTER_INFOCENTER_KEY, false, null); 
+		return Platform.getPreferencesService().getBoolean(HelpPlugin.PLUGIN_ID, HelpPlugin.FILTER_INFOCENTER_KEY, false, null);
 	}
 }

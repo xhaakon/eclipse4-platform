@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2007 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -63,11 +63,6 @@ public class WorkbenchEncoding {
 			encodings = definedEncodings;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 *
-		 * @see org.eclipse.ui.internal.registry.RegistryReader#readElement(org.eclipse.core.runtime.IConfigurationElement)
-		 */
 		@Override
 		protected boolean readElement(IConfigurationElement element) {
 			String name = element.getAttribute(IWorkbenchRegistryConstants.ATT_NAME);

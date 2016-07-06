@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2011 IBM Corporation and others.
+ * Copyright (c) 2008, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,7 +40,7 @@ public class CompositeParser extends XMLParser implements XMLConstants {
 		public ChildrenHandler(AbstractHandler parentHandler, Attributes attributes) {
 			super(parentHandler, CHILDREN_ELEMENT);
 			String size = parseOptionalAttribute(attributes, COLLECTION_SIZE_ATTRIBUTE);
-			children = (size != null ? new ArrayList<URI>(new Integer(size).intValue()) : new ArrayList<URI>(4));
+			children = (size != null ? new ArrayList<URI>(Integer.parseInt(size)) : new ArrayList<URI>(4));
 		}
 
 		public URI[] getChildren() {
@@ -188,9 +188,13 @@ public class CompositeParser extends XMLParser implements XMLConstants {
 				theState = repositoryHandler.getRepository();
 			}
 		} catch (SAXException e) {
-			throw new IOException(e.getMessage());
+			IOException ioException = new IOException(e.getMessage());
+			ioException.initCause(e);
+			throw ioException;
 		} catch (ParserConfigurationException e) {
-			throw new IOException(e.getMessage());
+			IOException ioException = new IOException(e.getMessage());
+			ioException.initCause(e);
+			throw ioException;
 		} finally {
 			stream.close();
 		}

@@ -21,20 +21,20 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 import org.eclipse.team.ui.synchronize.SubscriberParticipant;
 
 /**
- * A synchronize view page that works with participants that are subclasses of 
+ * A synchronize view page that works with participants that are subclasses of
  * {@link SubscriberParticipant}. It shows changes in the tree or table view
  * and supports navigation, opening, and filtering changes.
  * <p>
- * Clients can subclass to extend the label decoration or add action bar 
+ * Clients can subclass to extend the label decoration or add action bar
  * contributions. For more extensive modifications, clients should create
  * their own custom page.
- * </p> 
+ * </p>
  * @since 3.0
  */
 public final class SubscriberParticipantPage extends AbstractSynchronizePage {
-		
+
 	private SubscriberParticipant participant;
-	
+
 	private final static int[] INCOMING_MODE_FILTER = new int[] {SyncInfo.CONFLICTING, SyncInfo.INCOMING};
 	private final static int[] OUTGOING_MODE_FILTER = new int[] {SyncInfo.CONFLICTING, SyncInfo.OUTGOING};
 	private final static int[] BOTH_MODE_FILTER = new int[] {SyncInfo.CONFLICTING, SyncInfo.INCOMING, SyncInfo.OUTGOING};
@@ -44,10 +44,10 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 	 * Filters out-of-sync resources by working set and mode
 	 */
 	private WorkingSetFilteredSyncInfoCollector collector;
-	
+
 	/**
 	 * Constructs a new SynchronizeView.
-	 * 
+	 *
 	 * @param configuration
 	 *            a synchronize page configuration
 	 * @param subscriberCollector
@@ -56,14 +56,14 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 	public SubscriberParticipantPage(ISynchronizePageConfiguration configuration, SubscriberSyncInfoCollector subscriberCollector) {
 		super(configuration);
 		this.participant = (SubscriberParticipant)configuration.getParticipant();
-		configuration.setComparisonType(isThreeWay() 
-						? ISynchronizePageConfiguration.THREE_WAY 
+		configuration.setComparisonType(isThreeWay()
+						? ISynchronizePageConfiguration.THREE_WAY
 						: ISynchronizePageConfiguration.TWO_WAY);
 		configuration.addActionContribution(new DefaultSynchronizePageActions());
 		configuration.addActionContribution(new SubscriberActionContribution());
 		initializeCollector(configuration, subscriberCollector);
 	}
-	
+
 	/**
 	 * @return Returns the participant.
 	 */
@@ -71,10 +71,11 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 		return participant;
 	}
 
+	@Override
 	protected AbstractViewerAdvisor createViewerAdvisor(Composite parent) {
 		return new TreeViewerAdvisor(parent, getConfiguration());
 	}
-	
+
 	/*
 	 * This method is invoked from <code>setMode</code> when the mode has changed.
 	 * It sets the filter on the collector to show the <code>SyncInfo</code>
@@ -83,9 +84,10 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 	 * <code>OUTGOING_MODE_FILTER</code>, <code>CONFLICTING_MODE_FILTER</code>
 	 * or <code>BOTH_MODE_FILTER</code>)
 	 */
+	@Override
 	protected void updateMode(int mode) {
-		if(collector != null && isThreeWay()) {	
-		
+		if(collector != null && isThreeWay()) {
+
 			int[] modeFilter = BOTH_MODE_FILTER;
 			switch(mode) {
 			case ISynchronizePageConfiguration.INCOMING_MODE:
@@ -105,7 +107,7 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 							}));
 		}
 	}
-	
+
 	private void initializeCollector(ISynchronizePageConfiguration configuration, SubscriberSyncInfoCollector subscriberCollector) {
 		SubscriberParticipant participant = getParticipant();
 		collector = new WorkingSetFilteredSyncInfoCollector(subscriberCollector, participant.getSubscriber().roots());
@@ -114,7 +116,7 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 		configuration.setProperty(ISynchronizePageConfiguration.P_SYNC_INFO_SET, collector.getSyncInfoTree());
 		configuration.setProperty(SynchronizePageConfiguration.P_WORKING_SET_SYNC_INFO_SET, collector.getWorkingSetSyncInfoSet());
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.SyncInfoSetSynchronizePage#isThreeWay()
 	 */
@@ -125,10 +127,11 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.SyncInfoSetSynchronizePage#reset()
 	 */
+	@Override
 	public void reset() {
 		getParticipant().reset();
 	}
-	
+
 	/*
 	 * Provide internal access to the collector
 	 * @return Returns the collector.
@@ -136,15 +139,17 @@ public final class SubscriberParticipantPage extends AbstractSynchronizePage {
 	public WorkingSetFilteredSyncInfoCollector getCollector() {
 		return collector;
 	}
-	
+
+	@Override
 	public void dispose() {
 		super.dispose();
 		collector.dispose();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizePage#createChangesSection(org.eclipse.swt.widgets.Composite)
 	 */
+	@Override
 	protected ChangesSection createChangesSection(Composite parent) {
 		return new SyncInfoSetChangesSection(parent, this, getConfiguration());
 	}

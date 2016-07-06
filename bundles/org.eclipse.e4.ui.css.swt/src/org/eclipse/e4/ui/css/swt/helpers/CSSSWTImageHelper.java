@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2014 Angelo Zerr and others.
+ * Copyright (c) 2008, 2015 Angelo Zerr and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -148,7 +148,7 @@ public class CSSSWTImageHelper {
 
 	/** Helper function to avoid setting images unnecessarily */
 	public static void setBackgroundImage(Control control, Image image) {
-		if (control instanceof Control && control.getBackgroundImage() != image) {
+		if (control != null && control.getBackgroundImage() != image) {
 			control.setBackgroundImage(image);
 		}
 	}

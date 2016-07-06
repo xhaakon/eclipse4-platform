@@ -23,7 +23,7 @@ import org.osgi.framework.Bundle;
 public abstract class RegistryReader {
 	protected static final String TAG_DESCRIPTION = "description"; //$NON-NLS-1$
 	protected static Hashtable extensionPoints = new Hashtable();
-	
+
     /**
      * Creates an extension.  If the extension plugin has not
      * been loaded a busy cursor will be activated during the duration of
@@ -46,7 +46,8 @@ public abstract class RegistryReader {
             final Object[] ret = new Object[1];
             final CoreException[] exc = new CoreException[1];
             BusyIndicator.showWhile(null, new Runnable() {
-                public void run() {
+                @Override
+				public void run() {
                     try {
                         ret[0] = element
                                 .createExecutableExtension(classAttribute);
@@ -67,15 +68,15 @@ public abstract class RegistryReader {
                     IStatus.ERROR, NLS.bind(TeamUIMessages.RegistryReader_0, element.getNamespaceIdentifier(), element.getName()),e));
         }
     }
-    
+
     private static boolean isActivated(String bundleId) {
         return isActivated(Platform.getBundle(bundleId));
     }
-    
+
     private static boolean isActivated(Bundle bundle) {
         return bundle != null && (bundle.getState() & (Bundle.ACTIVE | Bundle.STOPPING)) != 0;
     }
-    
+
 	/**
 	 * The constructor.
 	 */
@@ -83,7 +84,7 @@ public abstract class RegistryReader {
 	}
 	/**
 	 * This method extracts description as a sub-element of the given element.
-	 * 
+	 *
 	 * @return description string if defined, or empty string if not.
 	 */
 	protected String getDescription(IConfigurationElement config) {
@@ -134,6 +135,7 @@ public abstract class RegistryReader {
 		// more than one extension for an extension point is
 		// dependent in the order listed in the XML file.
 		Sorter sorter = new Sorter() {
+			@Override
 			public boolean compare(Object extension1, Object extension2) {
 				String s1 = ((IExtension) extension1).getNamespaceIdentifier();
 				String s2 = ((IExtension) extension2).getNamespaceIdentifier();
@@ -151,7 +153,7 @@ public abstract class RegistryReader {
 	 * Implement this method to read element's attributes. If children should
 	 * also be read, then implementor is responsible for calling <code>readElementChildren</code>.
 	 * Implementor is also responsible for logging missing attributes.
-	 * 
+	 *
 	 * @return true if element was recognized, false if not.
 	 */
 	protected abstract boolean readElement(IConfigurationElement element);
@@ -165,7 +167,7 @@ public abstract class RegistryReader {
 	/**
 	 * Read each element one at a time by calling the subclass implementation
 	 * of <code>readElement</code>.
-	 * 
+	 *
 	 * Logs an error if the element was not recognized.
 	 */
 	protected void readElements(IConfigurationElement[] elements) {

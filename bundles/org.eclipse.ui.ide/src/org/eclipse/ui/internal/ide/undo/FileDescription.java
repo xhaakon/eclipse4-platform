@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,8 +24,7 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 /**
  * FileDescription is a lightweight description that describes a file to be
@@ -93,12 +92,6 @@ public class FileDescription extends AbstractResourceDescription {
 		this.fileContentDescription = fileContentDescription;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#recordStateFromHistory(org.eclipse.core.resources.IResource,
-	 *      org.eclipse.core.runtime.IProgressMonitor)
-	 */
 	@Override
 	public void recordStateFromHistory(IResource resource,
 			IProgressMonitor monitor) throws CoreException {
@@ -112,31 +105,16 @@ public class FileDescription extends AbstractResourceDescription {
 		if (states.length > 0) {
 			final IFileState state = getMatchingFileState(states);
 			this.fileContentDescription = new IFileContentDescription() {
-				/*
-				 * (non-Javadoc)
-				 *
-				 * @see org.eclipse.ui.internal.ide.undo.IFileContentDescription#exists()
-				 */
 				@Override
 				public boolean exists() {
 					return state.exists();
 				}
 
-				/*
-				 * (non-Javadoc)
-				 *
-				 * @see org.eclipse.ui.internal.ide.undo.IFileContentDescription#getContents()
-				 */
 				@Override
 				public InputStream getContents() throws CoreException {
 					return state.getContents();
 				}
 
-				/*
-				 * (non-Javadoc)
-				 *
-				 * @see org.eclipse.ui.internal.ide.undo.IFileContentDescription#getCharset()
-				 */
 				@Override
 				public String getCharset() throws CoreException {
 					return state.getCharset();
@@ -145,11 +123,6 @@ public class FileDescription extends AbstractResourceDescription {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#createResourceHandle()
-	 */
 	@Override
 	public IResource createResourceHandle() {
 		IWorkspaceRoot workspaceRoot = parent.getWorkspace().getRoot();
@@ -157,30 +130,19 @@ public class FileDescription extends AbstractResourceDescription {
 		return workspaceRoot.getFile(fullPath);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#createExistentResourceFromHandle(org.eclipse.core.resources.IResource,
-	 *      org.eclipse.core.runtime.IProgressMonitor)
-	 */
 	@Override
-	public void createExistentResourceFromHandle(IResource resource,
-			IProgressMonitor monitor) throws CoreException {
+	public void createExistentResourceFromHandle(IResource resource, IProgressMonitor mon) throws CoreException {
 
 		Assert.isLegal(resource instanceof IFile);
 		if (resource.exists()) {
 			return;
 		}
 		IFile fileHandle = (IFile) resource;
-		monitor.beginTask("", 200); //$NON-NLS-1$
-		monitor.setTaskName(UndoMessages.FileDescription_NewFileProgress);
+		SubMonitor subMonitor = SubMonitor.convert(mon, 200);
+		subMonitor.setTaskName(UndoMessages.FileDescription_NewFileProgress);
 		try {
-			if (monitor.isCanceled()) {
-				throw new OperationCanceledException();
-			}
 			if (location != null) {
-				fileHandle.createLink(location, IResource.ALLOW_MISSING_LOCAL,
-						new SubProgressMonitor(monitor, 200));
+				fileHandle.createLink(location, IResource.ALLOW_MISSING_LOCAL, subMonitor.split(200));
 			} else {
 				InputStream contents = new ByteArrayInputStream(
 						UndoMessages.FileDescription_ContentsCouldNotBeRestored
@@ -193,13 +155,8 @@ public class FileDescription extends AbstractResourceDescription {
 						&& fileContentDescription.exists()) {
 					contents = fileContentDescription.getContents();
 				}
-				fileHandle.create(contents, false, new SubProgressMonitor(
-						monitor, 100));
-				fileHandle.setCharset(charset, new SubProgressMonitor(monitor,
-						100));
-			}
-			if (monitor.isCanceled()) {
-				throw new OperationCanceledException();
+				fileHandle.create(contents, false, subMonitor.split(100));
+				fileHandle.setCharset(charset, subMonitor.split(100));
 			}
 		} catch (CoreException e) {
 			if (e.getStatus().getCode() == IResourceStatus.PATH_OCCUPIED) {
@@ -207,16 +164,9 @@ public class FileDescription extends AbstractResourceDescription {
 			} else {
 				throw e;
 			}
-		} finally {
-			monitor.done();
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#isValid()
-	 */
 	@Override
 	public boolean isValid() {
 		if (location != null) {
@@ -226,11 +176,6 @@ public class FileDescription extends AbstractResourceDescription {
 				&& fileContentDescription.exists();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#getName()
-	 */
 	@Override
 	public String getName() {
 		return name;
@@ -251,11 +196,6 @@ public class FileDescription extends AbstractResourceDescription {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.ide.undo.ResourceDescription#restoreResourceAttributes(org.eclipse.core.resources.IResource)
-	 */
 	@Override
 	protected void restoreResourceAttributes(IResource resource)
 			throws CoreException {

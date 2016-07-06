@@ -48,6 +48,7 @@ import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
  * @since 3.0
  * @deprecated As of 3.2, replaced by JFace field assist support
  */
+@Deprecated
 public class ContentAssistHandler {
 	/**
 	 * The target control.
@@ -113,6 +114,7 @@ public class ContentAssistHandler {
 		fContentAssistSubjectAdapter= subjectAdapter;
 		setEnabled(true);
 		fControl.addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				setEnabled(false);
 			}
@@ -175,11 +177,9 @@ public class ContentAssistHandler {
 	 */
 	private void installCueLabelProvider() {
 		ILabelProvider labelProvider= new LabelProvider() {
-			/*
-			 * @see org.eclipse.jface.viewers.ILabelProvider#getText(java.lang.Object)
-			 */
+			@Override
 			public String getText(Object element) {
-				IBindingService bindingService= (IBindingService) PlatformUI.getWorkbench().getAdapter(IBindingService.class);
+				IBindingService bindingService= PlatformUI.getWorkbench().getAdapter(IBindingService.class);
 				TriggerSequence[] activeBindings= bindingService.getActiveBindingsFor(ITextEditorActionDefinitionIds.CONTENT_ASSIST_PROPOSALS);
 				if (activeBindings.length == 0)
 					return ContentAssistMessages.ContentAssistHandler_contentAssistAvailable;
@@ -194,10 +194,12 @@ public class ContentAssistHandler {
 	 */
 	private void installFocusListener() {
 		fFocusListener= new FocusListener() {
+			@Override
 			public void focusGained(final FocusEvent e) {
 				if (fHandlerActivation == null)
 					activateHandler();
 			}
+			@Override
 			public void focusLost(FocusEvent e) {
 				if (fHandlerActivation != null)
 					deactivateHandler();
@@ -210,11 +212,12 @@ public class ContentAssistHandler {
 	 * Create and register fHandlerSubmission.
 	 */
 	private void activateHandler() {
-		IHandlerService handlerService= (IHandlerService)PlatformUI.getWorkbench().getAdapter(IHandlerService.class);
+		IHandlerService handlerService= PlatformUI.getWorkbench().getAdapter(IHandlerService.class);
 		if (handlerService == null)
 			return;
 
 		IHandler handler= new AbstractHandler() {
+			@Override
 			public Object execute(ExecutionEvent event) throws ExecutionException {
 				if (ContentAssistHandler.this.isEnabled()) // don't call AbstractHandler#isEnabled()!
 					fContentAssistant.showPossibleCompletions();
@@ -228,7 +231,7 @@ public class ContentAssistHandler {
 	 * Unregister the {@link IHandlerActivation} from the shell.
 	 */
 	private void deactivateHandler() {
-		IHandlerService handlerService= (IHandlerService)PlatformUI.getWorkbench().getAdapter(IHandlerService.class);
+		IHandlerService handlerService= PlatformUI.getWorkbench().getAdapter(IHandlerService.class);
 		if (handlerService != null)
 			handlerService.deactivateHandler(fHandlerActivation);
 		fHandlerActivation= null;

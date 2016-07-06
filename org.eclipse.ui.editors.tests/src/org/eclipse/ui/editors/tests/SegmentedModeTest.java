@@ -11,9 +11,11 @@
  *******************************************************************************/
 package org.eclipse.ui.editors.tests;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Control;
@@ -36,13 +38,9 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 
-public class SegmentedModeTest extends TestCase {
+public class SegmentedModeTest {
 
 	private static final String ORIGINAL_CONTENT= "this\nis\nthe\ncontent\nof\nthe\nfile";
-
-	public static Test suite() {
-		return new TestSuite(SegmentedModeTest.class);
-	}
 
 	private IFile fFile;
 
@@ -50,24 +48,21 @@ public class SegmentedModeTest extends TestCase {
 		return ORIGINAL_CONTENT;
 	}
 
-	/*
-	 * @see junit.framework.TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		IFolder folder= ResourceHelper.createFolder("project/folderA/folderB/");
 		fFile= ResourceHelper.createFile(folder, "file.txt", getOriginalContent());
 	}
 
-	/*
-	 * @see junit.framework.TestCase#tearDown()
-	 */
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		ResourceHelper.deleteProject("project");
 	}
 
 	/*
 	 * @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=70934
-	 */
+	 */	
+	@Test
 	public void testSegmentation() {
 		IWorkbench workbench= PlatformUI.getWorkbench();
 		IWorkbenchPage page= workbench.getActiveWorkbenchWindow().getActivePage();
@@ -81,7 +76,7 @@ public class SegmentedModeTest extends TestCase {
 					editor.showHighlightRangeOnly(true);
 					editor.setHighlightRange(5, 0, true);
 
-					Control control= (Control) part.getAdapter(Control.class);
+					Control control= part.getAdapter(Control.class);
 					if (control instanceof StyledText) {
 						StyledText styledText= (StyledText) control;
 						int caret= styledText.getCaretOffset();
@@ -104,7 +99,8 @@ public class SegmentedModeTest extends TestCase {
 
 	/*
 	 * @see https://bugs.eclipse.org/bugs/show_bug.cgi?id=465684
-	 */
+	 */	
+	@Test
 	public void testShowNothing() {
 		IWorkbench workbench= PlatformUI.getWorkbench();
 		IWorkbenchPage page= workbench.getActiveWorkbenchWindow().getActivePage();
@@ -120,7 +116,7 @@ public class SegmentedModeTest extends TestCase {
 					editor.showHighlightRangeOnly(true);
 					editor.setHighlightRange(0, 0, true);
 
-					Control control= (Control)part.getAdapter(Control.class);
+					Control control= part.getAdapter(Control.class);
 					if (control instanceof StyledText) {
 						StyledText styledText= (StyledText)control;
 						String text= styledText.getText();

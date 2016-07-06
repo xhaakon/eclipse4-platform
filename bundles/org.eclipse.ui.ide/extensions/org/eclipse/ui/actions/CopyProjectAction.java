@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.ErrorDialog;
@@ -35,11 +34,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ProjectLocationSelectionDialog;
 import org.eclipse.ui.ide.undo.WorkspaceUndoUtil;
+import org.eclipse.ui.internal.WorkbenchPlugin;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.eclipse.ui.internal.ide.IIDEHelpContextIds;
 import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 /**
  * The CopyProjectAction is the action designed to copy projects specifically as
@@ -119,11 +118,7 @@ public class CopyProjectAction extends SelectionListenerAction {
 	CopyProjectAction(final Shell shell, String name) {
 		super(name);
 		Assert.isNotNull(shell);
-		shellProvider = new IShellProvider() {
-			@Override
-			public Shell getShell() {
-				return shell;
-			} };
+		shellProvider = () -> shell;
 			initAction();
 	}
 
@@ -210,7 +205,7 @@ public class CopyProjectAction extends SelectionListenerAction {
 	 * @return AbstractUIPlugin
 	 */
 	protected org.eclipse.ui.plugin.AbstractUIPlugin getPlugin() {
-		return (AbstractUIPlugin) Platform.getPlugin(PlatformUI.PLUGIN_ID);
+		return WorkbenchPlugin.getDefault();
 	}
 
 	/**
@@ -227,23 +222,20 @@ public class CopyProjectAction extends SelectionListenerAction {
 	 */
 	boolean performCopy(final IProject project, final String projectName,
 			final URI newLocation) {
-		IRunnableWithProgress op = new IRunnableWithProgress() {
-			@Override
-			public void run(IProgressMonitor monitor) {
-				org.eclipse.ui.ide.undo.CopyProjectOperation op = new org.eclipse.ui.ide.undo.CopyProjectOperation(
-						project, projectName, newLocation, getText());
-				op.setModelProviderIds(getModelProviderIds());
-				try {
-					PlatformUI.getWorkbench().getOperationSupport()
-							.getOperationHistory().execute(op, monitor,
-									WorkspaceUndoUtil.getUIInfoAdapter(shellProvider.getShell()));
-				} catch (ExecutionException e) {
-					if (e.getCause() instanceof CoreException) {
-						recordError((CoreException)e.getCause());
-					} else {
-						IDEWorkbenchPlugin.log(e.getMessage(), e);
-						displayError(e.getMessage());
-					}
+		IRunnableWithProgress op = monitor -> {
+			org.eclipse.ui.ide.undo.CopyProjectOperation op1 = new org.eclipse.ui.ide.undo.CopyProjectOperation(
+					project, projectName, newLocation, getText());
+			op1.setModelProviderIds(getModelProviderIds());
+			try {
+				PlatformUI.getWorkbench().getOperationSupport()
+						.getOperationHistory().execute(op1, monitor,
+								WorkspaceUndoUtil.getUIInfoAdapter(shellProvider.getShell()));
+			} catch (ExecutionException e) {
+				if (e.getCause() instanceof CoreException) {
+					recordError((CoreException)e.getCause());
+				} else {
+					IDEWorkbenchPlugin.log(e.getMessage(), e);
+					displayError(e.getMessage());
 				}
 			}
 		};

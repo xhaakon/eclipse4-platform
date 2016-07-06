@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,13 +28,14 @@ import org.eclipse.search.ui.SearchUI;
  * Represents an entry in the search result view
  * @deprecated old search
  */
+@Deprecated
 public class SearchResultViewEntry extends PlatformObject implements ISearchResultViewEntry {
 
 	private Object fGroupByKey= null;
 	private IResource fResource= null;
 	private IMarker fMarker= null;
-	private ArrayList fMarkers= null;
-	private ArrayList fAttributes;
+	private ArrayList<IMarker> fMarkers= null;
+	private ArrayList<Map<String, Object>> fAttributes;
 	private int fSelectedMarkerIndex;
 	private long fModificationStamp= IResource.NULL_STAMP;
 	private String fMarkerType;
@@ -47,6 +48,7 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 	}
 
 	//---- Accessors ------------------------------------------------
+	@Override
 	public Object getGroupByKey() {
 		return fGroupByKey;
 	}
@@ -55,10 +57,12 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 		fGroupByKey= groupByKey;
 	}
 
+	@Override
 	public IResource getResource() {
 		return fResource;
 	}
 
+	@Override
 	public int getMatchCount() {
 		if (fMarkers != null)
 			return fMarkers.size();
@@ -73,9 +77,9 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 		return false;
 	}
 
-	List getAttributesPerMarker() {
+	List<Map<String, Object>> getAttributesPerMarker() {
 		if (fAttributes == null)
-			return new ArrayList(0);
+			return new ArrayList<>(0);
 		return fAttributes;
 	}
 
@@ -105,7 +109,7 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 			return;
 		}
 		if (fMarkers == null) {
-			fMarkers= new ArrayList(10);
+			fMarkers= new ArrayList<>(10);
 			addByStartpos(fMarkers, fMarker);
 		}
 		addByStartpos(fMarkers, marker);
@@ -115,20 +119,21 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 		fSelectedMarkerIndex= index;
 	}
 
+	@Override
 	public IMarker getSelectedMarker() {
 		fSelectedMarkerIndex= Math.min(fSelectedMarkerIndex, getMatchCount() - 1);
 		if (fMarkers == null && fMarker == null)
 			return null;
 		if (fMarkers != null && fSelectedMarkerIndex >= 0)
-			return (IMarker)fMarkers.get(fSelectedMarkerIndex);
+			return fMarkers.get(fSelectedMarkerIndex);
 		return fMarker;
 	}
 
-	public List getMarkers() {
+	public List<IMarker> getMarkers() {
 		if (fMarkers == null && fMarker == null)
-			return new ArrayList(0);
+			return new ArrayList<>(0);
 		else if (fMarkers == null && fMarker != null) {
-			List markers= new ArrayList(1);
+			List<IMarker> markers= new ArrayList<>(1);
 			markers.add(fMarker);
 			return markers;
 		}
@@ -160,7 +165,7 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 		else {
 			fMarkers.remove(marker);
 			if (fMarkers.size() == 1) {
-				fMarker= (IMarker)fMarkers.get(0);
+				fMarker= fMarkers.get(0);
 				fMarkers= null;
 			}
 		}
@@ -169,12 +174,12 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 	void backupMarkers() {
 		if (fResource != null)
 			fModificationStamp= fResource.getModificationStamp();
-		List markers= getMarkers();
-		fAttributes= new ArrayList(markers.size());
-		Iterator iter= markers.iterator();
+		List<IMarker> markers= getMarkers();
+		fAttributes= new ArrayList<>(markers.size());
+		Iterator<IMarker> iter= markers.iterator();
 		while (iter.hasNext()) {
-			IMarker marker= (IMarker)iter.next();
-			Map attributes= null;
+			IMarker marker= iter.next();
+			Map<String, Object> attributes= null;
 			try {
 				attributes= marker.getAttributes();
 			} catch (CoreException ex) {
@@ -185,21 +190,19 @@ public class SearchResultViewEntry extends PlatformObject implements ISearchResu
 		}
 	}
 
-	private void addByStartpos(ArrayList markers, IMarker marker) {
+	private void addByStartpos(ArrayList<IMarker> markers, IMarker marker) {
 		int startPos= marker.getAttribute(IMarker.CHAR_START, -1);
 		int i= 0;
 		int markerCount= markers.size();
-		while (i < markerCount && startPos >= ((IMarker)markers.get(i)).getAttribute(IMarker.CHAR_START, -1))
+		while (i < markerCount && startPos >= markers.get(i).getAttribute(IMarker.CHAR_START, -1))
 			i++;
 		markers.add(i, marker);
 		if (i == 0)
 			fMarker= marker;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.PlatformObject#getAdapter(java.lang.Class)
-	 */
-	public Object getAdapter(Class adapter) {
+	@Override
+	public <T> T getAdapter(Class<T> adapter) {
 		return super.getAdapter(adapter);
 	}
 }

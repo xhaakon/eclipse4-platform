@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,53 +44,40 @@ public class NonExistingFileEditorInput implements IEditorInput, ILocationProvid
 		fName= namePrefix + " " + fgNonExisting; //$NON-NLS-1$
 	}
 
-	/*
-	 * @see org.eclipse.ui.IEditorInput#exists()
-	 */
+	@Override
 	public boolean exists() {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.ui.IEditorInput#getImageDescriptor()
-	 */
+	@Override
 	public ImageDescriptor getImageDescriptor() {
 		return PlatformUI.getWorkbench().getEditorRegistry().getImageDescriptor(fName);
 	}
 
-	/*
-	 * @see org.eclipse.ui.IEditorInput#getName()
-	 */
+	@Override
 	public String getName() {
 		return fName;
 	}
 
-	/*
-	 * @see org.eclipse.ui.IEditorInput#getPersistable()
-	 */
+	@Override
 	public IPersistableElement getPersistable() {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.ui.IEditorInput#getToolTipText()
-	 */
+	@Override
 	public String getToolTipText() {
 		return fName;
 	}
 
-	/*
-	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
-	 */
-	public Object getAdapter(Class adapter) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getAdapter(Class<T> adapter) {
 		if (ILocationProvider.class.equals(adapter))
-			return this;
+			return (T) this;
 		return Platform.getAdapterManager().getAdapter(this, adapter);
 	}
 
-	/*
-	 * @see org.eclipse.ui.editors.text.ILocationProvider#getPath(java.lang.Object)
-	 */
+	@Override
 	public IPath getPath(Object element) {
 		if (element instanceof NonExistingFileEditorInput) {
 			NonExistingFileEditorInput input= (NonExistingFileEditorInput)element;
@@ -99,9 +86,7 @@ public class NonExistingFileEditorInput implements IEditorInput, ILocationProvid
 		return null;
 	}
 
-	/*
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
+	@Override
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
@@ -114,9 +99,7 @@ public class NonExistingFileEditorInput implements IEditorInput, ILocationProvid
 		return false;
 	}
 
-	/*
-	 * @see java.lang.Object#hashCode()
-	 */
+	@Override
 	public int hashCode() {
 		return fFileStore.hashCode();
 	}

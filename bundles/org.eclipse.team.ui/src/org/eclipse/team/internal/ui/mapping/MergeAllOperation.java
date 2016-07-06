@@ -26,7 +26,7 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 import org.eclipse.team.ui.synchronize.ModelMergeOperation;
 
 public final class MergeAllOperation extends SynchronizationOperation {
-	
+
 	private final IMergeContext context;
 	private final String jobName;
 
@@ -35,23 +35,28 @@ public final class MergeAllOperation extends SynchronizationOperation {
 		this.jobName = jobName;
 		this.context = context;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.SynchronizationOperation#execute(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	public void execute(IProgressMonitor monitor) throws InvocationTargetException,
 			InterruptedException {
 		new ModelMergeOperation(getPart(), ((SynchronizationContext)context).getScopeManager()) {
+			@Override
 			public boolean isPreviewRequested() {
 				return false;
 			}
+			@Override
 			protected void initializeContext(IProgressMonitor monitor) throws CoreException {
 				monitor.beginTask(null, 10);
 				monitor.done();
 			}
+			@Override
 			protected ISynchronizationContext getContext() {
 				return context;
 			}
+			@Override
 			protected void executeMerge(IProgressMonitor monitor) throws CoreException {
 				monitor.beginTask(null, 100);
 				if (!hasChangesOfInterest()) {
@@ -77,8 +82,10 @@ public final class MergeAllOperation extends SynchronizationOperation {
 			private boolean promptToContinue(final IStatus status) {
 		    	final boolean[] result = new boolean[] { false };
 		    	Runnable runnable = new Runnable() {
+					@Override
 					public void run() {
 						ErrorDialog dialog = new ErrorDialog(getShell(), TeamUIMessages.ModelMergeOperation_0, TeamUIMessages.ModelMergeOperation_1, status, IStatus.ERROR | IStatus.WARNING | IStatus.INFO) {
+							@Override
 							protected void createButtonsForButtonBar(Composite parent) {
 						        createButton(parent, IDialogConstants.YES_ID, IDialogConstants.YES_LABEL,
 						                false);
@@ -89,6 +96,7 @@ public final class MergeAllOperation extends SynchronizationOperation {
 							/* (non-Javadoc)
 							 * @see org.eclipse.jface.dialogs.ErrorDialog#buttonPressed(int)
 							 */
+							@Override
 							protected void buttonPressed(int id) {
 								if (id == IDialogConstants.YES_ID)
 									super.buttonPressed(IDialogConstants.OK_ID);
@@ -110,13 +118,15 @@ public final class MergeAllOperation extends SynchronizationOperation {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.TeamOperation#canRunAsJob()
 	 */
+	@Override
 	protected boolean canRunAsJob() {
 		return true;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.TeamOperation#getJobName()
 	 */
+	@Override
 	protected String getJobName() {;
 		return jobName;
 	}

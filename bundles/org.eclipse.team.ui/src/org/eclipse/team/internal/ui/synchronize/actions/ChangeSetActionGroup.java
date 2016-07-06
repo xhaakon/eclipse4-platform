@@ -37,7 +37,7 @@ import org.eclipse.ui.actions.BaseSelectionListenerAction;
 /**
  * This action group contributes actions that support the management
  * of Change sets to a synchronize page.
- * 
+ *
  * @since 3.1
  */
 public class ChangeSetActionGroup extends SynchronizePageActionGroup {
@@ -46,41 +46,46 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
      * Menu group that can be added to the context menu
      */
     public final static String CHANGE_SET_GROUP = "change_set_group"; //$NON-NLS-1$
-    
+
 	// Constants for persisting sorting options
 	private static final String P_LAST_COMMENTSORT = TeamUIPlugin.ID + ".P_LAST_COMMENT_SORT"; //$NON-NLS-1$
-    
+
     public static final FastSyncInfoFilter OUTGOING_RESOURCE_FILTER = new SyncInfoDirectionFilter(
             new int[] { SyncInfo.OUTGOING, SyncInfo.CONFLICTING });
-    
+
 	private class CreateChangeSetAction extends SynchronizeModelAction {
-	    
+
         public CreateChangeSetAction(ISynchronizePageConfiguration configuration) {
-            super(TeamUIMessages.ChangeLogModelProvider_0, configuration); 
+            super(TeamUIMessages.ChangeLogModelProvider_0, configuration);
         }
-        
+
 		/* (non-Javadoc)
 		 * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#needsToSaveDirtyEditors()
 		 */
+		@Override
 		protected boolean needsToSaveDirtyEditors() {
 			return false;
 		}
-        
+
         /* (non-Javadoc)
          * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#getSyncInfoFilter()
          */
-        protected FastSyncInfoFilter getSyncInfoFilter() {
+        @Override
+		protected FastSyncInfoFilter getSyncInfoFilter() {
             return OUTGOING_RESOURCE_FILTER;
         }
-        
+
         /* (non-Javadoc)
          * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#getSubscriberOperation(org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration, org.eclipse.compare.structuremergeviewer.IDiffElement[])
          */
-        protected SynchronizeModelOperation getSubscriberOperation(ISynchronizePageConfiguration configuration, IDiffElement[] elements) {
+        @Override
+		protected SynchronizeModelOperation getSubscriberOperation(ISynchronizePageConfiguration configuration, IDiffElement[] elements) {
             return new SynchronizeModelOperation(configuration, elements) {
-                public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+                @Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
                     syncExec(new Runnable() {
-                        public void run() {
+                        @Override
+						public void run() {
 		                    ActiveChangeSet set = createChangeSet(getDiffs(getSyncInfoSet().getResources()));
 		                    if (set != null) {
 		                        getActiveChangeSetManager().add(set);
@@ -97,11 +102,12 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
         public ChangeSetAction(String title, ISynchronizePageConfiguration configuration) {
             super(title);
         }
-        
+
         /* (non-Javadoc)
          * @see org.eclipse.ui.actions.BaseSelectionListenerAction#updateSelection(org.eclipse.jface.viewers.IStructuredSelection)
          */
-        protected boolean updateSelection(IStructuredSelection selection) {
+        @Override
+		protected boolean updateSelection(IStructuredSelection selection) {
             return getSelectedSet() != null;
         }
 
@@ -112,42 +118,44 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
                 if (first instanceof IAdaptable) {
 	                Object adapter = ((IAdaptable)first).getAdapter(ChangeSet.class);
 	                if (adapter instanceof ActiveChangeSet) {
-	                    return (ActiveChangeSet)adapter; 
+	                    return (ActiveChangeSet)adapter;
 	                }
                 }
             }
             return null;
         }
 	}
-	
+
 	private class EditChangeSetAction extends ChangeSetAction {
 
         public EditChangeSetAction(ISynchronizePageConfiguration configuration) {
-            super(TeamUIMessages.ChangeLogModelProvider_6, configuration); 
+            super(TeamUIMessages.ChangeLogModelProvider_6, configuration);
         }
-        
-        public void run() {
+
+        @Override
+		public void run() {
             ActiveChangeSet set = getSelectedSet();
             if (set == null) return;
     		editChangeSet(set);
         }
 	}
-	
+
 	private class RemoveChangeSetAction extends ChangeSetAction {
 
         public RemoveChangeSetAction(ISynchronizePageConfiguration configuration) {
             super(TeamUIMessages.ChangeLogModelProvider_7, configuration);
         }
-        
-        public void run() {
+
+        @Override
+		public void run() {
             ActiveChangeSet set = getSelectedSet();
             if (set == null) return;
-            if (MessageDialog.openConfirm(getConfiguration().getSite().getShell(), TeamUIMessages.ChangeSetActionGroup_0, NLS.bind(TeamUIMessages.ChangeSetActionGroup_1, new String[] { LegacyActionTools.escapeMnemonics(set.getTitle()) }))) { // 
+            if (MessageDialog.openConfirm(getConfiguration().getSite().getShell(), TeamUIMessages.ChangeSetActionGroup_0, NLS.bind(TeamUIMessages.ChangeSetActionGroup_1, new String[] { LegacyActionTools.escapeMnemonics(set.getTitle()) }))) { //
                 getActiveChangeSetManager().remove(set);
             }
         }
 	}
-	
+
 	private class MakeDefaultChangeSetAction extends ChangeSetAction {
 
 		public MakeDefaultChangeSetAction(
@@ -155,6 +163,7 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 			super(TeamUIMessages.ChangeLogModelProvider_9, configuration);
 		}
 
+		@Override
 		protected boolean updateSelection(IStructuredSelection selection) {
 			if (getSelectedSet() != null) {
 				setText(TeamUIMessages.ChangeLogModelProvider_9);
@@ -167,6 +176,7 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 			return true;
 		}
 
+		@Override
 		public void run() {
 			getActiveChangeSetManager().makeDefault(
 					isChecked() ? getSelectedSet() : null);
@@ -178,32 +188,36 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 	}
 
 	private class AddToChangeSetAction extends SynchronizeModelAction {
-	
+
         private final ActiveChangeSet set;
-	    
+
         public AddToChangeSetAction(ISynchronizePageConfiguration configuration, ActiveChangeSet set, ISelection selection) {
-            super(set == null ? TeamUIMessages.ChangeSetActionGroup_2 : LegacyActionTools.escapeMnemonics(set.getTitle()), configuration); 
+            super(set == null ? TeamUIMessages.ChangeSetActionGroup_2 : LegacyActionTools.escapeMnemonics(set.getTitle()), configuration);
             this.set = set;
             selectionChanged(selection);
         }
-        
+
         /* (non-Javadoc)
          * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#getSyncInfoFilter()
          */
-        protected FastSyncInfoFilter getSyncInfoFilter() {
+        @Override
+		protected FastSyncInfoFilter getSyncInfoFilter() {
             return OUTGOING_RESOURCE_FILTER;
         }
-        
+
+		@Override
 		protected boolean needsToSaveDirtyEditors() {
 			return false;
 		}
-        
+
         /* (non-Javadoc)
          * @see org.eclipse.team.ui.synchronize.SynchronizeModelAction#getSubscriberOperation(org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration, org.eclipse.compare.structuremergeviewer.IDiffElement[])
          */
-        protected SynchronizeModelOperation getSubscriberOperation(ISynchronizePageConfiguration configuration, IDiffElement[] elements) {
+        @Override
+		protected SynchronizeModelOperation getSubscriberOperation(ISynchronizePageConfiguration configuration, IDiffElement[] elements) {
             return new SynchronizeModelOperation(configuration, elements) {
-                public void run(IProgressMonitor monitor)
+                @Override
+				public void run(IProgressMonitor monitor)
                         throws InvocationTargetException, InterruptedException {
                 	IResource[] resources = getSyncInfoSet().getResources();
                     if (set != null) {
@@ -220,7 +234,7 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
             };
         }
 	}
-	
+
 	/* *****************************************************************************
 	 * Action that allows changing the model providers sort order.
 	 */
@@ -229,9 +243,10 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 		protected ToggleSortOrderAction(String name, int criteria) {
 			super(name, IAction.AS_RADIO_BUTTON);
 			this.criteria = criteria;
-			update();		
+			update();
 		}
 
+		@Override
 		public void run() {
 			if (isChecked() && sortCriteria != criteria) {
 			    sortCriteria = criteria;
@@ -244,11 +259,11 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 				provider.setViewerSorter(getViewerSorter());
 			}
 		}
-		
+
 		public void update() {
 		    setChecked(criteria == sortCriteria);
 		}
-		
+
 		protected String getSettingsKey() {
 		    return P_LAST_COMMENTSORT;
 		}
@@ -258,7 +273,7 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 	 * The model provider for this action group
 	 */
 	private ChangeSetModelProvider provider;
-	
+
 	/*
 	 * The actions created by this group
 	 */
@@ -268,14 +283,14 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
     private EditChangeSetAction editChangeSet;
     private RemoveChangeSetAction removeChangeSet;
     private MakeDefaultChangeSetAction makeDefault;
-    
+
     private SynchronizePageActionGroup subActions;
-    
+
     /*
      * The currently chosen sort criteria
      */
     private int sortCriteria = ChangeSetModelSorter.DATE;
-    
+
     public static int getSortCriteria(ISynchronizePageConfiguration configuration) {
         int sortCriteria = ChangeSetModelSorter.DATE;
 		try {
@@ -297,27 +312,29 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
         }
 		return sortCriteria;
     }
-    
+
     public ChangeSetActionGroup(ChangeSetModelProvider provider) {
         this.provider = provider;
     }
-    
+
+	@Override
 	public void initialize(ISynchronizePageConfiguration configuration) {
 		super.initialize(configuration);
-		
+
 		if (getChangeSetCapability().supportsCheckedInChangeSets()) {
 		    sortCriteria = getSortCriteria(configuration);
-			sortByComment = new MenuManager(TeamUIMessages.ChangeLogModelProvider_0a);	 
-			sortByComment.add(new ToggleSortOrderAction(TeamUIMessages.ChangeLogModelProvider_1a, ChangeSetModelSorter.COMMENT)); 
-			sortByComment.add(new ToggleSortOrderAction(TeamUIMessages.ChangeLogModelProvider_2a, ChangeSetModelSorter.DATE)); 
-			sortByComment.add(new ToggleSortOrderAction(TeamUIMessages.ChangeLogModelProvider_3a, ChangeSetModelSorter.USER)); 
+			sortByComment = new MenuManager(TeamUIMessages.ChangeLogModelProvider_0a);
+			sortByComment.add(new ToggleSortOrderAction(TeamUIMessages.ChangeLogModelProvider_1a, ChangeSetModelSorter.COMMENT));
+			sortByComment.add(new ToggleSortOrderAction(TeamUIMessages.ChangeLogModelProvider_2a, ChangeSetModelSorter.DATE));
+			sortByComment.add(new ToggleSortOrderAction(TeamUIMessages.ChangeLogModelProvider_3a, ChangeSetModelSorter.USER));
 		}
-		
+
 		if (getChangeSetCapability().supportsActiveChangeSets()) {
-			addToChangeSet = new MenuManager(TeamUIMessages.ChangeLogModelProvider_12); 
+			addToChangeSet = new MenuManager(TeamUIMessages.ChangeLogModelProvider_12);
 			addToChangeSet.setRemoveAllWhenShown(true);
 			addToChangeSet.addMenuListener(new IMenuListener() {
-	            public void menuAboutToShow(IMenuManager manager) {
+	            @Override
+				public void menuAboutToShow(IMenuManager manager) {
 	                addChangeSets(manager);
 	            }
 	        });
@@ -328,48 +345,50 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 			makeDefault = new MakeDefaultChangeSetAction(configuration);
 			removeChangeSet = new RemoveChangeSetAction(configuration);
 		}
-		
+
 		subActions = getChangeSetCapability().getActionGroup();
 		if (subActions != null) {
 		    subActions.initialize(configuration);
 		}
 	}
-	
+
 	/* (non-Javadoc)
      * @see org.eclipse.team.ui.synchronize.SynchronizePageActionGroup#fillContextMenu(org.eclipse.jface.action.IMenuManager)
      */
-    public void fillContextMenu(IMenuManager menu) {
+    @Override
+	public void fillContextMenu(IMenuManager menu) {
         if (getChangeSetCapability().enableCheckedInChangeSetsFor(getConfiguration())) {
             appendToGroup(menu, ISynchronizePageConfiguration.SORT_GROUP, sortByComment);
         }
         if (getChangeSetCapability().enableActiveChangeSetsFor(getConfiguration())) {
 			appendToGroup(
-					menu, 
-					CHANGE_SET_GROUP, 
+					menu,
+					CHANGE_SET_GROUP,
 					addToChangeSet);
 			appendToGroup(
-					menu, 
-					CHANGE_SET_GROUP, 
+					menu,
+					CHANGE_SET_GROUP,
 					editChangeSet);
 			appendToGroup(
-					menu, 
-					CHANGE_SET_GROUP, 
+					menu,
+					CHANGE_SET_GROUP,
 					removeChangeSet);
 			appendToGroup(
-					menu, 
-					CHANGE_SET_GROUP, 
+					menu,
+					CHANGE_SET_GROUP,
 					makeDefault);
         }
 		if (subActions != null) {
 		    subActions.fillContextMenu(menu);
 		}
     }
-    
+
     protected void addChangeSets(IMenuManager manager) {
         ChangeSet[] sets = getActiveChangeSetManager().getSets();
         Arrays.sort(sets, new Comparator() {
         	private Collator collator = Collator.getInstance();
-        	public int compare(Object o1, Object o2) {
+        	@Override
+			public int compare(Object o1, Object o2) {
         		return collator.compare(((ChangeSet) o1).getName(), ((ChangeSet) o2).getName());
         	}
         });
@@ -398,6 +417,7 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
     /* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.SynchronizePageActionGroup#dispose()
 	 */
+	@Override
 	public void dispose() {
 	    if (addToChangeSet != null) {
 			addToChangeSet.dispose();
@@ -412,9 +432,10 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 	    }
 		super.dispose();
 	}
-	
-	
-    public void updateActionBars() {
+
+
+    @Override
+	public void updateActionBars() {
         if (editChangeSet != null)
 	        editChangeSet.selectionChanged((IStructuredSelection)getContext().getSelection());
         if (removeChangeSet != null)
@@ -423,11 +444,12 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 	        makeDefault.selectionChanged((IStructuredSelection)getContext().getSelection());
         super.updateActionBars();
     }
-    
+
     private void syncExec(final Runnable runnable) {
 		final Control ctrl = getConfiguration().getPage().getViewer().getControl();
 		if (ctrl != null && !ctrl.isDisposed()) {
 			ctrl.getDisplay().syncExec(new Runnable() {
+				@Override
 				public void run() {
 					if (!ctrl.isDisposed()) {
 					    runnable.run();
@@ -436,7 +458,7 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 			});
 		}
     }
-    
+
     /**
      * Return a viewer sorter that utilizes the sort criteria
      * selected by the user.
@@ -445,11 +467,11 @@ public class ChangeSetActionGroup extends SynchronizePageActionGroup {
 	public ViewerSorter getViewerSorter() {
 		return new ChangeSetModelSorter(provider, sortCriteria);
 	}
-	
+
     private ActiveChangeSet createChangeSet(IDiff[] diffs) {
         return getChangeSetCapability().createChangeSet(getConfiguration(), diffs);
     }
-    
+
     private void editChangeSet(ActiveChangeSet set) {
         getChangeSetCapability().editChangeSet(getConfiguration(), set);
     }

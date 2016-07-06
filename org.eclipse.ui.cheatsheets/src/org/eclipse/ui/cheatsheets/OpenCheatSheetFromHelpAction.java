@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2007 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,11 +20,11 @@ import org.eclipse.swt.widgets.Display;
  * is the id of a cheat sheet contributed to the <code>cheatsheetContent</code>
  * extension point.
  * </p>
- * 
+ *
  * @since 3.0
  */
 public final class OpenCheatSheetFromHelpAction implements ILiveHelpAction {
-	
+
 	/**
 	 * Cheat sheet id; null until initialized.
 	 */
@@ -37,21 +37,20 @@ public final class OpenCheatSheetFromHelpAction implements ILiveHelpAction {
 		super();
 	}
 
-	/* (non-javadoc)
-	 * This method is called by the eclipse framework.  The initialization string must be the id of a 
+	/*
+	 * This method is called by the eclipse framework.  The initialization string must be the id of a
 	 * registered cheat sheet in order for the action to work.
-	 * @see ILiveHelpAction#setInitializationString(String)
 	 */
+	@Override
 	public void setInitializationString(String data) {
 		cheatsheetID = data;
 	}
 
-	/* (non-javadoc)
-	 * @see java.lang.Runnable#run()
-	 */
+	@Override
 	public void run() {
 		// Active help does not run on the UI thread, so we must use syncExec
 		Display.getDefault().syncExec(new Runnable() {
+			@Override
 			public void run() {
 				new OpenCheatSheetAction(cheatsheetID).run();
 			}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Red Hat Inc.
+ * Copyright (c) 2014, 2015 Red Hat Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,9 +13,9 @@ package org.eclipse.ui.internal.navigator.resources.actions;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.internal.navigator.AdaptabilityUtility;
 import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.CommonViewer;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
@@ -37,7 +37,7 @@ public class FoldersAsProjectsActionProvider extends CommonActionProvider {
 			return;
 		}
 		Object object = selection.getFirstElement();
-		IFolder folder = (IFolder)AdaptabilityUtility.getAdapter(object, IFolder.class);
+		IFolder folder = Adapters.adapt(object, IFolder.class);
 		if (folder == null) {
 			return;
 		}

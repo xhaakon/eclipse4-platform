@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Sergey Prigogin (Google) - use parameterized types (bug 442021)
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 478864
  *******************************************************************************/
 package org.eclipse.core.runtime;
 
@@ -134,6 +135,11 @@ public interface IAdapterManager {
 	 * <p>
 	 * Note that this method will never cause plug-ins to be loaded. If the
 	 * only suitable factory is not yet loaded, this method will return <code>null</code>.
+	 * <p>
+	 * In most cases, it is preferable for client code to use
+	 * {@link Adapters#adapt(Object, Class, boolean)} rather than calling this 
+	 * method directly since doing so will also detect interfaces supplied by the 
+	 * {@link IAdaptable} interface
 	 * 
 	 * @param adaptable the adaptable object being queried (usually an instance
 	 * of <code>IAdaptable</code>)
@@ -153,6 +159,11 @@ public interface IAdapterManager {
 	 * only suitable factory is not yet loaded, this method will return <code>null</code>.
 	 * If activation of the plug-in providing the factory is required, use the
 	 * <code>loadAdapter</code> method instead.
+	 * <p>
+	 * In most cases, it is preferable for client code to use
+	 * {@link Adapters#adapt(Object, Class, boolean)} rather than calling this 
+	 * method directly since doing so will also detect interfaces supplied by the 
+	 * {@link IAdaptable} interface
 	 * 
 	 * @param adaptable the adaptable object being queried (usually an instance
 	 * of <code>IAdaptable</code>)
@@ -213,6 +224,11 @@ public interface IAdapterManager {
 	 * if necessary. As such, this method should be used judiciously, in order
 	 * to avoid unnecessary plug-in activations. Most clients should avoid
 	 * activation by using <code>getAdapter</code> instead.
+	 * <p>
+	 * In most cases, it is preferable for client code to use
+	 * {@link Adapters#adapt(Object, Class, boolean)} rather than calling this 
+	 * method directly since doing so will also detect interfaces supplied by the 
+	 * {@link IAdaptable} interface.
 	 * 
 	 * @param adaptable the adaptable object being queried (usually an instance
 	 * of <code>IAdaptable</code>)

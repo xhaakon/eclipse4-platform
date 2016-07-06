@@ -36,10 +36,11 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 	public ResourceMarkAsMergedHandler(ISynchronizePageConfiguration configuration) {
 		super(configuration);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.MergeActionHandler#getOperation()
 	 */
+	@Override
 	protected synchronized SynchronizationOperation getOperation() {
 		if (operation == null) {
 			operation = new ResourceModelProviderOperation(getConfiguration(),
@@ -47,6 +48,7 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 				/* (non-Javadoc)
 				 * @see org.eclipse.jface.operation.IRunnableWithProgress#run(org.eclipse.core.runtime.IProgressMonitor)
 				 */
+				@Override
 				public void execute(IProgressMonitor monitor)
 						throws InvocationTargetException, InterruptedException {
 					try {
@@ -54,18 +56,19 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 						final IDiff[] deltas = getTargetDiffs();
 						ISchedulingRule rule = getMergeRule(context, deltas);
 						context.run(new IWorkspaceRunnable() {
+							@Override
 							public void run(IProgressMonitor monitor)
 									throws CoreException {
 								markAsMerged(deltas, context, monitor);
 							}
-	
+
 						}, rule, IResource.NONE, monitor);
-	
+
 					} catch (CoreException e) {
 						throw new InvocationTargetException(e);
 					}
 				}
-	
+
 				private ISchedulingRule getMergeRule(IMergeContext context,
 						IDiff[] deltas) {
 					ISchedulingRule result = null;
@@ -80,18 +83,20 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 					}
 					return result;
 				}
-	
+
 				private void markAsMerged(IDiff[] deltas,
 						final IMergeContext context, IProgressMonitor monitor)
 						throws CoreException {
 					context.markAsMerged(deltas, false, monitor);
 				}
-	
+
 				/* (non-Javadoc)
 				 * @see org.eclipse.team.internal.ui.mapping.ResourceModelProviderOperation#getDiffFilter()
 				 */
+				@Override
 				protected FastDiffFilter getDiffFilter() {
 					return new FastDiffFilter() {
+						@Override
 						public boolean select(IDiff node) {
 							if (node instanceof IThreeWayDiff) {
 								IThreeWayDiff twd = (IThreeWayDiff) node;
@@ -104,6 +109,7 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 						}
 					};
 				}
+				@Override
 				protected String getJobName() {
 					IDiff[] diffs = getTargetDiffs();
 					if (diffs.length == 1)
@@ -114,18 +120,19 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 		}
 		return operation;
 	}
-	
-	
+
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.MergeActionHandler#updateEnablement(org.eclipse.jface.viewers.IStructuredSelection)
 	 */
+	@Override
 	public void updateEnablement(IStructuredSelection selection) {
 		synchronized (this) {
 			operation = null;
 		}
 		super.updateEnablement(selection);
 		int mode = getConfiguration().getMode();
-		if ((mode == ISynchronizePageConfiguration.OUTGOING_MODE 
+		if ((mode == ISynchronizePageConfiguration.OUTGOING_MODE
 				&& getSynchronizationContext().getDiffTree().countFor(IThreeWayDiff.CONFLICTING, IThreeWayDiff.DIRECTION_MASK) == 0)
 				|| (getSynchronizationContext().getDiffTree().countFor(IThreeWayDiff.CONFLICTING, IThreeWayDiff.DIRECTION_MASK) == 0
 						&& getSynchronizationContext().getDiffTree().countFor(IThreeWayDiff.INCOMING, IThreeWayDiff.DIRECTION_MASK) == 0)) {
@@ -133,11 +140,12 @@ public class ResourceMarkAsMergedHandler extends ResourceMergeActionHandler {
 			return;
 		}
 	}
-	
+
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		if (saveDirtyEditors())
 			return super.execute(event);
 		return null;
 	}
-	
+
 }

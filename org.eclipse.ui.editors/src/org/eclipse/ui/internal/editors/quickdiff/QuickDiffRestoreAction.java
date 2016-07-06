@@ -70,14 +70,12 @@ public abstract class QuickDiffRestoreAction extends TextEditorAction implements
 	 */
 	protected abstract void runCompoundChange();
 
-	/*
-	 * @see org.eclipse.jface.action.IAction#run()
-	 */
+	@Override
 	public void run() {
 		ITextEditor editor= getTextEditor();
 		if (editor == null || !validateEditorInputState())
 			return;
-		IRewriteTarget target= (IRewriteTarget)editor.getAdapter(IRewriteTarget.class);
+		IRewriteTarget target= editor.getAdapter(IRewriteTarget.class);
 		if (target != null)
 			target.beginCompoundChange();
 		runCompoundChange();
@@ -86,9 +84,7 @@ public abstract class QuickDiffRestoreAction extends TextEditorAction implements
 
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IUpdate#update()
-	 */
+	@Override
 	public void update() {
 		/*
 		 * Update only works if we're updated from the ruler action
@@ -99,10 +95,7 @@ public abstract class QuickDiffRestoreAction extends TextEditorAction implements
 		setEnabled(computeEnablement());
 	}
 
-	/*
-	 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-	 * @since 3.3
-	 */
+	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
 		update();
 	}
@@ -213,7 +206,7 @@ public abstract class QuickDiffRestoreAction extends TextEditorAction implements
 	 */
 	protected IVerticalRulerInfo getRuler() {
 		if (getTextEditor() != null)
-			return (IVerticalRulerInfo)getTextEditor().getAdapter(IVerticalRulerInfo.class);
+			return getTextEditor().getAdapter(IVerticalRulerInfo.class);
 		return null;
 	}
 
@@ -224,7 +217,7 @@ public abstract class QuickDiffRestoreAction extends TextEditorAction implements
 	 */
 	protected void setStatus(String string) {
 		if (getTextEditor() != null) {
-			IEditorStatusLine statusLine= (IEditorStatusLine) getTextEditor().getAdapter(IEditorStatusLine.class);
+			IEditorStatusLine statusLine= getTextEditor().getAdapter(IEditorStatusLine.class);
 			if (statusLine != null) {
 				statusLine.setMessage(true, string, null);
 			}

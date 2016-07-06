@@ -60,14 +60,14 @@ import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds;
  *       point="org.eclipse.ui.views"&gt;
  *    &lt;view
  *          name="%templatesViewName"
- *          icon="$nl$/icons/full/eview16/templates.gif"
+ *          icon="$nl$/icons/full/eview16/templates.png"
  *          category="org.eclipse.ui"
  *          class="org.eclipse.ui.texteditor.templates.TemplatesView"
  *          id="org.eclipse.ui.texteditor.TemplatesView"&gt;
  *    &lt;/view&gt;
  * &lt/extension>
  * </pre>
- * The <code>templates.gif</code> icon can be copied from this plug-in.
+ * The <code>templates.png</code> icon can be copied from this plug-in.
  * </p>
  * If the editor supports a templates page, the editor instantiates and configures the page, and
  * returns it. This page is then added to this Templates view and immediately made the current page
@@ -102,9 +102,7 @@ public final class TemplatesView extends PageBookView {
 	public TemplatesView() {
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#createDefaultPage(org.eclipse.ui.part.PageBook)
-	 */
+	@Override
 	protected IPage createDefaultPage(PageBook book) {
 		MessagePage page= new MessagePage();
 		initPage(page);
@@ -113,24 +111,19 @@ public final class TemplatesView extends PageBookView {
 		return page;
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#createPartControl(org.eclipse.swt.widgets.Composite)
-	 * @since 3.4
-	 */
+	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
 		Assert.isTrue(ID.equals(getViewSite().getId())); // prevent from contributing this view under a different ID
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(getPageBook(), IAbstractTextEditorHelpContextIds.TEMPLATES_VIEW);
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#doCreatePage(org.eclipse.ui.IWorkbenchPart)
-	 */
+	@Override
 	protected PageRec doCreatePage(IWorkbenchPart part) {
 		// Try to get template page.
-		ITemplatesPage page= (ITemplatesPage)part.getAdapter(ITemplatesPage.class);
+		ITemplatesPage page= part.getAdapter(ITemplatesPage.class);
 		if (page == null)
-			page= (ITemplatesPage)Platform.getAdapterManager().getAdapter(part, ITemplatesPage.class);
+			page= Platform.getAdapterManager().getAdapter(part, ITemplatesPage.class);
 		if (page == null)
 			return null; // There is no template page
 
@@ -139,19 +132,14 @@ public final class TemplatesView extends PageBookView {
 		return new PageRec(part, page);
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#doDestroyPage(org.eclipse.ui.IWorkbenchPart, org.eclipse.ui.part.PageBookView.PageRec)
-	 */
+	@Override
 	protected void doDestroyPage(IWorkbenchPart part, PageRec rec) {
 		ITemplatesPage page= (ITemplatesPage)rec.page;
 		page.dispose();
 		rec.dispose();
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#getBootstrapPart()
-	 * @since 3.4
-	 */
+	@Override
 	protected IWorkbenchPart getBootstrapPart() {
 		IWorkbenchPage page= getSite().getPage();
 		if (page != null)
@@ -159,18 +147,13 @@ public final class TemplatesView extends PageBookView {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#isImportant(org.eclipse.ui.IWorkbenchPart)
-	 */
+	@Override
 	protected boolean isImportant(IWorkbenchPart part) {
 		//We only care about editors
 		return (part instanceof IEditorPart);
 	}
 
-	/*
-	 * @see org.eclipse.ui.part.PageBookView#partBroughtToTop(org.eclipse.ui.IWorkbenchPart)
-	 * @since 3.4
-	 */
+	@Override
 	public void partBroughtToTop(IWorkbenchPart part) {
 		partActivated(part);
 	}

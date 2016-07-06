@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *     Francis Lynch (Wind River) - [301563] Save and load tree snapshots
  *     Broadcom Corporation - ongoing development
  *     Sergey Prigogin (Google) - [437005] Out-of-date .snap file prevents Eclipse from running
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -234,10 +236,10 @@ public class LocalMetaArea implements ICoreConstants {
 		if (sequenceNumber == null)
 			sequenceNumber = "0"; //$NON-NLS-1$
 		if (updateSequenceNumber) {
-			int n = new Integer(sequenceNumber).intValue() + 1;
+			int n = Integer.parseInt(sequenceNumber) + 1;
 			n = n < 0 ? 1 : n;
-			sequenceNumber = new Integer(n).toString();
-			getWorkspace().getSaveManager().getMasterTable().setProperty(key.toString(), new Integer(sequenceNumber).toString());
+			sequenceNumber = Integer.toString(n);
+			getWorkspace().getSaveManager().getMasterTable().setProperty(key.toString(), sequenceNumber);
 		}
 		return locationFor(target).append(sequenceNumber + F_TREE);
 	}
@@ -389,14 +391,14 @@ public class LocalMetaArea implements ICoreConstants {
 				for (int i = 0; i < configs.length; i++)
 					configs[i] = dataIn.readUTF();
 				if (configs.length > 0)
-					// In the future we may decide this is better stored in the 
+					// In the future we may decide this is better stored in the
 					// .project, so only set if configs.length > 0
 					description.setBuildConfigs(configs);
 				// Active configuration name
 				description.setActiveBuildConfig(dataIn.readUTF());
 				// Build configuration references?
 				int numBuildConifgsWithRefs = dataIn.readInt();
-				HashMap<String, IBuildConfiguration[]> m = new HashMap<String, IBuildConfiguration[]>(numBuildConifgsWithRefs);
+				HashMap<String, IBuildConfiguration[]> m = new HashMap<>(numBuildConifgsWithRefs);
 				for (int i = 0; i < numBuildConifgsWithRefs; i++) {
 					String configName = dataIn.readUTF();
 					numRefs = dataIn.readInt();
@@ -423,7 +425,7 @@ public class LocalMetaArea implements ICoreConstants {
 	/**
 	 * Writes the workspace description to the local meta area. This method is
 	 * synchronized to prevent multiple current write attempts.
-	 * 
+	 *
 	 * @deprecated should not be called any more - workspace preferences are
 	 *                     now maintained in the plug-in's preferences
 	 */

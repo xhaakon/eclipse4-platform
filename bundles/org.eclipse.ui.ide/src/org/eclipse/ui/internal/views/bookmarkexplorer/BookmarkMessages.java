@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -54,7 +54,6 @@ public class BookmarkMessages extends NLS {
 	public static String ColumnLocation_text;
 	public static String ColumnCreationTime_text;
 
-	public static String Error_text;
 
 	public static String LineIndicator_text;
 
@@ -63,11 +62,6 @@ public class BookmarkMessages extends NLS {
 	public static String ColumnResource_header;
 	public static String ColumnFolder_header;
 	public static String ColumnLocation_header;
-
-	public static String ColumnDescription_dialogText;
-	public static String ColumnResource_dialogText;
-	public static String ColumnFolder_dialogText;
-	public static String ColumnLocation_dialogText;
 
 	public static String SortMenuGroup_text;
 	public static String SortDirectionAscending_text;

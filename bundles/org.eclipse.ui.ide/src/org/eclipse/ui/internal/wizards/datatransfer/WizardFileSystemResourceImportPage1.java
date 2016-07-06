@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Mickael Istria (Red Hat Inc.) - Bug 486901
  *******************************************************************************/
 package org.eclipse.ui.internal.wizards.datatransfer;
 
@@ -43,8 +44,6 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -200,7 +199,7 @@ public class WizardFileSystemResourceImportPage1 extends WizardResourceImportPag
         GridData buttonData = new GridData(GridData.FILL_HORIZONTAL);
         button.setLayoutData(buttonData);
 
-        button.setData(new Integer(id));
+        button.setData(id);
         button.setText(label);
 
         if (defaultButton) {
@@ -271,9 +270,6 @@ public class WizardFileSystemResourceImportPage1 extends WizardResourceImportPag
 
     }
 
-    /* (non-Javadoc)
-     * Method declared on IDialogPage.
-     */
     @Override
 	public void createControl(Composite parent) {
         super.createControl(parent);
@@ -497,12 +493,7 @@ public class WizardFileSystemResourceImportPage1 extends WizardResourceImportPag
             }
         });
 
-        sourceNameField.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				entryChanged = true;
-			}
-		});
+        sourceNameField.addModifyListener(e -> entryChanged = true);
 
         sourceNameField.addFocusListener(new FocusListener() {
             /*
@@ -1050,14 +1041,8 @@ public class WizardFileSystemResourceImportPage1 extends WizardResourceImportPag
 
         final MinimizedFileSystemElement[] results = new MinimizedFileSystemElement[1];
 
-        BusyIndicator.showWhile(getShell().getDisplay(), new Runnable() {
-            @Override
-			public void run() {
-                //Create the root element from the supplied file system object
-                results[0] = createRootElement(rootFileSystemObject,
-                        structureProvider);
-            }
-        });
+        BusyIndicator.showWhile(getShell().getDisplay(), () -> results[0] = createRootElement(rootFileSystemObject,
+		        structureProvider));
 
         return results[0];
     }
@@ -1159,16 +1144,12 @@ public class WizardFileSystemResourceImportPage1 extends WizardResourceImportPag
 
         };
 
-        IRunnableWithProgress runnable = new IRunnableWithProgress() {
-            @Override
-			public void run(final IProgressMonitor monitor)
-                    throws InterruptedException {
-                monitor
-                        .beginTask(
-                                DataTransferMessages.ImportPage_filterSelections, IProgressMonitor.UNKNOWN);
-                getSelectedResources(filter, monitor);
-            }
-        };
+        IRunnableWithProgress runnable = monitor -> {
+            monitor
+		    .beginTask(
+		            DataTransferMessages.ImportPage_filterSelections, IProgressMonitor.UNKNOWN);
+            getSelectedResources(filter, monitor);
+         };
 
         try {
             dialog.run(true, true, runnable);
@@ -1191,9 +1172,6 @@ public class WizardFileSystemResourceImportPage1 extends WizardResourceImportPag
         }
     }
 
-    /* (non-Javadoc)
-     * Method declared on IDialogPage. Set the selection up when it becomes visible.
-     */
     @Override
 	public void setVisible(boolean visible) {
         super.setVisible(visible);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,7 +35,7 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 
 	private final int fOffset;
 
-	private final List fList;
+	private final List<QuickDiffRangeDifference> fList;
 
 	private final IDocument fDocument;
 
@@ -47,7 +47,7 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 	 * @param differences the list of differences
 	 * @param source the document
 	 */
-	public DiffRegion(QuickDiffRangeDifference difference, int offset, List differences, IDocument source) {
+	public DiffRegion(QuickDiffRangeDifference difference, int offset, List<QuickDiffRangeDifference> differences, IDocument source) {
 		super("org.eclipse.ui.workbench.texteditor.quickdiffChange", false, null); //$NON-NLS-1$
 		fOffset= offset;
 		fDifference= difference;
@@ -55,9 +55,7 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 		fDocument= source;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.Annotation#getType()
-	 */
+	@Override
 	public String getType() {
 		// we return unknown for unchanged regions to avoid
 		// them getting displayed.
@@ -79,9 +77,7 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ILineDiffInfo#getRemovedLinesBelow()
-	 */
+	@Override
 	public int getRemovedLinesBelow() {
 		if (fOffset == fDifference.rightLength() - 1) {
 
@@ -89,10 +85,10 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 				return Math.max(fDifference.leftLength() - fDifference.rightLength(), 0);
 
 			synchronized (fList) {
-				for (ListIterator it= fList.listIterator(); it.hasNext();) {
+				for (ListIterator<QuickDiffRangeDifference> it= fList.listIterator(); it.hasNext();) {
 					if (fDifference.equals(it.next())) {
 						if (it.hasNext()) {
-							QuickDiffRangeDifference next= (QuickDiffRangeDifference) it.next();
+							QuickDiffRangeDifference next= it.next();
 							if (next.rightLength() == 0)
 								return Math.max(next.leftLength() - next.rightLength(), 0);
 						}
@@ -104,9 +100,7 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 		return 0;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ILineDiffInfo#getChangeType()
-	 */
+	@Override
 	public int getChangeType() {
 		if (fDifference.kind() == RangeDifference.NOCHANGE)
 			return UNCHANGED;
@@ -115,16 +109,14 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 		return CHANGED;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ILineDiffInfo#getRemovedLinesAbove()
-	 */
+	@Override
 	public int getRemovedLinesAbove() {
 		if (getChangeType() == UNCHANGED && fOffset == 0) {
 			synchronized (fList) {
-				for (ListIterator it= fList.listIterator(fList.size()); it.hasPrevious();) {
+				for (ListIterator<QuickDiffRangeDifference> it= fList.listIterator(fList.size()); it.hasPrevious();) {
 					if (fDifference.equals(it.previous())) {
 						if (it.hasPrevious()) {
-							QuickDiffRangeDifference previous= (QuickDiffRangeDifference) it.previous();
+							QuickDiffRangeDifference previous= it.previous();
 							return Math.max(previous.leftLength() - previous.rightLength(), 0);
 						}
 						break;
@@ -135,16 +127,12 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 		return 0;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ILineDiffInfo#hasChanges()
-	 */
+	@Override
 	public boolean hasChanges() {
 		return getChangeType() != UNCHANGED || getRemovedLinesAbove() > 0 || getRemovedLinesBelow() > 0;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ILineDiffInfo#getOriginalText()
-	 */
+	@Override
 	public String[] getOriginalText() {
 		IDocument doc= fDocument;
 		if (doc != null) {
@@ -171,9 +159,7 @@ public final class DiffRegion extends Annotation implements ILineDiffInfo {
 		return new String[0];
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.Annotation#getText()
-	 */
+	@Override
 	public String getText() {
 		int r= fDifference.rightLength();
 		int l= fDifference.leftLength();

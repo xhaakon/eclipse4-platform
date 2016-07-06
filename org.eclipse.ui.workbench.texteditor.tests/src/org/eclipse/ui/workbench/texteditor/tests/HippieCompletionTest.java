@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,14 +11,15 @@
  *******************************************************************************/
 package org.eclipse.ui.workbench.texteditor.tests;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.core.runtime.AssertionFailedException;
 
@@ -30,25 +31,18 @@ import org.eclipse.jface.text.IDocument;
 
 import org.eclipse.ui.internal.texteditor.HippieCompletionEngine;
 
-
 /**
  * Tests for the Hippie completion action of the text editor.
  *
  * @author Genady Beryozkin, me@genady.org
  */
-public class HippieCompletionTest extends TestCase {
+public class HippieCompletionTest {
 
 	IDocument[] documents;
 	private HippieCompletionEngine fEngine;
 
-	public HippieCompletionTest(String name) {
-		super(name);
-	}
-
-	/*
-	 * @see junit.framework.TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		documents= new IDocument[5];
 		documents[0]= new Document("package ui.TestPackage;\n" +
 				"\n" +
@@ -139,9 +133,10 @@ public class HippieCompletionTest extends TestCase {
 		fEngine= new HippieCompletionEngine();
 	}
 
+	@Test
 	public void testSearchBackwards1() {
 		try {
-			List list= fEngine.getCompletionsBackwards(documents[0],
+			List<String> list= fEngine.getCompletionsBackwards(documents[0],
 					"pri", documents[0].get().indexOf("println") + 10);
 			assertEquals(list.size(), 2);
 			assertEquals(list.get(0), "ntln");
@@ -168,9 +163,10 @@ public class HippieCompletionTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testSearchBackwards2() {
 		try {
-			List list= fEngine.getCompletionsBackwards(documents[2],
+			List<String> list= fEngine.getCompletionsBackwards(documents[2],
 					"plugi", documents[2].getLength());
 			assertEquals(8, list.size());
 			list= fEngine.makeUnique(list);
@@ -186,9 +182,10 @@ public class HippieCompletionTest extends TestCase {
 		}
 	}
 
+	@Test
     public void testSearchBackwards3() {
         try {
-            List list= fEngine.getCompletionsBackwards(documents[1],
+        	List<String> list= fEngine.getCompletionsBackwards(documents[1],
                     "test", documents[1].getLength());
             assertEquals("Number of backwards suggestions does not match", 2, list.size());
             list= fEngine.getCompletionsBackwards(documents[1],
@@ -203,9 +200,10 @@ public class HippieCompletionTest extends TestCase {
         }
     }
 
+	@Test
 	public void testSearch() {
-		ArrayList docsList= new ArrayList(Arrays.asList(this.documents));
-		List result= createSuggestions("te", docsList);
+		ArrayList<IDocument> docsList= new ArrayList<>(Arrays.asList(this.documents));
+		List<String> result= createSuggestions("te", docsList);
 		assertEquals("Number of completions does not match", 15, result.size());
 		result= fEngine.makeUnique(result);
 		assertEquals("Number of completions does not match", 7, result.size());
@@ -229,9 +227,10 @@ public class HippieCompletionTest extends TestCase {
 		assertEquals("Incorrect completion", "roperties", result.get(9));
 	}
 
+	@Test
 	public void testSearch2() {
-		ArrayList docsList= new ArrayList(Arrays.asList(this.documents));
-		List result= createSuggestions("printe", docsList);
+		ArrayList<IDocument> docsList= new ArrayList<>(Arrays.asList(this.documents));
+		List<String> result= createSuggestions("printe", docsList);
 		assertEquals("Number of completions does not match", 0, result.size());
 
 		result= createSuggestions("s", docsList);
@@ -241,10 +240,10 @@ public class HippieCompletionTest extends TestCase {
 		assertEquals("Number of completions does not match", 1, result.size());
 	}
 
-
+	@Test
 	public void testForwardSearch() {
 		try {
-			List result= fEngine.getCompletionsForward(documents[0],
+			List<String> result= fEngine.getCompletionsForward(documents[0],
 					"cl", documents[0].get().indexOf("cl"), true);
 			assertEquals(2, result.size());
 
@@ -264,8 +263,9 @@ public class HippieCompletionTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testForwardSearchInternational() {
-		List result;
+		List<String> result;
 		try {
 			result= fEngine.getCompletionsForward(documents[4],
 					"$", documents[4].get().indexOf('$'), true);
@@ -288,7 +288,7 @@ public class HippieCompletionTest extends TestCase {
 		}
 	}
 
-
+	@Test
 	public void testPrefix() {
 		try {
 			String prefix= fEngine.getPrefixString(documents[0],
@@ -349,10 +349,11 @@ public class HippieCompletionTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testInternational() {
 		IDocument intlDoc= documents[4];
 
-		List result= createSuggestions("\u05D4", intlDoc); // hebrew letter heh
+		List<String> result= createSuggestions("\u05D4", intlDoc); // hebrew letter heh
 		assertEquals("Number of completions does not match", 4, result.size());
 		assertEquals(result.get(0), "\u05DE\u05D7\u05DC\u05E7\u05D4");
 		assertEquals(result.get(1), "\u05D6\u05D5");
@@ -415,11 +416,11 @@ public class HippieCompletionTest extends TestCase {
 		assertEquals("Number of completions does not match", 0, result.size());
 	}
 
-
+	@Test
 	public void testInternationalBackwards() {
 		IDocument intlDoc= documents[4];
 		try {
-			List list= fEngine.getCompletionsBackwards(intlDoc,
+			List<String> list= fEngine.getCompletionsBackwards(intlDoc,
 					"\u043B\u0443", intlDoc.get().indexOf("129"));
 			assertEquals(2, list.size());
 			assertEquals(list.get(0), "\u0447\u0448");
@@ -445,7 +446,7 @@ public class HippieCompletionTest extends TestCase {
 		}
 	}
 
-	private Accessor createAccessor(Iterator suggestions, int startOffset) {
+	private Accessor createAccessor(Iterator<String> suggestions, int startOffset) {
 		return new Accessor("org.eclipse.ui.texteditor.HippieCompleteAction$CompletionState",
 				getClass().getClassLoader(), new Class[] { Iterator.class, int.class }, new
 				Object[] { suggestions, new Integer(startOffset) });
@@ -459,8 +460,9 @@ public class HippieCompletionTest extends TestCase {
 	/*
 	 * Getting completions lazily
 	 */
+	@Test
 	public void testCompletionState() throws Exception {
-		ArrayList list= new ArrayList();
+		ArrayList<String> list= new ArrayList<>();
 		Accessor state= null;
 
 		try {
@@ -521,6 +523,7 @@ public class HippieCompletionTest extends TestCase {
 	/*
 	 * Getting completions lazily
 	 */
+	@Test
 	public void testIteration() throws Exception {
 		//Check only with current document
 		IDocument openDocument= new Document("" +
@@ -529,7 +532,7 @@ public class HippieCompletionTest extends TestCase {
 				"bar2\n" +
 				"");
 
-		Iterator suggestions= fEngine.getMultipleDocumentsIterator(openDocument, new ArrayList(), "bar", 3);
+		Iterator<String> suggestions= fEngine.getMultipleDocumentsIterator(openDocument, new ArrayList<IDocument>(), "bar", 3);
 		assertEquals("1", suggestions.next());
 		assertEquals("2", suggestions.next());
 		assertEquals("", suggestions.next());
@@ -537,7 +540,7 @@ public class HippieCompletionTest extends TestCase {
 
 
 		//Check with 2 documents
-		List otherDocuments= new ArrayList();
+		List<IDocument> otherDocuments= new ArrayList<>();
 		otherDocuments.add(new Document("" +
 				"bar3\n" +
 				"bar4\n" +
@@ -573,7 +576,7 @@ public class HippieCompletionTest extends TestCase {
 				"bar0 bar1 bar" +
 				"");
 
-		suggestions= fEngine.getMultipleDocumentsIterator(openDocument, new ArrayList(), "bar", openDocument.getLength());
+		suggestions= fEngine.getMultipleDocumentsIterator(openDocument, new ArrayList<IDocument>(), "bar", openDocument.getLength());
 		assertEquals("1", suggestions.next());
 		assertEquals("0", suggestions.next());
 		assertEquals("", suggestions.next());
@@ -581,18 +584,14 @@ public class HippieCompletionTest extends TestCase {
 
 	}
 
-	public static Test suite() {
-		return new TestSuite(HippieCompletionTest.class);
-	}
-
-	private List createSuggestions(String prefix, IDocument doc) {
+	private List<String> createSuggestions(String prefix, IDocument doc) {
 		return createSuggestions(prefix, Arrays.asList(new IDocument[]{doc}));
 	}
 
-	private List createSuggestions(String prefix, List docsList) {
-		ArrayList results= new ArrayList();
-		for (Iterator i= docsList.iterator(); i.hasNext();) {
-			IDocument doc= (IDocument) i.next();
+	private List<String> createSuggestions(String prefix, List<IDocument> docsList) {
+		ArrayList<String> results= new ArrayList<>();
+		for (Iterator<IDocument> i= docsList.iterator(); i.hasNext();) {
+			IDocument doc= i.next();
 			try {
 				results.addAll(fEngine.getCompletionsForward(doc, prefix, 0, false));
 			} catch (BadLocationException e) {

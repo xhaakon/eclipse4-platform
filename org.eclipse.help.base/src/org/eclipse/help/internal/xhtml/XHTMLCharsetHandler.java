@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2012 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,6 +29,7 @@ public class XHTMLCharsetHandler extends ProcessorHandler {
 	private static final String PREFIX_CHARSET = "text/html; charset="; //$NON-NLS-1$
 	private static final String ENCODING_UTF8 = "UTF-8"; //$NON-NLS-1$
 
+	@Override
 	public short handle(UAElement element, String id) {
 		if (ELEMENT_META.equals(element.getElementName())) {
 			String content = element.getAttribute(ATTRIBUTE_CONTENT);

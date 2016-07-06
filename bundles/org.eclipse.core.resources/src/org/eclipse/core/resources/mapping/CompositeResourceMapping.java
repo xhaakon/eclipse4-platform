@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2014 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.resources.mapping;
 
@@ -20,11 +21,10 @@ import org.eclipse.core.runtime.*;
  * from a set of child mappings.
  * <p>
  * This class is not intended to be subclasses by clients.
- * 
+ *
  * @since 3.2
  */
 public final class CompositeResourceMapping extends ResourceMapping {
-
 	private final ResourceMapping[] mappings;
 	private final Object modelObject;
 	private IProject[] projects;
@@ -41,9 +41,6 @@ public final class CompositeResourceMapping extends ResourceMapping {
 		this.providerId = providerId;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.mapping.ResourceMapping#contains(org.eclipse.core.resources.mapping.ResourceMapping)
-	 */
 	@Override
 	public boolean contains(ResourceMapping mapping) {
 		for (int i = 0; i < mappings.length; i++) {
@@ -63,29 +60,20 @@ public final class CompositeResourceMapping extends ResourceMapping {
 		return mappings;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.mapping.ResourceMapping#getModelObject()
-	 */
 	@Override
 	public Object getModelObject() {
 		return modelObject;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.mapping.ResourceMapping#getModelProviderId()
-	 */
 	@Override
 	public String getModelProviderId() {
 		return providerId;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.mapping.ResourceMapping#getProjects()
-	 */
 	@Override
 	public IProject[] getProjects() {
 		if (projects == null) {
-			Set<IProject> result = new HashSet<IProject>();
+			Set<IProject> result = new HashSet<>();
 			for (int i = 0; i < mappings.length; i++) {
 				ResourceMapping mapping = mappings[i];
 				result.addAll(Arrays.asList(mapping.getProjects()));
@@ -95,24 +83,15 @@ public final class CompositeResourceMapping extends ResourceMapping {
 		return projects;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.mapping.ResourceMapping#getTraversals(org.eclipse.core.internal.resources.mapping.ResourceMappingContext, org.eclipse.core.runtime.IProgressMonitor)
-	 */
 	@Override
 	public ResourceTraversal[] getTraversals(ResourceMappingContext context, IProgressMonitor monitor) throws CoreException {
-		if (monitor == null)
-			monitor = new NullProgressMonitor();
-		try {
-			monitor.beginTask("", 100 * mappings.length); //$NON-NLS-1$
-			List<ResourceTraversal> result = new ArrayList<ResourceTraversal>();
-			for (int i = 0; i < mappings.length; i++) {
-				ResourceMapping mapping = mappings[i];
-				result.addAll(Arrays.asList(mapping.getTraversals(context, new SubProgressMonitor(monitor, 100))));
-			}
-			return result.toArray(new ResourceTraversal[result.size()]);
-		} finally {
-			monitor.done();
+		SubMonitor subMonitor = SubMonitor.convert(monitor, mappings.length);
+		List<ResourceTraversal> result = new ArrayList<>();
+		for (int i = 0; i < mappings.length; i++) {
+			ResourceMapping mapping = mappings[i];
+			Collections.addAll(result, mapping.getTraversals(context, subMonitor.newChild(1)));
 		}
+		return result.toArray(new ResourceTraversal[result.size()]);
 	}
 
 }

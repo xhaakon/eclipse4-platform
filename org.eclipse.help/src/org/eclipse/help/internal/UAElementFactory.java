@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2010 IBM Corporation and others.
+ * Copyright (c) 2007, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,10 +71,10 @@ public class UAElementFactory {
 		{ ICriterionValueDefinition.class, CriterionValueDefinition.class },
 	};
 
-	private static final Map classByElementName;
+	private static final Map<String, Class> classByElementName;
 
 	static {
-		classByElementName = Collections.synchronizedMap(new HashMap());
+		classByElementName = Collections.synchronizedMap(new HashMap<String, Class>());
 		classByElementName.put(Anchor.NAME, Anchor.class);
 		classByElementName.put(Include.NAME, Include.class);
 		classByElementName.put(Toc.NAME, Toc.class);
@@ -95,14 +95,14 @@ public class UAElementFactory {
 		classByElementName.put(ContentExtension.NAME_REPLACEMENT, ContentExtension.class);
 		classByElementName.put(ContentExtension.NAME_REPLACEMENT_LEGACY, ContentExtension.class);
 	}
-	
+
 	public static UAElement newElement(Element element) {
 		String name = element.getNodeName();
-		Class clazz = (Class)classByElementName.get(name);
+		Class<?> clazz = classByElementName.get(name);
 		if (clazz != null) {
 			try {
-				Constructor constructor = clazz.getConstructor(new Class[] { Element.class });
-				return (UAElement)constructor.newInstance(new Object[] { element });
+				Constructor<?> constructor = clazz.getConstructor(Element.class);
+				return (UAElement) constructor.newInstance(element);
 			}
 			catch (Exception e) {
 				String msg = "Error creating document model element"; //$NON-NLS-1$
@@ -114,12 +114,12 @@ public class UAElementFactory {
 
 	public static UAElement newElement(IUAElement src) {
 		for (int i=0;i<interfaceTable.length;++i) {
-			Class interfaze = interfaceTable[i][0];
-			Class clazz = interfaceTable[i][1];
+			Class<?> interfaze = interfaceTable[i][0];
+			Class<?> clazz = interfaceTable[i][1];
 			if (interfaze.isAssignableFrom(src.getClass())) {
 				try {
-					Constructor constructor = clazz.getConstructor(new Class[] { interfaze });
-					return (UAElement)constructor.newInstance(new Object[] { src });
+					Constructor constructor = clazz.getConstructor(interfaze);
+					return (UAElement) constructor.newInstance(src);
 				}
 				catch (Exception e) {
 					String msg = "Error creating document model element"; //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -110,9 +110,6 @@ public class ConcreteMarker extends MarkerNode{
         return type;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.views.markers.internal.MarkerNode#getDescription()
-     */
     @Override
 	public String getDescription() {
         return description;
@@ -188,25 +185,16 @@ public class ConcreteMarker extends MarkerNode{
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.views.markers.internal.MarkerNode#getChildren()
-	 */
 	@Override
 	public MarkerNode[] getChildren() {
 		return Util.EMPTY_MARKER_ARRAY;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.views.markers.internal.MarkerNode#getParent()
-	 */
 	@Override
 	public MarkerNode getParent() {
 		return markerCategory;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.views.markers.internal.MarkerNode#isConcrete()
-	 */
 	@Override
 	public boolean isConcrete() {
 		return true;
@@ -250,9 +238,6 @@ public class ConcreteMarker extends MarkerNode{
 		this.group = group;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.views.markers.internal.MarkerNode#getConcreteRepresentative()
-	 */
 	@Override
 	public ConcreteMarker getConcreteRepresentative() {
 		return this;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,15 +33,15 @@ import org.eclipse.ui.internal.cheatsheets.state.ICheatSheetStateManager;
  * cheat sheets inside the ReusableHelpPart.
  */
 public class CheatSheetHelpPart extends AbstractFormPart implements IHelpPart {
-	
+
 	public static final String ID = "cheatsheet-page"; //$NON-NLS-1$
-	
+
 	private CheatSheetViewer viewer;
 	private String id;
-	
+
 	/**
 	 * Constructs a new part.
-	 * 
+	 *
 	 * @param parent the parent Composite that will contain the widgets
 	 * @param toolkit the form toolkit to use for creating the widgets
 	 * @param tbm the toolbar we will contribute to
@@ -57,7 +57,7 @@ public class CheatSheetHelpPart extends AbstractFormPart implements IHelpPart {
 
 	/**
 	 * Contributes any actions we have to the toolbar.
-	 * 
+	 *
 	 * @param tbm the toolbar to contribute to
 	 */
 	private void contributeToToolBar(IToolBarManager tbm) {
@@ -70,50 +70,56 @@ public class CheatSheetHelpPart extends AbstractFormPart implements IHelpPart {
 		tbm.insertBefore("back", new Separator()); //$NON-NLS-1$
 		viewer.setExpandRestoreAction(expandRestoreAction);
 	}
-	
+
 	/**
 	 * This part doesn't require a context menu.
 	 */
+	@Override
 	public boolean fillContextMenu(IMenuManager manager) {
 		return false;
 	}
-	
+
 	/**
 	 * Returns the part's top Control.
 	 */
+	@Override
 	public Control getControl() {
 		return viewer.getControl();
 	}
-	
+
 	/**
 	 * This part doesn't use any global actions.
 	 */
+	@Override
 	public IAction getGlobalAction(String id) {
 		return null;
 	}
-	
+
 	/**
 	 * Returns the part's unique identifier.
-	 * 
+	 *
 	 * @param the unique id for the part
 	 */
+	@Override
 	public String getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Returns whether or not this part contains the given Control, which
 	 * is in focus.
-	 * 
+	 *
 	 * @param control the Control in focus
 	 */
+	@Override
 	public boolean hasFocusControl(Control control) {
 		return viewer.hasFocusControl(control);
 	}
-	
+
 	/**
 	 * Initializes the part.
 	 */
+	@Override
 	public void init(ReusableHelpPart parent, String id, IMemento memento) {
 		this.id = id;
 	}
@@ -121,33 +127,38 @@ public class CheatSheetHelpPart extends AbstractFormPart implements IHelpPart {
 	/**
 	 * No filtering required.
 	 */
+	@Override
 	public void refilter() {
 	}
-	
+
 	/**
 	 * The cheat sheet automatically saves its state; no action required.
 	 */
+	@Override
 	public void saveState(IMemento memento) {
 	}
-	
+
 	/**
 	 * Sets the visibility of the part.
-	 * 
+	 *
 	 * @param whether or not the part should be visible
 	 */
+	@Override
 	public void setVisible(boolean visible) {
 		viewer.getControl().setVisible(visible);
 	}
-	
+
 	/**
 	 * No action needed for this part here.
 	 */
+	@Override
 	public void stop() {
 	}
-	
+
 	/**
 	 * No action needed for this part here.
 	 */
+	@Override
 	public void toggleRoleFilter() {
 	}
 }

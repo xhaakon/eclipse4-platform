@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,21 +12,22 @@
 package org.eclipse.ui.internal.cheatsheets.composite.model;
 
 import java.util.ArrayList;
+
 import org.eclipse.ui.internal.cheatsheets.composite.parser.ITaskParseStrategy;
 import org.eclipse.ui.internal.cheatsheets.composite.parser.TaskGroupParseStrategy;
 import org.eclipse.ui.internal.provisional.cheatsheets.ICompositeCheatSheetTask;
 import org.eclipse.ui.internal.provisional.cheatsheets.ITaskGroup;
 
 public class TaskGroup extends AbstractTask implements ITaskGroup {
-	
+
 	public interface CompletionStrategy {
 		public int computeState(TaskGroup taskGroup);
 	}
-	
+
 	private ITaskParseStrategy parserStrategy;
 
-	private ArrayList subtasks;
-	
+	private ArrayList<ICompositeCheatSheetTask> subtasks;
+
 	private CompletionStrategy completionStrategy;
 
 	public TaskGroup(CompositeCheatSheetModel model, String id, String name, String kind) {
@@ -45,23 +46,25 @@ public class TaskGroup extends AbstractTask implements ITaskGroup {
 		return new TaskSetCompletionStrategy();
 	}
 
+	@Override
 	public ITaskParseStrategy getParserStrategy() {
 		return parserStrategy;
 	}
-	
+
+	@Override
 	public ICompositeCheatSheetTask[] getSubtasks() {
 		if (subtasks==null) return EMPTY;
-		return (ICompositeCheatSheetTask[])subtasks.toArray(new ICompositeCheatSheetTask[subtasks.size()]);
+		return subtasks.toArray(new ICompositeCheatSheetTask[subtasks.size()]);
 	}
-	
+
 	public void addSubtask(ICompositeCheatSheetTask task) {
 		if (subtasks==null) {
-			subtasks = new ArrayList();
+			subtasks = new ArrayList<>();
 		}
 		subtasks.add(task);
 		((AbstractTask)task).setParent(this);
 	}
-	
+
 	/**
 	 * Called when the state of a child has changed or when the model
 	 * has been restored.
@@ -74,7 +77,7 @@ public class TaskGroup extends AbstractTask implements ITaskGroup {
 	}
 
 	/**
-	 * Determine the state based on the state of the children, which 
+	 * Determine the state based on the state of the children, which
      * will use a different computation depending on whether this is a set,
      * sequence or choice.
 	 */

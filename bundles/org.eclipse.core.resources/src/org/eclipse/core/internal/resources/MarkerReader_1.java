@@ -1,13 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -19,7 +21,7 @@ import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.runtime.*;
 
 /**
- * This class is used to read markers from disk. This is for version 1. 
+ * This class is used to read markers from disk. This is for version 1.
  */
 public class MarkerReader_1 extends MarkerReader {
 
@@ -39,7 +41,7 @@ public class MarkerReader_1 extends MarkerReader {
 
 	/**
 	 * SAVE_FILE -> VERSION_ID RESOURCE+
-	 * VERSION_ID -> 
+	 * VERSION_ID ->
 	 * RESOURCE -> RESOURCE_PATH MARKERS_SIZE MARKER*
 	 * RESOURCE_PATH -> String
 	 * MARKERS_SIZE -> int
@@ -60,7 +62,7 @@ public class MarkerReader_1 extends MarkerReader {
 	@Override
 	public void read(DataInputStream input, boolean generateDeltas) throws IOException, CoreException {
 		try {
-			List<String> readTypes = new ArrayList<String>(5);
+			List<String> readTypes = new ArrayList<>(5);
 			while (true) {
 				IPath path = new Path(input.readUTF());
 				int markersSize = input.readInt();
@@ -79,7 +81,7 @@ public class MarkerReader_1 extends MarkerReader {
 					// Iterate over all elements and add not null ones. This saves us from copying
 					// and shrinking the array.
 					IMarkerSetElement[] infos = markers.elements;
-					ArrayList<MarkerDelta> deltas = new ArrayList<MarkerDelta>(infos.length);
+					ArrayList<MarkerDelta> deltas = new ArrayList<>(infos.length);
 					for (int i = 0; i < infos.length; i++)
 						if (infos[i] != null)
 							deltas.add(new MarkerDelta(IResourceDelta.ADDED, resource, (MarkerInfo) infos[i]));
@@ -95,17 +97,17 @@ public class MarkerReader_1 extends MarkerReader {
 		int attributesSize = input.readInt();
 		if (attributesSize == 0)
 			return null;
-		Map<String, Object> result = new MarkerAttributeMap<Object>(attributesSize);
+		Map<String, Object> result = new MarkerAttributeMap<>(attributesSize);
 		for (int j = 0; j < attributesSize; j++) {
 			String key = input.readUTF();
 			int type = input.readInt();
 			Object value = null;
 			switch (type) {
 				case ATTRIBUTE_INTEGER :
-					value = new Integer(input.readInt());
+					value = input.readInt();
 					break;
 				case ATTRIBUTE_BOOLEAN :
-					value = input.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
+					value = input.readBoolean();
 					break;
 				case ATTRIBUTE_STRING :
 					value = input.readUTF();

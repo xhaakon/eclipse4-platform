@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2009 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -85,6 +85,7 @@ public class CoreItem extends ViewItem {
 			final ImageHyperlink startButton = createButtonWithText(buttonComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_START), this, itemColor, Messages.PERFORM_TASK_TOOLTIP);
 			startButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			startButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.runPerformExecutable(startButton);
 				}
@@ -93,6 +94,7 @@ public class CoreItem extends ViewItem {
 		if (!isActionShown || executable.isConfirm() || !executable.isRequired()) {
 			final ImageHyperlink completeButton = createButtonWithText(buttonComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_COMPLETE), this, itemColor, Messages.COMPLETE_TASK_TOOLTIP);
 			completeButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.advanceItem(completeButton, true);
 				}
@@ -101,6 +103,7 @@ public class CoreItem extends ViewItem {
 		if (item.isSkip()) {
 			final ImageHyperlink skipButton = createButtonWithText(buttonComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_SKIP), this, itemColor, Messages.SKIP_TASK_TOOLTIP);
 			skipButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.advanceItem(skipButton, false);
 				}
@@ -110,7 +113,7 @@ public class CoreItem extends ViewItem {
 
 	private void createSubItemButtonComposite() {
 		buttonComposite = page.getToolkit().createComposite(bodyWrapperComposite);
-		
+
 		TableWrapLayout xbuttonlayout = new TableWrapLayout();
 		xbuttonlayout.numColumns = SUBITEM_COLUMNS;
 		xbuttonlayout.leftMargin = 0;
@@ -131,7 +134,7 @@ public class CoreItem extends ViewItem {
 		}
 		final int LABEL_MARGIN = 5; // space to the left and right of the label
 		SubItemCompositeHolder holder = new SubItemCompositeHolder(sub);
-		
+
 		//Spacer label added.
 		Label checkDoneLabel = page.getToolkit().createLabel(buttonComposite, null);
 		checkDoneLabel.setImage(CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_COMPLETE));
@@ -153,7 +156,7 @@ public class CoreItem extends ViewItem {
 			formText.setText(labelText, labelText.startsWith(IParserTags.FORM_START_TAG), false);
 			formText.setBackground(itemColor);
 			subItemLabel = formText;
-		} else { 
+		} else {
 			Text text = new Text(buttonComposite, SWT.READ_ONLY + SWT.WRAP);
 			text.setText(labelText);
 			text.setBackground(itemColor);
@@ -164,9 +167,9 @@ public class CoreItem extends ViewItem {
 		subItemLabel.setLayoutData(labelData);
 		holder.setSubitemLabel(subItemLabel);
 		added++;
-		
+
 		// Add some space to the right of the label
-		
+
 		Label spacer = page.getToolkit().createLabel(buttonComposite, null);
 		TableWrapData spacerData = new TableWrapData();
 		spacerData.maxWidth = 0;
@@ -181,7 +184,7 @@ public class CoreItem extends ViewItem {
 		} else {
 			subExecutable = sub.getExecutable();
 		}
-		
+
 		/*
 		 * Actions are disabled while inside dialogs.
 		 */
@@ -194,6 +197,7 @@ public class CoreItem extends ViewItem {
 			startButton = createButton(buttonComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_START), this, itemColor, Messages.PERFORM_TASK_TOOLTIP);
 			final ImageHyperlink finalStartButton = startButton;
 			startButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.runSubItemPerformExecutable(finalStartButton, fi);
 				}
@@ -204,6 +208,7 @@ public class CoreItem extends ViewItem {
 			added++;
 			final ImageHyperlink completeButton = createButton(buttonComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_COMPLETE), this, itemColor, Messages.COMPLETE_TASK_TOOLTIP);
 			completeButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.advanceSubItem(completeButton, true, fi);
 				}
@@ -214,6 +219,7 @@ public class CoreItem extends ViewItem {
 			added++;
 			final ImageHyperlink skipButton = createButton(buttonComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_SKIP), this, itemColor, Messages.SKIP_TASK_TOOLTIP);
 			skipButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.advanceSubItem(skipButton, false, fi);
 				}
@@ -238,7 +244,7 @@ public class CoreItem extends ViewItem {
 		TableWrapData padData = new TableWrapData();
 		padData.maxWidth = 0;
 		pad.setLayoutData(padData);
-		Label separator = new Label(buttonComposite, SWT.SEPARATOR + SWT.HORIZONTAL); 
+		Label separator = new Label(buttonComposite, SWT.SEPARATOR + SWT.HORIZONTAL);
 		TableWrapData separatorData = new TableWrapData();
 		separatorData.align = TableWrapData.FILL;
 		separatorData.grabHorizontal = true;
@@ -265,7 +271,7 @@ public class CoreItem extends ViewItem {
 
 	private AbstractExecutable getExecutable(int index) {
 		if (item.getSubItems() != null && item.getSubItems().size()>0 && listOfSubItemCompositeHolders != null) {
-			SubItemCompositeHolder s = (SubItemCompositeHolder) listOfSubItemCompositeHolders.get(index);
+			SubItemCompositeHolder s = listOfSubItemCompositeHolders.get(index);
 			if(s != null) {
 				SubItem subItem = s.getSubItem();
 				AbstractExecutable executable = subItem.getExecutable();
@@ -280,7 +286,7 @@ public class CoreItem extends ViewItem {
 		return null;
 	}
 
-	public ArrayList getListOfSubItemCompositeHolders() {
+	public ArrayList<SubItemCompositeHolder> getListOfSubItemCompositeHolders() {
 		return listOfSubItemCompositeHolders;
 	}
 
@@ -309,6 +315,7 @@ public class CoreItem extends ViewItem {
 	/**
 	 * @see org.eclipse.ui.internal.cheatsheets.ViewItem#handleButtons()
 	 */
+	@Override
 	/*package*/ void handleButtons() {
 		if(item.isDynamic()) {
 			handleDynamicButtons();
@@ -341,14 +348,14 @@ public class CoreItem extends ViewItem {
 				Control control = children[i];
 				control.dispose();
 			}
-			
+
 			refreshRequired = true;
 		} else {
 			createSubItemButtonComposite();
 		}
 
 		//Instantiate the list to store the sub item composites.
-		listOfSubItemCompositeHolders = new ArrayList(20);
+		listOfSubItemCompositeHolders = new ArrayList<>(20);
 
 		//loop throught the number of sub items, make a new composite for each sub item.
 		//Add the spacer, the label, then the buttons that are applicable for each sub item.
@@ -373,13 +380,13 @@ public class CoreItem extends ViewItem {
 				}
 
 				SubItem sub = (SubItem)repeatedSubItem.getSubItems().get(0);
-				
+
 				StringTokenizer tokenizer = new StringTokenizer(values, ","); //$NON-NLS-1$
 				while(tokenizer.hasMoreTokens()) {
 					String value = tokenizer.nextToken();
 					createSubItemButtons(sub, value, i++);
 				}
-				
+
 				// Decrement the counter by because the outer loop increments it prior to the next iteration
 				i--;
 			} else if( subItem instanceof ConditionalSubItem ) {
@@ -422,7 +429,7 @@ public class CoreItem extends ViewItem {
 					control.dispose();
 				}
 			}
-			
+
 			refreshRequired = true;
 		} else {
 			createButtonComposite();
@@ -432,7 +439,7 @@ public class CoreItem extends ViewItem {
 		AbstractExecutable performExecutable = item.getPerformWhen().getSelectedExecutable();
 
 		createButtons(performExecutable);
-		
+
 		if(refreshRequired) {
 			refresh(buttonComposite);
 		}
@@ -442,10 +449,10 @@ public class CoreItem extends ViewItem {
 		if (buttonsHandled)
 			return;
 		//Instantiate the list to store the sub item composites.
-		listOfSubItemCompositeHolders = new ArrayList(20);
+		listOfSubItemCompositeHolders = new ArrayList<>(20);
 
 		ArrayList sublist = item.getSubItems();
-		
+
 		createSubItemButtonComposite();
 
 		//loop throught the number of sub items, make a new composite for each sub item.
@@ -455,7 +462,7 @@ public class CoreItem extends ViewItem {
 		}
 		buttonsHandled = true;
 	}
-	
+
 	/*package*/
 	boolean hasConfirm() {
 		AbstractExecutable executable = getExecutable();
@@ -495,23 +502,23 @@ public class CoreItem extends ViewItem {
 
 		return buffer.toString();
 	}
-	
+
 	/*package*/
 	IStatus runExecutable(CheatSheetManager csm) {
-		return runExecutable(getExecutable(), csm);	
+		return runExecutable(getExecutable(), csm);
 	}
-	
+
 	IStatus runExecutable(AbstractExecutable executable, CheatSheetManager csm) {
 		if(executable != null) {
 			return executable.execute(csm);
-		} 
+		}
 		return Status.OK_STATUS;
 	}
 
 	/*package*/
 	byte runSubItemExecutable(CheatSheetManager csm, int index) {
 		if (item.getSubItems() != null && item.getSubItems().size()>0 && listOfSubItemCompositeHolders != null) {
-			SubItemCompositeHolder s = (SubItemCompositeHolder) listOfSubItemCompositeHolders.get(index);
+			SubItemCompositeHolder s = listOfSubItemCompositeHolders.get(index);
 			if(s != null) {
 				AbstractExecutable executable = getExecutable(index);
 
@@ -521,12 +528,12 @@ public class CoreItem extends ViewItem {
 							csm.setData("this", s.getThisValue()); //$NON-NLS-1$
 						}
 						IStatus status = runExecutable(executable, csm);
-						if ( status.isOK()) {					
+						if ( status.isOK()) {
 							return VIEWITEM_ADVANCE;
 						}
 						if ( status.getSeverity() == IStatus.ERROR) {
 							CheatSheetPlugin.getPlugin().getLog().log(status);
-						    org.eclipse.jface.dialogs.ErrorDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), null, null, status);								
+						    org.eclipse.jface.dialogs.ErrorDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), null, null, status);
 						}
 						return VIEWITEM_DONOT_ADVANCE;
 					} finally {
@@ -543,10 +550,11 @@ public class CoreItem extends ViewItem {
 	/*package*/void setButtonsHandled(boolean handled){
 		buttonsHandled = handled;
 	}
-	
-	/*package*/ void setIncomplete() {
+
+	/*package*/ @Override
+	void setIncomplete() {
 		super.setIncomplete();
-			
+
 		//check for sub items and reset their icons.
 		ArrayList l = getListOfSubItemCompositeHolders();
 		if(l != null){
@@ -555,14 +563,15 @@ public class CoreItem extends ViewItem {
 				if(s.isCompleted() || s.isSkipped())
 					s.getCheckDoneLabel().setVisible(false); //setImage(null);
 				if(s.getStartButton() != null) {
-					s.getStartButton().setImage(CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_START));	
+					s.getStartButton().setImage(CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_START));
 					s.getStartButton().setToolTipText(Messages.PERFORM_TASK_TOOLTIP);
 				}
-			}					
-		}	
+			}
+		}
 	}
 
-	/*package*/ void setRestartImage() {
+	/*package*/ @Override
+	void setRestartImage() {
 		ImageHyperlink startButton = getStartButton();
 		if (startButton != null) {
 			startButton.setImage(CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_RESTART));
@@ -571,7 +580,8 @@ public class CoreItem extends ViewItem {
 		}
 	}
 
-	/*package*/ void setStartImage() {
+	/*package*/ @Override
+	void setStartImage() {
 		ImageHyperlink startButton = getStartButton();
 		if (startButton != null) {
 			startButton.setImage(CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_START));
@@ -582,17 +592,13 @@ public class CoreItem extends ViewItem {
 		}
 	}
 
+	@Override
 	boolean hasCompletionMessage() {
 		return item.getCompletionMessage() != null;
 	}
-	
-	
-	/*
-	 * (non-Javadoc)
-	 * Create a composite to hold the message defined in an onCompletion element
-	 * and a button to advance to the next step or return to the introduction if 
-	 * this is the last step.
-	 */
+
+
+	@Override
 	void createCompletionComposite(boolean isFinalItem) {
 		String completionMessage = viewer.getManager().performVariableSubstitution
 		    (item.getCompletionMessage());
@@ -615,10 +621,11 @@ public class CoreItem extends ViewItem {
 			final ImageHyperlink completeButton = createButtonWithText(
 					completionComposite,
 					getCompletionButtonIcon(isFinalItem),
-					this, 
-					backgroundColor, 
+					this,
+					backgroundColor,
 					getCompletionButtonTooltip(isFinalItem));
 			completeButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					viewer.advanceItem(completeButton, true);
 				}
@@ -643,26 +650,27 @@ public class CoreItem extends ViewItem {
 				.getImage(
 						ICheatSheetResource.CHEATSHEET_ITEM_BUTTON_COMPLETE);
 	}
-	
+
 	private String getCompletionButtonTooltip(boolean isFinalItem) {
 		if (isFinalItem) {
 			return Messages.RETURN_TO_INTRO_TOOLTIP;
 		}
-		return Messages.ADVANCE_TASK_TOOLTIP;	
+		return Messages.ADVANCE_TASK_TOOLTIP;
 	}
-	
+
 	private void refresh(Composite composite) {
 		composite.layout();
 		getMainItemComposite().layout();
 		page.getForm().reflow(true);
 	}
-	
+
 	public void refreshItem() {
 		if (buttonComposite != null) {
 			refresh(buttonComposite);
 		}
 	}
-	
+
+	@Override
 	protected void setFocus() {
 		ArrayList list = getListOfSubItemCompositeHolders();
 		Control subitemLabel = null;
@@ -673,7 +681,7 @@ public class CoreItem extends ViewItem {
         		if (!holder.isCompleted() && !holder.isSkipped()) {
         			subitemLabel = holder.getSubitemLabel();
         		}
-        	}  	
+        	}
         }
         if (subitemLabel != null) {
     		FormToolkit.ensureVisible(subitemLabel);
@@ -687,5 +695,5 @@ public class CoreItem extends ViewItem {
     		super.setFocus();
         }
 	}
-		
+
 }

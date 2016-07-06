@@ -30,17 +30,18 @@ import org.eclipse.ui.part.Page;
 /**
  * Displays a history page combined with the compare/merge infrastructure. This only works properly if the
  * history page adapts to an {@link IHistoryCompareAdapter}.
- * 
+ *
  * @deprecated use {@link HistoryPageCompareEditorInput}
  * @since 3.2
  */
+@Deprecated
 public class HistoryPageSaveablePart extends PageSaveablePart {
 
 	private IHistoryPage historyPage;
 	private DialogHistoryPageSite site;
 	private final Object object;
 	private final IHistoryPageSource pageSource;
-	
+
 	/**
 	 * Show the history for the object in a dialog. The history will only be
 	 * shown if an {@link IHistoryPageSource} can be found for the object.
@@ -71,7 +72,7 @@ public class HistoryPageSaveablePart extends PageSaveablePart {
 		IResource resource = Utils.getResource(object);
 		return (resource != null && resource.getType() == IResource.FILE);
 	}
-	
+
 	/**
 	 * Create a history page part for the given page and object.
 	 * @param shell the parent shell
@@ -87,6 +88,7 @@ public class HistoryPageSaveablePart extends PageSaveablePart {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#getTitle()
 	 */
+	@Override
 	public String getTitle() {
 		return historyPage.getName();
 	}
@@ -94,6 +96,7 @@ public class HistoryPageSaveablePart extends PageSaveablePart {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#getTitleImage()
 	 */
+	@Override
 	public Image getTitleImage() {
 		return null;
 	}
@@ -101,12 +104,14 @@ public class HistoryPageSaveablePart extends PageSaveablePart {
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.IContentChangeListener#contentChanged(org.eclipse.compare.IContentChangeNotifier)
 	 */
+	@Override
 	public void contentChanged(IContentChangeNotifier source) {
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#createPage(org.eclipse.swt.widgets.Composite, org.eclipse.jface.action.ToolBarManager)
 	 */
+	@Override
 	protected Control createPage(Composite parent, ToolBarManager toolBarManager) {
 		site = new DialogHistoryPageSite(getShell());
 		historyPage = (IHistoryPage)pageSource.createPage(object);
@@ -120,17 +125,19 @@ public class HistoryPageSaveablePart extends PageSaveablePart {
 		setPageDescription(description);
 		return ((Page) historyPage).getControl();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#getPageSelectionProvider()
 	 */
+	@Override
 	protected final ISelectionProvider getSelectionProvider() {
 		return site.getSelectionProvider();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#getCompareInput(org.eclipse.jface.viewers.ISelection)
 	 */
+	@Override
 	protected ICompareInput getCompareInput(ISelection selection) {
 		ICompareInput compareInput = super.getCompareInput(selection);
 		if (compareInput != null)
@@ -147,20 +154,22 @@ public class HistoryPageSaveablePart extends PageSaveablePart {
 		}
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageSaveablePart#prepareInput(org.eclipse.compare.structuremergeviewer.ICompareInput, org.eclipse.compare.CompareConfiguration, org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected void prepareInput(ICompareInput input, CompareConfiguration configuration, IProgressMonitor monitor) throws InvocationTargetException {
 		IHistoryCompareAdapter compareAdapter = (IHistoryCompareAdapter) Utils.getAdapter(historyPage, IHistoryCompareAdapter.class);
 		if (compareAdapter != null){
 			compareAdapter.prepareInput(input, configuration, monitor);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.SaveablePartAdapter#dispose()
 	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 		if (historyPage != null)

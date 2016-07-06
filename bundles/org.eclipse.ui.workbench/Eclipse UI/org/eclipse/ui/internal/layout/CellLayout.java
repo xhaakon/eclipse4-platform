@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -337,9 +337,6 @@ public class CellLayout extends Layout {
         cachedColMin = null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.swt.widgets.Layout#computeSize(org.eclipse.swt.widgets.Composite, int, int, boolean)
-     */
     @Override
 	protected Point computeSize(Composite composite, int wHint, int hHint,
             boolean flushCache) {
@@ -806,9 +803,6 @@ public class CellLayout extends Layout {
         return result;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.swt.widgets.Layout#layout(org.eclipse.swt.widgets.Composite, boolean)
-     */
     @Override
 	protected void layout(Composite composite, boolean flushCache) {
         Control[] children = composite.getChildren();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,20 +30,12 @@ public abstract class AbstractWorkbenchBrowserSupport implements
 	public AbstractWorkbenchBrowserSupport() {
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.browser.IWorkbenchBrowserSupport#getExternalBrowser()
-	 */
 	@Override
 	public IWebBrowser getExternalBrowser() throws PartInitException {
 		return createBrowser(AS_EXTERNAL, SHARED_EXTERNAL_BROWSER_ID, null,
 				null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.browser.IWorkbenchBrowserSupport#isInternalWebBrowserAvailable()
-	 */
 	@Override
 	public boolean isInternalWebBrowserAvailable() {
 		return false;

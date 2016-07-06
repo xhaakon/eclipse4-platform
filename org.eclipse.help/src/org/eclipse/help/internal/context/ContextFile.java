@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ public class ContextFile {
 
 	private String bundleId;
 	private String file;
-	
+
 	/*
 	 * Creates a new context file reference.
 	 */
@@ -40,10 +40,11 @@ public class ContextFile {
 	public String getFile() {
 		return file;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof ContextFile) {
 			if (obj == this) {
@@ -53,10 +54,11 @@ public class ContextFile {
 		}
 		return false;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
+	@Override
 	public int hashCode() {
 		return bundleId.hashCode() + file.hashCode();
 	}

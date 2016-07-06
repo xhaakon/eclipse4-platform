@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,7 @@ import org.xml.sax.SAXException;
 public class CriteriaDefinitionFileParser {
 
 	private DocumentReader reader;
-	
+
     public CriteriaDefinitionContribution parse(CriteriaDefinitionFile criteriaDefinitionFile) throws IOException, SAXException, ParserConfigurationException {
 		if (reader == null) {
 			reader = new CriteriaDefinitionDocumentReader();

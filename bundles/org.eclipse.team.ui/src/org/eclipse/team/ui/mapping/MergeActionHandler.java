@@ -23,11 +23,11 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 /**
  * An abstract superclass that enables models to create handlers
  * for the basic merge operations (merge, overwrite and mark-as-merged).
- * This class makes use of a {@link SynchronizationOperation} to determine its 
+ * This class makes use of a {@link SynchronizationOperation} to determine its
  * enablement state and execute the handler. Enablement is determined
  * using {@link SynchronizationOperation#shouldRun()} and the handler will
  * invoke {@link SynchronizationOperation#run()} when executed.
- * 
+ *
  * @since 3.2
  * @see SynchronizationActionProvider
  */
@@ -37,14 +37,15 @@ public abstract class MergeActionHandler extends AbstractHandler {
 	private boolean enabled = false;
 	private IStructuredSelection selection;
 	private ISelectionChangedListener listener = new ISelectionChangedListener() {
+		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
 			updatedEnablement(event);
 		}
 	};
-	
+
 	/**
 	 * Return an instance of the default handler for the given merge action id.
-	 * Note that this handler must be disposed by the caller when it is no longer 
+	 * Note that this handler must be disposed by the caller when it is no longer
 	 * needed.
 	 * @param mergeActionId the merge action id
 	 * @param configuration the synchronization page configuration
@@ -77,10 +78,11 @@ public abstract class MergeActionHandler extends AbstractHandler {
 		selectionProvider.addSelectionChangedListener(listener);
 		updateEnablement((IStructuredSelection)selectionProvider.getSelection());
 	}
-	
+
 	/**
-	 * Deregister this handler from selection change events. 
+	 * Deregister this handler from selection change events.
 	 */
+	@Override
 	public void dispose() {
 		getConfiguration().getSite().getSelectionProvider().removeSelectionChangedListener(listener);
 	}
@@ -120,14 +122,15 @@ public abstract class MergeActionHandler extends AbstractHandler {
 	protected final IStructuredSelection getStructuredSelection() {
 		return selection;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.AbstractHandler#isEnabled()
 	 */
+	@Override
 	public boolean isEnabled() {
 		return enabled;
 	}
-	
+
 	/**
 	 * Set the enablement of this handler.
 	 * @param isEnabled whether the handler is enabled
@@ -138,10 +141,11 @@ public abstract class MergeActionHandler extends AbstractHandler {
 			fireHandlerChanged(new HandlerEvent(this, true, false));
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.ExecutionEvent)
 	 */
+	@Override
 	public Object execute(final ExecutionEvent event) throws ExecutionException {
 		try {
 			SynchronizationOperation operation = getOperation();
@@ -165,7 +169,7 @@ public abstract class MergeActionHandler extends AbstractHandler {
 	 * @return a synchronization operation
 	 */
 	protected abstract SynchronizationOperation getOperation();
-	
+
 	/**
 	 * Return the saveable that is the target of this handler.
 	 * By default, the saveable of this handlers operation is returned.

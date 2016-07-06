@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,11 +18,11 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 	private boolean skip;
 	private boolean dialog;
 	private ArrayList itemExtensions;
-	
+
 	private AbstractExecutable executable;
 	private PerformWhen performWhen;
-	
-	private ArrayList subItems;
+
+	private ArrayList<AbstractSubItem> subItems;
 	private String completionMessage;
 
 	/**
@@ -31,14 +31,14 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 	public Item() {
 		super();
 	}
-	
+
 	public Item(String title, String description, String href, String contextId, boolean skip, boolean dialog) {
 		super(description, href, contextId);
 		this.title = title;
 		this.skip = skip;
 		this.dialog = dialog;
 	}
-	
+
 	/**
 	 * Returns the title.
 	 * @return String
@@ -69,7 +69,7 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 	public boolean isDialog() {
 		return this.dialog;
 	}
-	
+
 	/**
 	 * Returns the skip.
 	 * @return boolean
@@ -85,7 +85,7 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 	public void setDialog(boolean dialog) {
 		this.dialog = dialog;
 	}
-	
+
 	/**
 	 * @param skip The skip to set.
 	 */
@@ -105,38 +105,41 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 	 * Sets the item extensions for this item.
 	 * @param exts the extensions to set
 	 */
-	public void setItemExtensions(ArrayList exts){
-		this.itemExtensions = exts;	
+	public void setItemExtensions(ArrayList exts) {
+		this.itemExtensions = exts;
 	}
-	
+
 	/**
 	 * Returns the item extensions, if any, for this item,.
 	 * @return list of the extensions or <code>null</code>
 	 */
-	public ArrayList getItemExtensions(){
+	public ArrayList getItemExtensions() {
 		return itemExtensions;
 	}
-	
+
 	/**
 	 * @return Returns the performWhen.
 	 */
+	@Override
 	public PerformWhen getPerformWhen() {
 		return performWhen;
 	}
-	
+
 	/**
 	 * @param performWhen The performWhen to set.
 	 */
+	@Override
 	public void setPerformWhen(PerformWhen performWhen) {
 		this.performWhen = performWhen;
 	}
-	
+
 	/**
 	 * @param subItem the SubItem to add.
 	 */
+	@Override
 	public void addSubItem(AbstractSubItem subItem) {
 		if(subItems == null) {
-			subItems = new ArrayList();
+			subItems = new ArrayList<>();
 		}
 		subItems.add(subItem);
 	}
@@ -144,14 +147,15 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 	/**
 	 * @return Returns the subItems.
 	 */
-	public ArrayList getSubItems() {
+	@Override
+	public ArrayList<AbstractSubItem> getSubItems() {
 		return subItems;
 	}
-	
+
 	private boolean hasDynamicSubItems() {
 		if( subItems != null) {
-			for (Iterator iter = subItems.iterator(); iter.hasNext();) {
-				AbstractSubItem subItem = (AbstractSubItem)iter.next();
+			for (Iterator<AbstractSubItem> iter = subItems.iterator(); iter.hasNext();) {
+				AbstractSubItem subItem = iter.next();
 				if( subItem instanceof RepeatedSubItem ||
 					subItem instanceof ConditionalSubItem ||
 					subItem instanceof SubItem && ((SubItem)subItem).getPerformWhen() != null ) {
@@ -163,18 +167,20 @@ public class Item extends Intro implements IExecutableItem, IPerformWhenItem, IS
 		return false;
 	}
 
+	@Override
 	public AbstractExecutable getExecutable() {
 		return executable;
 	}
 
+	@Override
 	public void setExecutable(AbstractExecutable executable) {
-		this.executable = executable;	
+		this.executable = executable;
 	}
 
 	public void setCompletionMessage(String message) {
-		this.completionMessage = message;	
+		this.completionMessage = message;
 	}
-	
+
 	public String getCompletionMessage() {
 		return completionMessage;
 	}

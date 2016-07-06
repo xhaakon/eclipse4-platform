@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -98,6 +98,7 @@ public final class MoveTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#doCopy
 	 */
+	@Override
 	protected TextEdit doCopy() {
 		return new MoveTargetEdit(this);
 	}
@@ -105,6 +106,7 @@ public final class MoveTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#postProcessCopy
 	 */
+	@Override
 	protected void postProcessCopy(TextEditCopier copier) {
 		if (fSource != null) {
 			MoveTargetEdit target= (MoveTargetEdit)copier.getCopy(this);
@@ -117,6 +119,7 @@ public final class MoveTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#accept0
 	 */
+	@Override
 	protected void accept0(TextEditVisitor visitor) {
 		boolean visitChildren= visitor.visit(this);
 		if (visitChildren) {
@@ -129,13 +132,15 @@ public final class MoveTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#traverseConsistencyCheck
 	 */
-	int traverseConsistencyCheck(TextEditProcessor processor, IDocument document, List sourceEdits) {
+	@Override
+	int traverseConsistencyCheck(TextEditProcessor processor, IDocument document, List<List<TextEdit>> sourceEdits) {
 		return super.traverseConsistencyCheck(processor, document, sourceEdits) + 1;
 	}
 
 	/*
 	 * @see TextEdit#performConsistencyCheck
 	 */
+	@Override
 	void performConsistencyCheck(TextEditProcessor processor, IDocument document) throws MalformedTreeException {
 		if (fSource == null)
 			throw new MalformedTreeException(getParent(), this, TextEditMessages.getString("MoveTargetEdit.no_source")); //$NON-NLS-1$
@@ -148,6 +153,7 @@ public final class MoveTargetEdit extends TextEdit {
 	/*
 	 * @see TextEdit#performDocumentUpdating
 	 */
+	@Override
 	int performDocumentUpdating(IDocument document) throws BadLocationException {
 		String source= fSource.getContent();
 		document.replace(getOffset(), getLength(), source);
@@ -157,7 +163,7 @@ public final class MoveTargetEdit extends TextEdit {
 		if (sourceRoot != null) {
 			sourceRoot.internalMoveTree(getOffset());
 			TextEdit[] sourceChildren= sourceRoot.removeChildren();
-			List children= new ArrayList(sourceChildren.length);
+			List<TextEdit> children= new ArrayList<>(sourceChildren.length);
 			for (int i= 0; i < sourceChildren.length; i++) {
 				TextEdit child= sourceChildren[i];
 				child.internalSetParent(this);
@@ -174,6 +180,7 @@ public final class MoveTargetEdit extends TextEdit {
 	/*
 	 * @see org.eclipse.text.edits.TextEdit#traversePassThree
 	 */
+	@Override
 	int traverseRegionUpdating(TextEditProcessor processor, IDocument document, int accumulatedDelta, boolean delete) {
 		// the children got already updated / normalized while they got removed
 		// from the source edit. So we only have to adjust the offset computed to
@@ -186,6 +193,7 @@ public final class MoveTargetEdit extends TextEdit {
 		return accumulatedDelta + fDelta;
 	}
 
+	@Override
 	boolean deleteChildren() {
 		return false;
 	}

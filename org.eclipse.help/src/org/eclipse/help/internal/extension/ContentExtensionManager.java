@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 package org.eclipse.help.internal.extension;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,11 +35,11 @@ public class ContentExtensionManager {
 	private static final String ELEMENT_NAME_CONTENT_EXTENSION_PROVIDER = "contentExtensionProvider"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_NAME_CLASS = "class"; //$NON-NLS-1$
 	private static final ContentExtension[] EMPTY_ARRAY = new ContentExtension[0];
-	
+
 	private AbstractContentExtensionProvider[] contentExtensionProviders;
-	private Map extensionsByPath;
-	private Map replacesByPath;
-	
+	private Map<String, List<ContentExtension>> extensionsByPath;
+	private Map<String, List<ContentExtension>> replacesByPath;
+
 	/*
 	 * Returns all known extensions for the given locale.
 	 */
@@ -48,18 +47,18 @@ public class ContentExtensionManager {
 		if (extensionsByPath == null) {
 			loadExtensions(locale);
 		}
-		List extensions = new ArrayList();
-		Iterator iter = extensionsByPath.values().iterator();
+		List<ContentExtension> extensions = new ArrayList<>();
+		Iterator<List<ContentExtension>> iter = extensionsByPath.values().iterator();
 		while (iter.hasNext()) {
-			extensions.addAll((Collection)iter.next());
+			extensions.addAll(iter.next());
 		}
 		iter = replacesByPath.values().iterator();
 		while (iter.hasNext()) {
-			extensions.addAll((Collection)iter.next());
+			extensions.addAll(iter.next());
 		}
-		return (ContentExtension[])extensions.toArray(new ContentExtension[extensions.size()]);
+		return extensions.toArray(new ContentExtension[extensions.size()]);
 	}
-	
+
 	/*
 	 * Get all extensions of the given type whose target matches the given path.
 	 */
@@ -67,14 +66,15 @@ public class ContentExtensionManager {
 		if (extensionsByPath == null) {
 			loadExtensions(locale);
 		}
-		Map map = (type == ContentExtension.CONTRIBUTION ? extensionsByPath : replacesByPath);
-		List extensions = (List)map.get(path);
+		Map<String, List<ContentExtension>> map = (type == ContentExtension.CONTRIBUTION ? extensionsByPath
+				: replacesByPath);
+		List<ContentExtension> extensions = map.get(path);
 		if (extensions != null) {
-			return (ContentExtension[])extensions.toArray(new ContentExtension[extensions.size()]);
+			return extensions.toArray(new ContentExtension[extensions.size()]);
 		}
 		return EMPTY_ARRAY;
 	}
-	
+
 	/*
 	 * Clears all cached data, forcing the manager to query the
 	 * providers again next time a request is made.
@@ -93,8 +93,8 @@ public class ContentExtensionManager {
 	 * type.
 	 */
 	private void loadExtensions(String locale) {
-		extensionsByPath = new HashMap();
-		replacesByPath = new HashMap();
+		extensionsByPath = new HashMap<>();
+		replacesByPath = new HashMap<>();
 		contentExtensionProviders = getContentExtensionProviders();
 		for (int i=0;i<contentExtensionProviders.length;++i) {
 			IContentExtension[] extensions = contentExtensionProviders[i].getContentExtensions(locale);
@@ -104,28 +104,29 @@ public class ContentExtensionManager {
 				String path = extension.getPath();
 				if (content != null && path != null) {
 					int type = extension.getType();
-					Map map = (type == IContentExtension.CONTRIBUTION ? extensionsByPath : replacesByPath);
+					Map<String, List<ContentExtension>> map = (type == IContentExtension.CONTRIBUTION ? extensionsByPath
+							: replacesByPath);
 					content = normalizePath(content);
 					path = normalizePath(path);
 					extension.setContent(content);
 					extension.setPath(path);
-					List list = (List)map.get(path);
+					List<ContentExtension> list = map.get(path);
 					if (list == null) {
-						list = new ArrayList();
+						list = new ArrayList<>();
 						map.put(path, list);
 					}
 					list.add(extension);
 				}
 			}
-		}		
+		}
 	}
-	
+
 	/*
 	 * Returns all registered content extension providers (potentially cached).
 	 */
 	private AbstractContentExtensionProvider[] getContentExtensionProviders() {
 		if (contentExtensionProviders == null) {
-			List providers = new ArrayList();
+			List<AbstractContentExtensionProvider> providers = new ArrayList<>();
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
 			IConfigurationElement[] elements = registry.getConfigurationElementsFor(EXTENSION_POINT_ID_CONTENT_EXTENSION);
 			for (int i=0;i<elements.length;++i) {
@@ -142,11 +143,11 @@ public class ContentExtensionManager {
 					}
 				}
 			}
-			contentExtensionProviders = (AbstractContentExtensionProvider[])providers.toArray(new AbstractContentExtensionProvider[providers.size()]);
+			contentExtensionProviders = providers.toArray(new AbstractContentExtensionProvider[providers.size()]);
 		}
 		return contentExtensionProviders;
 	}
-	
+
 	/*
 	 * Normalizes the given path by adding a leading slash if one doesn't
 	 * exist, and converting the final slash into a '#' if it is thought to
@@ -156,10 +157,10 @@ public class ContentExtensionManager {
 		int bundleStart, bundleEnd;
 		int pathStart, pathEnd;
 		int elementStart, elementEnd;
-		
+
 		bundleStart = path.charAt(0) == '/' ? 1 : 0;
 		bundleEnd = path.indexOf('/', bundleStart);
-		
+
 		pathStart = bundleEnd + 1;
 		pathEnd = path.indexOf('#', pathStart);
 		if (pathEnd == -1) {
@@ -178,10 +179,10 @@ public class ContentExtensionManager {
 				pathEnd = path.length();
 			}
 		}
-		
+
 		elementStart = Math.min(pathEnd + 1, path.length());
 		elementEnd = path.length();
-		
+
 		if (bundleEnd > bundleStart && pathStart > bundleEnd && pathEnd > pathStart && elementStart >= pathEnd && elementEnd >= elementStart) {
 			String bundleId = path.substring(bundleStart, bundleEnd);
 			String relativePath = path.substring(pathStart, pathEnd);

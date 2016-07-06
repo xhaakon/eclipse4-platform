@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -77,17 +78,17 @@ public class ContentDetectHelper {
 		return extensionCount.intValue();
 	}
 
-	public void saveContributors(Set contributors) {
+	public void saveContributors(Set<String> contributors) {
 		XMLMemento writeMemento = XMLMemento.createWriteRoot(ROOT);
-		for (Iterator iter = contributors.iterator(); iter.hasNext();) {
+		for (Iterator<String> iter = contributors.iterator(); iter.hasNext();) {
 			IMemento childMemento = writeMemento.createChild(CONTRIBUTOR);
-			childMemento.putString(NAME, (String)iter.next());
+			childMemento.putString(NAME, iter.next());
 		}
 		saveMemento(writeMemento, EXTENSION_NAMES_XML);
 	}
 	
-	public Set getContributors() {	
-		Set contributors = new HashSet();
+	public Set<String> getContributors() {
+		Set<String> contributors = new HashSet<>();
 		XMLMemento readMemento = getReadMemento(EXTENSION_NAMES_XML);
 		if (readMemento == null) {
 			return contributors;
@@ -107,7 +108,7 @@ public class ContentDetectHelper {
 			final File stateFile = getStateFile(filename); 
 
 			FileInputStream input = new FileInputStream(stateFile);
-			reader = new InputStreamReader(input, "utf-8"); //$NON-NLS-1$
+			reader = new InputStreamReader(input, StandardCharsets.UTF_8);
 			memento = XMLMemento.createReadRoot(reader);
 
 			
@@ -134,7 +135,7 @@ public class ContentDetectHelper {
 		OutputStreamWriter writer = null;
 		try {
 			FileOutputStream stream = new FileOutputStream(stateFile);
-			writer = new OutputStreamWriter(stream, "utf-8"); //$NON-NLS-1$
+			writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
 			memento.save(writer);
 		} catch (IOException e) {
 			stateFile.delete();
@@ -155,9 +156,9 @@ public class ContentDetectHelper {
 		return stateFile;
 	}
 	
-	public Set findNewContributors(Set contributors, Set previousContributors) {
-		Set result = new HashSet(contributors);
-		for (Iterator iter = previousContributors.iterator(); iter.hasNext();) {
+	public Set<String> findNewContributors(Set<String> contributors, Set<String> previousContributors) {
+		Set<String> result = new HashSet<>(contributors);
+		for (Iterator<String> iter = previousContributors.iterator(); iter.hasNext();) {
 			result.remove(iter.next());
 		}
 		return result;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,7 +65,7 @@ public class BrowserManager {
 
 	private BrowserDescriptor internalBrowserDesc;
 
-	private Collection<IBrowser> browsers = new ArrayList<IBrowser>();
+	private Collection<IBrowser> browsers = new ArrayList<>();
 
 	private boolean alwaysUseExternal = false;
 
@@ -130,15 +130,19 @@ public class BrowserManager {
 			// If no browsers at all, use the Null Browser Adapter
 			defaultBrowserDesc = new BrowserDescriptor("", "Null Browser", //$NON-NLS-1$ //$NON-NLS-2$
 					new IBrowserFactory() {
+						@Override
 						public boolean isAvailable() {
 							return true;
 						}
 
+						@Override
 						public IBrowser createBrowser() {
 							return new IBrowser() {
+								@Override
 								public void close() {
 								}
 
+								@Override
 								public void displayURL(String url) {
 									HelpBasePlugin
 											.logError(
@@ -151,21 +155,26 @@ public class BrowserManager {
 											.displayError(msg);
 								}
 
+								@Override
 								public boolean isCloseSupported() {
 									return false;
 								}
 
+								@Override
 								public boolean isSetLocationSupported() {
 									return false;
 								}
 
+								@Override
 								public boolean isSetSizeSupported() {
 									return false;
 								}
 
+								@Override
 								public void setLocation(int width, int height) {
 								}
 
+								@Override
 								public void setSize(int x, int y) {
 								}
 							};
@@ -201,7 +210,7 @@ public class BrowserManager {
 	private BrowserDescriptor[] createBrowserDescriptors() {
 		if (this.browsersDescriptors != null)
 			return this.browsersDescriptors;
-		Collection<BrowserDescriptor> bDescriptors = new ArrayList<BrowserDescriptor>();
+		Collection<BrowserDescriptor> bDescriptors = new ArrayList<>();
 		IConfigurationElement configElements[] = Platform
 				.getExtensionRegistry().getConfigurationElementsFor(
 						HelpBasePlugin.PLUGIN_ID, "browser"); //$NON-NLS-1$

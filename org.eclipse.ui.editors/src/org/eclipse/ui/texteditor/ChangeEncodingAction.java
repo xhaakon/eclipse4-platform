@@ -89,9 +89,7 @@ public class ChangeEncodingAction extends TextEditorAction {
 		fDialogTitle= getString(bundle, key, null);
 	}
 
-	/*
-	 * @see org.eclipse.jface.action.Action#run()
-	 */
+	@Override
 	public void run() {
 		final IResource resource= getResource();
 		final Shell parentShell= getTextEditor().getSite().getShell();
@@ -105,17 +103,13 @@ public class ChangeEncodingAction extends TextEditorAction {
 			private AbstractEncodingFieldEditor fEncodingEditor;
 			private IPreferenceStore store= null;
 
-			/*
-			 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-			 */
+			@Override
 			protected void configureShell(Shell newShell) {
 				super.configureShell(newShell);
 				newShell.setText(fDialogTitle);
 			}
 
-			/*
-			 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-			 */
+			@Override
 			protected Control createDialogArea(Composite parent) {
 				Composite composite= (Composite)super.createDialogArea(parent);
 
@@ -132,6 +126,7 @@ public class ChangeEncodingAction extends TextEditorAction {
 				composite.setFont(parent.getFont());
 
 				DialogPage page= new MessageDialogPage(composite) {
+					@Override
 					public void setErrorMessage(String newMessage) {
 						super.setErrorMessage(newMessage);
 						setButtonEnabledState(IDialogConstants.OK_ID, newMessage == null);
@@ -169,17 +164,13 @@ public class ChangeEncodingAction extends TextEditorAction {
 				return composite;
 			}
 
-			/*
-			 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-			 */
+			@Override
 			protected void createButtonsForButtonBar(Composite parent) {
 				createButton(parent, APPLY_ID, TextEditorMessages.ChangeEncodingAction_button_apply_label, false);
 				super.createButtonsForButtonBar(parent);
 			}
 
-			/*
-			 * @see org.eclipse.jface.dialogs.Dialog#buttonPressed(int)
-			 */
+			@Override
 			protected void buttonPressed(int buttonId) {
 				if (buttonId == APPLY_ID)
 					apply();
@@ -187,9 +178,7 @@ public class ChangeEncodingAction extends TextEditorAction {
 					super.buttonPressed(buttonId);
 			}
 
-			/*
-			 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-			 */
+			@Override
 			protected void okPressed() {
 				apply();
 				super.okPressed();
@@ -207,9 +196,7 @@ public class ChangeEncodingAction extends TextEditorAction {
 		dialog.open();
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IUpdate#update()
-	 */
+	@Override
 	public void update() {
 		setEnabled((getResource() != null || getEncodingSupport() != null) && !getTextEditor().isDirty());
 	}
@@ -221,7 +208,7 @@ public class ChangeEncodingAction extends TextEditorAction {
 	 */
 	private IResource getResource() {
 		if (getTextEditor() != null && getTextEditor().getEditorInput() != null)
-			return (IResource)getTextEditor().getEditorInput().getAdapter(IResource.class);
+			return getTextEditor().getEditorInput().getAdapter(IResource.class);
 
 		return null;
 	}
@@ -233,7 +220,7 @@ public class ChangeEncodingAction extends TextEditorAction {
 	 */
 	private IEncodingSupport getEncodingSupport() {
 		if (getTextEditor() != null)
-			return (IEncodingSupport)getTextEditor().getAdapter(IEncodingSupport.class);
+			return getTextEditor().getAdapter(IEncodingSupport.class);
 
 		return null;
 	}

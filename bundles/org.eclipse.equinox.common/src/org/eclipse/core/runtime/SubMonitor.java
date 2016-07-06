@@ -10,9 +10,16 @@
  *     Stefan Xenos - bug 174539 - add a 1-argument convert(...) method     
  *     Stefan Xenos - bug 174040 - SubMonitor#convert doesn't always set task name
  *     Stefan Xenos - bug 206942 - updated javadoc to recommend better constants for infinite progress
+ *     Stefan Xenos (Google) - bug 475747 - Support efficient, convenient cancellation checks in SubMonitor
+ *     Stefan Xenos (Google) - bug 476924 - Add a SUPPRESS_ISCANCELED flag to SubMonitor
  *     IBM Corporation - ongoing maintenance
  *******************************************************************************/
 package org.eclipse.core.runtime;
+
+import java.util.HashSet;
+import java.util.Set;
+import org.eclipse.core.internal.runtime.RuntimeLog;
+import org.eclipse.core.internal.runtime.TracingOptions;
 
 /**
  * <p>A progress monitor that uses a given amount of work ticks from a parent monitor. This is intended as a 
@@ -35,7 +42,7 @@ package org.eclipse.core.runtime;
  * <ul>
  * <li>At the start of your method, use <code>SubMonitor.convert(...).</code> to convert the IProgressMonitor 
  * into a SubMonitor. </li>
- * <li>Use <code>SubMonitor.newChild(...)</code> whenever you need to call another method that 
+ * <li>Use <code>SubMonitor.split(...)</code> whenever you need to call another method that 
  * accepts an IProgressMonitor.</li>
  * </ul>
  * <p></p>
@@ -69,7 +76,7 @@ package org.eclipse.core.runtime;
  * <p>This example demonstrates how the recommended usage of <code>SubMonitor</code> makes it unnecessary to call
  * IProgressMonitor.done() in most situations.</p>
  * 
- * <p>It is never necessary to call done() on a monitor obtained from <code>convert</code> or <code>progress.newChild()</code>. 
+ * <p>It is never necessary to call done() on a monitor obtained from <code>convert</code> or <code>progress.split()</code>. 
  * In this example, there is no guarantee that <code>monitor</code> is an instance of <code>SubMonitor</code>, making it 
  * necessary to call <code>monitor.done()</code>. The JavaDoc contract makes this the responsibility of the caller.</p> 
  * 
@@ -83,13 +90,13 @@ package org.eclipse.core.runtime;
  *          SubMonitor progress = SubMonitor.convert(monitor, 100);
  *              
  *          // Use 30% of the progress to do some work
- *          doSomeWork(progress.newChild(30));
+ *          doSomeWork(progress.split(30));
  *          
  *          // Advance the monitor by another 30%
  *          progress.worked(30);
  *          
  *          // Use the remaining 40% of the progress to do some more work
- *          doSomeWork(progress.newChild(40)); 
+ *          doSomeWork(progress.split(40)); 
  *      }
  * </pre>
  *
@@ -109,18 +116,16 @@ package org.eclipse.core.runtime;
  *          SubMonitor progress = SubMonitor.convert(monitor, 100);
  *          try {
  *              // Use 30% of the progress to do some work
- *              doSomeWork(progress.newChild(30));
+ *              doSomeWork(progress.split(30));
  *          
  *              // Advance the monitor by another 30%
  *              progress.worked(30);
  *          
  *              // Use the remaining 40% of the progress to do some more work
- *              doSomeWork(progress.newChild(40));
+ *              doSomeWork(progress.split(40));
  *                            
  *          } finally {
- *              if (monitor != null) {
- *              	monitor.done();
- *              }
+ *              SubMonitor.done(monitor);
  *          } 
  *      }
  * </pre>
@@ -136,7 +141,7 @@ package org.eclipse.core.runtime;
  *           
  *          if (condition) {
  *              // Use 50% of the progress to do some work
- *          	doSomeWork(progress.newChild(50));
+ *          	doSomeWork(progress.split(50));
  *          }
  *          
  *          // Don't report any work, but ensure that we have 50 ticks remaining on the progress monitor.
@@ -146,7 +151,7 @@ package org.eclipse.core.runtime;
  *          progress.setWorkRemaining(50);
  *          
  *          // Use the remainder of the progress monitor to do the rest of the work
- *          doSomeWork(progress.newChild(50)); 
+ *          doSomeWork(progress.split(50)); 
  *      }
  * </pre>
  * 
@@ -155,7 +160,7 @@ package org.eclipse.core.runtime;
  * <pre>
  *          if (condition) {
  *              // Use 50% of the progress to do some work
- *          	doSomeWork(progress.newChild(50));
+ *          	doSomeWork(progress.split(50));
  *          } else {
  *              // Bad: Causes the progress monitor to appear to start at 50%, wasting half of the
  *              // space in the monitor.
@@ -175,16 +180,16 @@ package org.eclipse.core.runtime;
  *
  *          // Create a new progress monitor that uses 70% of the total progress and will allocate one tick
  *          // for each element of the given collection. 
- *          SubMonitor loopProgress = progress.newChild(70).setWorkRemaining(someCollection.size());
+ *          SubMonitor loopProgress = progress.split(70).setWorkRemaining(someCollection.size());
  *          
  *          for (Iterator iter = someCollection.iterator(); iter.hasNext();) {
  *          	Object next = iter.next();
  *              
- *              doWorkOnElement(next, loopProgress.newChild(1));
+ *              doWorkOnElement(next, loopProgress.split(1));
  *          }
  *          
  *          // Use the remaining 30% of the progress monitor to do some work outside the loop
- *          doSomeWork(progress.newChild(30));
+ *          doSomeWork(progress.split(30));
  *      }
  * </pre>
  *
@@ -204,7 +209,7 @@ package org.eclipse.core.runtime;
  *              // use 0.01% of the space remaining in the monitor to process the next node.
  *              progress.setWorkRemaining(10000);
  *              
- *				doWorkOnElement(node, progress.newChild(1));
+ *				doWorkOnElement(node, progress.split(1));
  *
  *              node = node.next;
  *          }
@@ -220,6 +225,16 @@ package org.eclipse.core.runtime;
 public final class SubMonitor implements IProgressMonitorWithBlocking {
 
 	/**
+	 * Number of trivial operations (operations which do not report any progress) which can be
+	 * performed before the monitor performs a cancellation check. This ensures that cancellation
+	 * checks do not create a performance problem in tight loops that create a lot of SubMonitors,
+	 * while still ensuring that cancellation is checked occasionally in such loops. This only
+	 * affects operations which are too small to report any progress. Operations which are large
+	 * enough to consume at least one tick will always be checked for cancellation.
+	 */
+	private static final int TRIVIAL_OPERATIONS_BEFORE_CANCELLATION_CHECK = 1000;
+
+	/**
 	 * Minimum number of ticks to allocate when calling beginTask on an unknown IProgressMonitor.
 	 * Pick a number that is big enough such that, no matter where progress is being displayed,
 	 * the user would be unlikely to notice if progress were to be reported with higher accuracy.
@@ -231,19 +246,25 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * its active descendents share the same RootInfo.
 	 */
 	private static final class RootInfo {
-		private final IProgressMonitor root;
+		final IProgressMonitor root;
 
 		/**
 		 * Remembers the last task name. Prevents us from setting the same task name multiple
 		 * times in a row.
 		 */
-		private String taskName = null;
+		String taskName = null;
 
 		/**
 		 * Remembers the last subtask name. Prevents the SubMonitor from setting the same
 		 * subtask string more than once in a row.
 		 */
-		private String subTask = null;
+		String subTask = null;
+
+		/**
+		 * Counter that indicates when we should perform an cancellation check for a trivial
+		 * operation.
+		 */
+		int cancellationCheckCounter;
 
 		/**
 		 * Creates a RootInfo struct that delegates to the given progress 
@@ -294,6 +315,11 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 				((IProgressMonitorWithBlocking) root).setBlocked(reason);
 		}
 
+		public void checkForCancellation() {
+			if (root.isCanceled()) {
+				throw new OperationCanceledException();
+			}
+		}
 	}
 
 	/**
@@ -314,14 +340,14 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 
 	/**
 	 * Number of ticks allocated for this instance's children. This is the total number
-	 * of ticks that may be passed into worked(int) or newChild(int). 
+	 * of ticks that may be passed into worked(int) or split(int). 
 	 */
 	private int totalForChildren;
 
 	/**
-	 * Children created by newChild will be completed automatically the next time
+	 * Children created by split will be completed automatically the next time
 	 * the parent progress monitor is touched. This points to the last incomplete child 
-	 * created with newChild.
+	 * created with split.
 	 */
 	private IProgressMonitor lastSubMonitor = null;
 
@@ -336,7 +362,17 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	private final int flags;
 
 	/**
-	 * May be passed as a flag to newChild. Indicates that the calls
+	 * True iff beginTask has been called on the public interface yet.
+	 */
+	private boolean beginTaskCalled;
+
+	/**
+	 * True iff ticks have been allocated yet.
+	 */
+	private boolean ticksAllocated;
+
+	/**
+	 * May be passed as a flag to {@link #split}. Indicates that the calls
 	 * to subTask on the child should be ignored. Without this flag,
 	 * calling subTask on the child will result in a call to subTask
 	 * on its parent.
@@ -344,7 +380,7 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	public static final int SUPPRESS_SUBTASK = 0x0001;
 
 	/**
-	 * May be passed as a flag to newChild. Indicates that strings
+	 * May be passed as a flag to {@link #split}. Indicates that strings
 	 * passed into beginTask should be ignored. If this flag is
 	 * specified, then the progress monitor instance will accept null 
 	 * as the first argument to beginTask. Without this flag, any 
@@ -354,7 +390,7 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	public static final int SUPPRESS_BEGINTASK = 0x0002;
 
 	/**
-	 * May be passed as a flag to newChild. Indicates that strings
+	 * May be passed as a flag to {@link #split}. Indicates that strings
 	 * passed into setTaskName should be ignored. If this string
 	 * is omitted, then a call to setTaskName on the child will 
 	 * result in a call to setTaskName on the parent.
@@ -362,17 +398,37 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	public static final int SUPPRESS_SETTASKNAME = 0x0004;
 
 	/**
-	 * May be passed as a flag to newChild. Indicates that strings
+	 * May be passed as a flag to {@link #split}. Indicates that isCanceled
+	 * should always return false.
+	 * @since 3.8
+	 */
+	public static final int SUPPRESS_ISCANCELED = 0x0008;
+
+	/**
+	 * May be passed as a flag to {@link #split}. Indicates that strings
 	 * passed to setTaskName, subTask, and beginTask should all be ignored.
 	 */
 	public static final int SUPPRESS_ALL_LABELS = SUPPRESS_SETTASKNAME | SUPPRESS_BEGINTASK | SUPPRESS_SUBTASK;
 
 	/**
-	 * May be passed as a flag to newChild. Indicates that strings
+	 * May be passed as a flag to {@link #split}. Indicates that strings
 	 * passed to setTaskName, subTask, and beginTask should all be propagated
 	 * to the parent.
 	 */
 	public static final int SUPPRESS_NONE = 0;
+
+	/**
+	 * Bitwise combination of all flags which may be passed in to the public interface on {@link #split}
+	 */
+	private static final int ALL_PUBLIC_FLAGS = SUPPRESS_ALL_LABELS | SUPPRESS_ISCANCELED;
+
+	/**
+	 * Bitwise combination of all flags which are inherited directly from a parent SubMonitor to its immediate
+	 * children. All other flags are either not inherited or are inherited from more complicated logic in {@link #split}
+	 */
+	private static final int ALL_INHERITED_FLAGS = SUPPRESS_SUBTASK | SUPPRESS_ISCANCELED;
+
+	private static final Set<String> knownBuggyMethods = new HashSet<>();
 
 	/**
 	 * Creates a new SubMonitor that will report its progress via
@@ -387,6 +443,7 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 		totalParent = (totalWork > 0) ? totalWork : 0;
 		this.totalForChildren = availableToChildren;
 		this.flags = flags;
+		ticksAllocated = availableToChildren > 0;
 	}
 
 	/**
@@ -396,6 +453,9 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * 
 	 * <p>This method should generally be called at the beginning of a method that accepts
 	 * an IProgressMonitor in order to convert the IProgressMonitor into a SubMonitor.</p> 
+	 * 
+	 * <p>Since it is illegal to call beginTask on the same IProgressMonitor more than once,
+	 * the same instance of IProgressMonitor must not be passed to convert more than once.</p>
 	 * 
 	 * @param monitor monitor to convert to a SubMonitor instance or null. Treats null
 	 * as a new instance of <code>NullProgressMonitor</code>.
@@ -413,6 +473,9 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * 
 	 * <p>This method should generally be called at the beginning of a method that accepts
 	 * an IProgressMonitor in order to convert the IProgressMonitor into a SubMonitor.</p> 
+	 *
+	 * <p>Since it is illegal to call beginTask on the same IProgressMonitor more than once,
+	 * the same instance of IProgressMonitor must not be passed to convert more than once.</p>
 	 * 
 	 * @param monitor monitor to convert to a SubMonitor instance or null. Treats null
 	 * as a new instance of <code>NullProgressMonitor</code>.
@@ -431,7 +494,10 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * 
 	 * <p>This method should generally be called at the beginning of a method that accepts
 	 * an IProgressMonitor in order to convert the IProgressMonitor into a SubMonitor.</p> 
-	 *  
+	 *
+	 * <p>Since it is illegal to call beginTask on the same IProgressMonitor more than once,
+	 * the same instance of IProgressMonitor must not be passed to convert more than once.</p>
+	 * 
 	 * @param monitor to convert into a SubMonitor instance or null. If given a null argument,
 	 * the resulting SubMonitor will not report its progress anywhere.
 	 * @param taskName user readable name to pass to monitor.beginTask. Never null. 
@@ -444,8 +510,9 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 
 		// Optimization: if the given monitor already a SubMonitor, no conversion is necessary
 		if (monitor instanceof SubMonitor) {
-			monitor.beginTask(taskName, work);
-			return (SubMonitor) monitor;
+			SubMonitor subMonitor = (SubMonitor) monitor;
+			subMonitor.beginTaskImpl(taskName, work);
+			return subMonitor;
 		}
 
 		monitor.beginTask(taskName, MINIMUM_RESOLUTION);
@@ -453,8 +520,24 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	}
 
 	/**
+	 * Calls {@link #done()} on the given monitor if is non-null. If the given monitor is null,
+	 * this is a no-op.
+	 * <p>
+	 * This is a convenience method intended to reduce the boilerplate around code which must call
+	 * {@link #done()} on a possibly-null monitor.
+	 * 
+	 * @param monitor a progress monitor or null
+	 * @since 3.8
+	 */
+	public static void done(IProgressMonitor monitor) {
+		if (monitor != null) {
+			monitor.done();
+		}
+	}
+
+	/**
 	 * <p>Sets the work remaining for this SubMonitor instance. This is the total number
-	 * of ticks that may be reported by all subsequent calls to worked(int), newChild(int), etc.
+	 * of ticks that may be reported by all subsequent calls to worked(int), split(int), etc.
 	 * This may be called many times for the same SubMonitor instance. When this method 
 	 * is called, the remaining space on the progress monitor is redistributed into the given 
 	 * number of ticks.</p>
@@ -467,8 +550,19 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * @return the receiver
 	 */
 	public SubMonitor setWorkRemaining(int workRemaining) {
+		if (TracingOptions.debugProgressMonitors && ticksAllocated && usedForChildren >= totalForChildren && workRemaining > 0) {
+			logProblem("Attempted to allocate ticks on a SubMonitor which had no space available. " //$NON-NLS-1$
+					+ "This may indicate that a SubMonitor was reused inappropriately (which is a bug) " //$NON-NLS-1$
+					+ "or may indicate that the caller was implementing infinite progress and overflowed " //$NON-NLS-1$
+					+ "(which may not be a bug but may require selecting a higher ratio)"); //$NON-NLS-1$
+		}
+
 		// Ensure we don't try to allocate negative ticks
-		workRemaining = Math.max(0, workRemaining);
+		if (workRemaining > 0) {
+			ticksAllocated = true;
+		} else {
+			workRemaining = 0;
+		}
 
 		// Ensure we don't cause division by zero
 		if (totalForChildren > 0 && totalParent > usedForParent) {
@@ -492,14 +586,21 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * @return ticks the number of ticks to be consumed from parent
 	 */
 	private int consume(double ticks) {
+		if (TracingOptions.debugProgressMonitors && !ticksAllocated && ticks > 0) {
+			logProblem("You must allocate ticks using beginTask or setWorkRemaining before trying to consume them"); //$NON-NLS-1$
+		}
+
 		if (totalParent == 0 || totalForChildren == 0) // this monitor has no available work to report
 			return 0;
 
 		usedForChildren += ticks;
 
-		if (usedForChildren > totalForChildren)
+		if (usedForChildren > totalForChildren) {
 			usedForChildren = totalForChildren;
-		else if (usedForChildren < 0.0)
+			if (TracingOptions.debugProgressMonitors) {
+				logProblem("This progress monitor consumed more ticks than were allocated for it."); //$NON-NLS-1$
+			}
+		} else if (usedForChildren < 0.0)
 			usedForChildren = 0.0;
 
 		int parentPosition = (int) (totalParent * usedForChildren / totalForChildren);
@@ -509,17 +610,14 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 		return delta;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#isCanceled()
-	 */
 	@Override
 	public boolean isCanceled() {
-		return root.isCanceled();
+		if ((flags & SUPPRESS_ISCANCELED) == 0) {
+			return root.isCanceled();
+		}
+		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#setTaskName(java.lang.String)
-	 */
 	@Override
 	public void setTaskName(String name) {
 		if ((flags & SUPPRESS_SETTASKNAME) == 0)
@@ -542,14 +640,19 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 */
 	@Override
 	public void beginTask(String name, int totalWork) {
+		if (TracingOptions.debugProgressMonitors && beginTaskCalled) {
+			logProblem("beginTask was called on this instance more than once"); //$NON-NLS-1$
+		}
+		beginTaskImpl(name, totalWork);
+	}
+
+	private void beginTaskImpl(String name, int totalWork) {
 		if ((flags & SUPPRESS_BEGINTASK) == 0 && name != null)
 			root.setTaskName(name);
 		setWorkRemaining(totalWork);
+		beginTaskCalled = true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#done()
-	 */
 	@Override
 	public void done() {
 		cleanupActiveChild();
@@ -563,9 +666,6 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 		usedForChildren = 0.0d;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#internalWorked(double)
-	 */
 	@Override
 	public void internalWorked(double work) {
 		cleanupActiveChild();
@@ -575,87 +675,33 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 			root.worked(delta);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#subTask(java.lang.String)
-	 */
 	@Override
 	public void subTask(String name) {
 		if ((flags & SUPPRESS_SUBTASK) == 0)
 			root.subTask(name);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#worked(int)
-	 */
 	@Override
 	public void worked(int work) {
+		if (TracingOptions.debugProgressMonitors && work == 0) {
+			logProblem("Attempted to report 0 ticks of work"); //$NON-NLS-1$
+		}
+
 		internalWorked(work);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitor#setCanceled(boolean)
-	 */
 	@Override
 	public void setCanceled(boolean b) {
 		root.setCanceled(b);
 	}
 
 	/**
-	 * <p>Creates a sub progress monitor that will consume the given number of ticks from the 
-	 * receiver. It is not necessary to call <code>beginTask</code> or <code>done</code> on the
-	 * result. However, the resulting progress monitor will not report any work after the first 
-	 * call to done() or before ticks are allocated. Ticks may be allocated by calling beginTask
-	 * or setWorkRemaining.</p>
+	 * <p>Creates a new SubMonitor that will consume the given number of ticks from its parent. 
+	 * Shorthand for calling {@link #newChild(int, int)} with (totalWork, SUPPRESS_BEGINTASK).
 	 * 
-	 * <p>Each SubMonitor only has one active child at a time. Each time newChild() is called, the
-	 * result becomes the new active child and any unused progress from the previously-active child is
-	 * consumed.</p>
-	 * 
-	 * <p>This is property makes it unnecessary to call done() on a SubMonitor instance, since child
-	 * monitors are automatically cleaned up the next time the parent is touched.</p> 
-	 * 
-	 * <code><pre> 
-	 *      ////////////////////////////////////////////////////////////////////////////
-	 *      // Example 1: Typical usage of newChild
-	 *      void myMethod(IProgressMonitor parent) {
-	 *          SubMonitor progress = SubMonitor.convert(parent, 100); 
-	 *          doSomething(progress.newChild(50));
-	 *          doSomethingElse(progress.newChild(50));
-	 *      }
-	 *      
-	 *      ////////////////////////////////////////////////////////////////////////////
-	 *      // Example 2: Demonstrates the function of active children. Creating children
-	 *      // is sufficient to smoothly report progress, even if worked(...) and done()
-	 *      // are never called.
-	 *      void myMethod(IProgressMonitor parent) {
-	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
-	 *          
-	 *          for (int i = 0; i < 100; i++) {
-	 *              // Creating the next child monitor will clean up the previous one,
-	 *              // causing progress to be reported smoothly even if we don't do anything
-	 *              // with the monitors we create
-	 *          	progress.newChild(1);
-	 *          }
-	 *      }
-	 *      
-	 *      ////////////////////////////////////////////////////////////////////////////
-	 *      // Example 3: Demonstrates a common anti-pattern
-	 *      void wrongMethod(IProgressMonitor parent) {
-	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
-	 *          
-	 *          // WRONG WAY: Won't have the intended effect, as only one of these progress
-	 *          // monitors may be active at a time and the other will report no progress.
-	 *          callMethod(progress.newChild(50), computeValue(progress.newChild(50)));
-	 *      }
-	 *      
-	 *      void rightMethod(IProgressMonitor parent) {
-	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
-	 *          
-	 *          // RIGHT WAY: Break up method calls so that only one SubMonitor is in use at a time.
-	 *          Object someValue = computeValue(progress.newChild(50));
-	 *          callMethod(progress.newChild(50), someValue);
-	 *      }
-	 * </pre></code>
+	 * <p>This is much like {@link #split(int)} but it does not check for cancellation and will not
+	 * throw {@link OperationCanceledException}. New code should consider using {@link #split(int)}
+	 * to benefit from automatic cancellation checks.
 	 * 
 	 * @param totalWork number of ticks to consume from the receiver
 	 * @return new sub progress monitor that may be used in place of a new SubMonitor
@@ -665,6 +711,10 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	}
 
 	/**
+	 * <p>This is much like {@link #split}, but it does not check for cancellation and will not
+	 * throw {@link OperationCanceledException}. New code should consider using {@link #split}
+	 * to benefit from automatic cancellation checks.
+	 * 
 	 * <p>Creates a sub progress monitor that will consume the given number of ticks from the 
 	 * receiver. It is not necessary to call <code>beginTask</code> or <code>done</code> on the
 	 * result. However, the resulting progress monitor will not report any work after the first 
@@ -722,9 +772,17 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 	 * </pre></code>
 	 * 
 	 * @param totalWork number of ticks to consume from the receiver
+	 * @param suppressFlags a bitwise combination of SUPPRESS_* flags. They can be used to suppress
+	 * various behaviors on the newly-created monitor. Callers should generally include
+	 * the {@link #SUPPRESS_BEGINTASK} flag unless they are invoking a method whose JavaDoc specifically
+	 * states that the string argument to {@link #beginTask(String, int)} must be preserved.
 	 * @return new sub progress monitor that may be used in place of a new SubMonitor
 	 */
 	public SubMonitor newChild(int totalWork, int suppressFlags) {
+		if (TracingOptions.debugProgressMonitors && totalWork == 0) {
+			logProblem("Attempted to create a child without providing it with any ticks"); //$NON-NLS-1$
+		}
+
 		double totalWorkDouble = (totalWork > 0) ? totalWork : 0.0d;
 		totalWorkDouble = Math.min(totalWorkDouble, totalForChildren - usedForChildren);
 		cleanupActiveChild();
@@ -734,7 +792,7 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 		// This means that we need to compute the flags such that - even if a label isn't 
 		// suppressed by the child - if that same label would have been suppressed when the
 		// child delegated to its parent, the child must explicitly suppress the label. 
-		int childFlags = SUPPRESS_NONE;
+		int childFlags = flags & ALL_INHERITED_FLAGS;
 
 		if ((flags & SUPPRESS_SETTASKNAME) != 0) {
 			// If the parent was ignoring labels passed to setTaskName, then the child will ignore
@@ -743,17 +801,183 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 			childFlags |= SUPPRESS_SETTASKNAME | SUPPRESS_BEGINTASK;
 		}
 
-		if ((flags & SUPPRESS_SUBTASK) != 0) {
-			// If the parent was suppressing labels passed to subTask, so will the child.
-			childFlags |= SUPPRESS_SUBTASK;
-		}
-
 		// Note: the SUPPRESS_BEGINTASK flag does not affect the child since there
 		// is no method on the child that would delegate to beginTask on the parent.
-		childFlags |= suppressFlags;
+		childFlags |= (suppressFlags & ALL_PUBLIC_FLAGS);
 
-		SubMonitor result = new SubMonitor(root, consume(totalWorkDouble), (int) totalWorkDouble, childFlags);
+		SubMonitor result = new SubMonitor(root, consume(totalWorkDouble), 0, childFlags);
 		lastSubMonitor = result;
+		return result;
+	}
+
+	/**
+	 * This is shorthand for calling <code>split(totalWork, SUPPRESS_BEGINTASK)</code>. See 
+	 * {@link #split(int, int)} for more details.
+	 * 
+	 * <p>Creates a sub progress monitor that will consume the given number of ticks from the 
+	 * receiver. It is not necessary to call <code>beginTask</code> or <code>done</code> on the
+	 * result. However, the resulting progress monitor will not report any work after the first 
+	 * call to done() or before ticks are allocated. Ticks may be allocated by calling {@link #beginTask}
+	 * or {@link #setWorkRemaining}.</p>
+	 * 
+	 * <p>This method is much like {@link #newChild}, but it will additionally check for cancellation and
+	 * will throw an OperationCanceledException if the monitor has been cancelled. Not every call to
+	 * this method will trigger a cancellation check. The checks will be performed as often as possible
+	 * without degrading the performance of the caller.
+	 * 
+	 * <p>Each SubMonitor only has one active child at a time. Each time {@link #newChild} or
+	 * {@link #split} is called, the result becomes the new active child and any unused progress
+	 * from the previously-active child is consumed.</p>
+	 * 
+	 * <p>This makes it unnecessary to call done() on a SubMonitor instance, since child
+	 * monitors are automatically cleaned up the next time the parent is touched.</p> 
+	 * 
+	 * <code><pre> 
+	 *      ////////////////////////////////////////////////////////////////////////////
+	 *      // Example 1: Typical usage of split
+	 *      void myMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100); 
+	 *          doSomething(progress.split(50));
+	 *          doSomethingElse(progress.split(50));
+	 *      }
+	 *      
+	 *      ////////////////////////////////////////////////////////////////////////////
+	 *      // Example 2: Demonstrates the function of active children. Creating children
+	 *      // is sufficient to smoothly report progress, even if worked(...) and done()
+	 *      // are never called.
+	 *      void myMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
+	 *          
+	 *          for (int i = 0; i < 100; i++) {
+	 *              // Creating the next child monitor will clean up the previous one,
+	 *              // causing progress to be reported smoothly even if we don't do anything
+	 *              // with the monitors we create
+	 *          	progress.split(1);
+	 *          }
+	 *      }
+	 *      
+	 *      ////////////////////////////////////////////////////////////////////////////
+	 *      // Example 3: Demonstrates a common anti-pattern
+	 *      void wrongMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
+	 *          
+	 *          // WRONG WAY: Won't have the intended effect, as only one of these progress
+	 *          // monitors may be active at a time and the other will report no progress.
+	 *          callMethod(progress.split(50), computeValue(progress.split(50)));
+	 *      }
+	 *      
+	 *      void rightMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
+	 *          
+	 *          // RIGHT WAY: Break up method calls so that only one SubMonitor is in use at a time.
+	 *          Object someValue = computeValue(progress.split(50));
+	 *          callMethod(progress.split(50), someValue);
+	 *      }
+	 * </pre></code>
+	 * 
+	 * @param totalWork number of ticks to consume from the receiver
+	 * @return a new SubMonitor instance
+	 * @throws OperationCanceledException if the monitor has been cancelled
+	 * @since 3.8
+	 */
+	public SubMonitor split(int totalWork) throws OperationCanceledException {
+		return split(totalWork, SUPPRESS_BEGINTASK);
+	}
+
+	/**
+	 * <p>Creates a sub progress monitor that will consume the given number of ticks from the 
+	 * receiver. It is not necessary to call <code>beginTask</code> or <code>done</code> on the
+	 * result. However, the resulting progress monitor will not report any work after the first 
+	 * call to done() or before ticks are allocated. Ticks may be allocated by calling {@link #beginTask}
+	 * or {@link #setWorkRemaining}</p>
+	 * 
+	 * <p>This method is much like {@link #newChild}, but will additionally check for cancellation and
+	 * will throw an {@link OperationCanceledException} if the monitor has been cancelled. Not every call to
+	 * this method will trigger a cancellation check. The checks will be performed as often as possible
+	 * without degrading the performance of the caller.
+	 * 
+	 * <p>Each SubMonitor only has one active child at a time. Each time {@link #newChild} or
+	 * {@link #split} is called, the result becomes the new active child and any unused progress
+	 * from the previously-active child is consumed.</p>
+	 * 
+	 * <p>This is property makes it unnecessary to call done() on a SubMonitor instance, since child
+	 * monitors are automatically cleaned up the next time the parent is touched.</p> 
+	 * 
+	 * <code><pre> 
+	 *      ////////////////////////////////////////////////////////////////////////////
+	 *      // Example 1: Typical usage of split
+	 *      void myMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100); 
+	 *          doSomething(progress.split(50));
+	 *          doSomethingElse(progress.split(50));
+	 *      }
+	 *      
+	 *      ////////////////////////////////////////////////////////////////////////////
+	 *      // Example 2: Demonstrates the function of active children. Creating children
+	 *      // is sufficient to smoothly report progress, even if worked(...) and done()
+	 *      // are never called.
+	 *      void myMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
+	 *          
+	 *          for (int i = 0; i < 100; i++) {
+	 *              // Creating the next child monitor will clean up the previous one,
+	 *              // causing progress to be reported smoothly even if we don't do anything
+	 *              // with the monitors we create
+	 *          	progress.split(1);
+	 *          }
+	 *      }
+	 *      
+	 *      ////////////////////////////////////////////////////////////////////////////
+	 *      // Example 3: Demonstrates a common anti-pattern
+	 *      void wrongMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
+	 *          
+	 *          // WRONG WAY: Won't have the intended effect, as only one of these progress
+	 *          // monitors may be active at a time and the other will report no progress.
+	 *          callMethod(progress.split(50), computeValue(progress.split(50)));
+	 *      }
+	 *      
+	 *      void rightMethod(IProgressMonitor parent) {
+	 *          SubMonitor progress = SubMonitor.convert(parent, 100);
+	 *          
+	 *          // RIGHT WAY: Break up method calls so that only one SubMonitor is in use at a time.
+	 *          Object someValue = computeValue(progress.split(50));
+	 *          callMethod(progress.split(50), someValue);
+	 *      }
+	 * </pre></code>
+	 * 
+	 * @param totalWork number of ticks to consume from the receiver
+	 * @param suppressFlags a bitwise combination of SUPPRESS_* flags. They can be used to suppress
+	 * various behaviors on the newly-created monitor. Callers should generally include
+	 * the {@link #SUPPRESS_BEGINTASK} flag unless they are invoking a method whose JavaDoc specifically
+	 * states that the string argument to {@link #beginTask(String, int)} must be preserved.
+	 * @return new sub progress monitor that may be used in place of a new SubMonitor
+	 * @throws OperationCanceledException if the monitor has been cancelled
+	 * @since 3.8
+	 */
+	public SubMonitor split(int totalWork, int suppressFlags) throws OperationCanceledException {
+		int oldUsedForParent = this.usedForParent;
+		SubMonitor result = newChild(totalWork, suppressFlags);
+
+		if ((flags & SUPPRESS_ISCANCELED) == 0) {
+			int ticksTheChildWillReportToParent = result.totalParent;
+
+			// If the new child reports a nonzero amount of progress.
+			if (ticksTheChildWillReportToParent > 0) {
+				// Don't check for cancellation if the child is consuming 100% of its parent since whatever code created
+				// the parent already performed this check.
+				if (oldUsedForParent > 0 || usedForParent < totalParent) {
+					// Treat this as a nontrivial operation and check for cancellation unconditionally.
+					root.checkForCancellation();
+				}
+			} else {
+				// This is a trivial operation. Only perform a cancellation check after the counter expires.
+				if (++root.cancellationCheckCounter >= TRIVIAL_OPERATIONS_BEFORE_CANCELLATION_CHECK) {
+					root.cancellationCheckCounter = 0;
+					root.checkForCancellation();
+				}
+			}
+		}
 		return result;
 	}
 
@@ -766,17 +990,11 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 		child.done();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitorWithBlocking#clearBlocked()
-	 */
 	@Override
 	public void clearBlocked() {
 		root.clearBlocked();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IProgressMonitorWithBlocking#setBlocked(org.eclipse.core.runtime.IStatus)
-	 */
 	@Override
 	public void setBlocked(IStatus reason) {
 		root.setBlocked(reason);
@@ -788,5 +1006,31 @@ public final class SubMonitor implements IProgressMonitorWithBlocking {
 		if (o2 == null)
 			return false;
 		return o1.equals(o2);
+	}
+
+	private static String getCallerName() {
+		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+
+		String ourClassName = SubMonitor.class.getCanonicalName();
+		for (int idx = 1; idx < stackTrace.length; idx++) {
+			String className = stackTrace[idx].getClassName();
+			if (className.equals(ourClassName)) {
+				continue;
+			}
+
+			return stackTrace[idx].toString();
+		}
+
+		return "Unknown"; //$NON-NLS-1$
+	}
+
+	private static void logProblem(String message) {
+		String caller = getCallerName();
+		synchronized (knownBuggyMethods) {
+			if (!knownBuggyMethods.add(caller)) {
+				return;
+			}
+		}
+		RuntimeLog.log(new Status(IStatus.WARNING, "org.eclipse.core.runtime", message, new Throwable())); //$NON-NLS-1$
 	}
 }

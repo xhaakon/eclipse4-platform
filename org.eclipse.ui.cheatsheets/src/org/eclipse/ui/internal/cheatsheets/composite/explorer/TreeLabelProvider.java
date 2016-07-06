@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,36 +35,37 @@ public class TreeLabelProvider extends LabelProvider {
 
 	private static int BLOCKED = -1;
 	private Image defaultImage = null; // Image for tasks with null kind
-	
+
 	/*
 	 * A set of related images
 	 */
 	private class ImageSet {
 		// Use a map rather than array so the nuber of icons is not hard coded
-		Map images = new HashMap();
-		
+		Map<String, Image> images = new HashMap<>();
+
 		public void put(int index, Image image) {
 			images.put(Integer.toString(index), image);
 		}
-		
+
 		public Image getImage(int index) {
-			return (Image)images.get(Integer.toString(index));
+			return images.get(Integer.toString(index));
 		}
-		
+
 		void dispose() {
-			for (Iterator iter = images.values().iterator(); iter.hasNext(); ) {
-				Image nextImage = (Image)iter.next();
+			for (Iterator<Image> iter = images.values().iterator(); iter.hasNext();) {
+				Image nextImage = iter.next();
 				nextImage.dispose();
-			}		
+			}
 		}
-	}
-	
-	private Map imageMap = null; // each entry is an ImageSet
-		
-	public TreeLabelProvider() {
-		imageMap = new HashMap();
 	}
 
+	private Map<String, ImageSet> imageMap = null; // each entry is an ImageSet
+
+	public TreeLabelProvider() {
+		imageMap = new HashMap<>();
+	}
+
+	@Override
 	public String getText(Object obj) {
 		String result;
 		if (obj instanceof ICompositeCheatSheetTask) {
@@ -78,16 +79,17 @@ public class TreeLabelProvider extends LabelProvider {
 		return result;
 	}
 
+	@Override
 	public Image getImage(Object obj) {
 		if (obj instanceof ICompositeCheatSheetTask) {
 			ICompositeCheatSheetTask task = (ICompositeCheatSheetTask) obj;
-			return lookupImage(task.getKind(), task.getState(), TaskStateUtilities.isBlocked(task));		
+			return lookupImage(task.getKind(), task.getState(), TaskStateUtilities.isBlocked(task));
 		}
 		return super.getImage(obj);
 	}
 
 	public Image lookupImage(String kind, int state, boolean isBlocked) {
-		ImageSet images = (ImageSet) imageMap.get(kind);
+		ImageSet images = imageMap.get(kind);
 		if (images == null) {
 			images = createImages(kind);
 			imageMap.put(kind, images);
@@ -105,31 +107,30 @@ public class TreeLabelProvider extends LabelProvider {
 	 */
 	private ImageSet createImages(String kind) {
 		ImageSet images = new ImageSet();
-		ImageDescriptor desc;
-		desc = getPredefinedImageDescriptor(kind, true);
+		ImageDescriptor desc = getPredefinedImageDescriptor(kind, true);
         if (desc == null) {
 		    desc = TaskEditorManager.getInstance().getImageDescriptor(kind);
         }
-		if (desc != null) {		
+		if (desc != null) {
 			Image baseImage = desc.createImage();
 			images.put(ICompositeCheatSheetTask.NOT_STARTED, baseImage);
-			
-			createImageWithOverlay(ICompositeCheatSheetTask.IN_PROGRESS, 
+
+			createImageWithOverlay(ICompositeCheatSheetTask.IN_PROGRESS,
 		               "$nl$/icons/ovr16/task_in_progress.gif",  //$NON-NLS-1$
-		               images, 
+		               images,
 		               desc);
-			createImageWithOverlay(ICompositeCheatSheetTask.SKIPPED, 
+			createImageWithOverlay(ICompositeCheatSheetTask.SKIPPED,
 		               "$nl$/icons/ovr16/task_skipped.gif",  //$NON-NLS-1$
-		               images, 
+		               images,
 		               desc);
-			createDisabledImage(kind, BLOCKED, 
-		               images, 
+			createDisabledImage(kind, BLOCKED,
+		               images,
 		               baseImage);
-			createImageWithOverlay(ICompositeCheatSheetTask.COMPLETED, 
+			createImageWithOverlay(ICompositeCheatSheetTask.COMPLETED,
 		               "$nl$/icons/ovr16/task_complete.gif",  //$NON-NLS-1$
-		               images, 
+		               images,
 		               desc);
-			
+
 		}
 		return images;
 	}
@@ -148,7 +149,7 @@ public class TreeLabelProvider extends LabelProvider {
 			return null;
 		}
 		String iconPath =  "$nl$/icons/"; //$NON-NLS-1$
-		if (isEnabled) { 
+		if (isEnabled) {
 			iconPath += CheatSheetPlugin.T_OBJ;
 		} else {
 			iconPath += CheatSheetPlugin.T_DLCL;
@@ -158,17 +159,17 @@ public class TreeLabelProvider extends LabelProvider {
 	}
 
 	private void createImageWithOverlay(int state, String imagePath, ImageSet images, ImageDescriptor baseDescriptor) {
-		ImageDescriptor descriptor = createImageDescriptor(imagePath); 
+		ImageDescriptor descriptor = createImageDescriptor(imagePath);
 		OverlayIcon icon = new OverlayIcon(baseDescriptor, new ImageDescriptor[][] {
 				{}, { descriptor } });
 		images.put(state, icon.createImage());
 	}
-	
+
 	private void createDisabledImage(String kind, int state, ImageSet images, Image baseImage) {
 		// The four images for task_set, task_sequence, task_choice and cheatsheet_task can be found
-		// in icons/dlcl16. 
+		// in icons/dlcl16.
 		// TODO extend the extension point to allow disabled images to be specified.
-		//if 
+		//if
 
 		ImageDescriptor desc = getPredefinedImageDescriptor(kind, false);
 		Image disabledImage;
@@ -177,7 +178,7 @@ public class TreeLabelProvider extends LabelProvider {
 		} else {
 		    disabledImage = createGrayedImage(baseImage);
 		}
-		images.put(state, disabledImage);		
+		images.put(state, disabledImage);
 	}
 
 	private Image createGrayedImage(Image image) {
@@ -196,10 +197,11 @@ public class TreeLabelProvider extends LabelProvider {
 		}
 	}
 
+	@Override
 	public void dispose() {
 		if (imageMap != null) {
-			for (Iterator iter = imageMap.values().iterator(); iter.hasNext(); ) {
-			    ImageSet nextImages = (ImageSet)iter.next();
+			for (Iterator<ImageSet> iter = imageMap.values().iterator(); iter.hasNext();) {
+				ImageSet nextImages = iter.next();
 			    nextImages.dispose();
 			}
 			imageMap = null;
@@ -209,5 +211,5 @@ public class TreeLabelProvider extends LabelProvider {
 			defaultImage = null;
 		}
 	}
-	
+
 }

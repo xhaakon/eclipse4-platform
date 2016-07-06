@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,9 +38,9 @@ public class ContentExtensionFileParser extends DefaultHandler {
 
 	private DocumentReader reader;
 	private DocumentProcessor processor;
-	private Map requiredAttributes;
-	private Map deprecatedElements;
-	
+	private Map<String, String[]> requiredAttributes;
+	private Map<String, String> deprecatedElements;
+
 	/*
 	 * Parses the specified content extension XML file into model elements.
 	 */
@@ -51,7 +51,7 @@ public class ContentExtensionFileParser extends DefaultHandler {
 		URL url= FileLocator.find(bundle, new Path(path), null);
 		if (url != null) {
 			InputStream in = url.openStream();
-			UAElement extension = (UAElement)reader.read(in);
+			UAElement extension = reader.read(in);
 			if (processor == null) {
 				processor = new DocumentProcessor(new ProcessorHandler[] {
 					new ValidationHandler(getRequiredAttributes(), getDeprecatedElements())
@@ -70,7 +70,7 @@ public class ContentExtensionFileParser extends DefaultHandler {
 
 	private Map getRequiredAttributes() {
 		if (requiredAttributes == null) {
-			requiredAttributes = new HashMap();
+			requiredAttributes = new HashMap<>();
 			requiredAttributes.put(ContentExtension.NAME_CONTRIBUTION, new String[] { ContentExtension.ATTRIBUTE_CONTENT, ContentExtension.ATTRIBUTE_PATH });
 			requiredAttributes.put(ContentExtension.NAME_CONTRIBUTION_LEGACY, new String[] { ContentExtension.ATTRIBUTE_CONTENT, ContentExtension.ATTRIBUTE_PATH });
 			requiredAttributes.put(ContentExtension.NAME_REPLACEMENT, new String[] { ContentExtension.ATTRIBUTE_CONTENT, ContentExtension.ATTRIBUTE_PATH });
@@ -81,7 +81,7 @@ public class ContentExtensionFileParser extends DefaultHandler {
 
 	private Map getDeprecatedElements() {
 		if (deprecatedElements == null) {
-			deprecatedElements = new HashMap();
+			deprecatedElements = new HashMap<>();
 			deprecatedElements.put(ContentExtension.NAME_CONTRIBUTION_LEGACY, ContentExtension.NAME_CONTRIBUTION);
 			deprecatedElements.put(ContentExtension.NAME_REPLACEMENT_LEGACY, ContentExtension.NAME_REPLACEMENT);
 		}

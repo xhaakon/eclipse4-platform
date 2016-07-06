@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,7 +28,7 @@ public class ExtensionHandler extends ProcessorHandler {
 	private ExtensionResolver resolver;
 	private DocumentReader reader;
 	private String locale;
-	
+
 	/*
 	 * This handler must know the locale since it's pulling content
 	 * in from other documents.
@@ -37,7 +37,8 @@ public class ExtensionHandler extends ProcessorHandler {
 		this.reader = reader;
 		this.locale = locale;
 	}
-	
+
+	@Override
 	public short handle(UAElement element, String path) {
 		if (element instanceof Anchor) {
 			return handleExtension(element, path, ContentExtension.CONTRIBUTION);
@@ -47,7 +48,7 @@ public class ExtensionHandler extends ProcessorHandler {
 		}
 		return UNHANDLED;
 	}
-	
+
 	/*
 	 * Handle the given extension-related node. It is either an anchor
 	 * or an element with an id that could potentially be replaced.

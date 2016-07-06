@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -57,9 +57,6 @@ public class SlaveEvaluationService implements IEvaluationService {
 		return ref;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.services.IEvaluationService#addEvaluationReference(org.eclipse.ui.services.IEvaluationReference)
-	 */
 	@Override
 	public void addEvaluationReference(IEvaluationReference ref) {
 		if (!evaluationReferences.contains(ref)) {
@@ -125,11 +122,6 @@ public class SlaveEvaluationService implements IEvaluationService {
 		parentService.removeSourceProvider(provider);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.services.IDisposable#dispose()
-	 */
 	@Override
 	public void dispose() {
 		if (!evaluationReferences.isEmpty()) {
@@ -158,9 +150,6 @@ public class SlaveEvaluationService implements IEvaluationService {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.services.IEvaluationService#requestEvaluation(java.lang.String)
-	 */
 	@Override
 	public void requestEvaluation(String propertyName) {
 		parentService.requestEvaluation(propertyName);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2014 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Lars Vogel <Lars.Vogel@gmail.com> - Bug 430694
  *     Christian Georgi (SAP)            - Bug 432480
+ *     Patrik Suzzi <psuzzi@gmail.com> - Bug 490700
  *******************************************************************************/
 package org.eclipse.ui.internal.ide.application;
 
@@ -30,6 +31,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IBundleGroup;
 import org.eclipse.core.runtime.IBundleGroupProvider;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -204,6 +206,10 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 		// show Help button in JFace dialogs
 		TrayDialog.setDialogHelpAvailable(true);
 
+		// Set the default value of the preference controlling the workspace
+		// name displayed in the window title.
+		setWorkspaceNameDefault();
+
 		Policy.setComparator(Collator.getInstance());
 	}
 
@@ -274,13 +280,10 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 				currentHighContrast = !currentHighContrast;
 
 				// make sure they really want to do this
-				if (new MessageDialog(null,
-						IDEWorkbenchMessages.SystemSettingsChange_title, null,
-						IDEWorkbenchMessages.SystemSettingsChange_message,
-						MessageDialog.QUESTION, new String[] {
-								IDEWorkbenchMessages.SystemSettingsChange_yes,
-								IDEWorkbenchMessages.SystemSettingsChange_no },
-						1).open() == Window.OK) {
+				if (new MessageDialog(null, IDEWorkbenchMessages.SystemSettingsChange_title, null,
+						IDEWorkbenchMessages.SystemSettingsChange_message, MessageDialog.QUESTION, 1,
+						IDEWorkbenchMessages.SystemSettingsChange_yes, IDEWorkbenchMessages.SystemSettingsChange_no)
+								.open() == Window.OK) {
 					PlatformUI.getWorkbench().restart();
 				}
 			}
@@ -509,7 +512,7 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 	 */
 	private Map<String, AboutInfo> computeBundleGroupMap() {
 		// use tree map to get predicable order
-		Map<String, AboutInfo> ids = new TreeMap<String, AboutInfo>();
+		Map<String, AboutInfo> ids = new TreeMap<>();
 
 		IBundleGroupProvider[] providers = Platform.getBundleGroupProviders();
 		for (int i = 0; i < providers.length; ++i) {
@@ -569,6 +572,27 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 		}
 
 		return bundleGroups;
+	}
+
+	/**
+	 * Sets the default value of the preference controlling the workspace name
+	 * displayed in the window title to the name of the workspace directory.
+	 * This preference cannot be set in the preference initializer because the
+	 * workspace directory may not be known when the preference initializer is
+	 * called.
+	 */
+	private static void setWorkspaceNameDefault() {
+		IPreferenceStore preferences = IDEWorkbenchPlugin.getDefault().getPreferenceStore();
+		String workspaceNameDefault = preferences.getDefaultString(IDEInternalPreferences.WORKSPACE_NAME);
+		if (workspaceNameDefault != null && !workspaceNameDefault.isEmpty())
+			return; // Default is set in a plugin customization file - don't change it.
+		IPath workspaceDir = Platform.getLocation();
+		if (workspaceDir == null)
+			return;
+		String workspaceName = workspaceDir.lastSegment();
+		if (workspaceName == null)
+			return;
+		preferences.setDefault(IDEInternalPreferences.WORKSPACE_NAME, workspaceName);
 	}
 
 	/**
@@ -696,6 +720,9 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 		declareWorkbenchImage(ideBundle,
 				IDEInternalWorkbenchImages.IMG_OBJS_FIXABLE_ERROR,
 				PATH_OBJECT + "quickfix_error_obj.png", true); //$NON-NLS-1$
+		declareWorkbenchImage(ideBundle,
+				IDEInternalWorkbenchImages.IMG_OBJS_FIXABLE_INFO,
+				PATH_OBJECT + "quickfix_info_obj.png", true); //$NON-NLS-1$
 
 
 		// task objects
@@ -752,6 +779,9 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 		declareWorkbenchImage(ideBundle,
 				IDEInternalWorkbenchImages.IMG_ETOOL_PROBLEMS_VIEW_WARNING,
 				PATH_EVIEW + "problems_view_warning.png", true); //$NON-NLS-1$
+		declareWorkbenchImage(ideBundle,
+				IDEInternalWorkbenchImages.IMG_ETOOL_PROBLEMS_VIEW_INFO,
+				PATH_EVIEW + "problems_view_info.png", true); //$NON-NLS-1$
 
 		// synchronization indicator objects
 		// declareRegistryImage(IDEInternalWorkbenchImages.IMG_OBJS_WBET_STAT,
@@ -827,7 +857,7 @@ public class IDEWorkbenchAdvisor extends WorkbenchAdvisor {
 			// support old welcome perspectives if intro plugin is not present
 			if (!hasIntro()) {
 				Map<String, AboutInfo> m = getNewlyAddedBundleGroups();
-				ArrayList<AboutInfo> list = new ArrayList<AboutInfo>(m.size());
+				ArrayList<AboutInfo> list = new ArrayList<>(m.size());
 				for (Iterator<AboutInfo> i = m.values().iterator(); i.hasNext();) {
 					AboutInfo info = i.next();
 					if (info != null && info.getWelcomePerspectiveId() != null

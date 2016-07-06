@@ -20,12 +20,13 @@ import org.eclipse.ui.intro.IntroContentDetector;
 
 public class ContentDetector extends IntroContentDetector {
 
-	private static Set newContributors;
+	private static Set<String> newContributors;
 	private static boolean detectorCalled = false;
 	
 	public ContentDetector() {
 	}
 
+	@Override
 	public boolean isNewContentAvailable() {		
 		try {
 			detectorCalled = true;
@@ -42,12 +43,12 @@ public class ContentDetector extends IntroContentDetector {
 			int previous = helper.getExtensionCount();
 			if (numIntroExtensions != previous) {
 				helper.saveExtensionCount(numIntroExtensions);
-				Set contributors = new HashSet();
+				Set<String> contributors = new HashSet<>();
 				for (int i = 0; i < extensions.length; i++) {
 					contributors.add(extensions[i].getContributor().getName());
 				}
 				if (numIntroExtensions > previous && previous != ContentDetectHelper.NO_STATE) {
-					Set previousContributors = helper.getContributors();
+					Set<String> previousContributors = helper.getContributors();
 					newContributors = helper.findNewContributors(contributors, previousContributors);
 					helper.saveContributors(contributors);
 					return true;
@@ -57,7 +58,7 @@ public class ContentDetector extends IntroContentDetector {
 		} catch (Exception e) { 
 			return false;
 		}
-		newContributors = new HashSet();
+		newContributors = new HashSet<>();
 		return false;
 	}
 	
@@ -65,7 +66,7 @@ public class ContentDetector extends IntroContentDetector {
 	 * @return The set of the ids of config extensions which are new since the last time
 	 * intro was opened. May be null if there are no contributors.
 	 */
-	public static Set getNewContributors() {
+	public static Set<String> getNewContributors() {
 		if (!detectorCalled) {
 		    detectorCalled = true;
 		    new ContentDetector().isNewContentAvailable();

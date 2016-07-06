@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2010 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,21 +30,11 @@ class SubTaskInfo extends JobTreeElement {
 		jobInfo = parentJob;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.JobTreeElement#getChildren()
-	 */
 	@Override
 	Object[] getChildren() {
 		return ProgressManagerUtil.EMPTY_OBJECT_ARRAY;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.JobTreeElement#getDisplayString()
-	 */
 	@Override
 	String getDisplayString() {
 		if (taskName == null) {
@@ -53,11 +43,6 @@ class SubTaskInfo extends JobTreeElement {
 		return taskName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.JobTreeElement#hasChildren()
-	 */
 	@Override
 	boolean hasChildren() {
 		return false;
@@ -82,31 +67,16 @@ class SubTaskInfo extends JobTreeElement {
 		return taskName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.JobTreeElement#getParent()
-	 */
 	@Override
 	public Object getParent() {
 		return jobInfo;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.JobTreeElement#isJobInfo()
-	 */
 	@Override
 	boolean isJobInfo() {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.progress.JobTreeElement#isActive()
-	 */
 	@Override
 	boolean isActive() {
 		return jobInfo.isActive();

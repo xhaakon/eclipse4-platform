@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -118,14 +118,12 @@ public class AddMarkerAction extends TextEditorAction {
 		return fPrefix;
 	}
 
-	/*
-	 * @see IAction#run()
-	 */
+	@Override
 	public void run() {
 		IResource resource= getResource();
 		if (resource == null)
 			return;
-		Map attributes= getInitialAttributes();
+		Map<String, Object> attributes= getInitialAttributes();
 		if (fAskForLabel) {
 			if (!askForLabel(attributes))
 				return;
@@ -136,9 +134,11 @@ public class AddMarkerAction extends TextEditorAction {
 
 		final Shell shell= getTextEditor().getSite().getShell();
 		IAdaptable context= new IAdaptable() {
-			public Object getAdapter(Class adapter) {
+			@SuppressWarnings("unchecked")
+			@Override
+			public <T> T getAdapter(Class<T> adapter) {
 				if (adapter == Shell.class)
-					return shell;
+					return (T) shell;
 				return null;
 			}
 		};
@@ -155,9 +155,7 @@ public class AddMarkerAction extends TextEditorAction {
 		}
 	}
 
-	/*
-	 * @see TextEditorAction#update()
-	 */
+	@Override
 	public void update() {
 		setEnabled(getResource() != null);
 	}
@@ -171,13 +169,14 @@ public class AddMarkerAction extends TextEditorAction {
 	 * @param attributes the attributes map
 	 * @return <code>true</code> if a label has been entered
 	 */
-	protected boolean askForLabel(Map attributes) {
+	protected boolean askForLabel(Map<String, Object> attributes) {
 
 		Object o= attributes.get("message"); //$NON-NLS-1$
 		String proposal= (o instanceof String) ? (String) o : ""; //$NON-NLS-1$
 		String title= getString(fBundle, fPrefix + "dialog.title", fPrefix + "dialog.title"); //$NON-NLS-2$ //$NON-NLS-1$
 		String message= getString(fBundle, fPrefix + "dialog.message", fPrefix + "dialog.message"); //$NON-NLS-2$ //$NON-NLS-1$
 		IInputValidator inputValidator= new IInputValidator() {
+			@Override
 			public String isValid(String newText) {
 				return  (newText == null || newText.trim().length() == 0) ? " " : null;  //$NON-NLS-1$
 			}
@@ -206,9 +205,9 @@ public class AddMarkerAction extends TextEditorAction {
 	 *
 	 * @return the attributes the new marker will be initialized with
 	 */
-	protected Map getInitialAttributes() {
+	protected Map<String, Object> getInitialAttributes() {
 
-		Map attributes= new HashMap(11);
+		Map<String, Object> attributes= new HashMap<>(11);
 
 		ITextSelection selection= (ITextSelection) getTextEditor().getSelectionProvider().getSelection();
 		if (!selection.isEmpty()) {
@@ -333,7 +332,7 @@ public class AddMarkerAction extends TextEditorAction {
 		ITextEditor editor= getTextEditor();
 		if (editor != null) {
 			IEditorInput input= editor.getEditorInput();
-			return (IResource) ((IAdaptable) input).getAdapter(IResource.class);
+			return ((IAdaptable) input).getAdapter(IResource.class);
 		}
 		return null;
 	}

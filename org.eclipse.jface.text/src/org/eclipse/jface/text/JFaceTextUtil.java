@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2013 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,34 @@ public final class JFaceTextUtil {
 
 	private JFaceTextUtil() {
 		// Do not instantiate
+	}
+
+	/**
+	 * Computes the full line height for the text line corresponding to the given widget line,
+	 * considering the possible line wrapping.
+	 *
+	 * @param styledText the widget
+	 * @param widgetLine the widget line
+	 * @return the full real height of the corresponding line of text (which might wrap to multiple
+	 *         widget lines) in the widget
+	 * @since 3.11
+	 */
+	public static int computeLineHeight(StyledText styledText, int widgetLine) {
+		boolean isWrapActive= styledText.getWordWrap();
+		int lineHeight;
+		int offset= styledText.getOffsetAtLine(widgetLine);
+		if (!isWrapActive) {
+			lineHeight= styledText.getLineHeight(offset);
+		} else {
+			int offsetEnd= offset + styledText.getLine(widgetLine).length();
+			if (offsetEnd == styledText.getCharCount()) {
+				lineHeight= styledText.getLineHeight(offset);
+			} else {
+				Rectangle textBounds= styledText.getTextBounds(offset, offsetEnd);
+				lineHeight= textBounds.height;
+			}
+		}
+		return lineHeight;
 	}
 
 	/**
@@ -77,8 +105,7 @@ public final class JFaceTextUtil {
 		if (pixel <= 0)
 			return bottom;
 
-		int offset= widget.getOffsetAtLine(bottom);
-		int height= widget.getLineHeight(offset);
+		int height= computeLineHeight(widget, bottom);
 
 		// bottom is not showing entirely - use the previous line
 		if (pixel + height - 1 > lastPixel)
@@ -98,12 +125,6 @@ public final class JFaceTextUtil {
 		// see StyledText#getPartialTopIndex()
 		int top= widget.getTopIndex();
 		int pixels= widget.getLinePixel(top);
-
-		// FIXME remove when https://bugs.eclipse.org/bugs/show_bug.cgi?id=123770 is fixed
-		if (pixels == -widget.getLineHeight(widget.getOffsetAtLine(top))) {
-			top++;
-			pixels= 0;
-		}
 
 		if (pixels > 0)
 			top--;
@@ -314,7 +335,8 @@ public final class JFaceTextUtil {
 			bounds= styledText.getTextBounds(start, end - 1);
 		else {
 			Point loc= styledText.getLocationAtOffset(start);
-			bounds= new Rectangle(loc.x, loc.y, getAverageCharWidth(textViewer.getTextWidget()), styledText.getLineHeight(start));
+			bounds= new Rectangle(loc.x, loc.y, getAverageCharWidth(textViewer.getTextWidget()),
+					computeLineHeight(styledText, styledText.getLineAtOffset(start)));
 		}
 
 		return new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
@@ -365,7 +387,7 @@ public final class JFaceTextUtil {
 	 * Returns <code>true</code> if the text covered by <code>selection</code> does not contain any
 	 * characters in the given viewer. Note the difference to {@link ITextSelection#isEmpty()},
 	 * which returns <code>true</code> only for invalid selections.
-	 * 
+	 *
 	 * @param viewer the viewer
 	 * @param selection the selection
 	 * @return <code>true</code> if <code>selection</code> does not contain any text,
@@ -379,7 +401,7 @@ public final class JFaceTextUtil {
 
 	/**
 	 * Returns the text regions covered by the given selection in the given viewer.
-	 * 
+	 *
 	 * @param viewer the viewer
 	 * @param selection the selection
 	 * @return the text regions corresponding to <code>selection</code>
@@ -392,7 +414,7 @@ public final class JFaceTextUtil {
 
 	/**
 	 * Returns the offset in the given viewer that corresponds to the current cursor location.
-	 * 
+	 *
 	 * @param viewer the viewer
 	 * @return the offset for the current cursor location or -1 if not available
 	 * @since 3.5

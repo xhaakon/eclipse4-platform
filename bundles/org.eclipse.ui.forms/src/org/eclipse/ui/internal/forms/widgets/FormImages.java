@@ -36,7 +36,7 @@ public class FormImages {
 	}
 
 	private ResourceManagerManger manager = new ResourceManagerManger();
-	private Map descriptors;
+	private Map<Integer, AbstractImageDescriptor> descriptors;
 
 	private FormImages() {
 	}
@@ -54,6 +54,7 @@ public class FormImages {
 			fLength = length;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof AbstractImageDescriptor) {
 				AbstractImageDescriptor id = (AbstractImageDescriptor)obj;
@@ -68,10 +69,11 @@ public class FormImages {
 			return false;
 		}
 
+		@Override
 		public int hashCode() {
 			int hash = 0;
-			for (int i = 0; i < fRGBs.length; i++)
-				hash = hash * 7 + fRGBs[i].hashCode();
+			for (RGB fRGB : fRGBs)
+				hash = hash * 7 + fRGB.hashCode();
 			hash = hash * 7 + fLength;
 			return hash;
 		}
@@ -88,6 +90,7 @@ public class FormImages {
 			fMarginHeight = marginHeight;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof SimpleImageDescriptor) {
 				SimpleImageDescriptor id = (SimpleImageDescriptor) obj;
@@ -98,17 +101,20 @@ public class FormImages {
 			return false;
 		}
 
+		@Override
 		public int hashCode() {
 			int hash = super.hashCode();
-			hash = hash * 7 + new Integer(fTheight).hashCode();
-			hash = hash * 7 + new Integer(fMarginHeight).hashCode();
+			hash = hash * 7 + Integer.valueOf(fTheight).hashCode();
+			hash = hash * 7 + Integer.valueOf(fMarginHeight).hashCode();
 			return hash;
 		}
 
+		@Override
 		public ImageData getImageData() {
 			return null;
 		}
 
+		@Override
 		public Image createImage(boolean returnMissingImageOnError,	Device device) {
 			Image image = new Image(device, 1, fLength);
 			Color color1 = new Color(device, fRGBs[0]);
@@ -140,6 +146,7 @@ public class FormImages {
 			fPercents = percents;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof ComplexImageDescriptor) {
 				ComplexImageDescriptor id = (ComplexImageDescriptor) obj;
@@ -151,8 +158,8 @@ public class FormImages {
 					// if the only thing that isn't the same is the background color
 					// still return true if it does not matter (percents add up to 100)
 					int sum = 0;
-					for (int i = 0; i < fPercents.length; i++)
-						sum += fPercents[i];
+					for (int fPercent : fPercents)
+						sum += fPercent;
 					if (sum >= 100)
 						return true;
 				}
@@ -160,18 +167,21 @@ public class FormImages {
 			return false;
 		}
 
+		@Override
 		public int hashCode() {
 			int hash = super.hashCode();
-			hash = hash * 7 + new Boolean(fVertical).hashCode();
-			for (int i = 0; i < fPercents.length; i++)
-				hash = hash * 7 + new Integer(fPercents[i]).hashCode();
+			hash = hash * 7 + Boolean.valueOf(fVertical).hashCode();
+			for (int fPercent : fPercents)
+				hash = hash * 7 + Integer.valueOf(fPercent).hashCode();
 			return hash;
 		}
 
+		@Override
 		public ImageData getImageData() {
 			return null;
 		}
 
+		@Override
 		public Image createImage(boolean returnMissingImageOnError,	Device device) {
 			int width = fVertical ? 1 : fLength;
 			int height = fVertical ? fLength : 1;
@@ -184,8 +194,8 @@ public class FormImages {
 			Color bg = fBgRGB == null ? null : new Color(device, fBgRGB);
 			drawTextGradient(gc, width, height, colors, fPercents, fVertical, bg);
 			gc.dispose();
-			for (int i = 0; i < colors.length; i++)
-				colors[i].dispose();
+			for (Color color : colors)
+				color.dispose();
 			if (bg != null)
 				bg.dispose();
 			return gradient;
@@ -249,6 +259,7 @@ public class FormImages {
 			fMarginHeight = marginHeight;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof SimpleImageDescriptor) {
 				SimpleImageDescriptor id = (SimpleImageDescriptor) obj;
@@ -258,17 +269,20 @@ public class FormImages {
 			return false;
 		}
 
+		@Override
 		public int hashCode() {
 			int hash = super.hashCode();
-			hash = hash * 7 + new Integer(fTheight).hashCode();
-			hash = hash * 7 + new Integer(fMarginHeight).hashCode();
+			hash = hash * 7 + Integer.valueOf(fTheight).hashCode();
+			hash = hash * 7 + Integer.valueOf(fMarginHeight).hashCode();
 			return hash;
 		}
 
+		@Override
 		public ImageData getImageData() {
 			return null;
 		}
 
+		@Override
 		public Image createImage(boolean returnMissingImageOnError, Device device) {
 			Image image = new Image(device, 1, fLength);
 			Color originalBgColor = new Color(device, fRGBs[0]);
@@ -294,6 +308,7 @@ public class FormImages {
 			super(new Color[] { color1, color2 }, realtheight, theight, marginHeight);
 		}
 
+		@Override
 		public Image createImage(boolean returnMissingImageOnError, Device device) {
 			Image image = new Image(device, 1, fLength);
 			Color color1 = new Color(device, fRGBs[0]);
@@ -335,8 +350,8 @@ public class FormImages {
 			int length, boolean vertical, Color bg, Display display) {
 		if (colors.length == 0)
 			return null;
-		for (int i = 0; i < colors.length; i++)
-			if (colors[i] == null || colors[i].isDisposed())
+		for (Color color : colors)
+			if (color == null || color.isDisposed())
 				return null;
 		if (bg != null && bg.isDisposed())
 			return null;
@@ -347,14 +362,14 @@ public class FormImages {
 	private synchronized Image getGradient(AbstractImageDescriptor desc, Display display) {
 		checkHashMaps();
 		Image result = manager.getResourceManager(display).createImage(desc);
-		descriptors.put(new Integer(result.hashCode()), desc);
+		descriptors.put(Integer.valueOf(result.hashCode()), desc);
 		return result;
 	}
 
 	public synchronized boolean markFinished(Image image, Display display) {
 		checkHashMaps();
-		Integer imageHashCode = new Integer(image.hashCode());
-		AbstractImageDescriptor desc = (AbstractImageDescriptor)descriptors.get(imageHashCode);
+		Integer imageHashCode = Integer.valueOf(image.hashCode());
+		AbstractImageDescriptor desc = descriptors.get(imageHashCode);
 		if (desc != null) {
 			LocalResourceManager resourceManager = manager.getResourceManager(display);
 			resourceManager.destroyImage(desc);
@@ -372,7 +387,7 @@ public class FormImages {
 
 	private void checkHashMaps() {
 		if (descriptors == null)
-			descriptors = new HashMap();
+			descriptors = new HashMap<>();
 	}
 
 	private void validateHashMaps() {

@@ -17,7 +17,7 @@ import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.PreDestroy;
-import org.eclipse.e4.core.internal.services.ServicesActivator;
+import org.eclipse.e4.core.internal.services.ResourceBundleHelper;
 import org.osgi.service.log.LogService;
 
 /**
@@ -62,11 +62,9 @@ import org.osgi.service.log.LogService;
  */
 public class BaseMessageRegistry<M> {
 
-	private static LogService logService = ServicesActivator.getDefault().getLogService();
-
 	private M messages;
 
-	private final Map<MessageConsumer, MessageSupplier> bindings = new HashMap<MessageConsumer, MessageSupplier>();
+	private final Map<MessageConsumer, MessageSupplier> bindings = new HashMap<>();
 
 	/**
 	 * Register a consumer and a function that is acting as the supplier of the translation value.
@@ -196,6 +194,8 @@ public class BaseMessageRegistry<M> {
 	protected MessageConsumer createConsumer(final Object control, final String method) {
 		MessageConsumer consumer = null;
 
+		final LogService logService = ResourceBundleHelper.getLogService();
+
 		try {
 			final Method m = control.getClass().getMethod(method, String.class);
 			if (m != null) {
@@ -287,6 +287,8 @@ public class BaseMessageRegistry<M> {
 	 */
 	protected MessageSupplier createSupplier(final String messageKey) {
 		MessageSupplier supplier = null;
+
+		final LogService logService = ResourceBundleHelper.getLogService();
 
 		try {
 			final Field f = messages.getClass().getField(messageKey);

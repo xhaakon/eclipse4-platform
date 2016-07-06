@@ -24,7 +24,7 @@ import org.osgi.service.url.AbstractURLStreamHandlerService;
  */
 public class PlatformURLHandler extends AbstractURLStreamHandlerService {
 
-	private static Hashtable<String, Constructor<?>> connectionType = new Hashtable<String, Constructor<?>>();
+	private static Hashtable<String, Constructor<?>> connectionType = new Hashtable<>();
 
 	// URL protocol designations
 	public static final String PROTOCOL = "platform"; //$NON-NLS-1$
@@ -41,9 +41,6 @@ public class PlatformURLHandler extends AbstractURLStreamHandlerService {
 		super();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.service.url.AbstractURLStreamHandlerService#openConnection(java.net.URL)
-	 */
 	@Override
 	public URLConnection openConnection(URL url) throws IOException {
 		// Note: openConnection() method is made public (rather than protected)

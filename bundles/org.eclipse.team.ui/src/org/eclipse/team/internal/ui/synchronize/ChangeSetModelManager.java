@@ -24,20 +24,21 @@ import org.eclipse.team.ui.synchronize.SynchronizePageActionGroup;
  * Manager for hierarchical models
  */
 public class ChangeSetModelManager extends HierarchicalModelManager implements IPropertyChangeListener {
-    
+
     private static final String P_COMMIT_SET_ENABLED = TeamUIPlugin.ID + ".P_COMMIT_SET_ENABLED"; //$NON-NLS-1$
-    
+
     public static final String CHANGE_SET_GROUP = "ChangeSet"; //$NON-NLS-1$
-	
+
 	boolean enabled = false;
-	
+
 	private class ToggleCommitSetAction extends Action {
         public ToggleCommitSetAction() {
-            super(TeamUIMessages.ChangeLogModelManager_0, TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_CHANGE_SET)); 
-            setToolTipText(TeamUIMessages.ChangeLogModelManager_0); 
+            super(TeamUIMessages.ChangeLogModelManager_0, TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_CHANGE_SET));
+            setToolTipText(TeamUIMessages.ChangeLogModelManager_0);
             update();
         }
-        public void run() {
+        @Override
+		public void run() {
             setCommitSetsEnabled(!enabled);
             update();
         }
@@ -45,23 +46,24 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
             setChecked(enabled);
         }
 	}
-	
+
 	private ToggleCommitSetAction toggleCommitSetAction;
-	
+
 	private class CommitSetActionContribution extends SynchronizePageActionGroup {
 
-        public void initialize(ISynchronizePageConfiguration configuration) {
+        @Override
+		public void initialize(ISynchronizePageConfiguration configuration) {
 			super.initialize(configuration);
-			
+
 			toggleCommitSetAction = new ToggleCommitSetAction();
             appendToGroup(
-					ISynchronizePageConfiguration.P_TOOLBAR_MENU, 
+					ISynchronizePageConfiguration.P_TOOLBAR_MENU,
 					CHANGE_SET_GROUP,
 					toggleCommitSetAction);
             updateEnablement();
 		}
 	}
-	
+
 	public ChangeSetModelManager(ISynchronizePageConfiguration configuration) {
 	    super(configuration);
 		configuration.addPropertyChangeListener(this);
@@ -72,7 +74,8 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
 		    configuration.addLabelDecorator(new ChangeSetLabelDecorator(configuration));
 		}
 		configuration.addPropertyChangeListener(new IPropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent event) {
+            @Override
+			public void propertyChange(PropertyChangeEvent event) {
                 if (event.getProperty().equals(ISynchronizePageConfiguration.P_MODE)) {
                     updateEnablement();
                 }
@@ -81,7 +84,7 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
         });
 	}
 
-    private ChangeSetCapability getChangeSetCapability(ISynchronizePageConfiguration configuration) { 
+    private ChangeSetCapability getChangeSetCapability(ISynchronizePageConfiguration configuration) {
         ISynchronizeParticipant participant = configuration.getParticipant();
         if (participant instanceof IChangeSetProvider) {
             IChangeSetProvider provider = (IChangeSetProvider) participant;
@@ -89,7 +92,7 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
         }
         return null;
     }
-	
+
     private void updateEnablement() {
         if (toggleCommitSetAction != null) {
             ISynchronizePageConfiguration configuration = getConfiguration();
@@ -98,20 +101,22 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
             	|| changeSetCapability.enableCheckedInChangeSetsFor(configuration));
             toggleCommitSetAction.setEnabled(enabled);
         }
-        
+
     }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#dispose()
 	 */
+	@Override
 	public void dispose() {
 		getConfiguration().removePropertyChangeListener(this);
 		super.dispose();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#createModelProvider(java.lang.String)
 	 */
+	@Override
 	protected ISynchronizeModelProvider createModelProvider(String id) {
 	    if (enabled) {
 	        return new ChangeSetModelProvider(getConfiguration(), getSyncInfoSet(), id);
@@ -119,11 +124,12 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
 	        return super.createModelProvider(id);
 	    }
 	}
-	
+
 	/* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#getSelectedProviderId()
      */
-    protected String getSelectedProviderId() {
+    @Override
+	protected String getSelectedProviderId() {
         String id = super.getSelectedProviderId();
         if (id.equals(ChangeSetModelProvider.ChangeSetModelProviderDescriptor.ID)) {
             return ((ChangeSetModelProvider)getActiveModelProvider()).getSubproviderId();
@@ -135,24 +141,27 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.util.IPropertyChangeListener#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
 	 */
+	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 	}
-	
+
 	/* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#saveProviderSettings(java.lang.String)
      */
-    protected void saveProviderSettings(String id) {
+    @Override
+	protected void saveProviderSettings(String id) {
         super.saveProviderSettings(id);
         IDialogSettings pageSettings = getConfiguration().getSite().getPageSettings();
 		if(pageSettings != null) {
 			pageSettings.put(P_COMMIT_SET_ENABLED, enabled);
 		}
     }
-    
+
     /* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#initialize(org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration)
      */
-    public void initialize(ISynchronizePageConfiguration configuration) {
+    @Override
+	public void initialize(ISynchronizePageConfiguration configuration) {
         // Load our setting before invoking super since the inherited
         // initialize will create the provider
         IDialogSettings pageSettings = getConfiguration().getSite().getPageSettings();
@@ -163,7 +172,7 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
 		}
         super.initialize(configuration);
     }
-    
+
     /*
      * This method is public so it can be invoked from test cases
      */
@@ -173,11 +182,12 @@ public class ChangeSetModelManager extends HierarchicalModelManager implements I
 	        setInput(getSelectedProviderId(), null);
         }
     }
-    
+
     /* (non-Javadoc)
      * This method is public so it can be invoked from test cases
      */
-    public ISynchronizeModelProvider getActiveModelProvider() {
+    @Override
+	public ISynchronizeModelProvider getActiveModelProvider() {
         return super.getActiveModelProvider();
     }
 }

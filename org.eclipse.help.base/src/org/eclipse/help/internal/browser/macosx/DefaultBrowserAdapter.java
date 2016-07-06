@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,12 +28,14 @@ public class DefaultBrowserAdapter implements IBrowser {
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#close()
 	 */
+	@Override
 	public void close() {
 	}
 
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#displayURL(String)
 	 */
+	@Override
 	public void displayURL(String url) {
 		/*
 		 * Code from Marc-Antoine Parent
@@ -50,6 +52,7 @@ public class DefaultBrowserAdapter implements IBrowser {
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#isCloseSupported()
 	 */
+	@Override
 	public boolean isCloseSupported() {
 		return false;
 	}
@@ -57,6 +60,7 @@ public class DefaultBrowserAdapter implements IBrowser {
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#isSetLocationSupported()
 	 */
+	@Override
 	public boolean isSetLocationSupported() {
 		return false;
 	}
@@ -64,6 +68,7 @@ public class DefaultBrowserAdapter implements IBrowser {
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#isSetSizeSupported()
 	 */
+	@Override
 	public boolean isSetSizeSupported() {
 		return false;
 	}
@@ -71,12 +76,14 @@ public class DefaultBrowserAdapter implements IBrowser {
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#setLocation(int, int)
 	 */
+	@Override
 	public void setLocation(int x, int y) {
 	}
 
 	/**
 	 * @see org.eclipse.help.browser.IBrowser#setSize(int, int)
 	 */
+	@Override
 	public void setSize(int width, int height) {
 	}
 }

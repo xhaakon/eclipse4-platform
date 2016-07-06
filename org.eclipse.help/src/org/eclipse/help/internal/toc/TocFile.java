@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public class TocFile {
 	private String locale;
 	private String extraDir;
 	private String category;
-	
+
 	public TocFile(String pluginId, String file, boolean isPrimary, String locale, String extradir, String category) {
 		this.pluginId = pluginId;
 		this.file = file;
@@ -36,7 +36,7 @@ public class TocFile {
 		this.extraDir = extradir;
 		this.category = category;
 	}
-	
+
 	public String getCategory() {
 		return category;
 	}
@@ -57,7 +57,7 @@ public class TocFile {
 			return new FileInputStream(file);
 		}
 	}
-	
+
 	public String getLocale() {
 		return locale;
 	}

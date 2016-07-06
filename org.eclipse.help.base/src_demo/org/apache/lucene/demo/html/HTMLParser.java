@@ -1,5 +1,5 @@
 /**
- * Copyright 2004 The Apache Software Foundation
+ * Copyright 2004, 2015 The Apache Software Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,8 @@ public class HTMLParser implements HTMLParserConstants {
   /**
    * @deprecated Use HTMLParser(FileInputStream) instead
    */
-  public HTMLParser(File file) throws FileNotFoundException {
+  @Deprecated
+public HTMLParser(File file) throws FileNotFoundException {
     this(new FileInputStream(file));
   }
 
@@ -622,7 +623,7 @@ null)
       return (jj_ntk = jj_nt.kind);
   }
 
-  private java.util.Vector<int[]> jj_expentries = new java.util.Vector<int[]>();
+	private java.util.Vector<int[]> jj_expentries = new java.util.Vector<>();
   private int[] jj_expentry;
   private int jj_kind = -1;
   private int[] jj_lasttokens = new int[100];

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,13 +17,13 @@ import org.eclipse.help.internal.UAElement;
  * allowing it to process the node and return a result.
  */
 public abstract class ProcessorHandler {
-	
+
 	public static final short UNHANDLED = 0;
 	public static final short HANDLED_CONTINUE = 1;
 	public static final short HANDLED_SKIP = 2;
-	
+
 	private DocumentProcessor processor;
-	
+
 	/*
 	 * Will be called for every node visited by the processor,
 	 * except those requested to be skipped.
@@ -43,5 +43,5 @@ public abstract class ProcessorHandler {
 	 */
 	public void setProcessor(DocumentProcessor processor) {
 		this.processor = processor;
-	}	
+	}
 }

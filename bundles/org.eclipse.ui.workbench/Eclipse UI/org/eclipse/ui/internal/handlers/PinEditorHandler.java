@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,13 +32,6 @@ import org.eclipse.ui.menus.UIElement;
 public class PinEditorHandler extends AbstractHandler implements
 		IElementUpdater {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.
-	 * ExecutionEvent)
-	 */
 	@Override
 	public Object execute(ExecutionEvent event) {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
@@ -62,13 +55,6 @@ public class PinEditorHandler extends AbstractHandler implements
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.commands.IElementUpdater#updateElement(org.eclipse.ui.
-	 * menus.UIElement, java.util.Map)
-	 */
 	@Override
 	public void updateElement(UIElement element, Map parameters) {
 		IWorkbenchWindow window = element

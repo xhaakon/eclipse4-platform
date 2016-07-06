@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,12 +11,12 @@
 package org.eclipse.text.tests;
 
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Test;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -27,9 +27,7 @@ import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.projection.ChildDocument;
 import org.eclipse.jface.text.projection.ChildDocumentManager;
 
-
-
-public class DocumentExtensionTest extends TestCase {
+public class DocumentExtensionTest {
 
 
 	static class Listener implements IDocumentListener {
@@ -38,10 +36,12 @@ public class DocumentExtensionTest extends TestCase {
 		private int fInvocations= 0;
 		private boolean fIsPostNotificationSupported= true;
 
+		@Override
 		public void documentAboutToBeChanged(DocumentEvent e) {
 			++ fInvocations;
 		}
 
+		@Override
 		public void documentChanged(DocumentEvent e) {
 
 			if (fInvocations > fRepetitions) {
@@ -87,9 +87,7 @@ public class DocumentExtensionTest extends TestCase {
 		public Replace() {
 		}
 
-		/*
-		 * @see IReplace#perform(IDocument, IDocumentListener)
-		 */
+		@Override
 		public void perform(IDocument document, IDocumentListener owner) {
 			try {
 				document.replace(fOffset, fLength, fText);
@@ -116,31 +114,33 @@ public class DocumentExtensionTest extends TestCase {
 	static class TestDocumentListener implements IDocumentListener {
 
 		private IDocument fDocument1;
-		private List fTrace1;
+		private List<TestDocumentEvent> fTrace1;
 		private TestDocumentEvent fExpected1;
 
-		private List fTrace2;
+		private List<TestDocumentEvent> fTrace2;
 		private TestDocumentEvent fExpected2;
 
 		private boolean fPopped= false;
 
-		public TestDocumentListener(IDocument d1, List t1, List t2) {
+		public TestDocumentListener(IDocument d1, List<TestDocumentEvent> t1, List<TestDocumentEvent> t2) {
 			fDocument1= d1;
 			fTrace1= t1;
 			fTrace2= t2;
 		}
 
+		@Override
 		public void documentAboutToBeChanged(DocumentEvent received) {
 			if (!fPopped) {
 				fPopped= true;
-				fExpected1= (TestDocumentEvent) fTrace1.remove(0);
-				fExpected2= (TestDocumentEvent) fTrace2.remove(0);
+				fExpected1= fTrace1.remove(0);
+				fExpected2= fTrace2.remove(0);
 			}
 
 			TestDocumentEvent e= (received.getDocument() == fDocument1 ? fExpected1 : fExpected2);
 			assertTrue(e.isSameAs(received));
 		}
 
+		@Override
 		public void documentChanged(DocumentEvent received) {
 			TestDocumentEvent e= (received.getDocument() == fDocument1 ? fExpected1 : fExpected2);
 			assertTrue(e.isSameAs(received));
@@ -149,18 +149,10 @@ public class DocumentExtensionTest extends TestCase {
 
 	}
 
-
-	public DocumentExtensionTest(String name) {
-		super(name);
-	}
-
-
-	public static Test suite() {
-		return new TestSuite(DocumentExtensionTest.class);
-	}
-
+	@Test
 	public void testAppend() {
 		Listener listener= new Listener() {
+			@Override
 			protected Replace getReplace(DocumentEvent e) {
 				String t= e.getText();
 				if (t != null && t.length() > 0) {
@@ -187,9 +179,11 @@ public class DocumentExtensionTest extends TestCase {
 
 		assertTrue("axbxcx".equals(document.get()));
 	}
-
+	
+	@Test
 	public void testRemove() {
 		Listener listener= new Listener() {
+			@Override
 			protected Replace getReplace(DocumentEvent e) {
 				String t= e.getText();
 				if (t == null || t.length() == 0) {
@@ -216,9 +210,11 @@ public class DocumentExtensionTest extends TestCase {
 
 		assertTrue("yyy".equals(document.get()));
 	}
-
+	
+	@Test
 	public void testRepeatedAppend() {
 		Listener listener= new Listener() {
+			@Override
 			protected Replace getReplace(DocumentEvent e) {
 				String t= e.getText();
 				if (t != null && t.length() > 0) {
@@ -247,9 +243,9 @@ public class DocumentExtensionTest extends TestCase {
 		assertTrue("axxxxxbxxxxxcxxxxx".equals(document.get()));
 	}
 
-	private List createTrace(IDocument document, int repetitions) {
+	private List<TestDocumentEvent> createTrace(IDocument document, int repetitions) {
 		int i;
-		List trace= new ArrayList();
+		List<TestDocumentEvent> trace= new ArrayList<>();
 
 		trace.add(new TestDocumentEvent(document, 0, 0, "c"));
 		for (i= 0; i < repetitions; i++)
@@ -286,6 +282,7 @@ public class DocumentExtensionTest extends TestCase {
 		childDocument.addDocumentListener(l);
 
 		Listener modifier= new Listener() {
+			@Override
 			protected Replace getReplace(DocumentEvent e) {
 				String t= e.getText();
 				if (t != null && t.length() > 0) {
@@ -319,11 +316,13 @@ public class DocumentExtensionTest extends TestCase {
 			assertTrue(false);
 		}
 	}
-
+	
+	@Test
 	public void testChildDocumentPP() {
 		internalTestChildDocument(true, true, 1);
 	}
-
+	
+	@Test
 	public void testChildDocumentCC() {
 		try {
 			internalTestChildDocument(false, false, 1);
@@ -331,11 +330,13 @@ public class DocumentExtensionTest extends TestCase {
 		}
 
 	}
-
+	
+	@Test
 	public void testChildDocumentRepeatedPP() {
 		internalTestChildDocument(true, true, 5);
 	}
-
+	
+	@Test
 	public void testChildDocumentRepeatedCC() {
 		try {
 			internalTestChildDocument(false, false, 5);
@@ -346,6 +347,7 @@ public class DocumentExtensionTest extends TestCase {
 	/**
 	 * Tests that this is not supported.
 	 */
+	@Test
 	public void testChildDocumentPC() {
 		try {
 			internalTestChildDocument(true, false, 1);
@@ -353,14 +355,16 @@ public class DocumentExtensionTest extends TestCase {
 		} catch (UnsupportedOperationException x) {
 		}
 	}
-
+	
+	@Test
 	public void testChildDocumentCP() {
 		internalTestChildDocument(false, true, 1);
 	}
 
 	/**
 	 * Tests that this is not supported.
-	 */
+	 */	
+	@Test
 	public void testChildDocumentRepeatedPC() {
 		try {
 			internalTestChildDocument(true, false, 5);
@@ -368,7 +372,8 @@ public class DocumentExtensionTest extends TestCase {
 		} catch (UnsupportedOperationException x) {
 		}
 	}
-
+	
+	@Test
 	public void testChildDocumentRepeatedCP() {
 		internalTestChildDocument(false, true, 5);
 	}

@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM - Initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.refresh;
 
@@ -27,7 +28,7 @@ import org.eclipse.core.runtime.*;
  * Manages monitors by creating new monitors when projects are added and
  * removing monitors when projects are removed. Also handles the polling
  * mechanism when contributed native monitors cannot handle a project.
- * 
+ *
  * @since 3.0
  */
 class MonitorManager implements ILifecycleListener, IPathVariableChangeListener, IResourceChangeListener, IResourceDeltaVisitor {
@@ -62,7 +63,7 @@ class MonitorManager implements ILifecycleListener, IPathVariableChangeListener,
 	/**
 	 * Queries extensions of the refreshProviders extension point, and
 	 * creates the provider classes. Will never return <code>null</code>.
-	 * 
+	 *
 	 * @return RefreshProvider[] The array of registered <code>RefreshProvider</code>
 	 *             objects or an empty array.
 	 */
@@ -71,7 +72,7 @@ class MonitorManager implements ILifecycleListener, IPathVariableChangeListener,
 			return providers;
 		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(ResourcesPlugin.PI_RESOURCES, ResourcesPlugin.PT_REFRESH_PROVIDERS);
 		IConfigurationElement[] infos = extensionPoint.getConfigurationElements();
-		List<RefreshProvider> providerList = new ArrayList<RefreshProvider>(infos.length);
+		List<RefreshProvider> providerList = new ArrayList<>(infos.length);
 		for (int i = 0; i < infos.length; i++) {
 			IConfigurationElement configurationElement = infos[i];
 			RefreshProvider provider = null;
@@ -92,7 +93,7 @@ class MonitorManager implements ILifecycleListener, IPathVariableChangeListener,
 	 * includes projects and all linked resources.
 	 */
 	private List<IResource> getResourcesToMonitor() {
-		final List<IResource> resourcesToMonitor = new ArrayList<IResource>(10);
+		final List<IResource> resourcesToMonitor = new ArrayList<>(10);
 		IProject[] projects = workspace.getRoot().getProjects(IContainer.INCLUDE_HIDDEN);
 		for (int i = 0; i < projects.length; i++) {
 			if (!projects[i].isAccessible())
@@ -193,7 +194,7 @@ class MonitorManager implements ILifecycleListener, IPathVariableChangeListener,
 		if (registeredMonitors.isEmpty())
 			return;
 		String variableName = event.getVariableName();
-		Set<IResource> invalidResources = new HashSet<IResource>();
+		Set<IResource> invalidResources = new HashSet<>();
 		for (Iterator<List<IResource>> i = registeredMonitors.values().iterator(); i.hasNext();) {
 			for (Iterator<IResource> j = i.next().iterator(); j.hasNext();) {
 				IResource resource = j.next();
@@ -219,7 +220,7 @@ class MonitorManager implements ILifecycleListener, IPathVariableChangeListener,
 		synchronized (registeredMonitors) {
 			List<IResource> resources = registeredMonitors.get(monitor);
 			if (resources == null) {
-				resources = new ArrayList<IResource>(1);
+				resources = new ArrayList<>(1);
 				registeredMonitors.put(monitor, resources);
 			}
 			if (!resources.contains(resource))
@@ -269,7 +270,7 @@ class MonitorManager implements ILifecycleListener, IPathVariableChangeListener,
 		((Workspace) workspace).addLifecycleListener(this);
 		if (Policy.DEBUG_AUTO_REFRESH)
 			Policy.debug(RefreshManager.DEBUG_PREFIX + " starting monitor manager."); //$NON-NLS-1$
-		//If not exclusively using polling, create a polling monitor and run it once, to catch 
+		//If not exclusively using polling, create a polling monitor and run it once, to catch
 		//changes that occurred while the native monitor was turned off.
 		if (refreshNeeded)
 			new PollingMonitor(refreshManager).runOnce();

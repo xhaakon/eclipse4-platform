@@ -25,7 +25,7 @@ import org.eclipse.ui.navigator.*;
 /**
  * A label provider wrapper that adds synchronization image and/or text decorations
  * to the image and label obtained from the delegate provider.
- * 
+ *
  * @since 3.2
  */
 public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLabelProvider implements ICommonLabelProvider, IFontProvider {
@@ -34,19 +34,20 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 	private ISynchronizationContext context;
 	private ITreeContentProvider contentProvider;
 	private ICommonContentExtensionSite site;
-	
+
 	private void init(ISynchronizationScope input, ISynchronizationContext context) {
 		this.scope = input;
 		this.context = context;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.navigator.ICommonLabelProvider#init(org.eclipse.ui.navigator.ICommonContentExtensionSite)
 	 */
+	@Override
 	public void init(ICommonContentExtensionSite site) {
 		this.site = site;
 		contentProvider = site.getExtension().getContentProvider();
-		init((ISynchronizationScope)site.getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_SCOPE), 
+		init((ISynchronizationScope)site.getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_SCOPE),
 				(ISynchronizationContext)site.getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_CONTEXT));
 	}
 
@@ -69,10 +70,11 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 	public ISynchronizationScope getScope() {
 		return scope;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.navigator.IMementoAware#restoreState(org.eclipse.ui.IMemento)
 	 */
+	@Override
 	public void restoreState(IMemento aMemento) {
 		ILabelProvider provider = getDelegateLabelProvider();
 		if (provider instanceof ICommonLabelProvider) {
@@ -83,16 +85,18 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.navigator.IMementoAware#saveState(org.eclipse.ui.IMemento)
 	 */
+	@Override
 	public void saveState(IMemento aMemento) {
 		ILabelProvider provider = getDelegateLabelProvider();
 		if (provider instanceof ICommonLabelProvider) {
 			((ICommonLabelProvider) provider).saveState(aMemento);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.navigator.IDescriptionProvider#getDescription(java.lang.Object)
 	 */
+	@Override
 	public String getDescription(Object anElement) {
 		ILabelProvider provider = getDelegateLabelProvider();
 		if (provider instanceof IDescriptionProvider) {
@@ -104,13 +108,15 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.mapping.SynchronizationStateLabelProvider#isDecorationEnabled()
 	 */
+	@Override
 	protected boolean isDecorationEnabled() {
 		return getContext() != null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.mapping.SynchronizationStateLabelProvider#getImage(java.lang.Object)
 	 */
+	@Override
 	public Image getImage(Object element) {
 		Image image = super.getImage(element);
 		if (image == null && internalGetElement(element) instanceof ModelProvider) {
@@ -118,7 +124,7 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 		}
 		return image;
 	}
-	
+
 	/**
 	 * Return the root object for the model. By default, it is the
 	 * workspace root. Subclasses may override. This object is used to
@@ -128,10 +134,11 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 	protected Object getModelRoot() {
 		return ResourcesPlugin.getWorkspace().getRoot();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.AbstractSynchronizeLabelProvider#getText(java.lang.Object)
 	 */
+	@Override
 	public String getText(Object element) {
 		String text = super.getText(element);
 		if (contentProvider instanceof SynchronizationContentProvider) {
@@ -153,7 +160,7 @@ public abstract class SynchronizationLabelProvider extends AbstractSynchronizeLa
 	public ICommonContentExtensionSite getExtensionSite() {
 		return site;
 	}
-	
+
 	private Object internalGetElement(Object element) {
 		if (element instanceof TreePath) {
 			TreePath tp = (TreePath) element;

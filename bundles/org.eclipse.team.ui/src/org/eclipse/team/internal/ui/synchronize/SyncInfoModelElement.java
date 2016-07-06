@@ -35,46 +35,46 @@ import org.eclipse.team.internal.ui.TeamUIPlugin;
  * @see Differencer
  */
 public class SyncInfoModelElement extends SynchronizeModelElement {
-		
+
 	private ITypedElement ancestor;
 	private SyncInfo info;
-	
+
 	/**
 	 * Construct a <code>SyncInfoModelElement</code> for the given resource.
-	 * 
-	 * @param parent 
-	 * @param info 
+	 *
+	 * @param parent
+	 * @param info
 	 */
 	public SyncInfoModelElement(IDiffContainer parent, SyncInfo info) {
 		super(parent);
-		
+
 		Assert.isNotNull(info);
 		this.info = info;
 		// update state
-		setKind(info.getKind());		
+		setKind(info.getKind());
 		// local
 		setLeft(createLocalTypeElement(info));
 		// remote
-		setRight(createRemoteTypeElement(info));	
+		setRight(createRemoteTypeElement(info));
 		// base
 		setAncestor(createBaseTypeElement(info));
-			
+
 		fireChange();
 	}
 
 	/**
 	 * Update this element with a changed sync info. The remote and base handles have to be updated
 	 * with the new handles in the sync info.
-	 * 
+	 *
 	 * @param info the new sync info
 	 */
 	public void update(SyncInfo info) {
 		this.info = info;
 		// update state
-		setKind(info.getKind());	
-			
+		setKind(info.getKind());
+
 		// Remote
-		RemoteResourceTypedElement rightEl = (RemoteResourceTypedElement)getRight(); 
+		RemoteResourceTypedElement rightEl = (RemoteResourceTypedElement)getRight();
 		IResourceVariant remote = info.getRemote();
 		if(rightEl == null && remote != null) {
 			setRight(createRemoteTypeElement(info));
@@ -86,7 +86,7 @@ public class SyncInfoModelElement extends SynchronizeModelElement {
 			}
 		}
 		// Base
-		RemoteResourceTypedElement ancestorEl = (RemoteResourceTypedElement)getAncestor(); 
+		RemoteResourceTypedElement ancestorEl = (RemoteResourceTypedElement)getAncestor();
 		IResourceVariant base = info.getBase();
 		if(ancestorEl == null && base != null) {
 			setAncestor(createBaseTypeElement(info));
@@ -97,13 +97,14 @@ public class SyncInfoModelElement extends SynchronizeModelElement {
 				setAncestor(createBaseTypeElement(info));
 			}
 		}
-		
+
 		fireChange();
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.structuremergeviewer.DiffElement#getKind()
 	 */
+	@Override
 	public int getKind() {
 		SyncInfo info = getSyncInfo();
 		if (info != null) {
@@ -112,26 +113,29 @@ public class SyncInfoModelElement extends SynchronizeModelElement {
 			return SyncInfo.IN_SYNC;
 		}
 	}
-	
+
 	/**
 	 * We have to track the base because <code>DiffNode</code> doesn't provide a
 	 * setter. See:
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=52261
 	 */
+	@Override
 	public void setAncestor(ITypedElement ancestor) {
 		this.ancestor = ancestor;
 	}
-		
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.structuremergeviewer.DiffNode#getAncestor()
 	 */
+	@Override
 	public ITypedElement getAncestor() {
 		return this.ancestor;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.structuremergeviewer.DiffNode#getName()
 	 */
+	@Override
 	public String getName() {
 		IResource resource = getResource();
 		if(resource != null) {
@@ -140,34 +144,37 @@ public class SyncInfoModelElement extends SynchronizeModelElement {
 			return super.getName();
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
 	 */
+	@Override
 	public Object getAdapter(Class adapter) {
 		if(adapter == SyncInfo.class) {
 			return getSyncInfo();
 		}
 		return super.getAdapter(adapter);
 	}
-	
+
 	/**
 	 * Helper method that returns the resource associated with this node. A node is not
 	 * required to have an associated local resource.
 	 * @return the resource associated with this node or <code>null</code> if the local
 	 * contributor is not a resource.
 	 */
+	@Override
 	public IResource getResource() {
 		return info.getLocal();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
+	@Override
 	public String toString() {
 		return getResource().getFullPath().toString();
 	}
-	
+
 	/**
 	 * Cache the contents for the base and remote.
 	 * @param monitor
@@ -190,7 +197,7 @@ public class SyncInfoModelElement extends SynchronizeModelElement {
 			monitor.done();
 		}
 	}
-	
+
 	public SyncInfo getSyncInfo() {
 		return info;
 	}
@@ -205,7 +212,7 @@ public class SyncInfoModelElement extends SynchronizeModelElement {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Create an ITypedElement for the given remote resource. The contents for the remote resource
 	 * will be retrieved from the given IStorage which is a local cache used to buffer the remote contents

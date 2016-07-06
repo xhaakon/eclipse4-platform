@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -91,9 +91,6 @@ public class EnablementDialog extends Dialog {
 		this.strings = strings;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-     */
     @Override
 	protected Control createDialogArea(Composite parent) {
         Composite composite = (Composite) super.createDialogArea(parent);
@@ -141,9 +138,6 @@ public class EnablementDialog extends Dialog {
             viewer.setCheckedElements(activityIdsCopy.toArray());
             viewer.addCheckStateListener(new ICheckStateListener() {
 
-                /* (non-Javadoc)
-                 * @see org.eclipse.jface.viewers.ICheckStateListener#checkStateChanged(org.eclipse.jface.viewers.CheckStateChangedEvent)
-                 */
                 @Override
 				public void checkStateChanged(CheckStateChangedEvent event) {
                     if (event.getChecked()) {
@@ -157,9 +151,6 @@ public class EnablementDialog extends Dialog {
                 }
             });
             viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-                /* (non-Javadoc)
-                 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-                 */
                 @Override
 				public void selectionChanged(SelectionChangedEvent event) {
                     selectedActivity = (String) ((IStructuredSelection) event
@@ -272,9 +263,6 @@ public class EnablementDialog extends Dialog {
 		}
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-     */
     @Override
 	protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
@@ -296,18 +284,12 @@ public class EnablementDialog extends Dialog {
         return activitiesToEnable;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-     */
     @Override
 	protected void okPressed() {
         dontAsk = dontAskButton.getSelection();
         super.okPressed();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-     */
     @Override
 	protected void createButtonsForButtonBar(Composite parent) {
         super.createButtonsForButtonBar(parent);
@@ -316,9 +298,6 @@ public class EnablementDialog extends Dialog {
         setDetailButtonLabel();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.dialogs.Dialog#buttonPressed(int)
-     */
     @Override
 	protected void buttonPressed(int buttonId) {
         if (buttonId == IDialogConstants.DETAILS_ID) {

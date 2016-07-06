@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,12 +62,14 @@ public class MozillaBrowserAdapter implements IBrowser {
 	/*
 	 * @see IBrowser#close()
 	 */
+	@Override
 	public void close() {
 	}
 
 	/*
 	 * @see IBrowser#displayURL(String)
 	 */
+	@Override
 	public void displayURL(String url) {
 		if (lastBrowserThread != null)
 			lastBrowserThread.exitRequested = true;
@@ -83,6 +85,7 @@ public class MozillaBrowserAdapter implements IBrowser {
 	/*
 	 * @see IBrowser#isCloseSupported()
 	 */
+	@Override
 	public boolean isCloseSupported() {
 		return false;
 	}
@@ -90,6 +93,7 @@ public class MozillaBrowserAdapter implements IBrowser {
 	/*
 	 * @see IBrowser#isSetLocationSupported()
 	 */
+	@Override
 	public boolean isSetLocationSupported() {
 		return true;
 	}
@@ -97,6 +101,7 @@ public class MozillaBrowserAdapter implements IBrowser {
 	/*
 	 * @see IBrowser#isSetSizeSupported()
 	 */
+	@Override
 	public boolean isSetSizeSupported() {
 		return true;
 	}
@@ -104,6 +109,7 @@ public class MozillaBrowserAdapter implements IBrowser {
 	/*
 	 * @see IBrowser#setLocation(int, int)
 	 */
+	@Override
 	public void setLocation(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -113,6 +119,7 @@ public class MozillaBrowserAdapter implements IBrowser {
 	/*
 	 * @see IBrowser#setSize(int, int)
 	 */
+	@Override
 	public void setSize(int width, int height) {
 		this.width = width;
 		this.height = height;
@@ -126,25 +133,22 @@ public class MozillaBrowserAdapter implements IBrowser {
 				.toFile();
 		try {
 			outFile.getParentFile().mkdirs();
-			PrintWriter writer = new PrintWriter(new BufferedWriter(
-					new OutputStreamWriter(new FileOutputStream(outFile),
-							"UTF8")), //$NON-NLS-1$
-					false);
-			writer
-					.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">"); //$NON-NLS-1$
-			writer.println("<html><head>"); //$NON-NLS-1$
-			writer
-					.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"); //$NON-NLS-1$
-			writer.print("<title></title><script type=\"text/javascript\">"); //$NON-NLS-1$
-			if (setSizePending)
-				writer.print("window.resizeTo(" + width + "," + height + ");"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			if (setLocationPending)
-				writer.print("window.moveTo(" + x + "," + y + ");"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			writer.print("location.replace(\"" + url + "\");"); //$NON-NLS-1$ //$NON-NLS-2$
-			writer.print("</script></head><body>"); //$NON-NLS-1$
-			writer.print("<a href=\"" + url + "\">--&gt;</a>"); //$NON-NLS-1$ //$NON-NLS-2$
-			writer.print("</body></html>"); //$NON-NLS-1$
-			writer.close();
+			try (PrintWriter writer = new PrintWriter(
+					new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), "UTF8")), //$NON-NLS-1$
+					false)) {
+				writer.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">"); //$NON-NLS-1$
+				writer.println("<html><head>"); //$NON-NLS-1$
+				writer.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">"); //$NON-NLS-1$
+				writer.print("<title></title><script type=\"text/javascript\">"); //$NON-NLS-1$
+				if (setSizePending)
+					writer.print("window.resizeTo(" + width + "," + height + ");"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				if (setLocationPending)
+					writer.print("window.moveTo(" + x + "," + y + ");"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				writer.print("location.replace(\"" + url + "\");"); //$NON-NLS-1$ //$NON-NLS-2$
+				writer.print("</script></head><body>"); //$NON-NLS-1$
+				writer.print("<a href=\"" + url + "\">--&gt;</a>"); //$NON-NLS-1$ //$NON-NLS-2$
+				writer.print("</body></html>"); //$NON-NLS-1$
+			}
 			return "file://" + outFile.getAbsolutePath(); //$NON-NLS-1$
 		} catch (IOException ioe) {
 			// return the original url
@@ -228,6 +232,7 @@ public class MozillaBrowserAdapter implements IBrowser {
 			return false;
 		}
 
+		@Override
 		public void run() {
 			// If browser is opening, wait until it fully opens,
 			waitForBrowser();

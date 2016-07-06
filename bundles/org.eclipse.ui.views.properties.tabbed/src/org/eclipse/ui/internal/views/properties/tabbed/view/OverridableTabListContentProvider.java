@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2010 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,13 +10,12 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.views.properties.tabbed.view;
 
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.Assert;
-
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
-
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.IContributedContentsView;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
@@ -107,21 +106,23 @@ class OverridableTabListContentProvider extends TabListContentProvider
 	private void init(TabbedPropertyViewer newTabbedPropertyViewer) {
 		this.tabbedPropertyViewer = newTabbedPropertyViewer;
 		currentPart = tabbedPropertyViewer.getWorkbenchPart();
-		if (currentPart.getAdapter(IPropertySheetPage.class) != null) {
-			tabbedPropertySheetPage = (TabbedPropertySheetPage) currentPart
-					.getAdapter(IPropertySheetPage.class);
+		IPropertySheetPage page = (IPropertySheetPage) Adapters.adapt(currentPart, IPropertySheetPage.class);
+		if (page instanceof TabbedPropertySheetPage) {
+			tabbedPropertySheetPage = (TabbedPropertySheetPage) page;
 		} else {
 			/*
 			 * Is the part is a IContributedContentsView for the contributor,
 			 * for example, outline view.
 			 */
-			IContributedContentsView view = (IContributedContentsView) currentPart
-					.getAdapter(IContributedContentsView.class);
+			IContributedContentsView view = (IContributedContentsView) Adapters.adapt(currentPart,
+					IContributedContentsView.class);
 			if (view != null) {
 				IWorkbenchPart part = view.getContributingPart();
 				if (part != null) {
-					tabbedPropertySheetPage = (TabbedPropertySheetPage) part
-							.getAdapter(IPropertySheetPage.class);
+					page = (IPropertySheetPage) Adapters.adapt(part, IPropertySheetPage.class);
+					if (page instanceof TabbedPropertySheetPage) {
+						tabbedPropertySheetPage = (TabbedPropertySheetPage) page;
+					}
 				}
 			}
 		}

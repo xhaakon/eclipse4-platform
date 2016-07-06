@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,23 +47,12 @@ public abstract class AbstractPartRenderer {
 
 	public abstract void hookControllerLogic(final MUIElement me);
 
-	public abstract void childRendered(
-			MElementContainer<MUIElement> parentElement, MUIElement element);
+	public abstract void childRendered(MElementContainer<MUIElement> parentElement, MUIElement element);
 
-	public void hideChild(MElementContainer<MUIElement> parentElement,
-			MUIElement child) {
+	public void hideChild(MElementContainer<MUIElement> parentElement, MUIElement child) {
 	}
 
 	protected abstract Object getImage(MUILabel element);
-
-	//
-	// public Object createMenu(Object widgetObject, MMenu menu) {
-	// return null;
-	// }
-	//
-	// public Object createToolBar(Object widgetObject, MToolBar toolBar) {
-	// return null;
-	// }
 
 	/**
 	 * Return a parent context for this part.
@@ -121,7 +110,12 @@ public abstract class AbstractPartRenderer {
 	public Object getUIContainer(MUIElement element) {
 		if (element.getParent() != null)
 			return element.getParent().getWidget();
-
+		else {
+			Object value = element.getTransientData().get(IPresentationEngine.RENDERING_PARENT_KEY);
+			if (value != null) {
+				return value;
+			}
+		}
 		return null;
 	}
 
@@ -141,10 +135,10 @@ public abstract class AbstractPartRenderer {
 	 * @return Returns the style override bits or -1 if there is no override
 	 */
 	public int getStyleOverride(MUIElement mElement) {
-		String overrideStr = mElement.getPersistedState().get(
-				IPresentationEngine.STYLE_OVERRIDE_KEY);
-		if (overrideStr == null || overrideStr.length() == 0)
+		String overrideStr = mElement.getPersistedState().get(IPresentationEngine.STYLE_OVERRIDE_KEY);
+		if (overrideStr == null || overrideStr.length() == 0) {
 			return -1;
+		}
 
 		int val = -1;
 		val = Integer.parseInt(overrideStr);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2007 IBM Corporation and others.
+ * Copyright (c) 2004, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,6 +48,7 @@ public class LaunchingPreferencePage extends FieldEditorPreferencePage implement
 	private Button fUseOldLaunching;
 	private Button fLaunchLastIfNotLaunchable;
 	private Button fCheckParent;
+	private Button fTerminatAndRelaunch;
 	
 	/**
 	 * The default constructor
@@ -130,7 +131,7 @@ public class LaunchingPreferencePage extends FieldEditorPreferencePage implement
 		addField(editor);
 		int historyMax = IDebugPreferenceConstants.MAX_LAUNCH_HISTORY_SIZE;
 		editor.setTextLimit(Integer.toString(historyMax).length());
-		editor.setErrorMessage(MessageFormat.format(DebugPreferencesMessages.DebugPreferencePage_11, new Object[] { new Integer(1), new Integer(historyMax)})); 
+		editor.setErrorMessage(MessageFormat.format(DebugPreferencesMessages.DebugPreferencePage_11, new Object[] { Integer.valueOf(1), Integer.valueOf(historyMax)}));
 		editor.setValidateStrategy(StringFieldEditor.VALIDATE_ON_KEY_STROKE);
 		editor.setValidRange(1, historyMax);
 		editor.setEmptyStringAllowed(false);
@@ -172,7 +173,9 @@ public class LaunchingPreferencePage extends FieldEditorPreferencePage implement
 		fCheckParent = SWTFactory.createRadioButton(space, DebugPreferencesMessages.LaunchingPreferencePage_39);
 		fLaunchLastIfNotLaunchable = SWTFactory.createRadioButton(space, DebugPreferencesMessages.LaunchingPreferencePage_41);
 		
-		//initialize the buttons
+		fTerminatAndRelaunch = SWTFactory.createCheckButton(group, DebugPreferencesMessages.LaunchingPreferencePage_42, null, false, 1);
+
+		// initialize the buttons
 		boolean value = getPreferenceStore().getBoolean(IInternalDebugUIConstants.PREF_USE_CONTEXTUAL_LAUNCH);
 		fUseOldLaunching.setSelection(!value);
 		fUseContextLaunching.setSelection(value);
@@ -181,6 +184,9 @@ public class LaunchingPreferencePage extends FieldEditorPreferencePage implement
 		fCheckParent.setEnabled(value);
 		fLaunchLastIfNotLaunchable.setSelection(!enable);
 		fLaunchLastIfNotLaunchable.setEnabled(value);
+
+		value = getPreferenceStore().getBoolean(IInternalDebugUIConstants.PREF_TERMINATE_AND_RELAUNCH_LAUNCH_ACTION);
+		fTerminatAndRelaunch.setSelection(value);
 	}
 	
 	/* (non-Javadoc)
@@ -202,6 +208,8 @@ public class LaunchingPreferencePage extends FieldEditorPreferencePage implement
 		fCheckParent.setEnabled(value);
 		fLaunchLastIfNotLaunchable.setSelection(!parent);
 		fLaunchLastIfNotLaunchable.setEnabled(value);
+		value = getPreferenceStore().getDefaultBoolean(IInternalDebugUIConstants.PREF_TERMINATE_AND_RELAUNCH_LAUNCH_ACTION);
+		fTerminatAndRelaunch.setSelection(value);
 		super.performDefaults();
 	}
 	
@@ -213,6 +221,7 @@ public class LaunchingPreferencePage extends FieldEditorPreferencePage implement
 		getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_USE_CONTEXTUAL_LAUNCH, fUseContextLaunching.getSelection());
 		getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_LAUNCH_PARENT_PROJECT, fCheckParent.getSelection());
 		getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_LAUNCH_LAST_IF_NOT_LAUNCHABLE, fLaunchLastIfNotLaunchable.getSelection());
+		getPreferenceStore().setValue(IInternalDebugUIConstants.PREF_TERMINATE_AND_RELAUNCH_LAUNCH_ACTION, fTerminatAndRelaunch.getSelection());
 		return super.performOk();
 	}
 

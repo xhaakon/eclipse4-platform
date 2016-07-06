@@ -35,7 +35,7 @@ public class DialogSynchronizePageSite implements ISynchronizePageSite {
 	// Keybindings enabled in the dialog, these should be removed
 	// when the dialog is closed.
 	private List actionHandlers = new ArrayList(2);
-	
+
 	/**
 	 * Create a site for use in a dialog
 	 * @param shell the shell
@@ -48,63 +48,73 @@ public class DialogSynchronizePageSite implements ISynchronizePageSite {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getSelectionProvider()
 	 */
+	@Override
 	public ISelectionProvider getSelectionProvider() {
 		return selectionProvider;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getShell()
 	 */
+	@Override
 	public Shell getShell() {
 		return shell;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#setSelectionProvider(org.eclipse.jface.viewers.ISelectionProvider)
 	 */
+	@Override
 	public void setSelectionProvider(ISelectionProvider provider) {
 		selectionProvider = provider;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getWorkbenchSite()
 	 */
+	@Override
 	public IWorkbenchSite getWorkbenchSite() {
 		return null;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getPart()
 	 */
+	@Override
 	public IWorkbenchPart getPart() {
 		return null;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getKeyBindingService()
 	 */
+	@Override
 	public IKeyBindingService getKeyBindingService() {
 		return null;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#setFocus()
 	 */
+	@Override
 	public void setFocus() {
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getPageSettings()
 	 */
+	@Override
 	public IDialogSettings getPageSettings() {
 		return null;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#getActionBars()
 	 */
+	@Override
 	public IActionBars getActionBars() {
 		return actionBars;
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.ISynchronizePageSite#isModal()
 	 */
+	@Override
 	public boolean isModal() {
 		return isModal;
 	}
-	
+
 	/**
 	 * Create the action-bars for this site.
 	 * @param toolbar the toolbar for the action bar
@@ -112,20 +122,26 @@ public class DialogSynchronizePageSite implements ISynchronizePageSite {
 	public void createActionBars(final IToolBarManager toolbar) {
 		if (actionBars == null) {
 			actionBars = new IActionBars() {
+				@Override
 				public void clearGlobalActionHandlers() {
 				}
+				@Override
 				public IAction getGlobalActionHandler(String actionId) {
 					return null;
 				}
+				@Override
 				public IMenuManager getMenuManager() {
 					return null;
 				}
+				@Override
 				public IStatusLineManager getStatusLineManager() {
 					return null;
 				}
+				@Override
 				public IToolBarManager getToolBarManager() {
 					return toolbar;
 				}
+				@Override
 				public void setGlobalActionHandler(String actionId, IAction action) {
 					if (actionId != null && !"".equals(actionId)) { //$NON-NLS-1$
 						IHandler handler = new ActionHandler(action);
@@ -135,15 +151,17 @@ public class DialogSynchronizePageSite implements ISynchronizePageSite {
 					}
 				}
 
+				@Override
 				public void updateActionBars() {
 				}
+				@Override
 				public IServiceLocator getServiceLocator() {
 					return null;
 				}
 			};
 		}
 	}
-	
+
 	/**
 	 * Cleanup when the dialog is closed
 	 */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2008 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Simon Scholz <simon.scholz@vogella.com> - Bug 483528
  *******************************************************************************/
 package org.eclipse.ui.dialogs;
 
@@ -52,8 +53,8 @@ public final class WorkingSetGroup {
 				false));
 		workingSetGroup.setLayout(new GridLayout(1, false));
 
-		workingSetBlock = new WorkingSetConfigurationBlock(workingSetTypes,
-				WorkbenchPlugin.getDefault().getDialogSettings());
+		workingSetBlock = new WorkingSetConfigurationBlock(WorkbenchPlugin.getDefault().getDialogSettings(),
+				workingSetTypes);
 		workingSetBlock.setWorkingSets(workingSetBlock
 				.findApplicableWorkingSets(currentSelection));
 		workingSetBlock.createContent(workingSetGroup);

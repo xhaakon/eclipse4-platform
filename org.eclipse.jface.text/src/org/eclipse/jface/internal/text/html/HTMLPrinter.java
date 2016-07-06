@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,8 +33,8 @@ import org.eclipse.jface.text.DefaultInformationControl;
  */
 public class HTMLPrinter {
 
-	private static RGB BG_COLOR_RGB= new RGB(255, 255, 225); // RGB value of info bg color on WindowsXP
-	private static RGB FG_COLOR_RGB= new RGB(0, 0, 0); // RGB value of info fg color on WindowsXP
+	private static volatile RGB BG_COLOR_RGB= new RGB(255, 255, 225); // RGB value of info bg color on WindowsXP
+	private static volatile RGB FG_COLOR_RGB= new RGB(0, 0, 0); // RGB value of info fg color on WindowsXP
 	
 	private static final String UNIT; // See https://bugs.eclipse.org/bugs/show_bug.cgi?id=155993
 	static {
@@ -47,9 +47,7 @@ public class HTMLPrinter {
 		if (display != null && !display.isDisposed()) {
 			try {
 				display.asyncExec(new Runnable() {
-					/*
-					 * @see java.lang.Runnable#run()
-					 */
+					@Override
 					public void run() {
 						cacheColors(display);
 						installColorUpdater(display);
@@ -73,6 +71,7 @@ public class HTMLPrinter {
 	
 	private static void installColorUpdater(final Display display) {
 		display.addListener(SWT.Settings, new Listener() {
+			@Override
 			public void handleEvent(Event event) {
 				cacheColors(display);
 			}

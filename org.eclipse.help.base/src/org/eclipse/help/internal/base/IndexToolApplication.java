@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,6 +31,7 @@ public class IndexToolApplication implements IApplication {
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
+	@Override
 	public synchronized Object start(IApplicationContext context) throws Exception {
 		try {
 			String directory = System.getProperty("indexOutput"); //$NON-NLS-1$
@@ -60,6 +61,7 @@ public class IndexToolApplication implements IApplication {
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#stop()
 	 */
+	@Override
 	public synchronized void stop() {
 	}
 
@@ -83,12 +85,9 @@ public class IndexToolApplication implements IApplication {
 		}
 		if (!d.exists())
 			d.mkdirs();
-		ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(
-				new File(d, "doc_index.zip"))); //$NON-NLS-1$
-		try {
+
+		try (ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(new File(d, "doc_index.zip")))) { //$NON-NLS-1$
 			zipDirectory(indexPath, zout, null);
-		} finally {
-			zout.close();
 		}
 	}
 
@@ -141,11 +140,11 @@ public class IndexToolApplication implements IApplication {
 			else {
 				ZipEntry zentry = new ZipEntry(path);
 				zout.putNextEntry(zentry);
-				FileInputStream inputStream = new FileInputStream(f);
-				int len;
-				while ((len = inputStream.read(buffer)) != -1)
-					zout.write(buffer, 0, len);
-				inputStream.close();
+				try (FileInputStream inputStream = new FileInputStream(f)) {
+					int len;
+					while ((len = inputStream.read(buffer)) != -1)
+						zout.write(buffer, 0, len);
+				}
 				zout.flush();
 				zout.closeEntry();
 			}

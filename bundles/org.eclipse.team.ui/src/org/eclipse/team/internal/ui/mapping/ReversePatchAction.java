@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  * IBM Corporation - initial API and implementation
+ *     Alex Blewitt <alex.blewitt@gmail.com> - replace new Boolean with Boolean.valueOf - https://bugs.eclipse.org/470344
  *******************************************************************************/
 package org.eclipse.team.internal.ui.mapping;
 
@@ -31,10 +32,12 @@ public class ReversePatchAction extends Action {
 		subscriber = (ApplyPatchSubscriber) context.getSubscriber();
 	}
 
+	@Override
 	public boolean isChecked() {
 		return subscriber.getPatcher().isReversed();
 	}
 
+	@Override
 	public void run() {
 		boolean oldValue = subscriber.getPatcher().isReversed();
 		subscriber.getPatcher().setReversed(!oldValue);
@@ -45,7 +48,7 @@ public class ReversePatchAction extends Action {
 		participant.refresh(configuration.getSite().getWorkbenchSite(), context
 				.getScope().getMappings());
 
-		firePropertyChange(CHECKED, new Boolean(oldValue), new Boolean(
+		firePropertyChange(CHECKED, Boolean.valueOf(oldValue), Boolean.valueOf(
 				!oldValue));
 	}
 

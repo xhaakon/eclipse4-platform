@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2013 Angelo Zerr and others.
+ * Copyright (c) 2008, 2015 Angelo Zerr and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,55 +32,31 @@ public class RGBColorImpl extends CSSValueImpl implements RGBColor {
 		blue = new Measure(nextUnit);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.RGBColor#getRed()
-	 */
 	@Override
 	public CSSPrimitiveValue getRed() {
 		return red;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.RGBColor#getGreen()
-	 */
 	@Override
 	public CSSPrimitiveValue getGreen() {
 		return green;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.RGBColor#getBlue()
-	 */
 	@Override
 	public CSSPrimitiveValue getBlue() {
 		return blue;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSValue#getRGBColorValue()
-	 */
 	@Override
 	public RGBColor getRGBColorValue() throws DOMException {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSValue#getPrimitiveType()
-	 */
 	@Override
 	public short getPrimitiveType() {
 		return CSS_RGBCOLOR;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.w3c.dom.css.CSSValue#getCssText()
-	 */
 	@Override
 	public String getCssText() {
 		return "rgb(" + red.getCssText() + ", " + green.getCssText() + ", "

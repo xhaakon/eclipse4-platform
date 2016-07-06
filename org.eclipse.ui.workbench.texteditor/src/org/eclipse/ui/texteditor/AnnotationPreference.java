@@ -317,7 +317,7 @@ public class AnnotationPreference {
 	 * The map of attributes.
 	 * @since 3.0
 	 */
-	private Map fAttributes= new HashMap();
+	private Map<Object, Object> fAttributes= new HashMap<>();
 
 
 
@@ -479,6 +479,7 @@ public class AnnotationPreference {
 	 * @return the marker type, or <code>null</code> if none is set
 	 * @deprecated since 3.0
 	 */
+	@Deprecated
 	public String getMarkerType() {
 		return fMarkerType;
 	}
@@ -489,6 +490,7 @@ public class AnnotationPreference {
 	 * @return the marker severity
 	 * @deprecated since 3.0
 	 */
+	@Deprecated
 	public int getSeverity() {
 		return fSeverity;
 	}

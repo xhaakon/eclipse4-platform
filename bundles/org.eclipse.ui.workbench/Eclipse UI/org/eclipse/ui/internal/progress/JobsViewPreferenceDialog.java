@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,18 +39,12 @@ public class JobsViewPreferenceDialog extends ViewSettingsDialog {
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText(ProgressMessages.JobsViewPreferenceDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite top = (Composite) super.createDialogArea(parent);
@@ -69,18 +63,12 @@ public class JobsViewPreferenceDialog extends ViewSettingsDialog {
 		return top;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
 	@Override
 	protected void okPressed() {
 		verboseEditor.store();
 		super.okPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.internal.preferences.ViewSettingsDialog#performDefaults()
-	 */
 	@Override
 	protected void performDefaults() {
 		verboseEditor.loadDefault();

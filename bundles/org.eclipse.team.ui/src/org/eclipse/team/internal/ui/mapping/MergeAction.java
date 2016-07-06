@@ -25,18 +25,18 @@ import org.eclipse.team.ui.synchronize.*;
 import org.eclipse.ui.PlatformUI;
 
 /**
- * An action that delegates to an appropriate handler when performing 
+ * An action that delegates to an appropriate handler when performing
  * a merge opereration.
- * 
+ *
  * @since 3.2
  */
 public class MergeAction extends Action {
-	
+
 	private final String handlerId;
 	private final CommonMenuManager manager;
 	private final ISynchronizePageConfiguration configuration;
 	private IHandler defaultHandler;
-	
+
 	public MergeAction(String handlerId, CommonMenuManager manager, ISynchronizePageConfiguration configuration) {
 		Assert.isNotNull(handlerId);
 		Assert.isNotNull(manager);
@@ -45,7 +45,8 @@ public class MergeAction extends Action {
 		this.manager = manager;
 		this.configuration = configuration;
 	}
-	
+
+	@Override
 	public void runWithEvent(Event event) {
 		IHandler handler = getHandler();
 		if (handler != null && handler.isEnabled()) {
@@ -59,6 +60,7 @@ public class MergeAction extends Action {
 				final SaveableComparison target = targetBuffer;
 				try {
 					PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {
+						@Override
 						public void run(IProgressMonitor monitor) throws InvocationTargetException,
 								InterruptedException {
 							try {
@@ -66,7 +68,7 @@ public class MergeAction extends Action {
 							} catch (CoreException e) {
 								throw new InvocationTargetException(e);
 							}
-						}			
+						}
 					});
 				} catch (InvocationTargetException e) {
 					Utils.handle(e);
@@ -114,7 +116,7 @@ public class MergeAction extends Action {
 		}
 		return handler;
 	}
-	
+
 	private IHandler getDefaultHandler() {
 		return MergeActionHandler.getDefaultHandler(handlerId, configuration);
 	}
@@ -128,7 +130,7 @@ public class MergeAction extends Action {
 		if (defaultHandler != null)
 			defaultHandler.dispose();
 	}
-	
+
 	public void update() {
 		setEnabled(calculateEnablement());
 	}

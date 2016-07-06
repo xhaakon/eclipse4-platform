@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.preferences;
 
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.jface.wizard.Wizard;
@@ -84,12 +85,7 @@ public class WorkingSetPropertyPage extends WizardPropertyPage {
 	@Override
 	public void setElement(IAdaptable element) {
 		super.setElement(element);
-
-		if (element instanceof IWorkingSet) {
-			fWorkingSet= (IWorkingSet)element;
-		} else {
-			fWorkingSet= element.getAdapter(IWorkingSet.class);
-		}
+		fWorkingSet = Adapters.adapt(element, IWorkingSet.class);
 	}
 
 	/**

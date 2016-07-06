@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,7 @@
  *******************************************************************************/
 
 /**
- * The default state manager for a cheat sheet. The data will be saved and restored 
+ * The default state manager for a cheat sheet. The data will be saved and restored
  * using a file in metadata whose name is derived from the id
  */
 
@@ -31,19 +31,23 @@ import org.eclipse.ui.internal.cheatsheets.views.CheatSheetManager;
 public class NoSaveStateManager implements ICheatSheetStateManager {
 
 	private CheatSheetElement element;
+	@Override
 	public Properties getProperties() {
 		return null;
 	}
 
-	public CheatSheetManager getCheatSheetManager() {	
+	@Override
+	public CheatSheetManager getCheatSheetManager() {
 		CheatSheetManager result = new CheatSheetManager(element);
 		return result;
 	}
 
+	@Override
 	public void setElement(CheatSheetElement element) {
 		this.element = element;
 	}
 
+	@Override
 	public IStatus saveState(Properties properties, CheatSheetManager manager) {
 		return Status.OK_STATUS;
 	}

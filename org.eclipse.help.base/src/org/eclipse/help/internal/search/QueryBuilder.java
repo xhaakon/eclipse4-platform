@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,7 +42,7 @@ public class QueryBuilder {
 	// List of QueryWordsToken
 	private List<QueryWordsToken> analyzedTokens;
 	// List of words to highlight
-	private List<String> highlightWords = new ArrayList<String>();
+	private List<String> highlightWords = new ArrayList<>();
 	private Locale locale;
 	/**
 	 * Creates a query builder for the search word. The search word is processed
@@ -64,7 +64,7 @@ public class QueryBuilder {
 	 * Splits user query into tokens and returns a list of QueryWordsToken's.
 	 */
 	private List<QueryWordsToken> tokenizeUserQuery(String searchWords) {
-	    List<QueryWordsToken> tokenList = new ArrayList<QueryWordsToken>();
+		List<QueryWordsToken> tokenList = new ArrayList<>();
 		//Divide along quotation marks
 		//StringTokenizer qTokenizer = new StringTokenizer(searchWords.trim(),
 		//		"\"", true); //$NON-NLS-1$
@@ -139,7 +139,7 @@ public class QueryBuilder {
 	 */
 	private List<QueryWordsToken> analyzeTokens(List<QueryWordsToken> tokens) {
 		boolean isTokenAfterNot = false;
-		List<QueryWordsToken> newTokens = new ArrayList<QueryWordsToken>();
+		List<QueryWordsToken> newTokens = new ArrayList<>();
 		int wildCardTermCount = 0;
 		for (int i = 0; i < tokens.size(); i++) {
 			QueryWordsToken token = tokens.get(i);
@@ -241,17 +241,13 @@ public class QueryBuilder {
 	 * @return List of String
 	 */
 	private List<String> analyzeText(Analyzer analyzer, String fieldName, String text) {
-		List<String> words = new ArrayList<String>(1);
-		Reader reader = new StringReader(text);
-		TokenStream tStream = analyzer.tokenStream(fieldName, reader);
-
-		CharTermAttribute termAttribute = tStream.getAttribute(CharTermAttribute.class);
-		try {
+		List<String> words = new ArrayList<>(1);
+		try (Reader reader = new StringReader(text); TokenStream tStream = analyzer.tokenStream(fieldName, reader)) {
+			CharTermAttribute termAttribute = tStream.getAttribute(CharTermAttribute.class);
 			while (tStream.incrementToken()) {
 				String term = termAttribute.toString();
 				words.add(term);
 			}
-			reader.close();
 		} catch (IOException ioe) {
 		}
 
@@ -283,8 +279,8 @@ public class QueryBuilder {
 	 */
 	private List<Query> getRequiredQueries(List<QueryWordsToken> tokens, String[] fieldNames,
 			float[] boosts) {
-		List<Query> oredQueries = new ArrayList<Query>();
-		ArrayList<QueryWordsToken> requiredQueryTokens = new ArrayList<QueryWordsToken>();
+		List<Query> oredQueries = new ArrayList<>();
+		ArrayList<QueryWordsToken> requiredQueryTokens = new ArrayList<>();
 		for (int i = 0; i < tokens.size(); i++) {
 			QueryWordsToken token = tokens.get(i);
 			if (token.type != QueryWordsToken.OR) {
@@ -294,7 +290,7 @@ public class QueryBuilder {
 						fieldNames, boosts);
 				if (reqQuery != null)
 					oredQueries.add(reqQuery);
-				requiredQueryTokens = new ArrayList<QueryWordsToken>();
+				requiredQueryTokens = new ArrayList<>();
 			}
 		}
 		Query reqQuery = getRequiredQuery(requiredQueryTokens, fieldNames,

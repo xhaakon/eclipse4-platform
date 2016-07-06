@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Jan-Hendrik Diederich, Bredex GmbH - bug 201052
- *     Lars Vogel <Lars.Vogel@gmail.com> - Bug 430616, 441267, 441282, 445609, 441280
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 430616, 441267, 441282, 445609, 441280, 472654
+ *     Simon Scholz <scholzsimon@vogella.com> - Bug 473845
  *******************************************************************************/
 package org.eclipse.ui.internal.registry;
 
@@ -24,6 +25,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.services.log.Logger;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.descriptor.basic.MPartDescriptor;
@@ -34,14 +36,30 @@ import org.eclipse.ui.activities.WorkbenchActivityHelper;
 import org.eclipse.ui.internal.IWorkbenchConstants;
 import org.eclipse.ui.internal.e4.compatibility.CompatibilityPart;
 import org.eclipse.ui.internal.menus.MenuHelper;
+import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.IStickyViewDescriptor;
 import org.eclipse.ui.views.IViewCategory;
 import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
+import org.osgi.framework.Bundle;
 
 public class ViewRegistry implements IViewRegistry {
 
 	public static final String VIEW_TAG = "View"; //$NON-NLS-1$
+
+	/**
+	 * This constant is used as key for persisting the original class for a
+	 * legacy {@link ViewPart} in the persisted state of a
+	 * {@link MPartDescriptor}.
+	 */
+	public static final String ORIGINAL_COMPATIBILITY_VIEW_CLASS = "originalCompatibilityViewClass"; //$NON-NLS-1$
+
+	/**
+	 * This constant is used as key for persisting the original bundle for a
+	 * legacy {@link ViewPart} in the persisted state of a
+	 * {@link MPartDescriptor}.
+	 */
+	public static final String ORIGINAL_COMPATIBILITY_VIEW_BUNDLE = "originalCompatibilityViewBundle"; //$NON-NLS-1$
 
 	@Inject
 	private MApplication application;
@@ -58,11 +76,11 @@ public class ViewRegistry implements IViewRegistry {
 	@Inject
 	Logger logger;
 
-	private Map<String, IViewDescriptor> descriptors = new HashMap<String, IViewDescriptor>();
+	private Map<String, IViewDescriptor> descriptors = new HashMap<>();
 
-	private List<IStickyViewDescriptor> stickyDescriptors = new ArrayList<IStickyViewDescriptor>();
+	private List<IStickyViewDescriptor> stickyDescriptors = new ArrayList<>();
 
-	private HashMap<String, ViewCategory> categories = new HashMap<String, ViewCategory>();
+	private HashMap<String, ViewCategory> categories = new HashMap<>();
 
 	private Category miscCategory = new Category();
 
@@ -139,6 +157,17 @@ public class ViewRegistry implements IViewRegistry {
 		String implementationURI = CompatibilityPart.COMPATIBILITY_VIEW_URI;
 		if (e4View) {
 			implementationURI = "bundleclass://" + element.getContributor().getName() + "/" + clsSpec; //$NON-NLS-1$//$NON-NLS-2$
+		} else {
+			IExtension declaringExtension = element.getDeclaringExtension();
+			String name = declaringExtension.getContributor().getName();
+
+			Bundle bundle = Platform.getBundle(name);
+			// the indexOf operation removes potential additional information
+			// from the qualified classname
+			int colonIndex = clsSpec.indexOf(':');
+			String viewClass = colonIndex == -1 ? clsSpec : clsSpec.substring(0, colonIndex);
+			descriptor.getPersistedState().put(ORIGINAL_COMPATIBILITY_VIEW_CLASS, viewClass);
+			descriptor.getPersistedState().put(ORIGINAL_COMPATIBILITY_VIEW_BUNDLE, bundle.getSymbolicName());
 		}
 		descriptor.setContributionURI(implementationURI);
 
@@ -185,14 +214,14 @@ public class ViewRegistry implements IViewRegistry {
 	@Override
 	public IViewDescriptor[] getViews() {
 		Collection<?> allowedViews = WorkbenchActivityHelper.restrictCollection(
-				descriptors.values(), new ArrayList<Object>());
+				descriptors.values(), new ArrayList<>());
 		return allowedViews.toArray(new IViewDescriptor[allowedViews.size()]);
 	}
 
 	@Override
 	public IStickyViewDescriptor[] getStickyViews() {
 		Collection<?> allowedViews = WorkbenchActivityHelper.restrictCollection(stickyDescriptors,
-				new ArrayList<Object>());
+				new ArrayList<>());
 		return allowedViews.toArray(new IStickyViewDescriptor[allowedViews.size()]);
 	}
 

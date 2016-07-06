@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stefan Xenos <sxenos@gmail.com> - Bug 335792
+ *     Stefan Xenos <sxenos@gmail.com> - Bug 474065
  ******************************************************************************/
 
 package org.eclipse.core.databinding.observable.value;
@@ -18,10 +20,13 @@ import org.eclipse.core.databinding.observable.ObservableEvent;
  * Value change event describing a change of an {@link IObservableValue}
  * object's current value.
  *
+ * @param <T>
+ *            the type of value being observed
+ *
  * @since 1.0
  *
  */
-public class ValueChangeEvent extends ObservableEvent {
+public class ValueChangeEvent<T> extends ObservableEvent {
 
 	/**
 	 *
@@ -34,7 +39,7 @@ public class ValueChangeEvent extends ObservableEvent {
 	 * Description of the change to the source observable value. Listeners must
 	 * not change this field.
 	 */
-	public ValueDiff diff;
+	public ValueDiff<T> diff;
 
 	/**
 	 * Creates a new value change event.
@@ -44,7 +49,7 @@ public class ValueChangeEvent extends ObservableEvent {
 	 * @param diff
 	 *            the value change
 	 */
-	public ValueChangeEvent(IObservableValue source, ValueDiff diff) {
+	public ValueChangeEvent(IObservableValue<T> source, ValueDiff<T> diff) {
 		super(source);
 		this.diff = diff;
 	}
@@ -54,13 +59,15 @@ public class ValueChangeEvent extends ObservableEvent {
 	 *
 	 * @return returns the observable value from which this event originated
 	 */
-	public IObservableValue getObservableValue() {
-		return (IObservableValue) source;
+	@SuppressWarnings("unchecked")
+	public IObservableValue<T> getObservableValue() {
+		return (IObservableValue<T>) getSource();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void dispatch(IObservablesListener listener) {
-		((IValueChangeListener) listener).handleValueChange(this);
+		((IValueChangeListener<T>) listener).handleValueChange(this);
 	}
 
 	@Override

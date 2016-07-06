@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2012 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,10 +10,16 @@
  *******************************************************************************/
 package org.eclipse.jface.text.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -36,7 +42,7 @@ import org.eclipse.jface.text.source.ICharacterPairMatcherExtension;
  *
  * @since 3.3
  */
-public abstract class AbstractPairMatcherTest extends TestCase {
+public abstract class AbstractPairMatcherTest {
 
 	private final boolean fCaretEitherSideOfBracket;
 
@@ -66,6 +72,7 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/* --- T e s t s --- */
 
 	/** Tests that the test case reader works */
+	@Test
 	public void testTestCaseReader() {
 		performReaderTest("%( )#", 0, 3, "( )");
 		performReaderTest("#%", 0, 0, "");
@@ -74,8 +81,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Very simple checks.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testSimpleMatchSameMatcher() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "#(   )%");
@@ -106,8 +114,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Very simple checks.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testSimpleMatchDifferentMatchers() throws BadLocationException {
 		performMatch("()[]{}", "#(   )%");
 		performMatch("()[]{}", "#[   ]%");
@@ -124,8 +133,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Close matches.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testCloseMatches() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "(%)#");
@@ -151,8 +161,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Checks of simple situations where no matches should be found.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testIncompleteMatch() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "(% ");
@@ -164,8 +175,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Test that it doesn't match across different partitions.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testPartitioned() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "(% |a a| )#");
@@ -201,8 +213,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Test that it works properly next to partition boundaries.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testTightPartitioned() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "(|b)%b|");
@@ -221,6 +234,7 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	}
 
 	/** Test that nesting works properly */
+	@Test
 	public void testNesting() {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, " ( #( ( ( ) ) ( ) )% ) ");
@@ -255,8 +269,9 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 	/**
 	 * Test a few boundary conditions.
 	 * 
-	 * * @throws BadLocationException
+	 * * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testBoundaries() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		final StringDocument doc= new StringDocument("abcdefghijkl");
@@ -266,6 +281,7 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 		matcher.dispose();
 	}
 
+	@Test
 	public void testBug156426() {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}<>");
 		performMatch(matcher, " #( a < b )% ");
@@ -275,6 +291,7 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 		matcher.dispose();
 	}
 
+	@Test
 	public void testBug377417() {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "#( %  )%#");
@@ -488,22 +505,27 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 			fString= str;
 		}
 
+		@Override
 		public char get(int offset) {
 			return fString.charAt(offset);
 		}
 
+		@Override
 		public String get(int offset, int length) {
 			return fString.substring(offset, offset + length);
 		}
 
+		@Override
 		public int getLength() {
 			return fString.length();
 		}
 
+		@Override
 		public void replace(int offset, int length, String text) {
 			throw new UnsupportedOperationException();
 		}
 
+		@Override
 		public void set(String text) {
 			fString= text;
 		}
@@ -514,11 +536,11 @@ public abstract class AbstractPairMatcherTest extends TestCase {
 
 	private static IDocumentPartitioner createPartitioner() {
 		final RuleBasedPartitionScanner scan= new RuleBasedPartitionScanner();
-		final List/*<IPredicateRule>*/ rules= new ArrayList/*<IPredicateRule>*/();
+		final List<SingleLineRule> rules= new ArrayList<>();
 		rules.add(new SingleLineRule("|a", "a|", new Token("a")));
 		rules.add(new SingleLineRule("|b", "b|", new Token("b")));
 		rules.add(new SingleLineRule("|c", "c|", new Token("c")));
-		scan.setPredicateRules((IPredicateRule[]) rules.toArray(new IPredicateRule[rules.size()]));
+		scan.setPredicateRules(rules.toArray(new IPredicateRule[rules.size()]));
 		scan.setDefaultReturnToken(new Token(DEFAULT_PARTITION));
 		return new FastPartitioner(scan, new String[] { DEFAULT_PARTITION, "a", "b", "c" });
 	}

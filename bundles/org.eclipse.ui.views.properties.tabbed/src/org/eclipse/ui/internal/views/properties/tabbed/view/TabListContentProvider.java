@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2007 IBM Corporation and others.
+ * Copyright (c) 2001, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,8 +22,7 @@ import org.eclipse.ui.IWorkbenchPart;
  *
  * @author Anthony Hunter
  */
-public class TabListContentProvider
-	implements IStructuredContentProvider {
+public class TabListContentProvider implements IStructuredContentProvider {
 
 	protected TabbedPropertyRegistry registry;
 
@@ -44,13 +43,6 @@ public class TabListContentProvider
 		Assert.isTrue(inputElement instanceof ISelection);
 			return registry
 			.getTabDescriptors(currentPart, (ISelection) inputElement);
-	}
-
-	/**
-	 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-	 */
-	public void dispose() {
-		/* not used */
 	}
 
 	/**

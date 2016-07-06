@@ -1,6 +1,6 @@
 /*
 
-   Copyright 2002  The Apache Software Foundation
+   Copyright 2002, 2015  The Apache Software Foundation
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -123,6 +123,9 @@ public class CSSAttributeConditionImpl extends AbstractAttributeCondition {
 	 */
 	@Override
 	public boolean match(Element e, String pseudoE) {
+		if (!e.hasAttribute(getLocalName())) {
+			return false;
+		}
 		String val = getValue();
 		if (val == null) {
 			return !e.getAttribute(getLocalName()).equals("");

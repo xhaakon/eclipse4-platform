@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,6 +46,7 @@ public class CriteriaHelpScope extends AbstractHelpScope {
 		}
 	}
 
+	@Override
 	public boolean inScope(IToc toc) {
 		if(null == toc){
 			if(null == criteriaScope || 0 == criteriaScope.length){
@@ -57,6 +58,7 @@ public class CriteriaHelpScope extends AbstractHelpScope {
 		return isCriteriaInScope(criteriaOfToc);
 	}
 
+	@Override
 	public boolean inScope(ITopic topic) {
 		if(null == topic){
 			if(null == criteriaScope || 0 == criteriaScope.length){
@@ -93,21 +95,23 @@ public class CriteriaHelpScope extends AbstractHelpScope {
 	}
 
 	private Map<String, Set<String>> getCriteriaInfo(CriterionResource[] criteria) {
-		Map<String, Set<String>> criteriaMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> criteriaMap = new HashMap<>();
 		CriteriaUtilities.addCriteriaToMap(criteriaMap, criteria);
 		return criteriaMap;
 	}
 
 	private Map<String, Set<String>> getCriteriaInfo(ICriteria[] criteria) {
-		Map<String, Set<String>> criteriaMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> criteriaMap = new HashMap<>();
 		CriteriaUtilities.addCriteriaToMap(criteriaMap, criteria);
 	    return criteriaMap;
 	}
 
+	@Override
 	public boolean inScope(IIndexEntry entry) {
 		return hasInScopeChildren(entry);
 	}
 
+	@Override
 	public String getName(Locale locale) {
 		return null;
 	}

@@ -27,12 +27,14 @@ public class DiffTreeStatusLineContributionGroup extends
 		super(shell, configuration);
 		getSynchronizationContext().getDiffTree().addDiffChangeListener(this);
 	}
-	
+
+	@Override
 	public void dispose() {
 		getSynchronizationContext().getDiffTree().removeDiffChangeListener(this);
 		super.dispose();
 	}
 
+	@Override
 	protected int getChangeCount() {
 		return getSynchronizationContext().getDiffTree().size();
 	}
@@ -41,6 +43,7 @@ public class DiffTreeStatusLineContributionGroup extends
 		return (ISynchronizationContext)getConfiguration().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_CONTEXT);
 	}
 
+	@Override
 	protected int countFor(int state) {
 		switch (state) {
 		case SyncInfo.OUTGOING:
@@ -56,13 +59,15 @@ public class DiffTreeStatusLineContributionGroup extends
 		return (int)getSynchronizationContext().getDiffTree().countFor(state, IThreeWayDiff.DIRECTION_MASK);
 	}
 
+	@Override
 	public void diffsChanged(IDiffChangeEvent event, IProgressMonitor monitor) {
 		updateCounts();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.core.diff.IDiffChangeListener#propertyChanged(int, org.eclipse.core.runtime.IPath[])
 	 */
+	@Override
 	public void propertyChanged(IDiffTree tree, int property, IPath[] paths) {
 		// Do nothing
 	}

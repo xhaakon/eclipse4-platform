@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2011 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,17 +7,21 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 486889
  *******************************************************************************/
 package org.eclipse.text.tests.templates;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.jface.text.templates.TemplateBuffer;
 import org.eclipse.jface.text.templates.TemplateException;
@@ -27,30 +31,26 @@ import org.eclipse.jface.text.templates.TemplateVariable;
 /**
  * @since 3.3
  */
-public class TemplateTranslatorTest extends TestCase {
-	public static Test suite() {
-		return new TestSuite(TemplateTranslatorTest.class);
-	}
+public class TemplateTranslatorTest {
 
 	private TemplateTranslator fTranslator;
 
-	/*
-	 * @see junit.framework.TestCase#setUp()
-	 * @since 3.3
-	 */
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setUp() {
 		fTranslator= new TemplateTranslator();
 	}
 
+	@Test
 	public void testNullTemplate() throws Exception {
 		try {
 			fTranslator.translate((String) null);
 			fail();
 		} catch (NullPointerException x) {
+			// expected
 		}
 	}
 
+	@Test
 	public void testEmptyTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("");
 		assertNull(fTranslator.getErrorMessage());
@@ -67,6 +67,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals("foo bar", buffer.getString());
 	}
 
+	@Test
 	public void testSimpleTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${var} bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -84,6 +85,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals("var", vars[0].getType());
 	}
 
+	@Test
 	public void testMultiTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${var} bar ${var} end");
 		assertNull(fTranslator.getErrorMessage());
@@ -102,13 +104,14 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals("var", vars[0].getType());
 	}
 
+	@Test
 	public void testNonAsciiVarTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("System.out.println(${bl\u00F6d:var} + \" with element type \" + ${h\u00E4:elemType(bl\u00F6d)});");
 		assertNull(fTranslator.getErrorMessage());
 		assertEquals("System.out.println(bl\u00F6d + \" with element type \" + h\u00E4);", buffer.getString());
 		TemplateVariable[] vars= buffer.getVariables();
 		assertEquals(2, vars.length);
-		
+
 		assertEquals("bl\u00F6d", vars[0].getName());
 		assertEquals(1, vars[0].getOffsets().length);
 		assertEquals(19, vars[0].getOffsets()[0]);
@@ -118,7 +121,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(1, vars[0].getValues().length);
 		assertEquals(vars[0].getDefaultValue(), vars[0].getValues()[0]);
 		assertEquals("var", vars[0].getType());
-		
+
 		assertEquals("h\u00E4", vars[1].getName());
 		assertEquals(1, vars[1].getOffsets().length);
 		assertEquals(50, vars[1].getOffsets()[0]);
@@ -129,7 +132,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(vars[1].getDefaultValue(), vars[1].getValues()[0]);
 		assertEquals("elemType", vars[1].getType());
 	}
-	
+	@Test
 	public void testNumberAsIdentifier() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("${0:link(1,'2 ',3)}\\n${0}");
 		assertNull(fTranslator.getErrorMessage());
@@ -145,11 +148,12 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals("0", vars[0].getDefaultValue());
 		assertEquals(1, vars[0].getValues().length);
 		assertEquals(vars[0].getDefaultValue(), vars[0].getValues()[0]);
-		
+
 		assertEquals("link", vars[0].getType());
 		assertEquals(Arrays.asList(new Object[] { "1", "2 ", "3" }), vars[0].getVariableType().getParams());
 	}
-	
+
+	@Test
 	public void testIllegalSyntax1() throws Exception {
 		ensureFailure("foo ${var");
 	}
@@ -159,17 +163,21 @@ public class TemplateTranslatorTest extends TestCase {
 			fTranslator.translate(template);
 			fail();
 		} catch (TemplateException e) {
+			// expected
 		}
 	}
 
+	@Test
 	public void testIllegalSyntax2() throws Exception {
 		ensureFailure("foo $");
 	}
 
+	@Test
 	public void testIllegalSyntax3() throws Exception {
 		ensureFailure("foo ${] } bar");
 	}
 
+	@Test
 	public void testDollar() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo $$ bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -178,6 +186,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals("foo $ bar", buffer.getString());
 	}
 
+	@Test
 	public void testEmptyVariable() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${} bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -196,7 +205,7 @@ public class TemplateTranslatorTest extends TestCase {
 	}
 
 	/* 3.3 typed template variables */
-
+	@Test
 	public void testTypedTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${var:type} bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -213,7 +222,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals("type", vars[0].getType());
 		assertEquals(vars[0].getDefaultValue(), vars[0].getValues()[0]);
 	}
-
+	@Test
 	public void testParameterizedTypeTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${var:type(param)} bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -232,6 +241,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(Collections.singletonList("param"), vars[0].getVariableType().getParams());
 	}
 
+	@Test
 	public void testMultiParameterizedTypeTemplate1() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${var:type(param)} bar ${var:type(param)} end");
 		assertNull(fTranslator.getErrorMessage());
@@ -251,6 +261,7 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(Collections.singletonList("param"), vars[0].getVariableType().getParams());
 	}
 
+	@Test
 	public void testMultiParameterizedTypeTemplate2() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${var:type(param)} bar ${var} end");
 		assertNull(fTranslator.getErrorMessage());
@@ -270,11 +281,13 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(Collections.singletonList("param"), vars[0].getVariableType().getParams());
 	}
 
+	@Test
 	public void testIllegallyParameterizedTypeTemplate() throws Exception {
 		ensureFailure("foo ${var:type(param)} bar ${var:type(other)} end");
 		ensureFailure("foo ${var:type(param)} bar ${var:type} end");
 	}
 
+	@Test
 	public void testParameterizedTypeTemplateWithWhitespace() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${ var : type ( param1 , param2 , param3 ) } bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -290,13 +303,14 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(1, vars[0].getValues().length);
 		assertEquals(vars[0].getDefaultValue(), vars[0].getValues()[0]);
 		assertEquals("type", vars[0].getType());
-		List params= new ArrayList(2);
+		List<String> params= new ArrayList<>(2);
 		params.add("param1");
 		params.add("param2");
 		params.add("param3");
 		assertEquals(params, vars[0].getVariableType().getParams());
 	}
 
+	@Test
 	public void testQualifiedTypeTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${ var : qual.type ( qual.param1, qual.param2 ) } bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -312,12 +326,13 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(1, vars[0].getValues().length);
 		assertEquals(vars[0].getDefaultValue(), vars[0].getValues()[0]);
 		assertEquals("qual.type", vars[0].getType());
-		List params= new ArrayList(2);
+		List<String> params= new ArrayList<>(2);
 		params.add("qual.param1");
 		params.add("qual.param2");
 		assertEquals(params, vars[0].getVariableType().getParams());
 	}
 
+	@Test
 	public void testTextParameterTemplate() throws Exception {
 		TemplateBuffer buffer= fTranslator.translate("foo ${ var : qual.type ( 'a parameter 1', qual.param2, 'a parameter ''3' ) } bar");
 		assertNull(fTranslator.getErrorMessage());
@@ -333,25 +348,29 @@ public class TemplateTranslatorTest extends TestCase {
 		assertEquals(1, vars[0].getValues().length);
 		assertEquals(vars[0].getDefaultValue(), vars[0].getValues()[0]);
 		assertEquals("qual.type", vars[0].getType());
-		List params= new ArrayList(3);
+		List<String> params= new ArrayList<>(3);
 		params.add("a parameter 1");
 		params.add("qual.param2");
 		params.add("a parameter '3");
 		assertEquals(params, vars[0].getVariableType().getParams());
 	}
 
+	@Test
 	public void testIllegalSyntax4() throws Exception {
 		ensureFailure("foo ${var:} bar");
 	}
 
+	@Test
 	public void testIllegalSyntax5() throws Exception {
 		ensureFailure("foo ${var:type(} bar");
 	}
 
+	@Test
 	public void testIllegalSyntax6() throws Exception {
 		ensureFailure("foo ${var:type(] )} bar");
 	}
 
+	@Test
 	public void testIllegalSyntax7() throws Exception {
 		ensureFailure("foo ${var:type((} bar");
 	}

@@ -16,9 +16,8 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
@@ -69,26 +68,16 @@ class QuickFixWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		IRunnableWithProgress finishRunnable = new IRunnableWithProgress() {
-
-			@Override
-			public void run(IProgressMonitor monitor)
-				 {
-				IWizardPage[] pages = getPages();
-				monitor.beginTask(MarkerMessages.MarkerResolutionDialog_Fixing,
-						(10 * pages.length) + 1);
-				monitor.worked(1);
-				for (int i = 0; i < pages.length; i++) {
-					//Allow for cancel event processing
-					getShell().getDisplay().readAndDispatch();
-					if(monitor.isCanceled())
-						return;
-					QuickFixPage wizardPage = (QuickFixPage) pages[i];
-					wizardPage.performFinish(new SubProgressMonitor(monitor,10));
-					monitor.worked(1);
-				}
-				monitor.done();
-
+		IRunnableWithProgress finishRunnable = mon -> {
+			IWizardPage[] pages = getPages();
+			SubMonitor subMonitor = SubMonitor.convert(mon, MarkerMessages.MarkerResolutionDialog_Fixing,
+					(10 * pages.length) + 1);
+			subMonitor.worked(1);
+			for (int i = 0; i < pages.length; i++) {
+				// Allow for cancel event processing
+				getShell().getDisplay().readAndDispatch();
+				QuickFixPage wizardPage = (QuickFixPage) pages[i];
+				wizardPage.performFinish(subMonitor.split(10));
 			}
 		};
 

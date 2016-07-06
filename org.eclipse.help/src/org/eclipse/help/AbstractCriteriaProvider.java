@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,15 +13,15 @@ package org.eclipse.help;
 
 
 /**
- * <code>AbstractCriteriaProvider</code> is a mechanism for assigning criteria to 
+ * <code>AbstractCriteriaProvider</code> is a mechanism for assigning criteria to
  * <code>ITopic</code> and <code>IToc</code> elements independent of a table of contents
- * file. The criteria defined by this class are merged with those from the table of contents 
+ * file. The criteria defined by this class are merged with those from the table of contents
  * or from other criteria providers by creating a union of defined criteria and
  * defined criteria values.
  * @since 3.5
  */
 public abstract class AbstractCriteriaProvider {
-	
+
 	/**
 	 * Gets criteria for a topic
 	 * @param topic a topic from a table of contents or index

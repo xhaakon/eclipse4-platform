@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2009 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.ui.progress;
 
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -26,7 +27,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.progress.ProgressMessages;
-import org.eclipse.ui.internal.util.Util;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 
 /**
@@ -122,8 +122,7 @@ public class DeferredTreeContentManager {
 	public DeferredTreeContentManager(AbstractTreeViewer viewer,
 			IWorkbenchPartSite site) {
 		this(viewer);
-		Object siteService = Util.getAdapter(site,
-				IWorkbenchSiteProgressService.class);
+		Object siteService = Adapters.adapt(site, IWorkbenchSiteProgressService.class);
 		if (siteService != null) {
 			progressService = (IWorkbenchSiteProgressService) siteService;
 		}
@@ -201,7 +200,7 @@ public class DeferredTreeContentManager {
 	 * @return IDeferredWorkbenchAdapter or <code>null</code>
 	 */
 	protected IDeferredWorkbenchAdapter getAdapter(Object element) {
-		return Util.getAdapter(element, IDeferredWorkbenchAdapter.class);
+		return Adapters.adapt(element, IDeferredWorkbenchAdapter.class);
 	}
 
 	/**
@@ -283,7 +282,7 @@ public class DeferredTreeContentManager {
 			 *            The object we are adapting to.
 			 */
 			private IWorkbenchAdapter getWorkbenchAdapter(Object element) {
-				return Util.getAdapter(element, IWorkbenchAdapter.class);
+				return Adapters.adapt(element, IWorkbenchAdapter.class);
 			}
 		};
 		job.addJobChangeListener(new JobChangeAdapter() {

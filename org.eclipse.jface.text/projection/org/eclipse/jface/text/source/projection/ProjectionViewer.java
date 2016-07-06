@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,16 +101,12 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	 */
 	private class AnnotationModelListener implements IAnnotationModelListener, IAnnotationModelListenerExtension {
 
-		/*
-		 * @see org.eclipse.jface.text.source.IAnnotationModelListener#modelChanged(org.eclipse.jface.text.source.IAnnotationModel)
-		 */
+		@Override
 		public void modelChanged(IAnnotationModel model) {
 			processModelChanged(model, null);
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.source.IAnnotationModelListenerExtension#modelChanged(org.eclipse.jface.text.source.AnnotationModelEvent)
-		 */
+		@Override
 		public void modelChanged(AnnotationModelEvent event) {
 			processModelChanged(event.getAnnotationModel(), event);
 		}
@@ -156,15 +152,11 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			}
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.IDocumentListener#documentAboutToBeChanged(org.eclipse.jface.text.DocumentEvent)
-		 */
+		@Override
 		public void documentAboutToBeChanged(DocumentEvent event) {
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.IDocumentListener#documentChanged(org.eclipse.jface.text.DocumentEvent)
-		 */
+		@Override
 		public void documentChanged(DocumentEvent event) {
 			fExecutionTrigger.removeDocumentListener(this);
 			executeReplaceVisibleDocument(fSlaveDocument);
@@ -232,7 +224,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		final static int REDRAW_COSTS= 15;
 		final static int INVALIDATION_COSTS= 10;
 
-		List fList= new ArrayList(15);
+		List<ProjectionCommand> fList= new ArrayList<>(15);
 		int fExpectedExecutionCosts= -1;
 
 
@@ -240,7 +232,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			fList.add(command);
 		}
 
-		Iterator iterator() {
+		Iterator<ProjectionCommand> iterator() {
 			return fList.iterator();
 		}
 
@@ -266,9 +258,9 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			fExpectedExecutionCosts= fList.size();
 			if (fExpectedExecutionCosts <= max_costs) {
 				ProjectionCommand command;
-				Iterator e= fList.iterator();
+				Iterator<ProjectionCommand> e= fList.iterator();
 				while (e.hasNext()) {
-					command= (ProjectionCommand) e.next();
+					command= e.next();
 					fExpectedExecutionCosts += command.computeExpectedCosts();
 					if (fExpectedExecutionCosts > max_costs)
 						break;
@@ -288,11 +280,11 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	/** Indication whether projection changes in the visible document should be considered. */
 	private boolean fHandleProjectionChanges= true;
 	/** The list of projection listeners. */
-	private List fProjectionListeners;
+	private List<IProjectionListener> fProjectionListeners;
 	/** Internal lock for protecting the list of pending requests */
 	private Object fLock= new Object();
 	/** The list of pending requests */
-	private List fPendingRequests= new ArrayList();
+	private List<AnnotationModelEvent> fPendingRequests= new ArrayList<>();
 	/** The replace-visible-document execution trigger */
 	private IDocument fReplaceVisibleDocumentExecutionTrigger;
 	/** <code>true</code> if projection was on the last time we switched to segmented mode. */
@@ -357,9 +349,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.SourceViewer#setDocument(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.source.IAnnotationModel, int, int)
-	 */
+	@Override
 	public void setDocument(IDocument document, IAnnotationModel annotationModel, int modelRangeOffset, int modelRangeLength) {
 		boolean wasProjectionEnabled= false;
 
@@ -380,9 +370,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.SourceViewer#createVisualAnnotationModel(org.eclipse.jface.text.source.IAnnotationModel)
-	 */
+	@Override
 	protected IAnnotationModel createVisualAnnotationModel(IAnnotationModel annotationModel) {
 		IAnnotationModel model= super.createVisualAnnotationModel(annotationModel);
 		fProjectionAnnotationModel= new ProjectionAnnotationModel();
@@ -403,16 +391,12 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#createSlaveDocumentManager()
-	 */
+	@Override
 	protected ISlaveDocumentManager createSlaveDocumentManager() {
 		return new ProjectionDocumentManager();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#updateSlaveDocument(org.eclipse.jface.text.IDocument, int, int)
-	 */
+	@Override
 	protected boolean updateSlaveDocument(IDocument slaveDocument, int modelRangeOffset, int modelRangeLength) throws BadLocationException {
 		if (slaveDocument instanceof ProjectionDocument) {
 			ProjectionDocument projection= (ProjectionDocument) slaveDocument;
@@ -452,7 +436,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		Assert.isNotNull(listener);
 
 		if (fProjectionListeners == null)
-			fProjectionListeners= new ArrayList();
+			fProjectionListeners= new ArrayList<>();
 
 		if (!fProjectionListeners.contains(listener))
 			fProjectionListeners.add(listener);
@@ -482,9 +466,9 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	 */
 	protected void fireProjectionEnabled() {
 		if (fProjectionListeners != null) {
-			Iterator e= new ArrayList(fProjectionListeners).iterator();
+			Iterator<IProjectionListener> e= new ArrayList<>(fProjectionListeners).iterator();
 			while (e.hasNext()) {
-				IProjectionListener l= (IProjectionListener) e.next();
+				IProjectionListener l= e.next();
 				l.projectionEnabled();
 			}
 		}
@@ -496,9 +480,9 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	 */
 	protected void fireProjectionDisabled() {
 		if (fProjectionListeners != null) {
-			Iterator e= new ArrayList(fProjectionListeners).iterator();
+			Iterator<IProjectionListener> e= new ArrayList<>(fProjectionListeners).iterator();
 			while (e.hasNext()) {
-				IProjectionListener l= (IProjectionListener) e.next();
+				IProjectionListener l= e.next();
 				l.projectionDisabled();
 			}
 		}
@@ -551,7 +535,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			Position found= null;
 			Annotation bestMatch= null;
 			Point selection= getSelectedRange();
-			for (Iterator e= fProjectionAnnotationModel.getAnnotationIterator(); e.hasNext();) {
+			for (Iterator<Annotation> e= fProjectionAnnotationModel.getAnnotationIterator(); e.hasNext();) {
 				ProjectionAnnotation annotation= (ProjectionAnnotation) e.next();
 				if (annotation.isCollapsed()) {
 					Position position= fProjectionAnnotationModel.getPosition(annotation);
@@ -580,7 +564,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			Position found= null;
 			Annotation bestMatch= null;
 			Point selection= getSelectedRange();
-			for (Iterator e= fProjectionAnnotationModel.getAnnotationIterator(); e.hasNext();) {
+			for (Iterator<Annotation> e= fProjectionAnnotationModel.getAnnotationIterator(); e.hasNext();) {
 				ProjectionAnnotation annotation= (ProjectionAnnotation) e.next();
 				if (!annotation.isCollapsed()) {
 					Position position= fProjectionAnnotationModel.getPosition(annotation);
@@ -694,18 +678,14 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return document.getLineInformationOfOffset(offset).getOffset();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#setVisibleRegion(int, int)
-	 */
+	@Override
 	public void setVisibleRegion(int start, int length) {
 		fWasProjectionEnabled= isProjectionMode();
 		disableProjection();
 		super.setVisibleRegion(start, length);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#setVisibleDocument(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	protected void setVisibleDocument(IDocument document) {
 		if (!isProjectionMode()) {
 			super.setVisibleDocument(document);
@@ -718,18 +698,14 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		fFindReplaceDocumentAdapter= adapter;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#resetVisibleRegion()
-	 */
+	@Override
 	public void resetVisibleRegion() {
 		super.resetVisibleRegion();
 		if (fWasProjectionEnabled)
 			enableProjection();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextViewer#getVisibleRegion()
-	 */
+	@Override
 	public IRegion getVisibleRegion() {
 		disableProjection();
 		IRegion visibleRegion= getModelCoverage();
@@ -739,9 +715,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return visibleRegion;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextViewer#overlapsWithVisibleRegion(int,int)
-	 */
+	@Override
 	public boolean overlapsWithVisibleRegion(int offset, int length) {
 		disableProjection();
 		IRegion coverage= getModelCoverage();
@@ -901,6 +875,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 					Display display= widget.getDisplay();
 					if (display != null) {
 						display.asyncExec(new Runnable() {
+							@Override
 							public void run() {
 								try {
 									while (true) {
@@ -908,7 +883,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 										synchronized (fLock) {
 											if (fPendingRequests.size() == 0)
 												return;
-											ame= (AnnotationModelEvent) fPendingRequests.remove(0);
+											ame= fPendingRequests.remove(0);
 										}
 										catchupWithProjectionAnnotationModel(ame);
 									}
@@ -984,7 +959,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			int topIndex= isRedrawing ? getTopIndex() : -1;
 
 			processDeletions(event, removedAnnotations, true);
-			List coverage= new ArrayList();
+			List<Position> coverage= new ArrayList<>();
 			processChanges(addedAnnotations, true, coverage);
 			processChanges(changedAnnotation, true, coverage);
 
@@ -1016,9 +991,9 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	private void executeProjectionCommands(ProjectionCommandQueue commandQueue, boolean fireRedraw) throws BadLocationException {
 
 		ProjectionCommand command;
-		Iterator e= commandQueue.iterator();
+		Iterator<ProjectionCommand> e= commandQueue.iterator();
 		while (e.hasNext()) {
-			command= (ProjectionCommand) e.next();
+			command= e.next();
 			switch (command.fType) {
 				case ProjectionCommand.ADD:
 					addMasterDocumentRange(command.fProjection, command.fOffset, command.fLength);
@@ -1037,8 +1012,8 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	}
 
 	private ProjectionAnnotation[] computeCollapsedNestedAnnotations(int offset, int length) {
-		List annotations= new ArrayList(5);
-		Iterator e= fProjectionAnnotationModel.getAnnotationIterator(offset, length, false, false);
+		List<ProjectionAnnotation> annotations= new ArrayList<>(5);
+		Iterator<Annotation> e= fProjectionAnnotationModel.getAnnotationIterator(offset, length, false, false);
 		while (e.hasNext()) {
 			ProjectionAnnotation annotation= (ProjectionAnnotation) e.next();
 			if (annotation.isCollapsed()) {
@@ -1165,7 +1140,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return null;
 	}
 
-	private void processChanges(Annotation[] annotations, boolean fireRedraw, List coverage) throws BadLocationException {
+	private void processChanges(Annotation[] annotations, boolean fireRedraw, List<Position> coverage) throws BadLocationException {
 		for (int i= 0; i < annotations.length; i++) {
 			ProjectionAnnotation annotation= (ProjectionAnnotation) annotations[i];
 			Position position= fProjectionAnnotationModel.getPosition(annotation);
@@ -1187,10 +1162,10 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		}
 	}
 
-	private boolean covers(List coverage, Position position) {
-		Iterator e= coverage.iterator();
+	private boolean covers(List<Position> coverage, Position position) {
+		Iterator<Position> e= coverage.iterator();
 		while (e.hasNext()) {
-			Position p= (Position) e.next();
+			Position p= e.next();
 			if (p.getOffset() <= position.getOffset() && position.getOffset() + position.getLength() <= p.getOffset() + p.getLength())
 				return true;
 		}
@@ -1220,7 +1195,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		}
 
 		if (projection != null) {
-			Iterator e= fProjectionAnnotationModel.getAnnotationIterator();
+			Iterator<Annotation> e= fProjectionAnnotationModel.getAnnotationIterator();
 			while (e.hasNext()) {
 				ProjectionAnnotation annotation= (ProjectionAnnotation) e.next();
 				if (annotation.isCollapsed()) {
@@ -1239,9 +1214,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		replaceVisibleDocument(projection);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#handleVerifyEvent(org.eclipse.swt.events.VerifyEvent)
-	 */
+	@Override
 	protected void handleVerifyEvent(VerifyEvent e) {
 		if (getTextWidget().getBlockSelection()) {
 			ITextSelection selection= (ITextSelection) getSelection();
@@ -1270,9 +1243,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			super.handleVerifyEvent(e);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextViewerExtension5#exposeModelRange(org.eclipse.jface.text.IRegion)
-	 */
+	@Override
 	public boolean exposeModelRange(IRegion modelRange) {
 		if (isProjectionMode())
 			return fProjectionAnnotationModel.expandAll(modelRange.getOffset(), modelRange.getLength());
@@ -1285,15 +1256,13 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.SourceViewer#setRangeIndication(int, int, boolean)
-	 */
+	@Override
 	public void setRangeIndication(int offset, int length, boolean moveCursor) {
 		IRegion rangeIndication= getRangeIndication();
 		if (moveCursor && fProjectionAnnotationModel != null && (rangeIndication == null || offset != rangeIndication.getOffset() || length != rangeIndication.getLength())) {
-			List expand= new ArrayList(2);
+			List<ProjectionAnnotation> expand= new ArrayList<>(2);
 			// expand the immediate affected collapsed regions
-			Iterator iterator= fProjectionAnnotationModel.getAnnotationIterator();
+			Iterator<Annotation> iterator= fProjectionAnnotationModel.getAnnotationIterator();
 			while (iterator.hasNext()) {
 				ProjectionAnnotation annotation= (ProjectionAnnotation)iterator.next();
 				if (annotation.isCollapsed() && willAutoExpand(fProjectionAnnotationModel.getPosition(annotation), offset, length))
@@ -1301,9 +1270,9 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 			}
 
 			if (!expand.isEmpty()) {
-				Iterator e= expand.iterator();
+				Iterator<ProjectionAnnotation> e= expand.iterator();
 				while (e.hasNext())
-					fProjectionAnnotationModel.expand((Annotation)e.next());
+					fProjectionAnnotationModel.expand(e.next());
 			}
 		}
 		super.setRangeIndication(offset, length, moveCursor);
@@ -1321,10 +1290,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.SourceViewer#handleDispose()
-	 * @since 3.0
-	 */
+	@Override
 	protected void handleDispose() {
 		fWasProjectionEnabled= false;
 		super.handleDispose();
@@ -1333,6 +1299,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	/*
 	 * @see org.eclipse.jface.text.TextViewer#handleVisibleDocumentAboutToBeChanged(org.eclipse.jface.text.DocumentEvent)
 	 */
+	@Override
 	protected void handleVisibleDocumentChanged(DocumentEvent event) {
 		if (fHandleProjectionChanges && event instanceof ProjectionDocumentEvent && isProjectionMode()) {
 			ProjectionDocumentEvent e= (ProjectionDocumentEvent) event;
@@ -1363,10 +1330,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#handleVisibleDocumentAboutToBeChanged(org.eclipse.jface.text.DocumentEvent)
-	 * @since 3.1
-	 */
+	@Override
 	protected void handleVisibleDocumentAboutToBeChanged(DocumentEvent event) {
 		if (fHandleProjectionChanges && event instanceof ProjectionDocumentEvent && isProjectionMode()) {
 			int deletedLines;
@@ -1379,9 +1343,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextViewerExtension5#getCoveredModelRanges(org.eclipse.jface.text.IRegion)
-	 */
+	@Override
 	public IRegion[] getCoveredModelRanges(IRegion modelRange) {
 		if (fInformationMapping == null)
 			return new IRegion[] { new Region(modelRange.getOffset(), modelRange.getLength()) };
@@ -1397,9 +1359,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextOperationTarget#doOperation(int)
-	 */
+	@Override
 	public void doOperation(int operation) {
 		switch (operation) {
 			case TOGGLE:
@@ -1502,9 +1462,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.SourceViewer#canDoOperation(int)
-	 */
+	@Override
 	public boolean canDoOperation(int operation) {
 
 		switch (operation) {
@@ -1541,9 +1499,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return start > end ? new Region (end, start - end) : new Region(start, end - start);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#copyMarkedRegion(boolean)
-	 */
+	@Override
 	protected void copyMarkedRegion(boolean delete) {
 		IRegion markedRegion= getMarkedRegion();
 		if (markedRegion != null)
@@ -1614,6 +1570,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	 * @param widgetSelection the widget selection
 	 * @return the model selection while respecting line based folding
 	 */
+	@Override
 	protected Point widgetSelection2ModelSelection(Point widgetSelection) {
 
 		if (!isProjectionMode())
@@ -1689,19 +1646,17 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 	 * @since 3.1
 	 */
 	private Position[] computeOverlappingAnnotationPositions(IRegion modelSelection) {
-		List positions= new ArrayList();
-		for (Iterator e= fProjectionAnnotationModel.getAnnotationIterator(); e.hasNext();) {
+		List<Position> positions= new ArrayList<>();
+		for (Iterator<Annotation> e= fProjectionAnnotationModel.getAnnotationIterator(); e.hasNext();) {
 			ProjectionAnnotation annotation= (ProjectionAnnotation) e.next();
 			Position position= fProjectionAnnotationModel.getPosition(annotation);
 			if (position != null && position.overlapsWith(modelSelection.getOffset(), modelSelection.getLength()) && modelRange2WidgetRange(position) != null)
 				positions.add(position);
 		}
-		return (Position[]) positions.toArray(new Position[positions.size()]);
+		return positions.toArray(new Position[positions.size()]);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#getFindReplaceDocumentAdapter()
-	 */
+	@Override
 	protected FindReplaceDocumentAdapter getFindReplaceDocumentAdapter() {
 		if (fFindReplaceDocumentAdapter == null) {
 			IDocument document= isProjectionMode() ? getDocument() : getVisibleDocument();
@@ -1710,9 +1665,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return fFindReplaceDocumentAdapter;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#findAndSelect(int, java.lang.String, boolean, boolean, boolean, boolean)
-	 */
+	@Override
 	protected int findAndSelect(int startPosition, String findString, boolean forwardSearch, boolean caseSensitive, boolean wholeWord, boolean regExSearch) {
 
 		if (!isProjectionMode())
@@ -1738,9 +1691,7 @@ public class ProjectionViewer extends SourceViewer implements ITextViewerExtensi
 		return -1;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#findAndSelectInRange(int, java.lang.String, boolean, boolean, boolean, int, int, boolean)
-	 */
+	@Override
 	protected int findAndSelectInRange(int startPosition, String findString, boolean forwardSearch, boolean caseSensitive, boolean wholeWord, int rangeOffset, int rangeLength, boolean regExSearch) {
 
 		if (!isProjectionMode())

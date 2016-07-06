@@ -19,7 +19,7 @@ import org.eclipse.team.ui.synchronize.ISynchronizeParticipant;
  * A refresh event generated to notify clients of the refresh lifecycle.
  */
 public class RefreshEvent implements IRefreshEvent {
-	int type; 
+	int type;
 	SyncInfo[] changes;
 	long startTime = 0;
 	long stopTime = 0;
@@ -27,17 +27,19 @@ public class RefreshEvent implements IRefreshEvent {
 	private final ISynchronizeParticipant participant;
 	private final IChangeDescription description;
 	private boolean isLink;
-	
+
 	public RefreshEvent(int type, ISynchronizeParticipant participant, IChangeDescription description) {
 		this.type = type;
 		this.participant = participant;
 		this.description = description;
 	}
-	
+
+	@Override
 	public int getRefreshType() {
 		return type;
 	}
-	
+
+	@Override
 	public long getStartTime() {
 		return startTime;
 	}
@@ -46,6 +48,7 @@ public class RefreshEvent implements IRefreshEvent {
 		this.startTime = startTime;
 	}
 
+	@Override
 	public long getStopTime() {
 		return stopTime;
 	}
@@ -54,26 +57,31 @@ public class RefreshEvent implements IRefreshEvent {
 		this.stopTime = stopTime;
 	}
 
+	@Override
 	public IStatus getStatus() {
 		return status;
 	}
-	
+
 	public void setStatus(IStatus status) {
 		this.status = status;
 	}
 
+	@Override
 	public ISynchronizeParticipant getParticipant() {
 		return participant;
 	}
 
+	@Override
 	public IChangeDescription getChangeDescription() {
 		return description;
 	}
 
+	@Override
 	public boolean isLink() {
 		return isLink;
 	}
 
+	@Override
 	public void setIsLink(boolean isLink) {
 		this.isLink = isLink;
 	}

@@ -1,13 +1,15 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2012 Freescale Semiconductor and others.
+ * Copyright (c) 2008, 2016 Freescale Semiconductor and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Serge Beauchamp (Freescale Semiconductor) - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -21,7 +23,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
 
 public class PathVariableUtil {
-	
+
 	static public String getUniqueVariableName(String variable, IResource resource) {
 		int index = 1;
 		variable = getValidVariableName(variable);
@@ -43,7 +45,7 @@ public class PathVariableUtil {
 		int argumentIndex = variable.indexOf('-');
 		if (argumentIndex != -1)
 			variable = variable.substring(0, argumentIndex);
-		
+
 		variable = variable.trim();
 		char first = variable.charAt(0);
 		if (!Character.isLetter(first) && first != '_') {
@@ -53,8 +55,7 @@ public class PathVariableUtil {
 		StringBuffer builder = new StringBuffer();
 		for (int i = 0; i < variable.length(); i++) {
 			char c = variable.charAt(i);
-			if ((Character.isLetter(c) || Character.isDigit(c) || c == '_') &&
-					!Character.isWhitespace(c))
+			if ((Character.isLetter(c) || Character.isDigit(c) || c == '_') && !Character.isWhitespace(c))
 				builder.append(c);
 		}
 		variable = builder.toString();
@@ -76,7 +77,7 @@ public class PathVariableUtil {
 	static public URI convertToRelative(IPathVariableManager pathVariableManager, URI originalPath, IResource resource, boolean force, String variableHint, boolean skipWorkspace, boolean generateMacro) throws CoreException {
 		return URIUtil.toURI(convertToRelative(pathVariableManager, URIUtil.toPath(originalPath), resource, force, variableHint));
 	}
-	
+
 	static private IPath convertToRelative(IPathVariableManager pathVariableManager, IPath originalPath, IResource resource, boolean force, String variableHint, boolean skipWorkspace, boolean generateMacro) throws CoreException {
 		if (variableHint != null && pathVariableManager.isDefined(variableHint)) {
 			IPath value = URIUtil.toPath(pathVariableManager.getURIValue(variableHint));
@@ -90,10 +91,10 @@ public class PathVariableUtil {
 		for (int i = 0; i < existingVariables.length; i++) {
 			String variable = existingVariables[i];
 			if (skipWorkspace) {
-				// Variables relative to the workspace are not portable, and defeat the purpose of having linked resource locations, 
+				// Variables relative to the workspace are not portable, and defeat the purpose of having linked resource locations,
 				// so they should not automatically be created relative to the workspace.
 				if (variable.equals(WorkspaceLocationVariableResolver.NAME))
-					continue; 
+					continue;
 			}
 			if (variable.equals(WorkspaceParentLocationVariableResolver.NAME))
 				continue;
@@ -175,20 +176,20 @@ public class PathVariableUtil {
 		if (value.isPrefixOf(path)) {
 			// transform "c:/foo/bar" into "FOO/bar"
 			IPath tmp = Path.fromOSString(variableHint);
-			for (int j = valueSegmentCount;j < originalPath.segmentCount(); j++) {
+			for (int j = valueSegmentCount; j < originalPath.segmentCount(); j++) {
 				tmp = tmp.append(originalPath.segment(j));
 			}
 			return tmp;
-		} 
+		}
 
 		if (force) {
 			if (devicesAreCompatible(path, value)) {
 				// transform "c:/foo/bar/other_child/file.txt" into "${PARENT-1-BAR_CHILD}/other_child/file.txt"
 				int matchingFirstSegments = path.matchingFirstSegments(value);
 				if (matchingFirstSegments >= 0) {
-					String originalName= buildParentPathVariable(variableHint, valueSegmentCount - matchingFirstSegments, true);
+					String originalName = buildParentPathVariable(variableHint, valueSegmentCount - matchingFirstSegments, true);
 					IPath tmp = Path.fromOSString(originalName);
-					for (int j = matchingFirstSegments ;j < originalPath.segmentCount(); j++) {
+					for (int j = matchingFirstSegments; j < originalPath.segmentCount(); j++) {
 						tmp = tmp.append(originalPath.segment(j));
 					}
 					return tmp;
@@ -197,11 +198,9 @@ public class PathVariableUtil {
 		}
 		return originalPath;
 	}
-	
+
 	private static boolean devicesAreCompatible(IPath path, IPath value) {
-		return (path.getDevice() != null && value.getDevice() != null) ?
-					(path.getDevice().equals(value.getDevice())) :
-					(path.getDevice() == value.getDevice());
+		return (path.getDevice() != null && value.getDevice() != null) ? (path.getDevice().equals(value.getDevice())) : (path.getDevice() == value.getDevice());
 	}
 
 	static private IPath convertToProperCase(IPath path) {
@@ -213,7 +212,7 @@ public class PathVariableUtil {
 	static public boolean isParentVariable(String variableString) {
 		return variableString.startsWith(ParentVariableResolver.NAME + '-');
 	}
-	
+
 	// the format is PARENT-COUNT-ARGUMENT
 	static public int getParentVariableCount(String variableString) {
 		String items[] = variableString.split("-"); //$NON-NLS-1$
@@ -227,26 +226,26 @@ public class PathVariableUtil {
 		}
 		return -1;
 	}
-	
+
 	// the format is PARENT-COUNT-ARGUMENT
 	static public String getParentVariableArgument(String variableString) {
 		String items[] = variableString.split("-"); //$NON-NLS-1$
-		if (items.length == 3) 
+		if (items.length == 3)
 			return items[2];
 		return null;
 	}
 
 	static public String buildParentPathVariable(String variable, int difference, boolean generateMacro) {
-		String 	newString = ParentVariableResolver.NAME + "-" + difference + "-" + variable;    //$NON-NLS-1$//$NON-NLS-2$
+		String newString = ParentVariableResolver.NAME + "-" + difference + "-" + variable; //$NON-NLS-1$//$NON-NLS-2$
 
 		if (!generateMacro)
-			newString = "${" + newString + "}";    //$NON-NLS-1$//$NON-NLS-2$
+			newString = "${" + newString + "}"; //$NON-NLS-1$//$NON-NLS-2$
 		return newString;
 	}
 
 	public static IPath buildVariableMacro(IPath relativeSrcValue) {
 		String variable = relativeSrcValue.segment(0);
-		variable = "${" + variable + "}";  //$NON-NLS-1$//$NON-NLS-2$
+		variable = "${" + variable + "}"; //$NON-NLS-1$//$NON-NLS-2$
 		return Path.fromOSString(variable).append(relativeSrcValue.removeFirstSegments(1));
 	}
 
@@ -279,16 +278,16 @@ public class PathVariableUtil {
 						if (components[j] == null)
 							continue;
 						String variable = extractVariable(components[j]);
-						
+
 						boolean hasVariableWithMacroSyntax = true;
 						if (variable.length() == 0 && (locationFormat && j == 0)) {
 							variable = components[j];
 							hasVariableWithMacroSyntax = false;
 						}
-						
+
 						try {
 							if (variable.length() > 0) {
-								String prefix = new String();
+								String prefix = ""; //$NON-NLS-1$
 								if (hasVariableWithMacroSyntax) {
 									int indexOfVariable = components[j].indexOf(variable) - "${".length(); //$NON-NLS-1$
 									prefix = components[j].substring(0, indexOfVariable);
@@ -296,7 +295,7 @@ public class PathVariableUtil {
 									if (suffix.length() != 0) {
 										// Create an intermediate variable, since a syntax of "${VAR}foo/../"
 										// can't be converted to a "${PARENT-1-VAR}foo" variable.
-										// So instead, an intermediate variable "VARFOO" will be created of value 
+										// So instead, an intermediate variable "VARFOO" will be created of value
 										// "${VAR}foo", and the string "${PARENT-1-VARFOO}" will be inserted.
 										String intermediateVariable = PathVariableUtil.getValidVariableName(variable + suffix);
 										IPath intermediateValue = Path.fromPortableString(components[j]);
@@ -311,7 +310,7 @@ public class PathVariableUtil {
 										if (!manager.isDefined(intermediateVariable))
 											manager.setURIValue(intermediateVariable, URIUtil.toURI(intermediateValue));
 										variable = intermediateVariable;
-										prefix = new String();
+										prefix = ""; //$NON-NLS-1$
 									}
 								}
 								String newVariable = variable;
@@ -355,7 +354,7 @@ public class PathVariableUtil {
 	}
 
 	private static String[] splitPathComponents(String userFormat) {
-		ArrayList<String> list = new ArrayList<String>();
+		ArrayList<String> list = new ArrayList<>();
 		StringBuffer buffer = new StringBuffer();
 		for (int i = 0; i < userFormat.length(); i++) {
 			char c = userFormat.charAt(i);
@@ -378,7 +377,7 @@ public class PathVariableUtil {
 			if (path.isAbsolute())
 				return path.toOSString();
 			int index = value.indexOf(java.io.File.separator);
-			String variable = index != -1 ? value.substring(0, index): value;
+			String variable = index != -1 ? value.substring(0, index) : value;
 			convertVariableToUserFormat(buffer, variable, variable, false);
 			if (index != -1)
 				buffer.append(value.substring(index));
@@ -397,7 +396,7 @@ public class PathVariableUtil {
 			String argument = PathVariableUtil.getParentVariableArgument(variable);
 			int count = PathVariableUtil.getParentVariableCount(variable);
 			if (argument != null && count != -1) {
-				buffer.append(generateMacro? PathVariableUtil.buildVariableMacro(Path.fromOSString(argument)):Path.fromOSString(argument));
+				buffer.append(generateMacro ? PathVariableUtil.buildVariableMacro(Path.fromOSString(argument)) : Path.fromOSString(argument));
 				for (int j = 0; j < count; j++) {
 					buffer.append(java.io.File.separator + ".."); //$NON-NLS-1$
 				}
@@ -406,16 +405,17 @@ public class PathVariableUtil {
 		} else
 			buffer.append(component);
 	}
+
 	/*
 	 * Splits a value (returned by this.getValue(variable) in an array of
 	 * string, where the array is divided between the value content and the
 	 * value variables.
-	 * 
+	 *
 	 * For example, if the value is "${ECLIPSE_HOME}/plugins", the value
 	 * returned will be {"${ECLIPSE_HOME}" "/plugins"}
 	 */
 	static String[] splitVariablesAndContent(String value) {
-		LinkedList<String> result = new LinkedList<String>();
+		LinkedList<String> result = new LinkedList<>();
 		while (true) {
 			// we check if the value contains referenced variables with ${VAR}
 			int index = value.indexOf("${"); //$NON-NLS-1$
@@ -436,14 +436,14 @@ public class PathVariableUtil {
 	/*
 	 * Splits a value (returned by this.getValue(variable) in an array of
 	 * string of the variables contained in the value.
-	 * 
+	 *
 	 * For example, if the value is "${ECLIPSE_HOME}/plugins", the value
-	 * returned will be {"ECLIPSE_HOME"}. If the value is 
-	 * "${ECLIPSE_HOME}/${FOO}/plugins", the value returned will be 
+	 * returned will be {"ECLIPSE_HOME"}. If the value is
+	 * "${ECLIPSE_HOME}/${FOO}/plugins", the value returned will be
 	 * {"ECLIPSE_HOME", "FOO"}.
 	 */
 	static String[] splitVariableNames(String value) {
-		LinkedList<String> result = new LinkedList<String>();
+		LinkedList<String> result = new LinkedList<>();
 		while (true) {
 			int index = value.indexOf("${"); //$NON-NLS-1$
 			if (index != -1) {
@@ -458,7 +458,7 @@ public class PathVariableUtil {
 
 	/*
 	 * Extracts the variable name from a variable segment.
-	 * 
+	 *
 	 * For example, if the value is "${ECLIPSE_HOME}", the value returned will
 	 * be "ECLIPSE_HOME". If the segment doesn't contain any variable, the value
 	 * returned will be "".
@@ -493,14 +493,12 @@ public class PathVariableUtil {
 	}
 
 	/**
-	 * Returns whether this variable is suited for programmatically determining 
+	 * Returns whether this variable is suited for programmatically determining
 	 * which variable is the most appropriate when creating new linked resources.
-	 * 
+	 *
 	 * @return true if the path variable is preferred.
 	 */
 	static public boolean isPreferred(String variableName) {
-		return !(variableName.equals(WorkspaceLocationVariableResolver.NAME) ||
-				variableName.equals(WorkspaceParentLocationVariableResolver.NAME) ||
-				variableName.equals(ParentVariableResolver.NAME));
+		return !(variableName.equals(WorkspaceLocationVariableResolver.NAME) || variableName.equals(WorkspaceParentLocationVariableResolver.NAME) || variableName.equals(ParentVariableResolver.NAME));
 	}
 }

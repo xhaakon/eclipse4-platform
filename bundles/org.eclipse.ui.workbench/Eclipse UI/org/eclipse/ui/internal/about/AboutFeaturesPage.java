@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -485,11 +485,6 @@ public class AboutFeaturesPage extends ProductInfoPage {
 				info.getVersion(), info.getId() };
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.about.TableListPage#getSelectionValue()
-	 */
 	protected Collection getSelectionValue() {
 		if (table == null || table.isDisposed())
 			return null;
@@ -526,9 +521,6 @@ public class AboutFeaturesPage extends ProductInfoPage {
 		}
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on Dialog.
-	 */
 	@Override
 	protected void buttonPressed(int buttonId) {
 		switch (buttonId) {

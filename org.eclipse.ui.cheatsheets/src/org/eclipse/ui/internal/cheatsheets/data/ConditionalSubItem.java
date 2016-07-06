@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,7 @@ import org.eclipse.ui.internal.cheatsheets.views.CheatSheetManager;
 
 public class ConditionalSubItem extends AbstractSubItem implements ISubItemItem {
 	private String condition;
-	private ArrayList subItems;
+	private ArrayList<AbstractSubItem> subItems;
 	private SubItem selectedSubItem;
 
 	/**
@@ -26,12 +26,12 @@ public class ConditionalSubItem extends AbstractSubItem implements ISubItemItem 
 	public ConditionalSubItem() {
 		super();
 	}
-	
+
 	public ConditionalSubItem(String condition) {
 		super();
 		this.condition = condition;
 	}
-	
+
 	/**
 	 * Returns the condition.
 	 * @return String
@@ -51,9 +51,10 @@ public class ConditionalSubItem extends AbstractSubItem implements ISubItemItem 
 	/**
 	 * @param subItem the SubItem to add.
 	 */
+	@Override
 	public void addSubItem(AbstractSubItem subItem) {
 		if(subItems == null) {
-			subItems = new ArrayList();
+			subItems = new ArrayList<>();
 		}
 		subItems.add(subItem);
 	}
@@ -61,7 +62,8 @@ public class ConditionalSubItem extends AbstractSubItem implements ISubItemItem 
 	/**
 	 * @return Returns the subItems.
 	 */
-	public ArrayList getSubItems() {
+	@Override
+	public ArrayList<AbstractSubItem> getSubItems() {
 		return subItems;
 	}
 
@@ -72,7 +74,7 @@ public class ConditionalSubItem extends AbstractSubItem implements ISubItemItem 
 	public void setSelectedSubItem(CheatSheetManager csm) {
 		String conditionValue = csm.getVariableData(condition);
 
-		for (Iterator iter = subItems.iterator(); iter.hasNext();) {
+		for (Iterator<AbstractSubItem> iter = subItems.iterator(); iter.hasNext();) {
 			SubItem subItem = (SubItem) iter.next();
 			if(subItem.getWhen() != null && subItem.getWhen().equals(conditionValue)) {
 				selectedSubItem = subItem;

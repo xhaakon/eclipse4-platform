@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Alex Blewitt <alex.blewitt@gmail.com> - replace new Boolean with Boolean.valueOf - https://bugs.eclipse.org/470344
+ *     Stefan Xenos <sxenos@gmail.com> (Google) - bug 448968 - Add diagnostic logging
  *******************************************************************************/
 
 package org.eclipse.compare.contentmergeviewer;
@@ -29,6 +31,7 @@ import org.eclipse.compare.internal.ICompareUIConstants;
 import org.eclipse.compare.internal.IFlushable2;
 import org.eclipse.compare.internal.ISavingSaveable;
 import org.eclipse.compare.internal.MergeViewerContentProvider;
+import org.eclipse.compare.internal.Policy;
 import org.eclipse.compare.internal.Utilities;
 import org.eclipse.compare.internal.ViewerSwitchingCancelled;
 import org.eclipse.compare.structuremergeviewer.Differencer;
@@ -120,11 +123,22 @@ public abstract class ContentMergeViewer extends ContentViewer
 		public void layout(Composite composite, boolean force) {
 			
 			if (fLeftLabel == null) {
+				if (composite.isDisposed()) {
+					CompareUIPlugin
+							.log(new IllegalArgumentException("Attempted to perform a layout on a disposed composite")); //$NON-NLS-1$
+				}
+				if (Policy.debugContentMergeViewer) {
+					logTrace("found bad label. Layout = " + System.identityHashCode(this) + ". composite = "  //$NON-NLS-1$//$NON-NLS-2$
+							+ System.identityHashCode(composite) + ". fComposite = " //$NON-NLS-1$
+							+ System.identityHashCode(fComposite) + ". fComposite.isDisposed() = " //$NON-NLS-1$
+							+ fComposite.isDisposed()); //$NON-NLS-2$
+					logStackTrace();
+				}
 				// Help to find out the cause for bug 449558
-				NullPointerException npe= new NullPointerException("fLeftLabel is 'null';fLeftLabelSet is " + fLeftLabelSet + ";fComposite.isDisposed() is " + fComposite.isDisposed());
+				NullPointerException npe= new NullPointerException("fLeftLabel is 'null';fLeftLabelSet is " + fLeftLabelSet + ";fComposite.isDisposed() is " + fComposite.isDisposed()); //$NON-NLS-1$ //$NON-NLS-2$
 
 				// Allow to test whether doing nothing helps
-				if (Boolean.getBoolean("ContentMergeViewer.DEBUG")) {
+				if (Boolean.getBoolean("ContentMergeViewer.DEBUG")) { //$NON-NLS-1$
 					CompareUIPlugin.log(npe);
 					return;
 				}
@@ -353,6 +367,11 @@ public abstract class ContentMergeViewer extends ContentViewer
 	 */
 	protected ContentMergeViewer(int style, ResourceBundle bundle, CompareConfiguration cc) {
 		
+		if (Policy.debugContentMergeViewer) {
+			logTrace("constructed (fLeftLabel == null)"); //$NON-NLS-1$
+			logStackTrace();
+		}
+
 		fStyles= style & ~(SWT.LEFT_TO_RIGHT | SWT.RIGHT_TO_LEFT);	// remove BIDI direction bits
 		fBundle= bundle;
 		
@@ -374,7 +393,7 @@ public abstract class ContentMergeViewer extends ContentViewer
 			fCompareConfiguration = new CompareConfiguration();
 		else
 			fCompareConfiguration= cc;
-		fPropertyChangeListener= new IPropertyChangeListener() {
+			fPropertyChangeListener= new IPropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent event) {
 				ContentMergeViewer.this.handlePropertyChangeEvent(event);
 			}
@@ -385,8 +404,17 @@ public abstract class ContentMergeViewer extends ContentViewer
 		fIsRightDirty = false;
 	}
 
-	//---- hooks ---------------------
+	private void logStackTrace() {
+		new Exception("<Fake exception> in " + getClass().getName()).printStackTrace(System.out); //$NON-NLS-1$
+	}
+
+	private void logTrace(String string) {
+		System.out.println("ContentMergeViewer " + System.identityHashCode(this) + ": " + string);   //$NON-NLS-1$//$NON-NLS-2$
+	}
 	
+	//---- hooks ---------------------
+
+
 	/**
 	 * Returns the viewer's name.
 	 *
@@ -600,7 +628,7 @@ public abstract class ContentMergeViewer extends ContentViewer
 				action.setEnabled(enabled);
 			}
 		}
-		getCompareConfiguration().setProperty(ICompareUIConstants.PROP_ANCESTOR_VISIBLE, new Boolean(visible));
+		getCompareConfiguration().setProperty(ICompareUIConstants.PROP_ANCESTOR_VISIBLE, Boolean.valueOf(visible));
 	}
 
 	//---- input
@@ -771,6 +799,13 @@ public abstract class ContentMergeViewer extends ContentViewer
 		}
 	}
 	
+	protected void hookControl(Control control) {
+		if (Policy.debugContentMergeViewer) {
+			logTrace("Attached dispose listener to control " + System.identityHashCode(control)); //$NON-NLS-1$
+		}
+		super.hookControl(control);
+	}
+	
 	//---- layout & SWT control creation
 		
 	/**
@@ -797,11 +832,21 @@ public abstract class ContentMergeViewer extends ContentViewer
 		hookControl(fComposite);	// hook help & dispose listener
 		
 		fComposite.setLayout(new ContentMergeViewerLayout());
+		if (Policy.debugContentMergeViewer) {
+			logTrace("Created composite " + System.identityHashCode(fComposite) + " with layout "  //$NON-NLS-1$//$NON-NLS-2$
+					+ System.identityHashCode(fComposite.getLayout()));
+			logStackTrace();
+		}
 		
 		int style= SWT.SHADOW_OUT;
 		fAncestorLabel= new CLabel(fComposite, style | Window.getDefaultOrientation());
-		
+
 		fLeftLabel= new CLabel(fComposite, style | Window.getDefaultOrientation());
+		if (Policy.debugContentMergeViewer) {
+			logTrace("fLeftLabel initialized"); //$NON-NLS-1$
+			logStackTrace();
+		}
+		
 		fLeftLabelSet= true;
 		new Resizer(fLeftLabel, VERTICAL);
 		
@@ -981,6 +1026,10 @@ public abstract class ContentMergeViewer extends ContentViewer
 
 		fAncestorLabel= null;
 		fLeftLabel= null;
+		if (Policy.debugContentMergeViewer) {
+			logTrace("handleDispose(...) - fLeftLabel = null. event.widget = " + System.identityHashCode(event.widget)); //$NON-NLS-1$
+			logStackTrace();
+		}
 		fDirectionLabel= null;
 		fRightLabel= null;
 		fCenter= null;
@@ -1125,7 +1174,7 @@ public abstract class ContentMergeViewer extends ContentViewer
 	}
 	
 	private void fireDirtyState(boolean state) {
-		Utilities.firePropertyChange(fListenerList, this, CompareEditorInput.DIRTY_STATE, null, new Boolean(state));
+		Utilities.firePropertyChange(fListenerList, this, CompareEditorInput.DIRTY_STATE, null, Boolean.valueOf(state));
 	}
 	
 	/**

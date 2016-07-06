@@ -37,23 +37,17 @@ class LinkedModeManager {
 	 */
 	private class Listener implements ILinkedModeListener {
 
-		/*
-		 * @see org.eclipse.jdt.internal.ui.text.link2.LinkedModeModel.ILinkedModeListener#left(org.eclipse.jdt.internal.ui.text.link2.LinkedModeModel, int)
-		 */
+		@Override
 		public void left(LinkedModeModel model, int flags) {
 			LinkedModeManager.this.left(model, flags);
 		}
 
-		/*
-		 * @see org.eclipse.jdt.internal.ui.text.link2.LinkedModeModel.ILinkedModeListener#suspend(org.eclipse.jdt.internal.ui.text.link2.LinkedModeModel)
-		 */
+		@Override
 		public void suspend(LinkedModeModel model) {
 			// not interested
 		}
 
-		/*
-		 * @see org.eclipse.jdt.internal.ui.text.link2.LinkedModeModel.ILinkedModeListener#resume(org.eclipse.jdt.internal.ui.text.link2.LinkedModeModel, int)
-		 */
+		@Override
 		public void resume(LinkedModeModel model, int flags) {
 			// not interested
 		}
@@ -61,7 +55,7 @@ class LinkedModeManager {
 	}
 
 	/** Global map from documents to managers. */
-	private static Map fgManagers= new HashMap();
+	private static Map<IDocument, LinkedModeManager> fgManagers= new HashMap<>();
 
 	/**
 	 * Returns whether there exists a <code>LinkedModeManager</code> on <code>document</code>.
@@ -100,17 +94,17 @@ class LinkedModeManager {
 		if (documents == null || documents.length == 0)
 			return null;
 
-		Set mgrs= new HashSet();
+		Set<LinkedModeManager> mgrs= new HashSet<>();
 		LinkedModeManager mgr= null;
 		for (int i= 0; i < documents.length; i++) {
-			mgr= (LinkedModeManager) fgManagers.get(documents[i]);
+			mgr= fgManagers.get(documents[i]);
 			if (mgr != null)
 				mgrs.add(mgr);
 		}
 		if (mgrs.size() > 1)
 			if (force) {
-				for (Iterator it= mgrs.iterator(); it.hasNext(); ) {
-					LinkedModeManager m= (LinkedModeManager) it.next();
+				for (Iterator<LinkedModeManager> it= mgrs.iterator(); it.hasNext(); ) {
+					LinkedModeManager m= it.next();
 					m.closeAllEnvironments();
 				}
 			} else {
@@ -132,13 +126,13 @@ class LinkedModeManager {
 	 * @param document the document whose <code>LinkedModeManager</code> should be canceled
 	 */
 	public static void cancelManager(IDocument document) {
-		LinkedModeManager mgr= (LinkedModeManager) fgManagers.get(document);
+		LinkedModeManager mgr= fgManagers.get(document);
 		if (mgr != null)
 			mgr.closeAllEnvironments();
 	}
 
 	/** The hierarchy of environments managed by this manager. */
-	private Stack fEnvironments= new Stack();
+	private Stack<LinkedModeModel> fEnvironments= new Stack<>();
 	private Listener fListener= new Listener();
 
 	/**
@@ -152,7 +146,7 @@ class LinkedModeManager {
 			return;
 
 		while (!fEnvironments.isEmpty()) {
-			LinkedModeModel env= (LinkedModeModel) fEnvironments.pop();
+			LinkedModeModel env= fEnvironments.pop();
 			if (env == model)
 				break;
 			env.exit(ILinkedModeListener.NONE);
@@ -165,7 +159,7 @@ class LinkedModeManager {
 
 	private void closeAllEnvironments() {
 		while (!fEnvironments.isEmpty()) {
-			LinkedModeModel env= (LinkedModeModel) fEnvironments.pop();
+			LinkedModeModel env= fEnvironments.pop();
 			env.exit(ILinkedModeListener.NONE);
 		}
 
@@ -173,8 +167,8 @@ class LinkedModeManager {
 	}
 
 	private void removeManager() {
-		for (Iterator it= fgManagers.keySet().iterator(); it.hasNext();) {
-			IDocument doc= (IDocument) it.next();
+		for (Iterator<IDocument> it= fgManagers.keySet().iterator(); it.hasNext();) {
+			IDocument doc= it.next();
 			if (fgManagers.get(doc) == this)
 				it.remove();
 		}
@@ -201,7 +195,7 @@ class LinkedModeManager {
     				return true;
     			}
 
-    			LinkedModeModel top= (LinkedModeModel) fEnvironments.peek();
+    			LinkedModeModel top= fEnvironments.peek();
     			if (model.canNestInto(top)) {
     				model.addLinkingListener(fListener);
     				fEnvironments.push(model);
@@ -229,6 +223,6 @@ class LinkedModeManager {
 	public LinkedModeModel getTopEnvironment() {
 		if (fEnvironments.isEmpty())
 			return null;
-		return (LinkedModeModel) fEnvironments.peek();
+		return fEnvironments.peek();
 	}
 }

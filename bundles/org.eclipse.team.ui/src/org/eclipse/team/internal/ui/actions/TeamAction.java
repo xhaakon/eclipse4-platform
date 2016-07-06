@@ -39,15 +39,15 @@ import org.eclipse.ui.ide.ResourceUtil;
  * The abstract superclass of all Team actions. This class contains some convenience
  * methods for getting selected objects and mapping selected objects to their
  * providers.
- * 
+ *
  * Team providers may subclass this class when creating their actions.
- * Team providers may also instantiate or subclass any of the  
+ * Team providers may also instantiate or subclass any of the
  * subclasses of TeamAction provided in this package.
  */
 public abstract class TeamAction extends AbstractHandler implements IObjectActionDelegate, IViewActionDelegate, IWorkbenchWindowActionDelegate, IActionDelegate2 {
 	// The current selection
 	private IStructuredSelection selection;
-	
+
 	// The shell, required for the progress dialog
 	private Shell shell;
 
@@ -59,45 +59,54 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	private IWorkbenchPart targetPart;
 	private IWorkbenchWindow window;
 	private IPartListener2 targetPartListener = new IPartListener2() {
+		@Override
 		public void partActivated(IWorkbenchPartReference partRef) {
 		}
 
+		@Override
 		public void partBroughtToTop(IWorkbenchPartReference partRef) {
 		}
 
+		@Override
 		public void partClosed(IWorkbenchPartReference partRef) {
 			if (targetPart == partRef.getPart(false)) {
 				targetPart = null;
 			}
 		}
 
+		@Override
 		public void partDeactivated(IWorkbenchPartReference partRef) {
 		}
 
+		@Override
 		public void partHidden(IWorkbenchPartReference partRef) {
 		}
 
+		@Override
 		public void partInputChanged(IWorkbenchPartReference partRef) {
 		}
 
+		@Override
 		public void partOpened(IWorkbenchPartReference partRef) {
 		}
 
+		@Override
 		public void partVisible(IWorkbenchPartReference partRef) {
 		}
 	};
-	
+
 	private ISelectionListener selectionListener = new ISelectionListener() {
+		@Override
 		public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 			if(selection instanceof IStructuredSelection)
-				TeamAction.this.selection = (IStructuredSelection)selection; 
+				TeamAction.this.selection = (IStructuredSelection)selection;
 		}
 	};
 
 	/**
 	 * Creates an array of the given class type containing all the
 	 * objects in the selection that adapt to the given class.
-	 * 
+	 *
 	 * @param selection
 	 * @param c
 	 * @return the selected adaptables
@@ -119,12 +128,12 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		}
 		return (Object[])Array.newInstance(c, 0);
 	}
-	
+
 	/**
 	 * Find the object associated with the given object when it is adapted to
 	 * the provided class. Null is returned if the given object does not adapt
 	 * to the given class
-	 * 
+	 *
 	 * @param adaptable
 	 * @param c
 	 * @return Object
@@ -142,10 +151,10 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Returns the selected projects.
-	 * 
+	 *
 	 * @return the selected projects
 	 */
 	protected IProject[] getSelectedProjects() {
@@ -160,36 +169,36 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		}
 		return (IProject[]) projects.toArray(new IProject[projects.size()]);
 	}
-	
+
 	/**
 	 * Returns an array of the given class type c that contains all
 	 * instances of c that are either contained in the selection or
 	 * are adapted from objects contained in the selection.
-	 * 
+	 *
 	 * @param c
 	 * @return the selection adapted to the given class
 	 */
 	protected Object[] getAdaptedSelection(Class c) {
 		return getSelectedAdaptables(selection, c);
 	}
-	
+
 	/**
 	 * Returns the selected resources.
-	 * 
+	 *
 	 * @return the selected resources
 	 */
 	protected IResource[] getSelectedResources() {
 		return Utils.getContributedResources(getSelection().toArray());
 	}
-	
+
 	protected IStructuredSelection getSelection() {
 		if (selection == null)
 			selection = StructuredSelection.EMPTY;
 		return selection;
 	}
-	
+
 	/**
-     * Return the selected resource mappins that contain resources in 
+     * Return the selected resource mappins that contain resources in
      * projects that are associated with a repository of the given id.
      * @param providerId the repository provider id
      * @return the resource mappings that contain resources associated with the given provider
@@ -215,7 +224,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
             return object;
         return Utils.getResourceMapping(object);
     }
-    
+
     private boolean isMappedToProvider(ResourceMapping element, String providerId) {
         IProject[] projects = element.getProjects();
         for (int k = 0; k < projects.length; k++) {
@@ -227,10 +236,10 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
         }
         return false;
     }
-	
+
 	/**
 	 * Convenience method for getting the current shell.
-	 * 
+	 *
 	 * @return the shell
 	 */
 	protected Shell getShell() {
@@ -251,7 +260,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	/**
 	 * Convenience method for running an operation with progress and
 	 * error feedback.
-	 * 
+	 *
 	 * @param runnable  the runnable which executes the operation
 	 * @param problemMessage  the message to display in the case of errors
 	 * @param progressKind  one of PROGRESS_BUSYCURSOR or PROGRESS_DIALOG
@@ -261,6 +270,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		switch (progressKind) {
 			case PROGRESS_BUSYCURSOR :
 				BusyIndicator.showWhile(Display.getCurrent(), new Runnable() {
+					@Override
 					public void run() {
 						try {
 							runnable.run(new NullProgressMonitor());
@@ -287,10 +297,11 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 			handle(exceptions[0], null, problemMessage);
 		}
 	}
-	
+
 	/*
 	 * Method declared on IActionDelegate.
 	 */
+	@Override
 	public void selectionChanged(IAction action, ISelection selection) {
 		if (selection instanceof IStructuredSelection) {
 			this.selection = (IStructuredSelection) selection;
@@ -299,20 +310,20 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 			}
 		}
 	}
-	
+
 	/**
-	 * Method invoked from <code>selectionChanged(IAction, ISelection)</code> 
-	 * to set the enablement status of the action. The instance variable 
+	 * Method invoked from <code>selectionChanged(IAction, ISelection)</code>
+	 * to set the enablement status of the action. The instance variable
 	 * <code>selection</code> will contain the latest selection so the methods
 	 * <code>getSelectedResources()</code> and <code>getSelectedProjects()</code>
 	 * will provide the proper objects.
-	 * 
+	 *
 	 * This method can be overridden by subclasses but should not be invoked by them.
 	 */
 	protected void setActionEnablement(IAction action) {
 		action.setEnabled(isEnabled());
 	}
-	
+
 	/**
 	 * If an exception occurs during enablement testing, this method is invoked
 	 * to determine if the action should be enabled or not.
@@ -328,10 +339,11 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		TeamPlugin.log(exception);
 		return false;
 	}
-	
+
 	/*
 	 * Method declared on IObjectActionDelegate.
 	 */
+	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
 		if(targetPart != null) {
 			this.shell = targetPart.getSite().getShell();
@@ -340,7 +352,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	}
 	/**
 	 * Shows the given errors to the user.
-	 * 
+	 *
 	 * @param exception  the status containing the error
 	 * @param title  the title of the error dialog
 	 * @param message  the message for the error dialog
@@ -348,12 +360,12 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	protected void handle(Exception exception, String title, String message) {
 		Utils.handleError(getShell(), exception, title, message);
 	}
-	
+
 	/**
 	 * Convenience method that maps the given resources to their providers.
 	 * The returned Hashtable has keys which are ITeamProviders, and values
 	 * which are Lists of IResources that are shared with that provider.
-	 * 
+	 *
 	 * @return a hashtable mapping providers to their resources
 	 */
 	protected Hashtable getProviderMapping(IResource[] resources) {
@@ -369,7 +381,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		}
 		return result;
 	}
-	
+
 	/**
 	 * @return IWorkbenchPart
 	 */
@@ -392,11 +404,11 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 		if (getTargetPart() == null) return TeamUIPlugin.getActivePage();
 		return getTargetPart().getSite().getPage();
 	}
-	
+
 	/**
 	 * Show the view with the given ID in the perspective from which the action
 	 * was executed. Returns null if the view is not registered.
-	 * 
+	 *
 	 * @param viewId
 	 * @return IViewPart
 	 */
@@ -407,28 +419,31 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 			return null;
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IViewActionDelegate#init(org.eclipse.ui.IViewPart)
 	 */
+	@Override
 	public void init(IViewPart view) {
 		if(view != null) {
 			this.shell = view.getSite().getShell();
 			this.targetPart = view;
 		}
 	}
-	
+
+	@Override
 	public void init(IWorkbenchWindow window) {
 		this.window = window;
-		this.shell = window.getShell();	
+		this.shell = window.getShell();
 		window.getSelectionService().addPostSelectionListener(selectionListener);
 		window.getActivePage().addPartListener(targetPartListener);
 	}
-	
+
 	public IWorkbenchWindow getWindow() {
 		return window;
 	}
-	
+
+	@Override
 	public void dispose() {
 		super.dispose();
 		if(window != null) {
@@ -464,6 +479,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	 * </p>
 	 * @throws ExecutionException
 	 */
+	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow activeWorkbenchWindow = HandlerUtil.getActiveWorkbenchWindow(event);
 		if (activeWorkbenchWindow != null) {
@@ -473,7 +489,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 				try {
 					execute(activeWorkbenchWindow,  part, selection);
 				} catch (InvocationTargetException e) {
-					throw new ExecutionException(TeamUIMessages.TeamAction_errorTitle, e); 
+					throw new ExecutionException(TeamUIMessages.TeamAction_errorTitle, e);
 				} catch (InterruptedException e) {
 					// Operation was canceled. Ignore
 				}
@@ -510,6 +526,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	/**
 	 * Common run method for all Team actions.
 	 */
+	@Override
 	public void run(IAction action) {
 		try {
 			execute(action);
@@ -524,7 +541,7 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
 	/**
 	 * This method can be overridden by subclasses but should not be invoked by
 	 * them.
-	 * 
+	 *
 	 * @param e
 	 *            Exception to handle
 	 */
@@ -537,7 +554,8 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
      * <code>IActionDelegate2</code> method does nothing. Subclasses may
      * reimplement.
      */
-    public void init(IAction action) {
+    @Override
+	public void init(IAction action) {
     }
 
     /**
@@ -545,13 +563,15 @@ public abstract class TeamAction extends AbstractHandler implements IObjectActio
      * <code>IActionDelegate2</code> method redirects to the <code>run</code>
      * method. Subclasses may reimplement.
      */
-    final public void runWithEvent(IAction action, Event event) {
+    @Override
+	final public void runWithEvent(IAction action, Event event) {
         run(action);
     }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.commands.AbstractHandler#setEnabled(java.lang.Object)
 	 */
+	@Override
 	public void setEnabled(Object evaluationContext) {
 		IWorkbenchWindow activeWorkbenchWindow = (IWorkbenchWindow) HandlerUtil
 				.getVariable(evaluationContext,

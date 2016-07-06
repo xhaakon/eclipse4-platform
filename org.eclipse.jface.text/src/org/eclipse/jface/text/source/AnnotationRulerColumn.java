@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,11 +23,14 @@ import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Cursor;
@@ -69,24 +72,18 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 */
 	class InternalListener implements IViewportListener, IAnnotationModelListener, ITextListener {
 
-		/*
-		 * @see IViewportListener#viewportChanged(int)
-		 */
+		@Override
 		public void viewportChanged(int verticalPosition) {
 			if (verticalPosition != fScrollPos)
 				redraw();
 		}
 
-		/*
-		 * @see IAnnotationModelListener#modelChanged(IAnnotationModel)
-		 */
+		@Override
 		public void modelChanged(IAnnotationModel model) {
 			postRedraw();
 		}
 
-		/*
-		 * @see ITextListener#textChanged(TextEvent)
-		 */
+		@Override
 		public void textChanged(TextEvent e) {
 			if (e.getViewerRedrawState())
 				postRedraw();
@@ -118,13 +115,11 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 * Comparator for <code>Tuple</code>s.
 	 * @since 3.0
 	 */
-	private static class TupleComparator implements Comparator {
-		/*
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
-		public int compare(Object o1, Object o2) {
-			Position p1= ((Tuple) o1).position;
-			Position p2= ((Tuple) o2).position;
+	private static class TupleComparator implements Comparator<Tuple> {
+		@Override
+		public int compare(Tuple o1, Tuple o2) {
+			Position p1= o1.position;
+			Position p2= o2.position;
 			return p1.getOffset() - p2.getOffset();
 		}
 	}
@@ -153,14 +148,14 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 * The list of annotation types to be shown in this ruler.
 	 * @since 3.0
 	 */
-	private Set fConfiguredAnnotationTypes= new HashSet();
+	private Set<Object> fConfiguredAnnotationTypes= new HashSet<>();
 	/**
 	 * The list of allowed annotation types to be shown in this ruler.
 	 * An allowed annotation type maps to <code>true</code>, a disallowed
 	 * to <code>false</code>.
 	 * @since 3.0
 	 */
-	private Map fAllowedAnnotationTypes= new HashMap();
+	private Map<Object, Boolean> fAllowedAnnotationTypes= new HashMap<>();
 	/**
 	 * The annotation access extension.
 	 * @since 3.0
@@ -175,12 +170,12 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 * The cached annotations.
 	 * @since 3.0
 	 */
-	private List fCachedAnnotations= new ArrayList();
+	private List<Tuple> fCachedAnnotations= new ArrayList<>();
 	/**
 	 * The comparator for sorting annotations according to the offset of their position.
 	 * @since 3.0
 	 */
-	private Comparator fTupleComparator= new TupleComparator();
+	private Comparator<Tuple> fTupleComparator= new TupleComparator();
 	/**
 	 * The hit detection cursor. Do not dispose.
 	 * @since 3.0
@@ -247,23 +242,17 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		fWidth= width;
 	}
 
-	/*
-	 * @see IVerticalRulerColumn#getControl()
-	 */
+	@Override
 	public Control getControl() {
 		return fCanvas;
 	}
 
-	/*
-	 * @see IVerticalRulerColumn#getWidth()
-	 */
+	@Override
 	public int getWidth() {
 		return fWidth;
 	}
 
-	/*
-	 * @see IVerticalRulerColumn#createControl(CompositeRuler, Composite)
-	 */
+	@Override
 	public Control createControl(CompositeRuler parentRuler, Composite parentControl) {
 
 		fParentRuler= parentRuler;
@@ -275,6 +264,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		fCanvas= createCanvas(parentControl);
 
 		fCanvas.addPaintListener(new PaintListener() {
+			@Override
 			public void paintControl(PaintEvent event) {
 				if (fCachedTextViewer != null)
 					doubleBufferPaint(event.gc);
@@ -282,6 +272,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		});
 
 		fCanvas.addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				handleDispose();
 				fCachedTextViewer= null;
@@ -290,6 +281,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		});
 
 		fMouseListener= new MouseListener() {
+			@Override
 			public void mouseUp(MouseEvent event) {
 				int lineNumber;
 				if (isPropagatingMouseListener()) {
@@ -302,6 +294,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 					mouseClicked(lineNumber);
 			}
 
+			@Override
 			public void mouseDown(MouseEvent event) {
 				int lineNumber;
 				if (isPropagatingMouseListener()) {
@@ -314,6 +307,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 					AnnotationRulerColumn.this.mouseDown(lineNumber);
 			}
 
+			@Override
 			public void mouseDoubleClick(MouseEvent event) {
 				int lineNumber;
 				if (isPropagatingMouseListener()) {
@@ -329,18 +323,31 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		fCanvas.addMouseListener(fMouseListener);
 
 		fCanvas.addMouseMoveListener(new MouseMoveListener() {
-			/*
-			 * @see org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events.MouseEvent)
-			 * @since 3.0
-			 */
+			@Override
 			public void mouseMove(MouseEvent e) {
 				handleMouseMove(e);
+			}
+		});
+
+		fCanvas.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseScrolled(MouseEvent e) {
+				handleMouseScrolled(e);
 			}
 		});
 
 		if (fCachedTextViewer != null) {
 			fCachedTextViewer.addViewportListener(fInternalListener);
 			fCachedTextViewer.addTextListener(fInternalListener);
+			// on word wrap toggle a "resized" ControlEvent is fired: suggest a redraw of the ruler
+			fCachedTextWidget.addControlListener(new ControlAdapter() {
+				@Override
+				public void controlResized(ControlEvent e) {
+					if (fCachedTextWidget != null && fCachedTextWidget.getWordWrap()) {
+						redraw();
+					}
+				}
+			});
 		}
 
 		return fCanvas;
@@ -354,10 +361,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 */
 	private Canvas createCanvas(Composite parent) {
 		return new Canvas(parent, SWT.NO_BACKGROUND | SWT.NO_FOCUS) {
-			/*
-			 * @see org.eclipse.swt.widgets.Control#addMouseListener(org.eclipse.swt.events.MouseListener)
-			 * @since 3.0
-			 */
+			@Override
 			public void addMouseListener(MouseListener listener) {
 				if (isPropagatingMouseListener() || listener == fMouseListener)
 					super.addMouseListener(listener);
@@ -378,7 +382,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 
 	/**
 	 * Hook method for a mouse down event on the given ruler line.
-	 * 
+	 *
 	 * @param rulerLine the ruler line
 	 * @since 3.5
 	 */
@@ -398,7 +402,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 * <p>
 	 * <strong>Note:</strong> The event is sent on mouse up.
 	 * </p>
-	 * 
+	 *
 	 * @param rulerLine the ruler line
 	 * @since 3.0
 	 */
@@ -419,6 +423,25 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 				fCanvas.setCursor(cursor);
 				fLastCursor= cursor;
 			}
+		}
+	}
+
+	/**
+	 * Handles mouse scrolls.
+	 *
+	 * @param event the mouse scrolled event
+	 */
+	private void handleMouseScrolled(MouseEvent event) {
+		if (fCachedTextViewer instanceof ITextViewerExtension5) {
+			ITextViewerExtension5 extension= (ITextViewerExtension5) fCachedTextViewer;
+			StyledText textWidget= fCachedTextViewer.getTextWidget();
+			int topIndex= textWidget.getTopIndex();
+			int newTopIndex= Math.max(0, topIndex - event.count);
+			fCachedTextViewer.setTopIndex(extension.widgetLine2ModelLine(newTopIndex));
+		} else if (fCachedTextViewer != null) {
+			int topIndex= fCachedTextViewer.getTopIndex();
+			int newTopIndex= Math.max(0, topIndex - event.count);
+			fCachedTextViewer.setTopIndex(newTopIndex);
 		}
 	}
 
@@ -451,14 +474,14 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		int lineStart= line.getOffset();
 		int lineLength= line.getLength();
 
-		Iterator e;
+		Iterator<Annotation> e;
 		if (fModel instanceof IAnnotationModelExtension2)
 			e= ((IAnnotationModelExtension2)fModel).getAnnotationIterator(lineStart, lineLength + 1, true, true);
 		else
 			e= model.getAnnotationIterator();
 
 		while (e.hasNext()) {
-			Annotation a= (Annotation) e.next();
+			Annotation a= e.next();
 
 			if (a.isMarkedDeleted())
 				continue;
@@ -621,16 +644,16 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		// draw Annotations
 		Rectangle r= new Rectangle(0, 0, 0, 0);
 		int maxLayer= 1;	// loop at least once through layers.
-
+		boolean isWrapActive= fCachedTextWidget.getWordWrap();
 		for (int layer= 0; layer < maxLayer; layer++) {
-			Iterator iter;
+			Iterator<Annotation> iter;
 			if (fModel instanceof IAnnotationModelExtension2)
 				iter= ((IAnnotationModelExtension2)fModel).getAnnotationIterator(topLeft, viewPort + 1, true, true);
 			else
 				iter= fModel.getAnnotationIterator();
 
 			while (iter.hasNext()) {
-				Annotation annotation= (Annotation) iter.next();
+				Annotation annotation= iter.next();
 
 				int lay= IAnnotationAccessExtension.DEFAULT_LAYER;
 				if (fAnnotationAccessExtension != null)
@@ -672,13 +695,21 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 					endLine -= topLine;
 
 					r.x= 0;
-					r.y= JFaceTextUtil.computeLineHeight(fCachedTextWidget, 0, startLine, startLine)  - fScrollPos;
 
 					r.width= dimension.x;
 					int lines= endLine - startLine;
 
-					r.height= JFaceTextUtil.computeLineHeight(fCachedTextWidget, startLine, endLine + 1, lines + 1);
-
+					if (startLine != endLine || !isWrapActive || length <= 0) {
+						// line height for different lines includes wrapped line info already, 
+						// end we show annotations without offset info at very first line anyway
+						r.height= JFaceTextUtil.computeLineHeight(fCachedTextWidget, startLine, endLine + 1, lines + 1);
+						r.y= JFaceTextUtil.computeLineHeight(fCachedTextWidget, 0, startLine, startLine) - fScrollPos;
+					} else {
+						// annotate only the part of the line related to the given offset
+						Rectangle textBounds= fCachedTextWidget.getTextBounds(offset, offset + length);
+						r.height= textBounds.height;
+						r.y= textBounds.y;
+					}
 					if (r.y < dimension.y && fAnnotationAccessExtension != null)  // annotation within visible area
 						fAnnotationAccessExtension.paint(annotation, gc, fCanvas, r);
 
@@ -710,17 +741,17 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		// draw Annotations
 		Rectangle r= new Rectangle(0, 0, 0, 0);
 		ReusableRegion range= new ReusableRegion();
-
+		boolean isWrapActive= fCachedTextWidget.getWordWrap();
 		int minLayer= Integer.MAX_VALUE, maxLayer= Integer.MIN_VALUE;
 		fCachedAnnotations.clear();
-		Iterator iter;
+		Iterator<Annotation> iter;
 		if (fModel instanceof IAnnotationModelExtension2)
 			iter= ((IAnnotationModelExtension2)fModel).getAnnotationIterator(vOffset, vLength + 1, true, true);
 		else
 			iter= fModel.getAnnotationIterator();
 
 		while (iter.hasNext()) {
-			Annotation annotation= (Annotation) iter.next();
+			Annotation annotation= iter.next();
 
 			if (skip(annotation))
 				continue;
@@ -746,7 +777,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 
 		for (int layer= minLayer; layer <= maxLayer; layer++) {
 			for (int i= 0, n= fCachedAnnotations.size(); i < n; i++) {
-				Tuple tuple= (Tuple) fCachedAnnotations.get(i);
+				Tuple tuple= fCachedAnnotations.get(i);
 				Annotation annotation= tuple.annotation;
 				Position position= tuple.position;
 
@@ -762,21 +793,33 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 				if (widgetRegion == null)
 					continue;
 
-				int startLine= extension.widgetLineOfWidgetOffset(widgetRegion.getOffset());
+				int offset= widgetRegion.getOffset();
+				int startLine= extension.widgetLineOfWidgetOffset(offset);
 				if (startLine == -1)
 					continue;
 
-				int endLine= extension.widgetLineOfWidgetOffset(widgetRegion.getOffset() + Math.max(widgetRegion.getLength() -1, 0));
+				int length= Math.max(widgetRegion.getLength() -1, 0);
+				int endLine= extension.widgetLineOfWidgetOffset(offset + length);
 				if (endLine == -1)
 					continue;
 
 				r.x= 0;
-				r.y= JFaceTextUtil.computeLineHeight(fCachedTextWidget, 0, startLine, startLine)  - fScrollPos;
 
 				r.width= dimension.x;
 				int lines= endLine - startLine;
-				r.height= JFaceTextUtil.computeLineHeight(fCachedTextWidget, startLine, endLine + 1, lines + 1);
 
+				if(startLine != endLine || !isWrapActive || length <= 0){
+					// line height for different lines includes wrapped line info already, 
+					// end we show annotations without offset info at very first line anyway
+					r.height= JFaceTextUtil.computeLineHeight(fCachedTextWidget, startLine, endLine + 1, lines + 1);
+					r.y= JFaceTextUtil.computeLineHeight(fCachedTextWidget, 0, startLine, startLine)  - fScrollPos;
+				} else {
+					// annotate only the part of the line related to the given offset
+					Rectangle textBounds= fCachedTextWidget.getTextBounds(offset, offset + length);
+					r.height= textBounds.height;
+					r.y = textBounds.y;
+				}
+				
 				if (r.y < dimension.y && fAnnotationAccessExtension != null)  // annotation within visible area
 					fAnnotationAccessExtension.paint(annotation, gc, fCanvas, r);
 			}
@@ -794,6 +837,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 			Display d= fCanvas.getDisplay();
 			if (d != null) {
 				d.asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						redraw();
 					}
@@ -802,12 +846,10 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		}
 	}
 
-	/*
-	 * @see IVerticalRulerColumn#redraw()
-	 */
+	@Override
 	public void redraw() {
 		if (fCanvas != null && !fCanvas.isDisposed()) {
-			if (VerticalRuler.IS_MAC_BUG_298936) {
+			if (VerticalRuler.AVOID_NEW_GC) {
 				fCanvas.redraw();
 				fCanvas.update();
 			} else {
@@ -821,6 +863,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	/*
 	 * @see IVerticalRulerColumn#setModel
 	 */
+	@Override
 	public void setModel(IAnnotationModel model) {
 		if (fAllowSetModel && model != fModel) {
 
@@ -836,9 +879,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		}
 	}
 
-	/*
-	 * @see IVerticalRulerColumn#setFont(Font)
-	 */
+	@Override
 	public void setFont(Font font) {
 	}
 
@@ -851,9 +892,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		return fCachedTextViewer;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#getModel()
-	 */
+	@Override
 	public IAnnotationModel getModel() {
 		return fModel;
 	}
@@ -871,18 +910,12 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		fAllowedAnnotationTypes.clear();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfo#getLineOfLastMouseButtonActivity()
-	 * @since 3.0
-	 */
+	@Override
 	public int getLineOfLastMouseButtonActivity() {
 		return fParentRuler.getLineOfLastMouseButtonActivity();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfo#toDocumentLineNumber(int)
-	 * @since 3.0
-	 */
+	@Override
 	public int toDocumentLineNumber(int y_coordinate) {
 		return fParentRuler.toDocumentLineNumber(y_coordinate);
 	}
@@ -911,7 +944,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 */
 	private boolean skip(Annotation annotation) {
 		Object annotationType= annotation.getType();
-		Boolean allowed= (Boolean) fAllowedAnnotationTypes.get(annotationType);
+		Boolean allowed= fAllowedAnnotationTypes.get(annotationType);
 		if (allowed != null)
 			return !allowed.booleanValue();
 
@@ -931,7 +964,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 	 */
 	private boolean skip(Object annotationType) {
 		if (fAnnotationAccessExtension != null) {
-			Iterator e= fConfiguredAnnotationTypes.iterator();
+			Iterator<Object> e= fConfiguredAnnotationTypes.iterator();
 			while (e.hasNext()) {
 				if (fAnnotationAccessExtension.isSubtype(annotationType, e.next()))
 					return false;
@@ -941,10 +974,7 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		return !fConfiguredAnnotationTypes.contains(annotationType);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#getHover()
-	 * @since 3.0
-	 */
+	@Override
 	public IAnnotationHover getHover() {
 		return fHover;
 	}
@@ -957,18 +987,12 @@ public class AnnotationRulerColumn implements IVerticalRulerColumn, IVerticalRul
 		fHover= hover;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#addVerticalRulerListener(org.eclipse.jface.text.source.IVerticalRulerListener)
-	 * @since 3.0
-	 */
+	@Override
 	public void addVerticalRulerListener(IVerticalRulerListener listener) {
 		throw new UnsupportedOperationException();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerInfoExtension#removeVerticalRulerListener(org.eclipse.jface.text.source.IVerticalRulerListener)
-	 * @since 3.0
-	 */
+	@Override
 	public void removeVerticalRulerListener(IVerticalRulerListener listener) {
 		throw new UnsupportedOperationException();
 	}

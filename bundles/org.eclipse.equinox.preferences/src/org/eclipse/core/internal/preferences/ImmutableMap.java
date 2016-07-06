@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.core.internal.preferences;
 
 /**
  * Hash table of {String --> String}.
- * 
+ *
  * This map handles collisions using linear probing.  When elements are
  * removed, the entire table is rehashed.  Thus this map has good space
  * characteristics, good insertion and iteration performance, but slower
@@ -49,6 +49,7 @@ public abstract class ImmutableMap implements Cloneable {
 			this.threshold = (int) (tableLen * LOAD_FACTOR);
 		}
 
+		@Override
 		public String get(String key) {
 			int lengthMask = keyTable.length - 1;
 			int index = key.hashCode() & lengthMask;
@@ -68,6 +69,7 @@ public abstract class ImmutableMap implements Cloneable {
 		 * @param key
 		 * @param value
 		 */
+		@Override
 		protected void internalPut(String key, String value) {
 			int lengthMask = keyTable.length - 1;
 			int index = key.hashCode() & lengthMask;
@@ -87,6 +89,7 @@ public abstract class ImmutableMap implements Cloneable {
 		/**
 		 * Returns an array of all keys in this map.
 		 */
+		@Override
 		public String[] keys() {
 			if (elementSize == 0)
 				return EMPTY_STRING_ARRAY;
@@ -98,6 +101,7 @@ public abstract class ImmutableMap implements Cloneable {
 			return result;
 		}
 
+		@Override
 		public ImmutableMap put(String key, String value) {
 			ArrayMap result;
 			final int oldLen = keyTable.length;
@@ -118,6 +122,7 @@ public abstract class ImmutableMap implements Cloneable {
 			return result;
 		}
 
+		@Override
 		public ImmutableMap removeKey(String key) {
 			final int lengthMask = keyTable.length - 1;
 			int index = key.hashCode() & lengthMask;
@@ -141,9 +146,8 @@ public abstract class ImmutableMap implements Cloneable {
 			return this;
 		}
 
-		/* (non-Javadoc
-		 * Method declared on IStringPoolParticipant
-		 */
+
+		@Override
 		public void shareStrings(StringPool set) {
 			//copy elements for thread safety
 			String[] array = keyTable;
@@ -164,6 +168,7 @@ public abstract class ImmutableMap implements Cloneable {
 			}
 		}
 
+		@Override
 		public int size() {
 			return elementSize;
 		}
@@ -171,28 +176,34 @@ public abstract class ImmutableMap implements Cloneable {
 	}
 
 	static class EmptyMap extends ImmutableMap {
+		@Override
 		public String get(String value) {
 			return null;
 		}
 
+		@Override
 		public ImmutableMap removeKey(String key) {
 			return this;
 		}
 
+		@Override
 		protected void internalPut(String key, String value) {
 			throw new IllegalStateException();//cannot put elements in the empty map
 		}
 
+		@Override
 		public String[] keys() {
 			return EMPTY_STRING_ARRAY;
 		}
 
+		@Override
 		public ImmutableMap put(String key, String value) {
 			ImmutableMap result = createMap(4);
 			result.internalPut(key, value);
 			return result;
 		}
 
+		@Override
 		public int size() {
 			return 0;
 		}
@@ -207,7 +218,7 @@ public abstract class ImmutableMap implements Cloneable {
 	protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
 	/**
-	 * Returns the value associated with this key in the map, or 
+	 * Returns the value associated with this key in the map, or
 	 * <code>null</code> if the key is not present in the map.
 	 * @param key
 	 * @return The value associated with this key, or <code>null</code>
@@ -223,7 +234,7 @@ public abstract class ImmutableMap implements Cloneable {
 	/**
 	 * Destructively adds a key/value pair to this map. The caller must ensure
 	 * there is enough room in this map to proceed.
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 */
@@ -237,7 +248,7 @@ public abstract class ImmutableMap implements Cloneable {
 	/**
 	 * Returns a new map that is equal to this one, except with the given
 	 * key/value pair added.
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 * @return The map containing the given key/value pair
@@ -252,9 +263,7 @@ public abstract class ImmutableMap implements Cloneable {
 	 */
 	public abstract ImmutableMap removeKey(String key);
 
-	/* (non-Javadoc
-	 * Method declared on IStringPoolParticipant
-	 */
+
 	public void shareStrings(StringPool set) {
 		// nothing to do
 	}
@@ -265,6 +274,7 @@ public abstract class ImmutableMap implements Cloneable {
 	 */
 	public abstract int size();
 
+	@Override
 	public String toString() {
 		StringBuffer s = new StringBuffer();
 		String[] keys = keys();

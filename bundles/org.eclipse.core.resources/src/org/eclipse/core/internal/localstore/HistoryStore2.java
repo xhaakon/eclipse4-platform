@@ -4,9 +4,10 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.localstore;
 
@@ -23,7 +24,7 @@ import org.eclipse.core.runtime.*;
 public class HistoryStore2 implements IHistoryStore {
 
 	class HistoryCopyVisitor extends Bucket.Visitor {
-		private List<HistoryEntry> changes = new ArrayList<HistoryEntry>();
+		private List<HistoryEntry> changes = new ArrayList<>();
 		private IPath destination;
 		private IPath source;
 
@@ -64,7 +65,7 @@ public class HistoryStore2 implements IHistoryStore {
 	}
 
 	private BlobStore blobStore;
-	private Set<UniversalUniqueIdentifier> blobsToRemove = new HashSet<UniversalUniqueIdentifier>();
+	private Set<UniversalUniqueIdentifier> blobsToRemove = new HashSet<>();
 	final BucketTree tree;
 	private Workspace workspace;
 
@@ -105,7 +106,7 @@ public class HistoryStore2 implements IHistoryStore {
 
 	@Override
 	public synchronized Set<IPath> allFiles(IPath root, int depth, IProgressMonitor monitor) {
-		final Set<IPath> allFiles = new HashSet<IPath>();
+		final Set<IPath> allFiles = new HashSet<>();
 		try {
 			tree.accept(new Bucket.Visitor() {
 				@Override
@@ -127,7 +128,7 @@ public class HistoryStore2 implements IHistoryStore {
 		for (int i = 0; i < fileEntry.getOccurrences(); i++) {
 			if (i < maxStates && fileEntry.getTimestamp(i) >= minTimeStamp)
 				continue;
-			// "delete" the current uuid						
+			// "delete" the current uuid
 			blobsToRemove.add(fileEntry.getUUID(i));
 			fileEntry.deleteOccurrence(i);
 		}
@@ -140,7 +141,7 @@ public class HistoryStore2 implements IHistoryStore {
 		IWorkspaceDescription description = workspace.internalGetDescription();
 		final long minimumTimestamp = System.currentTimeMillis() - description.getFileStateLongevity();
 		final int maxStates = description.getMaxFileStates();
-		// apply policy to the given tree		
+		// apply policy to the given tree
 		tree.accept(new Bucket.Visitor() {
 			@Override
 			public int visit(Entry entry) {
@@ -200,14 +201,11 @@ public class HistoryStore2 implements IHistoryStore {
 			// remove unreferenced blobs
 			blobStore.deleteBlobs(blobsToRemove);
 			if (Policy.DEBUG_HISTORY)
-				Policy.debug("Time to remove " + blobsToRemove.size() + " unreferenced blobs: " + (System.currentTimeMillis() - start) + "ms."); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$			
-			blobsToRemove = new HashSet<UniversalUniqueIdentifier>();
+				Policy.debug("Time to remove " + blobsToRemove.size() + " unreferenced blobs: " + (System.currentTimeMillis() - start) + "ms."); //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+			blobsToRemove = new HashSet<>();
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.localstore.IHistoryStore#closeHistory(org.eclipse.core.resources.IResource)
-	 */
 	@Override
 	public void closeHistoryStore(IResource resource) {
 		try {
@@ -218,10 +216,6 @@ public class HistoryStore2 implements IHistoryStore {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.core.internal.localstore.IHistoryStore#copyHistory(org.eclipse.core.resources.IResource, org.eclipse.core.resources.IResource, boolean)
-	 */
 	@Override
 	public synchronized void copyHistory(IResource sourceResource, IResource destinationResource, boolean moving) {
 		// return early if either of the paths are null or if the source and
@@ -257,7 +251,7 @@ public class HistoryStore2 implements IHistoryStore {
 			// copy history by visiting the source tree
 			HistoryCopyVisitor copyVisitor = new HistoryCopyVisitor(source, destination);
 			tree.accept(copyVisitor, source, BucketTree.DEPTH_INFINITE);
-			// apply clean-up policy to the destination tree 
+			// apply clean-up policy to the destination tree
 			applyPolicy(destinationResource.getFullPath());
 		} catch (CoreException e) {
 			log(e);
@@ -304,7 +298,7 @@ public class HistoryStore2 implements IHistoryStore {
 	 * Return a boolean value indicating whether or not the given file
 	 * should be added to the history store based on the current history
 	 * store policies.
-	 * 
+	 *
 	 * @param localFile the file to check
 	 * @return <code>true</code> if this file should be added to the history
 	 * 	store and <code>false</code> otherwise
@@ -369,7 +363,7 @@ public class HistoryStore2 implements IHistoryStore {
 				}
 			}, Path.ROOT, BucketTree.DEPTH_INFINITE);
 			blobStore.deleteBlobs(blobsToRemove);
-			blobsToRemove = new HashSet<UniversalUniqueIdentifier>();
+			blobsToRemove = new HashSet<>();
 		} catch (Exception e) {
 			String message = Messages.history_problemsCleaning;
 			ResourceStatus status = new ResourceStatus(IResourceStatus.FAILED_DELETE_LOCAL, null, message, e);

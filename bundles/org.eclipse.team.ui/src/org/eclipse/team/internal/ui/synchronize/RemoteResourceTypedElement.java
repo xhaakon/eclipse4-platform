@@ -42,35 +42,39 @@ public class RemoteResourceTypedElement extends StorageTypedElement {
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.ITypedElement#getName()
 	 */
+	@Override
 	public String getName() {
 		return remote.getName();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.StorageTypedElement#getType()
 	 */
+	@Override
 	public String getType() {
 		if (remote.isContainer()) {
 			return ITypedElement.FOLDER_TYPE;
 		}
-		return super.getType();		
+		return super.getType();
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.StorageTypedElement#fetchContents(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected IStorage fetchContents(IProgressMonitor monitor) throws TeamException {
-		return remote.getStorage(monitor);		
+		return remote.getStorage(monitor);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.ISharedDocumentAdapter#getDocumentKey(java.lang.Object)
 	 */
+	@Override
 	public IEditorInput getDocumentKey(Object element) {
 		if (element == this && getBufferedStorage() != null) {
 			return new FileRevisionEditorInput(new ResourceVariantFileRevision(remote), getBufferedStorage(), getLocalEncoding());
 		}
 		return null;
 	}
-	
+
 }

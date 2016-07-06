@@ -153,9 +153,6 @@ public final class XMLRootElementContentDescriber2 extends XMLContentDescriber i
 		return VALID;
 	}
 
-	/* (Intentionally not included in javadoc)
-	 * @see IContentDescriber#describe(InputStream, IContentDescription)
-	 */
 	@Override
 	public int describe(InputStream contents, IContentDescription description) throws IOException {
 		return describe(contents, description, new HashMap<String, Object>());
@@ -174,9 +171,6 @@ public final class XMLRootElementContentDescriber2 extends XMLContentDescriber i
 		return checkCriteria(new InputSource(contents), properties);
 	}
 
-	/* (Intentionally not included in javadoc)
-	 * @see IContentDescriber#describe(Reader, IContentDescription)
-	 */
 	@Override
 	public int describe(Reader contents, IContentDescription description) throws IOException {
 		return describe(contents, description, new HashMap<String, Object>());
@@ -207,12 +201,12 @@ public final class XMLRootElementContentDescriber2 extends XMLContentDescriber i
 		XMLRootHandler xmlHandler = new XMLRootHandler(true);
 		try {
 			if (!xmlHandler.parseContents(input)) {
-				properties.put(RESULT, new Boolean(false));
+				properties.put(RESULT, Boolean.FALSE);
 				return;
 			}
 		} catch (SAXException e) {
 			// we may be handed any kind of contents... it is normal we fail to parse
-			properties.put(RESULT, new Boolean(false));
+			properties.put(RESULT, Boolean.FALSE);
 			return;
 		} catch (ParserConfigurationException e) {
 			// some bad thing happened - force this describer to be disabled
@@ -229,12 +223,9 @@ public final class XMLRootElementContentDescriber2 extends XMLContentDescriber i
 		String namespace = xmlHandler.getRootNamespace();
 		if (namespace != null)
 			properties.put(NAMESPACE, namespace);
-		properties.put(RESULT, new Boolean(true));
+		properties.put(RESULT, Boolean.TRUE);
 	}
 
-	/* (Intentionally not included in javadoc)
-	 * @see IExecutableExtension#setInitializationData
-	 */
 	@Override
 	public void setInitializationData(final IConfigurationElement config, final String propertyName, final Object data) throws CoreException {
 		if (data instanceof String)
@@ -251,12 +242,12 @@ public final class XMLRootElementContentDescriber2 extends XMLContentDescriber i
 				pname = params[i].getAttribute("name"); //$NON-NLS-1$
 				if (ELEMENT_TO_FIND.equals(pname)) {
 					if (elements == null)
-						elements = new LinkedList<QualifiedElement>();
+						elements = new LinkedList<>();
 					elements.add(new QualifiedElement(params[i].getAttribute("value"))); //$NON-NLS-1$
 				}
 			}
 
-			List<QualifiedElement> qualifiedElements = new ArrayList<QualifiedElement>();
+			List<QualifiedElement> qualifiedElements = new ArrayList<>();
 
 			// create list of qualified elements
 			if (elements != null) {

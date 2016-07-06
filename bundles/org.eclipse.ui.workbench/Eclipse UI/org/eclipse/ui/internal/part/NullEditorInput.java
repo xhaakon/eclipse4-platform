@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,25 +42,16 @@ public class NullEditorInput implements IEditorInput {
 
 	}
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorInput#exists()
-     */
     @Override
 	public boolean exists() {
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorInput#getImageDescriptor()
-     */
     @Override
 	public ImageDescriptor getImageDescriptor() {
         return ImageDescriptor.getMissingImageDescriptor();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorInput#getName()
-     */
     @Override
 	public String getName() {
 		String result = null;
@@ -73,17 +64,11 @@ public class NullEditorInput implements IEditorInput {
         return ""; //$NON-NLS-1$
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorInput#getPersistable()
-     */
     @Override
 	public IPersistableElement getPersistable() {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorInput#getToolTipText()
-     */
     @Override
 	public String getToolTipText() {
 		if (editorReference != null)
@@ -91,9 +76,6 @@ public class NullEditorInput implements IEditorInput {
         return ""; //$NON-NLS-1$
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
-     */
     @Override
 	public Object getAdapter(Class adapter) {
         return null;

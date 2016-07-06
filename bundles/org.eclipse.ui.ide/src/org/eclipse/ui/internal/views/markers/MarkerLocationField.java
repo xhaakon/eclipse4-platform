@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2011 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,11 +24,6 @@ import org.eclipse.ui.views.markers.MarkerItem;
  */
 public class MarkerLocationField extends MarkerField {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.provisional.views.markers.MarkerField#getValue(org.eclipse.ui.internal.provisional.views.markers.MarkerItem)
-	 */
 	@Override
 	public String getValue(MarkerItem item) {
 		return item.getLocation();
@@ -46,12 +41,6 @@ public class MarkerLocationField extends MarkerField {
 		return 15 * MarkerSupportInternalUtilities.getFontWidth(control);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.views.markers.MarkerField#compare(org.eclipse.ui.views.markers.MarkerItem,
-	 *      org.eclipse.ui.views.markers.MarkerItem)
-	 */
 	@Override
 	public int compare(MarkerItem item1, MarkerItem item2) {
 

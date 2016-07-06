@@ -62,7 +62,7 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 		}
 		return (IDiff[]) result.toArray(new IDiff[result.size()]);
 	}
-	
+
 	private IDiff[] getFileDeltas(Object pathOrElement) {
 		List result = new ArrayList();
 		ResourceTraversal[] traversals = getTraversals(pathOrElement);
@@ -79,7 +79,7 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 		}
 		return (IDiff[]) result.toArray(new IDiff[result.size()]);
 	}
-	
+
 	/**
 	 * Return whether the given node is visible in the page based
 	 * on the mode in the configuration.
@@ -105,13 +105,13 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 		} else {
 			element = pathOrElement;
 		}
-		
+
 		// Check for resources and adjust the depth to match the provider depth
 		if (isResourcePath(pathOrElement)) {
 			IResource resource = (IResource) element;
 			return getTraversalCalculator().getTraversals(resource, (TreePath)pathOrElement);
 		}
-		
+
 		// Finally, just get the traversals from the mapping.
 		ResourceMapping mapping = Utils.getResourceMapping(element);
 		if (mapping != null) {
@@ -130,7 +130,7 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 		}
 		return new ResourceTraversal[0];
 	}
-	
+
 	private boolean isResourcePath(Object pathOrElement) {
 		if (pathOrElement instanceof TreePath) {
 			TreePath tp = (TreePath) pathOrElement;
@@ -144,10 +144,11 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 	 * @return the filter used to match diffs to which this action applies
 	 */
 	protected abstract FastDiffFilter getDiffFilter();
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.ModelProviderOperation#shouldRun()
 	 */
+	@Override
 	public boolean shouldRun() {
 		Object[] elements = getElements();
 		for (int i = 0; i < elements.length; i++) {
@@ -158,7 +159,7 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 		}
 		return false;
 	}
-	
+
 	protected IDiff[] getTargetDiffs() {
 		return getFileDeltas(getTreePathsOrElements());
 	}
@@ -174,14 +175,15 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.TeamOperation#canRunAsJob()
 	 */
+	@Override
 	protected boolean canRunAsJob() {
 		return true;
 	}
-	
+
 	protected ResourceModelTraversalCalculator getTraversalCalculator() {
 		return ResourceModelTraversalCalculator.getTraversalCalculator(getConfiguration());
 	}
-	
+
 	private Object internalGetElement(Object elementOrPath) {
 		if (elementOrPath instanceof TreePath) {
 			TreePath tp = (TreePath) elementOrPath;
@@ -189,7 +191,8 @@ public abstract class ResourceModelProviderOperation extends SynchronizationOper
 		}
 		return elementOrPath;
 	}
-	
+
+	@Override
 	public boolean belongsTo(Object family) {
 		if (family == getContext()) {
 			return true;

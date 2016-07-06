@@ -21,9 +21,6 @@ import org.eclipse.osgi.util.NLS;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
-/**
- * @see IContentType
- */
 public final class ContentType implements IContentType, IContentTypeInfo {
 
 	/* A placeholder for missing/invalid binary/text describers. */
@@ -47,7 +44,7 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 	final static byte ASSOCIATED_BY_EXTENSION = 2;
 	final static byte ASSOCIATED_BY_NAME = 1;
 	private static final String DESCRIBER_ELEMENT = "describer"; //$NON-NLS-1$
-	private static ArrayList<FileSpec> EMPTY_LIST = new ArrayList<FileSpec>(0);
+	private static ArrayList<FileSpec> EMPTY_LIST = new ArrayList<>(0);
 	private static final Object INHERITED_DESCRIBER = "INHERITED DESCRIBER"; //$NON-NLS-1$
 
 	private static final Object NO_DESCRIBER = "NO DESCRIBER"; //$NON-NLS-1$
@@ -93,7 +90,7 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		contentType.priority = priority;
 		if ((fileExtensions != null && fileExtensions.length > 0) || (fileNames != null && fileNames.length > 0)) {
 			contentType.builtInAssociations = true;
-			contentType.fileSpecs = new ArrayList<FileSpec>(fileExtensions.length + fileNames.length);
+			contentType.fileSpecs = new ArrayList<>(fileExtensions.length + fileNames.length);
 			for (int i = 0; i < fileNames.length; i++)
 				contentType.internalAddFileSpec(fileNames[i], FILE_NAME_SPEC | SPEC_PRE_DEFINED);
 			for (int i = 0; i < fileExtensions.length; i++)
@@ -132,9 +129,6 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		this.manager = manager;
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public void addFileSpec(String fileSpec, int type) throws CoreException {
 		Assert.isLegal(type == FILE_EXTENSION_SPEC || type == FILE_NAME_SPEC, "Unknown type: " + type); //$NON-NLS-1$
@@ -201,10 +195,6 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		return aliasTargetId;
 	}
 
-	/**
-	 * @see IContentType
-	 */
-
 	@Override
 	public IContentType getBaseType() {
 		return baseType;
@@ -223,17 +213,11 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		return this;
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public String getDefaultCharset() {
 		return getDefaultProperty(IContentDescription.CHARSET);
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public IContentDescription getDefaultDescription() {
 		return defaultDescription;
@@ -306,32 +290,23 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		return baseType.getDescriber();
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public IContentDescription getDescriptionFor(InputStream contents, QualifiedName[] options) throws IOException {
 		return internalGetDescriptionFor(ContentTypeManager.readBuffer(contents), options);
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public IContentDescription getDescriptionFor(Reader contents, QualifiedName[] options) throws IOException {
 		return internalGetDescriptionFor(ContentTypeManager.readBuffer(contents), options);
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public String[] getFileSpecs(int typeMask) {
 		if (fileSpecs.isEmpty())
 			return new String[0];
 		// invert the last two bits so it is easier to compare
 		typeMask ^= (IGNORE_PRE_DEFINED | IGNORE_USER_DEFINED);
-		List<String> result = new ArrayList<String>(fileSpecs.size());
+		List<String> result = new ArrayList<>(fileSpecs.size());
 		for (Iterator<FileSpec> i = fileSpecs.iterator(); i.hasNext();) {
 			FileSpec spec = i.next();
 			if ((spec.getType() & typeMask) == spec.getType())
@@ -340,17 +315,11 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		return result.toArray(new String[result.size()]);
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public String getId() {
 		return id;
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public String getName() {
 		return name;
@@ -427,7 +396,7 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		if ((typeMask & ContentType.SPEC_USER_DEFINED) == 0) {
 			// plug-in defined - all that is left to be done is to add it to the list
 			if (fileSpecs.isEmpty())
-				fileSpecs = new ArrayList<FileSpec>(3);
+				fileSpecs = new ArrayList<>(3);
 			fileSpecs.add(newFileSpec);
 			return true;
 		}
@@ -526,25 +495,16 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		return target != null;
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public boolean isAssociatedWith(String fileName) {
 		return isAssociatedWith(fileName, manager.getContext());
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public boolean isAssociatedWith(String fileName, IScopeContext context) {
 		return internalIsAssociatedWith(fileName, context) != NOT_ASSOCIATED;
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public boolean isKindOf(IContentType another) {
 		if (another == null)
@@ -573,9 +533,6 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 			internalAddFileSpec(fileExtensions[i], FILE_EXTENSION_SPEC | SPEC_USER_DEFINED);
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public void removeFileSpec(String fileSpec, int type) throws CoreException {
 		Assert.isLegal(type == FILE_EXTENSION_SPEC || type == FILE_NAME_SPEC, "Unknown type: " + type); //$NON-NLS-1$
@@ -604,9 +561,6 @@ public final class ContentType implements IContentType, IContentTypeInfo {
 		target = newTarget;
 	}
 
-	/**
-	 * @see IContentType
-	 */
 	@Override
 	public void setDefaultCharset(String newCharset) throws CoreException {
 		synchronized (this) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,24 +19,25 @@ import org.w3c.dom.Element;
 import com.ibm.icu.text.Collator;
 
 public class IndexSee extends UAElement implements IIndexSee, Comparable  {
-	
+
 	public static final String NAME = "see"; //$NON-NLS-1$
 	public static final String ATTRIBUTE_KEYWORD = "keyword"; //$NON-NLS-1$
-	
+
 	public IndexSee(Element src) {
 		super(src);
 	}
-	
+
 	public IndexSee(IIndexSee src) {
 		super(NAME, src);
 		setKeyword(src.getKeyword());
 		appendChildren(src.getChildren());
 	}
 
+	@Override
 	public String getKeyword() {
 		return getAttribute(ATTRIBUTE_KEYWORD);
 	}
-	
+
 	private String[] getPath() {
 		IIndexSubpath[] subpaths = getSubpathElements();
 		String[] result = new String[1 + subpaths.length];
@@ -46,11 +47,11 @@ public class IndexSee extends UAElement implements IIndexSee, Comparable  {
 		}
 		return result;
 	}
-	
+
 	public void setKeyword(String keyword) {
 		setAttribute(ATTRIBUTE_KEYWORD, keyword);
 	}
-	
+
 	private int getCategory(String keyword) {
 		if (keyword != null && keyword.length() > 0) {
 			char c = keyword.charAt(0);
@@ -64,7 +65,8 @@ public class IndexSee extends UAElement implements IIndexSee, Comparable  {
 		}
 		return 4;
 	}
-	
+
+	@Override
 	public int compareTo(Object arg0) {
 		Collator collator = Collator.getInstance();
 		if (arg0 instanceof IndexSee) {
@@ -86,11 +88,13 @@ public class IndexSee extends UAElement implements IIndexSee, Comparable  {
 		}
 		return 0;
 	}
-	
+
+	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof IndexSee && compareTo(obj) == 0;
 	}
-	
+
+	@Override
 	public int hashCode() {
 		int result = getKeyword().hashCode();
 		IIndexSubpath[] subpaths = getSubpathElements();
@@ -100,12 +104,14 @@ public class IndexSee extends UAElement implements IIndexSee, Comparable  {
 		return result;
     }
 
+	@Override
 	public boolean isSeeAlso() {
 		UAElement parentElement = getParentElement();
 		return ! (parentElement.getChildren()[0] instanceof IIndexSee);
 	}
 
+	@Override
 	public IIndexSubpath[] getSubpathElements() {
-		return (IIndexSubpath[])getChildren(IIndexSubpath.class);
+		return getChildren(IIndexSubpath.class);
 	}
 }

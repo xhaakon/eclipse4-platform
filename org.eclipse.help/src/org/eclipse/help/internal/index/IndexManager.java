@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 Intel Corporation and others.
+ * Copyright (c) 2005, 2016 Intel Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Intel Corporation - initial API and implementation
  *     IBM Corporation - 122967 [Help] Remote help system
@@ -39,20 +39,20 @@ public class IndexManager {
 	private static final String EXTENSION_POINT_ID_INDEX = HelpPlugin.PLUGIN_ID + ".index"; //$NON-NLS-1$
 	private static final String ELEMENT_NAME_INDEX_PROVIDER = "indexProvider"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_NAME_CLASS = "class"; //$NON-NLS-1$
-	
-	private Map indexContributionsByLocale = new HashMap();
-	private Map indexesByLocale = new HashMap();
+
+	private Map<String, IIndexContribution[]> indexContributionsByLocale = new HashMap<>();
+	private Map<String, Index> indexesByLocale = new HashMap<>();
 	private AbstractIndexProvider[] indexProviders;
-	
+
 	public synchronized IIndex getIndex(String locale) {
-		Index index = (Index)indexesByLocale.get(locale);
+		Index index = indexesByLocale.get(locale);
 		if (index == null) {
 			HelpPlugin.getTocManager().getTocs(locale);  // Ensure Tocs and index not built simultaneously
 			long start = System.currentTimeMillis();
 			if (HelpPlugin.DEBUG_INDEX) {
 			    System.out.println("Start to update keyword index for locale " + locale); //$NON-NLS-1$
 			}
-			List contributions = new ArrayList(Arrays.asList(readIndexContributions(locale)));
+			List<IndexContribution> contributions = new ArrayList<>(Arrays.asList(readIndexContributions(locale)));
 			filterIndexContributions(contributions);
 			IndexAssembler assembler = new IndexAssembler();
 			index = assembler.assemble(contributions, locale);
@@ -64,13 +64,13 @@ public class IndexManager {
 		}
 		return index;
 	}
-	
+
 	/*
 	 * Returns all index contributions for the given locale, from all
 	 * providers.
 	 */
-	public synchronized IndexContribution[] getIndexContributions(String locale) {
-		IndexContribution[] contributions = (IndexContribution[])indexContributionsByLocale.get(locale);
+	public synchronized IIndexContribution[] getIndexContributions(String locale) {
+		IIndexContribution[] contributions = indexContributionsByLocale.get(locale);
 		if (contributions == null) {
 			contributions = readIndexContributions(locale);
 			indexContributionsByLocale.put(locale, contributions);
@@ -80,7 +80,7 @@ public class IndexManager {
 
 	private IndexContribution[] readIndexContributions(String locale) {
 		IndexContribution[] cached;
-		List contributions = new ArrayList();
+		List<IndexContribution> contributions = new ArrayList<>();
 		AbstractIndexProvider[] providers = getIndexProviders();
 		for (int i=0;i<providers.length;++i) {
 			IIndexContribution[] contrib;
@@ -111,10 +111,10 @@ public class IndexManager {
 				continue;
 			}
 		}
-		cached = (IndexContribution[])contributions.toArray(new IndexContribution[contributions.size()]);
+		cached = contributions.toArray(new IndexContribution[contributions.size()]);
 		return cached;
 	}
-	
+
 	/*
 	 * Clears all cached contributions, forcing the manager to query the
 	 * providers again next time a request is made.
@@ -129,7 +129,7 @@ public class IndexManager {
 	 */
 	public AbstractIndexProvider[] getIndexProviders() {
 		if (indexProviders == null) {
-			List providers = new ArrayList();
+			List<AbstractIndexProvider> providers = new ArrayList<>();
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
 			IConfigurationElement[] elements = registry.getConfigurationElementsFor(EXTENSION_POINT_ID_INDEX);
 			for (int i=0;i<elements.length;++i) {
@@ -146,11 +146,11 @@ public class IndexManager {
 					}
 				}
 			}
-			indexProviders = (AbstractIndexProvider[])providers.toArray(new AbstractIndexProvider[providers.size()]);
+			indexProviders = providers.toArray(new AbstractIndexProvider[providers.size()]);
 		}
 		return indexProviders;
 	}
-	
+
 	/*
 	 * Returns whether or not the index has been completely loaded for the
 	 * given locale yet or not.
@@ -171,24 +171,23 @@ public class IndexManager {
 	 * either the contribution's id or its category's id is listed in the
 	 * ignoredIndexes, filter the contribution.
 	 */
-	private void filterIndexContributions(List unfiltered) {
-		Set indexesToFilter = getIgnoredIndexContributions();
-		ListIterator iter = unfiltered.listIterator();
+	private void filterIndexContributions(List<IndexContribution> unfiltered) {
+		Set<String> indexesToFilter = getIgnoredIndexContributions();
+		ListIterator<IndexContribution> iter = unfiltered.listIterator();
 		while (iter.hasNext()) {
-			IIndexContribution contribution = (IIndexContribution)iter.next();
+			IIndexContribution contribution = iter.next();
 			if (indexesToFilter.contains(contribution.getId())) {
 				iter.remove();
 			}
 		}
 	}
 
-	private Set getIgnoredIndexContributions() {
+	private Set<String> getIgnoredIndexContributions() {
 		HelpData helpData = HelpData.getProductHelpData();
 		if (helpData != null) {
 			return helpData.getHiddenIndexes();
-		}
-		else {
-			HashSet ignored = new HashSet();
+		} else {
+			HashSet<String> ignored = new HashSet<>();
 			String preferredIndexes = Platform.getPreferencesService().getString(HelpPlugin.PLUGIN_ID, HelpPlugin.IGNORED_INDEXES_KEY, "", null); //$NON-NLS-1$
 			if (preferredIndexes.length() > 0) {
 				StringTokenizer suggestdOrderedInfosets = new StringTokenizer(preferredIndexes, " ;,"); //$NON-NLS-1$

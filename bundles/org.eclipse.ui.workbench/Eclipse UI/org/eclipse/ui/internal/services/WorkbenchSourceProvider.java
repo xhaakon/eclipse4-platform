@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ package org.eclipse.ui.internal.services;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.expressions.IEvaluationContext;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
@@ -77,13 +78,6 @@ public class WorkbenchSourceProvider extends AbstractSourceProvider implements
 	private IWorkbenchWindow lastWindow;
 //	private IServiceLocator locator;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.AbstractSourceProvider#initialize(org.eclipse.ui.services
-	 * .IServiceLocator)
-	 */
 	@Override
 	public void initialize(IServiceLocator locator) {
 //		this.locator = locator;
@@ -97,11 +91,6 @@ public class WorkbenchSourceProvider extends AbstractSourceProvider implements
 		display.addFilter(SWT.Activate, listener);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.ISourceProvider#dispose()
-	 */
 	@Override
 	public void dispose() {
 		if (lastWindow != null)
@@ -115,21 +104,11 @@ public class WorkbenchSourceProvider extends AbstractSourceProvider implements
 		lastWindow = null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.ISourceProvider#getProvidedSourceNames()
-	 */
 	@Override
 	public String[] getProvidedSourceNames() {
 		return PROVIDED_SOURCE_NAMES;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.ISourceProvider#getCurrentState()
-	 */
 	@Override
 	public Map getCurrentState() {
 
@@ -424,7 +403,7 @@ public class WorkbenchSourceProvider extends AbstractSourceProvider implements
 	}
 
 	private IShowInSource getShowInSource(IWorkbenchPart sourcePart) {
-		return Util.getAdapter(sourcePart, IShowInSource.class);
+		return Adapters.adapt(sourcePart, IShowInSource.class);
 	}
 
 	private ShowInContext getContext(IWorkbenchPart sourcePart) {

@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -178,7 +179,7 @@ public class ContentGeneratorDescriptor {
 	 */
 	public Collection<MarkerGroup> getMarkerGroups() {
 		if (groups == null) {
-			groups = new HashSet<>();
+			groups = new TreeSet<>((mg1, mg2) -> mg1.getMarkerField().getName().compareTo(mg2.getMarkerField().getName()));
 
 			// Add the groups defined in the receiver
 			addDefinedGroups(groups);

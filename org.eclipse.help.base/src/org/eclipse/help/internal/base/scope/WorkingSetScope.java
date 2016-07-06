@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2011 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,7 @@ public class WorkingSetScope extends AbstractHelpScope {
 		this.name = name;
 	}
 
+	@Override
 	public boolean inScope(IToc toc) {
 		if(HelpPlugin.getCriteriaManager().isCriteriaEnabled()) {
 			return inContentScope(toc) && inCriteriaScope(toc);
@@ -120,17 +121,18 @@ public class WorkingSetScope extends AbstractHelpScope {
 	}
 
 	private Map<String, Set<String>> getCriteriaInfo(CriterionResource[] criteria) {
-		Map<String, Set<String>> criteriaMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> criteriaMap = new HashMap<>();
 		CriteriaUtilities.addCriteriaToMap(criteriaMap, criteria);
 		return criteriaMap;
 	}
 
 	private Map<String, Set<String>> getCriteriaInfo(ICriteria[] criteria) {
-		Map<String, Set<String>> criteriaMap = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> criteriaMap = new HashMap<>();
 		CriteriaUtilities.addCriteriaToMap(criteriaMap, criteria);
 	    return criteriaMap;
 	}
 
+	@Override
 	public boolean inScope(ITopic topic) {
 		if(HelpPlugin.getCriteriaManager().isCriteriaEnabled()) {
 			return inContentScope(topic) && inCriteriaScope(topic);
@@ -140,7 +142,7 @@ public class WorkingSetScope extends AbstractHelpScope {
 	}
 
 	private boolean inContentScope(ITopic topic) {
-		Set<IUAElement> topics = new HashSet<IUAElement>();
+		Set<IUAElement> topics = new HashSet<>();
 		IToc toc = null;
 		topics.add(topic);
 		if (topic instanceof UAElement) {
@@ -209,14 +211,17 @@ public class WorkingSetScope extends AbstractHelpScope {
 		return isCriteriaInScope(criteriaOfTopic);
 	}
 
+	@Override
 	public boolean inScope(IIndexEntry entry) {
 		return hasInScopeChildren(entry);
 	}
 
+	@Override
 	public boolean inScope(IIndexSee see) {
 		return hasInScopeChildren(see);
 	}
 
+	@Override
 	public String getName(Locale locale) {
 		return name;
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008, 2013 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,6 +84,14 @@ public interface MApplication extends MElementContainer<MWindow>, MContext, MHan
 	 * @generated
 	 */
 	List<MCommand> getCommands();
+
+	/**
+	 * Returns the model element for the command identified via the elementId or
+	 * null if the element cannot be found
+	 *
+	 * @since 1.2
+	 */
+	MCommand getCommand(String elementId);
 
 	/**
 	 * Returns the value of the '<em><b>Addons</b></em>' containment reference list.

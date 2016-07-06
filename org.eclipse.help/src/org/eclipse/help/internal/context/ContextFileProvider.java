@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,7 +42,7 @@ import org.w3c.dom.Node;
 
 /*
  * Provides context-sensitive help data to the help system, contributed from
- * context XML files. 
+ * context XML files.
  */
 public class ContextFileProvider extends AbstractContextProvider {
 
@@ -50,77 +50,76 @@ public class ContextFileProvider extends AbstractContextProvider {
 	private static final String ELEMENT_CONTEXTS = "contexts"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_FILE = "file"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_PLUGIN = "plugin"; //$NON-NLS-1$
-	
+
 	// locale -> Map(pluginId -> Map(shortContextId -> Context)[])
-	private Map pluginContextsByLocale;
-	
+	private Map<String, Map<String, Map<String, Context>[]>> pluginContextsByLocale;
+
 	// pluginId -> ContextFile[]
-	private Map descriptorsByPluginId;
-	
+	private Map<String, ContextFile[]> descriptorsByPluginId;
+
 	// locale -> Map(ContextFile -> Map(shortContextId -> Context))
-	private Map contextFilesByLocale;
-	
+	private Map<String, Map<ContextFile, Map<String, Context>>> contextFilesByLocale;
+
 	private DocumentProcessor processor;
 	private DocumentReader reader;
 	private DocumentWriter writer;
-	private Map requiredAttributes;
-	
+	private Map<String, String[]> requiredAttributes;
+
+	@Override
 	public IContext getContext(String contextId, String locale) {
 		int index = contextId.lastIndexOf('.');
 		String pluginId = contextId.substring(0, index);
 		String shortContextId = contextId.substring(index + 1);
-		
+
 		if (pluginContextsByLocale == null) {
-			pluginContextsByLocale = new HashMap();
+			pluginContextsByLocale = new HashMap<>();
 		}
-		Map pluginContexts = (Map)pluginContextsByLocale.get(locale);
+		Map<String, Map<String, Context>[]> pluginContexts = pluginContextsByLocale.get(locale);
 		if (pluginContexts == null) {
-			pluginContexts = new HashMap();
+			pluginContexts = new HashMap<>();
 			pluginContextsByLocale.put(locale, pluginContexts);
 		}
-		Map[] contexts = (Map[])pluginContexts.get(pluginId);
+		Map<String, Context>[] contexts = pluginContexts.get(pluginId);
 		if (contexts == null) {
 			contexts = getPluginContexts(pluginId, locale);
 			pluginContexts.put(pluginId, contexts);
 		}
-		ArrayList matches = new ArrayList();
+		ArrayList<IContext> matches = new ArrayList<>();
 		for (int i=0;i<contexts.length;++i) {
 			// Search for contexts
-			Context context = (Context)contexts[i].get(shortContextId);
+			Context context = contexts[i].get(shortContextId);
 			if (context != null) {
 				matches.add(context);
 			}
 		}
 		switch (matches.size()) {
-		case 0: 
+		case 0:
 			return null;
 		case 1:
-			return (IContext)matches.get(0);
+			return matches.get(0);
 		default:
 			// Merge the contexts - this is the least common case
-			Context newContext = new Context((IContext)matches.get(0), shortContextId);
+			Context newContext = new Context(matches.get(0), shortContextId);
 		    for (int i = 1; i < matches.size(); i++) {
-		    	newContext.mergeContext((IContext)matches.get(i));
+		    	newContext.mergeContext(matches.get(i));
 		    }
 		    return newContext;
-		} 
+		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.help.AbstractContextProvider#getPlugins()
-	 */
+
+	@Override
 	public String[] getPlugins() {
-		Map associations = getPluginAssociations();
-		return (String[])associations.keySet().toArray(new String[associations.size()]);
+		Map<String, ContextFile[]> associations = getPluginAssociations();
+		return associations.keySet().toArray(new String[associations.size()]);
 	}
 
 	/*
 	 * Returns a mapping of plug-in IDs to arrays of context files that apply
 	 * to that plug-in (pluginId -> ContextFile[]).
 	 */
-	private Map getPluginAssociations() {
+	private Map<String, ContextFile[]> getPluginAssociations() {
 		if (descriptorsByPluginId == null) {
-			descriptorsByPluginId = new HashMap();
+			descriptorsByPluginId = new HashMap<>();
 			IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(EXTENSION_POINT_CONTEXTS);
 			for (int i=0;i<elements.length;++i) {
 				if (ELEMENT_CONTEXTS.equals(elements[i].getName())) {
@@ -129,7 +128,7 @@ public class ContextFileProvider extends AbstractContextProvider {
 					String plugin = elements[i].getAttribute(ATTRIBUTE_PLUGIN);
 					String targetPluginId = (plugin == null ? declaringPluginId : plugin);
 					ContextFile descriptor = new ContextFile(declaringPluginId, file);
-					ContextFile[] descriptors = (ContextFile[])descriptorsByPluginId.get(targetPluginId);
+					ContextFile[] descriptors = descriptorsByPluginId.get(targetPluginId);
 					if (descriptors == null) {
 						descriptors = new ContextFile[] { descriptor };
 					}
@@ -145,38 +144,39 @@ public class ContextFileProvider extends AbstractContextProvider {
 		}
 		return descriptorsByPluginId;
 	}
-	
+
 	/*
 	 * Returns the context definitions for the given plug-in and locale,
 	 * as a mapping of short IDs to Context objects (shortContextId -> Context).
 	 */
-	public Map[] getPluginContexts(String pluginId, String locale) {
-		List maps = new ArrayList();
-		Map associations = getPluginAssociations();
-		ContextFile[] descriptors = (ContextFile[])associations.get(pluginId);
+	@SuppressWarnings("unchecked")
+	public Map<String, Context>[] getPluginContexts(String pluginId, String locale) {
+		List<Map<String, Context>> maps = new ArrayList<>();
+		Map<String, ContextFile[]> associations = getPluginAssociations();
+		ContextFile[] descriptors = associations.get(pluginId);
 		for (int i=0;i<descriptors.length;++i) {
-			Map contexts = getContexts(descriptors[i], locale);
+			Map<String, Context> contexts = getContexts(descriptors[i], locale);
 			if (contexts != null) {
 				maps.add(contexts);
 			}
 		}
-		return (Map[])maps.toArray(new Map[maps.size()]);
+		return maps.toArray(new Map[maps.size()]);
 	}
-	
+
 	/*
 	 * Returns the context definitions stored in the given file for the given
 	 * locale (shortContextId -> Context).
 	 */
-	private Map getContexts(ContextFile descriptor, String locale) {
+	private Map<String, Context> getContexts(ContextFile descriptor, String locale) {
 		if (contextFilesByLocale == null) {
-			contextFilesByLocale = new HashMap();
+			contextFilesByLocale = new HashMap<>();
 		}
-		Map contextsByDescriptor = (Map)contextFilesByLocale.get(locale);
+		Map<ContextFile, Map<String, Context>> contextsByDescriptor = contextFilesByLocale.get(locale);
 		if (contextsByDescriptor == null) {
-			contextsByDescriptor = new HashMap();
+			contextsByDescriptor = new HashMap<>();
 			contextFilesByLocale.put(locale, contextsByDescriptor);
 		}
-		Map contexts = (Map)contextsByDescriptor.get(descriptor);
+		Map<String, Context> contexts = contextsByDescriptor.get(descriptor);
 		if (contexts == null) {
 			contexts = loadContexts(descriptor, locale);
 			if (contexts != null) {
@@ -185,13 +185,13 @@ public class ContextFileProvider extends AbstractContextProvider {
 		}
 		return contexts;
 	}
-	
+
 	/*
 	 * Loads the given context file for the given locale, and returns its
 	 * contents as a mapping from short context ids to Context objects
 	 * (shortContextId -> Context).
 	 */
-	private Map loadContexts(ContextFile descriptor, String locale) {
+	private Map<String, Context> loadContexts(ContextFile descriptor, String locale) {
 		try {
 			// load the file
 			InputStream in = ResourceLocator.openFromPlugin(descriptor.getBundleId(), descriptor.getFile(), locale);
@@ -214,7 +214,7 @@ public class ContextFileProvider extends AbstractContextProvider {
 	}
 
 
-	private Map loadContextsFromInputStream(ContextFile descriptor, String locale, InputStream in)
+	private Map<String, Context> loadContextsFromInputStream(ContextFile descriptor, String locale, InputStream in)
 			throws Exception {
 		if (reader == null) {
 			reader = new DocumentReader();
@@ -231,10 +231,10 @@ public class ContextFileProvider extends AbstractContextProvider {
 				});
 			}
 			processor.process(root, '/' + descriptor.getBundleId() + '/' + descriptor.getFile());
-			
+
 			// build map
 			IUAElement[] children = root.getChildren();
-			Map contexts = new HashMap();
+			Map<String, Context> contexts = new HashMap<>();
 			for (int i=0;i<children.length;++i) {
 				if (children[i] instanceof Context) {
 					Context context = (Context)children[i];
@@ -245,9 +245,9 @@ public class ContextFileProvider extends AbstractContextProvider {
 						    contexts.put(id, context);
 						else
 						{
-							((Context)existingContext).mergeContext(context);	
+							((Context)existingContext).mergeContext(context);
 
-							if (HelpPlugin.DEBUG_CONTEXT) 
+							if (HelpPlugin.DEBUG_CONTEXT)
 							{
 								String error = "Context help ID '"+id+"' is found multiple times in file '"+descriptor.getBundleId()+'/'+descriptor.getFile()+"'\n"+ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 									" Description 1: "+((Context)existingContext).getText()+'\n'+ //$NON-NLS-1$
@@ -266,14 +266,14 @@ public class ContextFileProvider extends AbstractContextProvider {
 		}
 		return null;
 	}
-	
+
 	private String getErrorPath(ContextFile descriptor, String locale) {
 		return ResourceLocator.getErrorPath(descriptor.getBundleId(), descriptor.getFile(), locale);
 	}
 
-	private Map getRequiredAttributes() {
+	private Map<String, String[]> getRequiredAttributes() {
 		if (requiredAttributes == null) {
-			requiredAttributes = new HashMap();
+			requiredAttributes = new HashMap<>();
 			requiredAttributes.put(Context.NAME, new String[] { Context.ATTRIBUTE_ID });
 			requiredAttributes.put(Topic.NAME, new String[] { Topic.ATTRIBUTE_LABEL, Topic.ATTRIBUTE_HREF });
 			requiredAttributes.put("anchor", new String[] { "id" }); //$NON-NLS-1$ //$NON-NLS-2$
@@ -281,15 +281,16 @@ public class ContextFileProvider extends AbstractContextProvider {
 		}
 		return requiredAttributes;
 	}
-	
+
 	/*
 	 * Handler that normalizes:
 	 * 1. Descriptions - any child elements like bold tags are serialized and inserted into the
 	 *    text node under the description element.
 	 * 2. Related topic hrefs - convert from relative (e.g. "path/file.html") to absolute hrefs
-	 *    (e.g. "/plugin.id/path/file.html"). 
+	 *    (e.g. "/plugin.id/path/file.html").
 	 */
 	private class NormalizeHandler extends ProcessorHandler {
+		@Override
 		public short handle(UAElement element, String id) {
 			if (element instanceof Context) {
 				Context context = (Context)element;

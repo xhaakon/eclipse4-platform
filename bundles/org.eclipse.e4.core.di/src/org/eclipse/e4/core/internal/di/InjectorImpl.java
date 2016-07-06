@@ -13,12 +13,14 @@ package org.eclipse.e4.core.internal.di;
 
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,8 +47,12 @@ import org.eclipse.e4.core.di.suppliers.ExtendedObjectSupplier;
 import org.eclipse.e4.core.di.suppliers.IObjectDescriptor;
 import org.eclipse.e4.core.di.suppliers.IRequestor;
 import org.eclipse.e4.core.di.suppliers.PrimaryObjectSupplier;
-import org.eclipse.e4.core.internal.di.osgi.DIActivator;
 import org.eclipse.e4.core.internal.di.osgi.LogHelper;
+import org.eclipse.osgi.service.debug.DebugOptions;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 /**
  * Reflection-based dependency injector.
@@ -54,12 +60,35 @@ import org.eclipse.e4.core.internal.di.osgi.LogHelper;
 public class InjectorImpl implements IInjector {
 
 	final static private String DEBUG_INJECTION = "org.eclipse.e4.core.di/debug/injector"; //$NON-NLS-1$
-	final static private boolean shouldDebug = DIActivator.getDefault().getBooleanDebugOption(DEBUG_INJECTION, false);
+	final static private boolean shouldDebug = getBooleanOption(DEBUG_INJECTION, false);
+
+	private static boolean getBooleanOption(String option, boolean defaultValue) {
+		try {
+			Bundle bundle = FrameworkUtil.getBundle(InjectorImpl.class);
+			BundleContext context = bundle == null ? null : bundle.getBundleContext();
+			ServiceReference<DebugOptions> ref = context == null ? null
+					: context.getServiceReference(DebugOptions.class);
+			if (ref == null) {
+				return false;
+			}
+			try {
+				DebugOptions options = context.getService(ref);
+				if (options == null) {
+					return false;
+				}
+				return options.getBooleanOption(option, defaultValue);
+			} finally {
+				context.ungetService(ref);
+			}
+		} catch (Throwable t) {
+			return false;
+		}
+	}
 
 	final static private String JAVA_OBJECT = "java.lang.Object"; //$NON-NLS-1$
 
-	final private static Boolean DEFAULT_BOOLEAN = new Boolean(false);
-	final private static Integer DEFAULT_INTEGER = new Integer(0);
+	final private static Boolean DEFAULT_BOOLEAN = Boolean.FALSE;
+	final private static Integer DEFAULT_INTEGER = Integer.valueOf(0);
 	final private static Character DEFAULT_CHAR = new Character((char) 0);
 	final private static Float DEFAULT_FLOAT = new Float(0.0f);
 	final private static Double DEFAULT_DOUBLE = new Double(0.0d);
@@ -67,16 +96,19 @@ public class InjectorImpl implements IInjector {
 	final private static Short DEFAULT_SHORT = new Short((short) 0);
 	final private static Byte DEFAULT_BYTE = new Byte((byte) 0);
 
-	private Map<PrimaryObjectSupplier, List<WeakReference<?>>> injectedObjects = new HashMap<PrimaryObjectSupplier, List<WeakReference<?>>>();
-	private Set<WeakReference<Class<?>>> injectedClasses = new HashSet<WeakReference<Class<?>>>();
-	private HashMap<Class<?>, Object> singletonCache = new HashMap<Class<?>, Object>();
-	private Map<Class<?>, Set<Binding>> bindings = new HashMap<Class<?>, Set<Binding>>();
+	private Map<PrimaryObjectSupplier, List<WeakReference<?>>> injectedObjects = new HashMap<>();
+	private Set<WeakReference<Class<?>>> injectedClasses = new HashSet<>();
+	private HashMap<Class<?>, Object> singletonCache = new HashMap<>();
+	private Map<Class<?>, Set<Binding>> bindings = new HashMap<>();
+	private Map<Class<? extends Annotation>, Map<AnnotatedElement, Boolean>> annotationsPresent = new HashMap<>();
 
 	// Performance improvement:
-	private Map<Class<?>, Method[]> methodsCache = new WeakHashMap<Class<?>, Method[]>();
-	private Map<Class<?>, Map<Method, Boolean>> isOverriddenCache = new WeakHashMap<Class<?>, Map<Method, Boolean>>();
+	private Map<Class<?>, Method[]> methodsCache = new WeakHashMap<>();
+	private Map<Class<?>, Field[]> fieldsCache = new WeakHashMap<>();
+	private Map<Class<?>, Constructor<?>[]> constructorsCache = new WeakHashMap<>();
+	private Map<Class<?>, Map<Method, Boolean>> isOverriddenCache = new WeakHashMap<>();
 
-	private Set<Class<?>> classesBeingCreated = new HashSet<Class<?>>(5);
+	private Set<Class<?>> classesBeingCreated = new HashSet<>(5);
 
 	private PrimaryObjectSupplier defaultSupplier;
 
@@ -84,16 +116,14 @@ public class InjectorImpl implements IInjector {
 	public void inject(Object object, PrimaryObjectSupplier objectSupplier) {
 		try {
 			inject(object, objectSupplier, null);
-		} catch (NoClassDefFoundError e) {
-			throw new InjectionException(e);
-		} catch (NoSuchMethodError e) {
+		} catch (NoClassDefFoundError | NoSuchMethodError e) {
 			throw new InjectionException(e);
 		}
 	}
 
 	public void inject(Object object, PrimaryObjectSupplier objectSupplier, PrimaryObjectSupplier tempSupplier) {
 		// Two stages: first, go and collect {requestor, descriptor[] }
-		ArrayList<Requestor<?>> requestors = new ArrayList<Requestor<?>>();
+		ArrayList<Requestor<?>> requestors = new ArrayList<>();
 		processClassHierarchy(object, objectSupplier, tempSupplier, true /* track */, true /* normal order */, requestors);
 
 		// if we are not establishing any links to the injected object (nothing to inject,
@@ -130,7 +160,7 @@ public class InjectorImpl implements IInjector {
 		synchronized (injectedObjects) {
 			List<WeakReference<?>> list;
 			if (!injectedObjects.containsKey(objectSupplier)) {
-				list = new ArrayList<WeakReference<?>>();
+				list = new ArrayList<>();
 				injectedObjects.put(objectSupplier, list);
 			} else
 				list = injectedObjects.get(objectSupplier);
@@ -138,7 +168,7 @@ public class InjectorImpl implements IInjector {
 				if (object == ref.get())
 					return; // we already have it
 			}
-			list.add(new WeakReference<Object>(object));
+			list.add(new WeakReference<>(object));
 		}
 	}
 
@@ -181,7 +211,7 @@ public class InjectorImpl implements IInjector {
 				return; // not injected at this time
 			processAnnotated(PreDestroy.class, object, object.getClass(), objectSupplier, null, new ArrayList<Class<?>>(5));
 
-			ArrayList<Requestor<?>> requestors = new ArrayList<Requestor<?>>();
+			ArrayList<Requestor<?>> requestors = new ArrayList<>();
 			processClassHierarchy(object, objectSupplier, null, true /* track */, false /* inverse order */, requestors);
 
 			for (Requestor<?> requestor : requestors) {
@@ -302,7 +332,7 @@ public class InjectorImpl implements IInjector {
 			if (shouldDebug)
 				classesBeingCreated.add(clazz);
 
-			boolean isSingleton = clazz.isAnnotationPresent(Singleton.class);
+			boolean isSingleton = isAnnotationPresent(clazz, Singleton.class);
 			if (isSingleton) {
 				synchronized (singletonCache) {
 					if (singletonCache.containsKey(clazz))
@@ -310,9 +340,9 @@ public class InjectorImpl implements IInjector {
 				}
 			}
 
-			Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+			Constructor<?>[] constructors = getDeclaredConstructors(clazz);
 			// Sort the constructors by descending number of constructor arguments
-			ArrayList<Constructor<?>> sortedConstructors = new ArrayList<Constructor<?>>(constructors.length);
+			ArrayList<Constructor<?>> sortedConstructors = new ArrayList<>(constructors.length);
 			for (Constructor<?> constructor : constructors)
 				sortedConstructors.add(constructor);
 			Collections.sort(sortedConstructors, new Comparator<Constructor<?>>() {
@@ -331,7 +361,7 @@ public class InjectorImpl implements IInjector {
 					continue;
 
 				// unless this is the default constructor, it has to be tagged
-				if (!constructor.isAnnotationPresent(Inject.class) && constructor.getParameterTypes().length != 0)
+				if (!isAnnotationPresent(constructor, Inject.class) && constructor.getParameterTypes().length != 0)
 					continue;
 
 				ConstructorRequestor requestor = new ConstructorRequestor(constructor, this, objectSupplier, tempSupplier);
@@ -352,9 +382,7 @@ public class InjectorImpl implements IInjector {
 				}
 			}
 			throw new InjectionException("Could not find satisfiable constructor in " + clazz.getName()); //$NON-NLS-1$
-		} catch (NoClassDefFoundError e) {
-			throw new InjectionException(e);
-		} catch (NoSuchMethodError e) {
+		} catch (NoClassDefFoundError | NoSuchMethodError e) {
 			throw new InjectionException(e);
 		} finally {
 			if (shouldDebug)
@@ -566,12 +594,8 @@ public class InjectorImpl implements IInjector {
 		if (qualifiers == null)
 			return null;
 		for (Annotation qualifier : qualifiers) {
-			String key;
-			Type type = qualifier.annotationType();
-			if (type instanceof Class<?>) {
-				key = ((Class<?>) type).getName();
-			} else
-				continue;
+			Class<?> type = qualifier.annotationType();
+			String key = ((Class<?>) type).getName();
 
 			ExtendedObjectSupplier supplier;
 			try {
@@ -648,14 +672,14 @@ public class InjectorImpl implements IInjector {
 	 */
 	private boolean processFields(Object userObject, PrimaryObjectSupplier objectSupplier, PrimaryObjectSupplier tempSupplier, Class<?> objectsClass, boolean track, List<Requestor<?>> requestors) {
 		boolean injectedStatic = false;
-		Field[] fields = objectsClass.getDeclaredFields();
+		Field[] fields = getDeclaredFields(objectsClass);
 		for (Field field : fields) {
 			if (Modifier.isStatic(field.getModifiers())) {
 				if (hasInjectedStatic(objectsClass))
 					continue;
 				injectedStatic = true;
 			}
-			if (!field.isAnnotationPresent(Inject.class))
+			if (!isAnnotationPresent(field, Inject.class))
 				continue;
 			requestors.add(new FieldRequestor(field, this, objectSupplier, tempSupplier, userObject, track));
 		}
@@ -681,7 +705,7 @@ public class InjectorImpl implements IInjector {
 			if (isOverridden == null) {
 				isOverridden = isOverridden(method, classHierarchy);
 				if (methodMap == null) {
-					methodMap = new WeakHashMap<Method, Boolean>();
+					methodMap = new WeakHashMap<>();
 					isOverriddenCache.put(originalClass, methodMap);
 				}
 				methodMap.put(method, isOverridden);
@@ -694,7 +718,7 @@ public class InjectorImpl implements IInjector {
 					continue;
 				injectedStatic = true;
 			}
-			if (!method.isAnnotationPresent(Inject.class))
+			if (!isAnnotationPresent(method, Inject.class))
 				continue;
 			requestors.add(new MethodRequestor(method, this, objectSupplier, tempSupplier, userObject, track));
 		}
@@ -755,6 +779,25 @@ public class InjectorImpl implements IInjector {
 		return false;
 	}
 
+	private Constructor<?>[] getDeclaredConstructors(Class<?> c) {
+		Constructor<?>[] constructors = constructorsCache.get(c);
+		if (constructors == null) {
+			constructors = c.getDeclaredConstructors();
+			// Sort the constructors by descending number of constructor
+			// arguments
+			Arrays.sort(constructors, new Comparator<Constructor<?>>() {
+				@Override
+				public int compare(Constructor<?> c1, Constructor<?> c2) {
+					int l1 = c1.getParameterTypes().length;
+					int l2 = c2.getParameterTypes().length;
+					return l2 - l1;
+				}
+			});
+			constructorsCache.put(c, constructors);
+		}
+		return constructors;
+	}
+
 	private Method[] getDeclaredMethods(Class<?> c) {
 		Method[] methods = methodsCache.get(c);
 		if (methods == null) {
@@ -762,6 +805,15 @@ public class InjectorImpl implements IInjector {
 			methodsCache.put(c, methods);
 		}
 		return methods;
+	}
+
+	private Field[] getDeclaredFields(Class<?> c) {
+		Field[] fields = fieldsCache.get(c);
+		if (fields == null) {
+			fields = c.getDeclaredFields();
+			fieldsCache.put(c, fields);
+		}
+		return fields;
 	}
 
 	private Class<?> getDesiredClass(Type desiredType) {
@@ -814,7 +866,7 @@ public class InjectorImpl implements IInjector {
 				}
 				collection.add(internalBinding);
 			} else {
-				Set<Binding> collection = new HashSet<Binding>(1);
+				Set<Binding> collection = new HashSet<>(1);
 				collection.add(internalBinding);
 				bindings.put(clazz, collection);
 			}
@@ -881,8 +933,24 @@ public class InjectorImpl implements IInjector {
 		}
 		Method[] methods = getDeclaredMethods(objectClass);
 		for (Method method : methods) {
-			if (!method.isAnnotationPresent(annotation))
+			if (!isAnnotationPresent(method, annotation)) {
+				if (shouldDebug) {
+					for (Annotation a : method.getAnnotations()) {
+						if (annotation.getName().equals(a.annotationType().getName())) {
+							StringBuilder tmp = new StringBuilder();
+							tmp.append("Possbible annotation mismatch: method \""); //$NON-NLS-1$
+							tmp.append(method.toString());
+							tmp.append("\" annotated with \""); //$NON-NLS-1$
+							tmp.append(describeClass(a.annotationType()));
+							tmp.append("\" but was looking for \""); //$NON-NLS-1$
+							tmp.append(describeClass(annotation));
+							tmp.append("\""); //$NON-NLS-1$
+							LogHelper.logWarning(tmp.toString(), null);
+						}
+					}
+				}
 				continue;
+			}
 			if (isOverridden(method, classHierarchy))
 				continue;
 
@@ -890,7 +958,7 @@ public class InjectorImpl implements IInjector {
 			Object[] actualArgs = resolveArgs(requestor, objectSupplier, tempSupplier, false, false, false);
 			int unresolved = unresolved(actualArgs);
 			if (unresolved != -1) {
-				if (method.isAnnotationPresent(Optional.class))
+				if (isAnnotationPresent(method, Optional.class))
 					continue;
 				reportUnresolvedArgument(requestor, unresolved);
 			}
@@ -899,9 +967,42 @@ public class InjectorImpl implements IInjector {
 		}
 	}
 
+	/** Provide a human-meaningful description of the provided class */
+	private String describeClass(Class<?> cl) {
+		Bundle b = FrameworkUtil.getBundle(cl);
+		if (b != null) {
+			return b.getSymbolicName() + ":" + b.getVersion() + ":" + cl.getName(); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		CodeSource clazzCS = cl.getProtectionDomain().getCodeSource();
+		if (clazzCS != null) {
+			return clazzCS.getLocation() + ">" + cl.getName(); //$NON-NLS-1$
+		}
+		if (cl.getClassLoader() == null) {
+			return cl.getName() + " [via bootstrap classloader]"; //$NON-NLS-1$
+		}
+		return cl.getName();
+	}
+
 	@Override
 	public void setDefaultSupplier(PrimaryObjectSupplier objectSupplier) {
 		defaultSupplier = objectSupplier;
 	}
 
+	private boolean isAnnotationPresent(AnnotatedElement annotatedElement,
+			Class<? extends Annotation> annotation) {
+		Map<AnnotatedElement, Boolean> cache = annotationsPresent.get(annotation);
+		if (cache == null) {
+			cache = new WeakHashMap<>();
+			annotationsPresent.put(annotation, cache);
+		}
+
+		Boolean present = cache.get(annotatedElement);
+		if (present != null) {
+			return present;
+		}
+
+		boolean isPresent = annotatedElement.isAnnotationPresent(annotation);
+		cache.put(annotatedElement, isPresent);
+		return isPresent;
+	}
 }

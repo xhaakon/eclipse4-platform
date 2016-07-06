@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,6 @@ package org.eclipse.ui.dialogs;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.swt.SWT;
@@ -181,13 +180,8 @@ public class FileSelectionDialog extends SelectionDialog {
                 SIZING_SELECTION_WIDGET_HEIGHT); // widgets we need to hardcode the combined widget's
         // size, otherwise it will open too small
 
-        ICheckStateListener listener = new ICheckStateListener() {
-            @Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-                getOkButton().setEnabled(
-                        selectionGroup.getCheckedElementCount() > 0);
-            }
-        };
+        ICheckStateListener listener = event -> getOkButton().setEnabled(
+		        selectionGroup.getCheckedElementCount() > 0);
 
         WorkbenchViewerComparator comparator = new WorkbenchViewerComparator();
         selectionGroup.setTreeComparator(comparator);

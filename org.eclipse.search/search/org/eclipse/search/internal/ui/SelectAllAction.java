@@ -44,7 +44,7 @@ public class SelectAllAction extends Action {
 		fViewer= viewer;
 	}
 
-	private void collectExpandedAndVisible(TreeItem[] items, List result) {
+	private void collectExpandedAndVisible(TreeItem[] items, List<TreeItem> result) {
 		for (int i= 0; i < items.length; i++) {
 			TreeItem item= items[i];
 			result.add(item);
@@ -57,15 +57,16 @@ public class SelectAllAction extends Action {
 	/**
 	 * Selects all resources in the view.
 	 */
+	@Override
 	public void run() {
 		if (fViewer == null || fViewer.getControl().isDisposed()) {
 			return;
 		}
 		if (fViewer instanceof TreeViewer) {
-			ArrayList allVisible= new ArrayList();
+			ArrayList<TreeItem> allVisible= new ArrayList<>();
 			Tree tree= ((TreeViewer) fViewer).getTree();
 			collectExpandedAndVisible(tree.getItems(), allVisible);
-			tree.setSelection((TreeItem[]) allVisible.toArray(new TreeItem[allVisible.size()]));
+			tree.setSelection(allVisible.toArray(new TreeItem[allVisible.size()]));
 		} else if (fViewer instanceof TableViewer) {
 			((TableViewer) fViewer).getTable().selectAll();
 			// force viewer selection change

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -83,15 +83,11 @@ public class FileFolderSelectionDialog extends ElementTreeSelectionDialog {
 		 *            receiver. <code>false</code> only folders are returned.
 		 */
 		public FileContentProvider(final boolean showFiles) {
-			fileFilter = new IFileStoreFilter() {
-
-				@Override
-				public boolean accept(IFileStore file) {
-					if (!file.fetchInfo().isDirectory() && showFiles == false) {
-						return false;
-					}
-					return true;
+			fileFilter = file -> {
+				if (!file.fetchInfo().isDirectory() && showFiles == false) {
+					return false;
 				}
+				return true;
 			};
 		}
 

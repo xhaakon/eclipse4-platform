@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -79,9 +79,6 @@ public class DynamicHelpAction extends Action implements IWorkbenchAction {
 		return text;
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IAction.
-	 */
 	@Override
 	public void run() {
 		if (workbenchWindow == null) {
@@ -98,9 +95,6 @@ public class DynamicHelpAction extends Action implements IWorkbenchAction {
 		});
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on ActionFactory.IWorkbenchAction.
-	 */
 	@Override
 	public void dispose() {
 		workbenchWindow = null;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 Cognos Incorporated, IBM Corporation and others.
+ * Copyright (c) 2005, 2016 Cognos Incorporated, IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,12 +23,15 @@ public class RequestDispatcherAdaptor implements RequestDispatcher {
 
 	private final DispatchTargets dispatchTargets;
 	private final String path;
+	private final String string;
 
 	public RequestDispatcherAdaptor(
 		DispatchTargets dispatchTargets, String path) {
 
 		this.dispatchTargets = dispatchTargets;
 		this.path = path;
+
+		this.string = getClass().getSimpleName() + '[' + path + ", " + dispatchTargets + ']'; //$NON-NLS-1$
 	}
 
 	public void forward(ServletRequest request, ServletResponse response)
@@ -45,6 +48,11 @@ public class RequestDispatcherAdaptor implements RequestDispatcher {
 		dispatchTargets.doDispatch(
 			(HttpServletRequest)request, (HttpServletResponse)response,
 			path, DispatcherType.INCLUDE);
+	}
+
+	@Override
+	public String toString() {
+		return string;
 	}
 
 }

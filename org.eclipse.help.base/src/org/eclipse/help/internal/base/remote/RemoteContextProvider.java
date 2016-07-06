@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,6 +35,7 @@ public class RemoteContextProvider extends AbstractContextProvider {
 
 	private DocumentReader reader;
 
+	@Override
 	public IContext getContext(String id, String locale) {
 
 		PreferenceFileHandler prefHandler = new PreferenceFileHandler();
@@ -105,6 +106,7 @@ public class RemoteContextProvider extends AbstractContextProvider {
 	 *
 	 * @see org.eclipse.help.AbstractContextProvider#getPlugins()
 	 */
+	@Override
 	public String[] getPlugins() {
 		// this is a global provider
 		return null;

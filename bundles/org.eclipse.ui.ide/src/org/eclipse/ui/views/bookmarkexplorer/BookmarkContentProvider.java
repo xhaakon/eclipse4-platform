@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -120,9 +120,9 @@ class BookmarkContentProvider implements IStructuredContentProvider,
         }
     }
 
-    /* (non-Javadoc)
-     * Method declared on ITreeContentProvider,
-     */
+	/*
+	 * Method declared on ITreeContentProvider,
+	 */
     public Object getParent(Object element) {
         return input;
     }
@@ -171,19 +171,16 @@ class BookmarkContentProvider implements IStructuredContentProvider,
 
         // update the viewer based on the marker changes, in the UI thread
         if (additions.size() + removals.size() + changes.size() > 0) {
-            viewer.getControl().getDisplay().asyncExec(new Runnable() {
-                @Override
-				public void run() {
-                    // This method runs inside an asyncExec.  The widget may have been destroyed
-                    // by the time this is run.  Check for this and do nothing if so.
-                    Control ctrl = viewer.getControl();
-                    if (ctrl == null || ctrl.isDisposed()) {
-						return;
-					}
+            viewer.getControl().getDisplay().asyncExec(() -> {
+			    // This method runs inside an asyncExec.  The widget may have been destroyed
+			    // by the time this is run.  Check for this and do nothing if so.
+			    Control ctrl = viewer.getControl();
+			    if (ctrl == null || ctrl.isDisposed()) {
+					return;
+				}
 
-                    viewer.refresh();
-                }
-            });
+			    viewer.refresh();
+			});
         }
     }
 }

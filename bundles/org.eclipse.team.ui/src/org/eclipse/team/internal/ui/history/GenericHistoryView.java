@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2013 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Sergey Prigogin (Google) - [490835] Local history page is sticky
  *******************************************************************************/
 package org.eclipse.team.internal.ui.history;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -43,16 +45,24 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 	private static final int MAX_NAVIGATION_HISTORY_ENTRIES = 15;
 
 	static boolean sameSource(IHistoryPageSource source1, IHistoryPageSource source2) {
-		return source1 == source2 || (source1 != null && source2 != null && source1.equals(source2));
+		return Objects.equals(source1, source2);
 	}
 
 	private boolean matches(IPage page, Object object, IHistoryPageSource pageSource) {
 		if (page instanceof IHistoryPage) {
 			Object input = ((IHistoryPage)page).getInput();
 			if (input != null)
-				return input.equals(object) && sameSource(getPageSourceFor(object, pageSource), getPageSourceFor(input, null));
+				return input.equals(object) && sameSource(getPageSourceFor(object, pageSource), getCurrentPageSource());
 		}
 		return false;
+	}
+
+	private IHistoryPageSource getCurrentPageSource() {
+		IWorkbenchPart part = getCurrentContributingPart();
+		if (part instanceof HistoryPageSourceWorkbenchPart) {
+			return ((HistoryPageSourceWorkbenchPart) part).getSource();
+		}
+		return null;
 	}
 
 	/*
@@ -138,6 +148,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 			this.name = name;
 			this.source = source;
 		}
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof NavigationHistoryEntry) {
 				NavigationHistoryEntry other = (NavigationHistoryEntry) obj;
@@ -150,6 +161,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 			return object.equals(historyPage.getInput())
 					&& sameSource(source, pageSource);
 		}
+		@Override
 		public int hashCode() {
 			return object.hashCode();
 		}
@@ -157,12 +169,14 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 
 	abstract class MenuCreator implements IMenuCreator {
 		private MenuManager menuManager;
+		@Override
 		public void dispose() {
 			if(menuManager != null) {
 				menuManager.dispose();
 				menuManager = null;
 			}
 		}
+		@Override
 		public Menu getMenu(Control parent) {
 			Menu fMenu = null;
 			if (menuManager == null) {
@@ -184,6 +198,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 				menuManager.update(true);
 		}
 		protected abstract IAction[] getDropDownActions();
+		@Override
 		public Menu getMenu(Menu parent) {
 			return null;
 		}
@@ -201,6 +216,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 
 		public NavigationHistoryAction() {
 			menuCreator = new MenuCreator() {
+				@Override
 				protected IAction[] getDropDownActions() {
 					return getActions();
 				}
@@ -220,6 +236,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		protected NavigationHistoryEntry[] getDropDownEntries() {
 			return navigationHistory.getEntries();
 		}
+		@Override
 		public void run() {
 			navigationHistory.gotoPreviousEntry();
 			updateCheckState();
@@ -264,6 +281,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 			super(navigationHistoryEntry.name);
 			this.navigationHistoryEntry = navigationHistoryEntry;
 		}
+		@Override
 		public void run() {
 			navigationHistory.gotoEntry(navigationHistoryEntry);
 			navigateAction.updateCheckState();
@@ -294,6 +312,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 	 */
 	private Object lastSelectedElement;
 
+	@Override
 	public void partActivated(IWorkbenchPart part) {
 		// don't call super.partActivated(IWorkbenchPart), it will be done in #showHistoryPageFor(...)
 		if (part instanceof IEditorPart)
@@ -304,6 +323,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 
 		private boolean isUpdatingSelection = false;
 
+		@Override
 		public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 			if (isUpdatingSelection)
 				return;
@@ -312,17 +332,17 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 				isUpdatingSelection = true;
 				if (GenericHistoryView.this == part)
 					return;
-	
+
 				if (selection instanceof IStructuredSelection) {
 					IStructuredSelection structSelection = (IStructuredSelection) selection;
 					//Always take the first element - this is not intended to work with multiple selection
 					//Also, hang on to this selection for future use in case the history view is not visible
 					lastSelectedElement = structSelection.getFirstElement();
-	
+
 					if (!isLinkingEnabled() || !checkIfPageIsVisible()) {
 						return;
 					}
-	
+
 					showLastSelectedElement();
 				}
 			} finally {
@@ -342,6 +362,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 	 * @see org.eclipse.ui.part.PageBookView#init(org.eclipse.ui.IViewSite)
 	 * @since 3.6.300
 	 */
+	@Override
 	public void init(IViewSite site) throws PartInitException {
 		super.init(site);
 
@@ -356,6 +377,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 			lastSelectedElement= getSite().getPage().getActiveEditor();
 	}
 
+	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
 
@@ -377,6 +399,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 	private void configureToolbars(IActionBars actionBars) {
 
 		pinAction = new Action(TeamUIMessages.GenericHistoryView_PinCurrentHistory, TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_PINNED)) {
+			@Override
 			public void run() {
 				if (isChecked()) {
 					//uncheck editor linking
@@ -390,6 +413,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		pinAction.setToolTipText(TeamUIMessages.GenericHistoryView_0);
 
 		refreshAction = new Action(TeamUIMessages.GenericHistoryView_Refresh, TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_REFRESH)) {
+			@Override
 			public void run() {
 				getHistoryPage().refresh();
 			}
@@ -398,6 +422,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		refreshAction.setEnabled(true);
 
 		linkWithEditorAction = new Action(TeamUIMessages.GenericHistoryView_LinkWithEditor, TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_LINK_WITH)) {
+			@Override
 			public void run() {
 				if (isChecked()) {
 					// uncheck pinned
@@ -466,6 +491,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		dropTarget.addDropListener(dropAdapter);
 	}
 
+	@Override
 	public void setFocus() {
 		if (isLinkingEnabled() && lastSelectedElement != null) {
 			showLastSelectedElement();
@@ -477,7 +503,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		if (lastSelectedElement != null) {
 			if (lastSelectedElement instanceof IEditorPart)
 				editorActivated((IEditorPart)lastSelectedElement);
-			else { 
+			else {
 				Object resource;
 				if (lastSelectedElement instanceof SyncInfoModelElement) {
 					SyncInfoModelElement syncInfoModelElement = (SyncInfoModelElement) lastSelectedElement;
@@ -496,6 +522,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		}
 	}
 
+	@Override
 	protected void showPageRec(PageRec pageRec) {
 		super.showPageRec(pageRec);
 		addNavigationHistoryEntry();
@@ -509,6 +536,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		}
 	}
 
+	@Override
 	public IHistoryPage showHistoryFor(Object object, boolean force) {
 		return showHistoryPageFor(object, true, force, null);
 	}
@@ -555,6 +583,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		return getHistoryPage();
 	}
 
+	@Override
 	protected PageRec getPageRec(IWorkbenchPart part) {
 		PageRec rec = super.getPageRec(part);
 		if (rec != null) {
@@ -594,11 +623,11 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 			} else {
 				IFileHistoryProvider fileHistory = teamProvider.getFileHistoryProvider();
 				if (fileHistory != null) {
-					IHistoryPageSource source = (IHistoryPageSource)Utils.getAdapter(fileHistory, IHistoryPageSource.class,true);
+					IHistoryPageSource source = Adapters.adapt(fileHistory, IHistoryPageSource.class);
 					if (source != null)
 						return source;
 				}
-				return (IHistoryPageSource)Utils.getAdapter(teamProvider, IHistoryPageSource.class,true);
+				return Adapters.adapt(teamProvider, IHistoryPageSource.class);
 			}
 		}
 	}
@@ -683,6 +712,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		return viewPinned;
 	}
 
+	@Override
 	protected PageRec doCreatePage(IWorkbenchPart part) {
 		HistoryPageSourceWorkbenchPart p = (HistoryPageSourceWorkbenchPart) part;
 		IHistoryPageSource source = p.getSource();
@@ -701,6 +731,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		return null;
 	}
 
+	@Override
 	protected void doDestroyPage(IWorkbenchPart part, PageRec pageRecord) {
 		IPage page = pageRecord.page;
 		if (page instanceof IHistoryPage)
@@ -709,10 +740,12 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		pageRecord.dispose();
 	}
 
+	@Override
 	protected IWorkbenchPart getBootstrapPart() {
 		return null;
 	}
 
+	@Override
 	protected boolean isImportant(IWorkbenchPart part) {
 		if (part instanceof HistoryPageSourceWorkbenchPart) {
 			HistoryPageSourceWorkbenchPart p = (HistoryPageSourceWorkbenchPart)part;
@@ -722,6 +755,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		return false;
 	}
 
+	@Override
 	protected IPage createDefaultPage(PageBook book) {
 		GenericHistoryViewDefaultPage page = new GenericHistoryViewDefaultPage();
 		initPage(page);
@@ -759,6 +793,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		return getViewSite().getPage().isPartVisible(this);
 	}
 
+	@Override
 	public void dispose() {
 		super.dispose();
 		//Remove the drop listener
@@ -770,10 +805,12 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 		navigateAction.dispose();
 	}
 
+	@Override
 	public IHistoryPage showHistoryFor(Object object) {
 		return showHistoryFor(object, false);
 	}
 
+	@Override
 	public IHistoryPage getHistoryPage() {
 		return (IHistoryPage) getCurrentPage();
 	}
@@ -781,10 +818,12 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.util.IPropertyChangeListener#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
 	 */
+	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		if (event.getSource() == getCurrentPage()) {
 			if (event.getProperty().equals(IHistoryPage.P_NAME)) {
 				Display.getDefault().asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						IHistoryPage historyPage = getHistoryPage();
 						setContentDescription(historyPage.getName());
@@ -814,6 +853,7 @@ public class GenericHistoryView extends PageBookView implements IHistoryView, IP
 			showHistoryPageFor(object, false, false, null);
 	}
 
+	@Override
 	public boolean show(ShowInContext context) {
 		ISelection selection = context.getSelection();
 		if (selection instanceof IStructuredSelection) {

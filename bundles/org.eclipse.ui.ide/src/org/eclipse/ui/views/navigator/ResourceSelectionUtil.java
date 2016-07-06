@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 
@@ -32,9 +32,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
  */
 @Deprecated
 public class ResourceSelectionUtil {
-    /* (non-Javadoc)
-     * Private constructor to block instantiation.
-     */
     private ResourceSelectionUtil() {
     }
 
@@ -52,7 +49,7 @@ public class ResourceSelectionUtil {
      */
     public static boolean allResourcesAreOfType(IStructuredSelection selection,
             int resourceMask) {
-        Iterator resources = selection.iterator();
+		Iterator<?> resources = selection.iterator();
         while (resources.hasNext()) {
             Object next = resources.next();
             if (!(next instanceof IResource)) {
@@ -77,20 +74,17 @@ public class ResourceSelectionUtil {
      */
     public static IStructuredSelection allResources(
             IStructuredSelection selection, int resourceMask) {
-        Iterator adaptables = selection.iterator();
-        List result = new ArrayList();
+		Iterator<?> adaptables = selection.iterator();
+		List<IResource> result = new ArrayList<>();
         while (adaptables.hasNext()) {
             Object next = adaptables.next();
-            if (next instanceof IAdaptable) {
-                Object resource = ((IAdaptable) next)
-                        .getAdapter(IResource.class);
-                if (resource == null) {
-					return null;
-				} else if (resourceIsType((IResource) resource, resourceMask)) {
-					result.add(resource);
-				}
-            } else {
+
+			IResource resource = Adapters.adapt(next, IResource.class);
+			if (resource == null) {
 				return null;
+			}
+			if (resourceIsType(resource, resourceMask)) {
+				result.add(resource);
 			}
         }
         return new StructuredSelection(result);

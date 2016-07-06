@@ -4,10 +4,11 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -22,10 +23,10 @@ import org.eclipse.core.runtime.jobs.*;
 /**
  * The work manager governs concurrent access to the workspace tree.  The {@link #lock}
  * field is used to protect the workspace tree data structure from concurrent
- * write attempts.  This is an internal lock that is generally not held while 
+ * write attempts.  This is an internal lock that is generally not held while
  * client code is running.  Scheduling rules are used by client code to obtain
- * exclusive write access to a portion of the workspace. 
- * 
+ * exclusive write access to a portion of the workspace.
+ *
  * This class also tracks operation state for each thread that is involved in an
  * operation. This includes prepared and running operation depth, auto-build
  * strategy and cancel state.
@@ -59,9 +60,9 @@ public class WorkManager implements IManager {
 	 * Indicates that the last checkIn failed, either due to cancelation or due to the
 	 * workspace tree being locked for modifications (during resource change events).
 	 */
-	private final ThreadLocal<Boolean> checkInFailed = new ThreadLocal<Boolean>();
+	private final ThreadLocal<Boolean> checkInFailed = new ThreadLocal<>();
 	/**
-	 * Indicates whether any operations have run that may require a build. 
+	 * Indicates whether any operations have run that may require a build.
 	 */
 	private boolean hasBuildChanges = false;
 	private IJobManager jobManager;
@@ -149,7 +150,7 @@ public class WorkManager implements IManager {
 	}
 
 	/**
-	 * Inform that an operation has finished. 
+	 * Inform that an operation has finished.
 	 */
 	public synchronized void checkOut(ISchedulingRule rule) {
 		decrementPreparedOperations();
@@ -309,7 +310,7 @@ public class WorkManager implements IManager {
 	}
 
 	/**
-	* This method should be called at the end of the workspace startup, even if the startup failed. 
+	* This method should be called at the end of the workspace startup, even if the startup failed.
 	* It must be preceded by a call to <code>startup</code>. It releases the primary workspace lock
 	* and ends applying the workspace rule to this thread.
 	*/

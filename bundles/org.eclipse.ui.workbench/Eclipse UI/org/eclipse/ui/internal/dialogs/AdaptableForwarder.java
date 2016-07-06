@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,8 +10,8 @@
  *******************************************************************************/
 package org.eclipse.ui.internal.dialogs;
 
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.ui.internal.util.Util;
 
 /**
  * Class that wraps an object and forwards adapter calls if possible, otherwise
@@ -33,7 +33,7 @@ public class AdaptableForwarder implements IAdaptable {
 	}
 
 	@Override
-	public Object getAdapter(Class adapter) {
-        return Util.getAdapter(element, adapter);
+	public <T> T getAdapter(Class<T> adapter) {
+		return Adapters.adapt(element, adapter);
 	}
 }

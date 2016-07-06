@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,14 +13,18 @@ package org.eclipse.ui.help;
 import org.eclipse.swt.events.HelpEvent;
 
 /**
- * A content computer is used to dynamically calculate help support contexts at the
- * time the user requests help.
+ * A content computer is used to dynamically calculate help support contexts at
+ * the time the user requests help.
  * <p>
  * This interface may be implemented by clients.
  * </p>
- * @deprecated nested contexts are no longer supported by the help support system
  *
+ *
+ *
+ * @deprecated marked for deletion, see Bug 442961, nested contexts are no
+ *             longer supported by the help support system
  */
+
 @Deprecated
 public interface IContextComputer {
     /**

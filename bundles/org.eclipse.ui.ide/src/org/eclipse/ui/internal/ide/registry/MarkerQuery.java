@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,9 +101,6 @@ public class MarkerQuery {
         return new MarkerQueryResult(values);
     }
 
-    /* (non-Javadoc)
-     * Method declared on Object.
-     */
     @Override
 	public boolean equals(Object o) {
         if (!(o instanceof MarkerQuery)) {
@@ -132,9 +129,6 @@ public class MarkerQuery {
         return true;
     }
 
-    /* (non-Javadoc)
-     * Method declared on Object.
-     */
     @Override
 	public int hashCode() {
         return hashCode;

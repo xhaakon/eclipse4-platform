@@ -27,23 +27,23 @@ import org.eclipse.team.ui.synchronize.ISynchronizeModelElement;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 /**
- * A label provider that decorates viewers showing 
+ * A label provider that decorates viewers showing
  * {@link ISynchronizeModelElement}.
- * 
+ *
  * @since 3.0
  */
 public class SynchronizeModelElementLabelProvider extends LabelProvider implements IColorProvider, IFontProvider {
 
 	// Cache for folder images that have been overlayed with conflict icon
 	private Map fgImageCache;
-	
+
 	// Contains direction images
 	CompareConfiguration compareConfig = new CompareConfiguration();
-	
+
 	// Used as the base label provider for retreiving image and text from
 	// the workbench adapter.
 	private WorkbenchLabelProvider workbenchLabelProvider = new WorkbenchLabelProvider();
-	
+
 	// Font used to display busy elements
 	private Font busyFont;
 
@@ -54,6 +54,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
 	 */
+	@Override
 	public Color getForeground(Object element) {
 		return null;
 	}
@@ -62,13 +63,15 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
 	 */
+	@Override
 	public Color getBackground(Object element) {
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IFontProvider#getFont(java.lang.Object)
 	 */
+	@Override
 	public Font getFont(Object element) {
 		if (element instanceof ISynchronizeModelElement) {
 			ISynchronizeModelElement node = (ISynchronizeModelElement)element;
@@ -78,7 +81,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 					FontData[] data = defaultFont.getFontData();
 					for (int i = 0; i < data.length; i++) {
 						data[i].setStyle(SWT.ITALIC);
-					}				
+					}
 					busyFont = new Font(TeamUIPlugin.getStandardDisplay(), data);
 				}
 				return busyFont;
@@ -91,6 +94,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
 	 */
+	@Override
 	public Image getImage(Object element) {
 		Image base = workbenchLabelProvider.getImage(element);
 		if (base != null) {
@@ -98,11 +102,11 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 				ISynchronizeModelElement syncNode = (ISynchronizeModelElement) element;
 				int kind = syncNode.getKind();
 				Image decoratedImage;
-				decoratedImage = getCompareImage(base, kind);				
+				decoratedImage = getCompareImage(base, kind);
 				// The reason we still overlay the compare image is to
 				// ensure that the image width for all images shown in the viewer
 				// are consistent.
-				return propagateConflicts(decoratedImage, syncNode);				
+				return propagateConflicts(decoratedImage, syncNode);
 			}
 		}
 		return base;
@@ -112,6 +116,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
 	 */
+	@Override
 	public String getText(Object element) {
 		String base = workbenchLabelProvider.getText(element);
 		if (element instanceof DiffNode) {
@@ -121,7 +126,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 				int kind = ((DiffNode) element).getKind();
 				if (kind != SyncInfo.IN_SYNC) {
 					String syncKindString = SyncInfo.kindToString(kind);
-					return NLS.bind(TeamUIMessages.TeamSubscriberSyncPage_labelWithSyncKind, new String[] { base, syncKindString }); // 
+					return NLS.bind(TeamUIMessages.TeamSubscriberSyncPage_labelWithSyncKind, new String[] { base, syncKindString }); //
 				}
 			}
 		}
@@ -144,7 +149,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 
 		ImageDescriptor[] overlayImages = new ImageDescriptor[4];
 		boolean hasOverlay = false;
-		
+
 		// Decorate with the busy indicator
 		if (element.getProperty(ISynchronizeModelElement.BUSY_PROPERTY)) {
 			overlayImages[IDecoration.TOP_LEFT] = TeamUIPlugin.getImageDescriptor(ISharedImages.IMG_HOURGLASS_OVR);
@@ -181,7 +186,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 		}
 		return base;
 	}
-	
+
 	/**
 	 * Return whether this diff node has descendant conflicts in the view in
 	 * which it appears.
@@ -190,7 +195,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	private boolean hasDecendantConflicts(ISynchronizeModelElement node) {
 		return node.getProperty(ISynchronizeModelElement.PROPAGATED_CONFLICT_PROPERTY);
 	}
-	
+
 	/**
 	 * Return whether this diff node has descendant conflicts in the view in which it appears.
 	 * @return whether the node has descendant conflicts
@@ -198,7 +203,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	private boolean hasErrorMarker(ISynchronizeModelElement node) {
 		return node.getProperty(ISynchronizeModelElement.PROPAGATED_ERROR_MARKER_PROPERTY);
 	}
-	
+
 	/**
 	 * Return whether this diff node has descendant conflicts in the view in which it appears.
 	 * @return whether the node has descendant conflicts
@@ -211,6 +216,7 @@ public class SynchronizeModelElementLabelProvider extends LabelProvider implemen
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
 	 */
+	@Override
 	public void dispose() {
         workbenchLabelProvider.dispose();
 		if(busyFont != null) {

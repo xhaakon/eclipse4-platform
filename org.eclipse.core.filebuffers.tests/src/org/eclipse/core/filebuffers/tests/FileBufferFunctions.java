@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,13 +7,23 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Alex Blewitt <alex.blewitt@gmail.com> - Replace new Boolean with Boolean.valueOf - https://bugs.eclipse.org/470244
  *******************************************************************************/
 package org.eclipse.core.filebuffers.tests;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
@@ -37,7 +47,7 @@ import org.eclipse.jface.text.source.IAnnotationModel;
 /**
  * FileBufferFunctions
  */
-public abstract class FileBufferFunctions extends TestCase {
+public abstract class FileBufferFunctions {
 
 	private IProject fProject;
 	protected ITextFileBufferManager fManager;
@@ -56,10 +66,11 @@ public abstract class FileBufferFunctions extends TestCase {
 
 	protected abstract boolean isStateValidationSupported();
 
-	protected abstract Class getAnnotationModelClass() throws Exception;
+	protected abstract Class<IAnnotationModel> getAnnotationModelClass() throws Exception;
 
 
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		fManager= FileBuffers.getTextFileBufferManager();
 		fProject= ResourceHelper.createProject("project");
 		fPath= createPath(fProject);
@@ -71,7 +82,8 @@ public abstract class FileBufferFunctions extends TestCase {
 		return fProject;
 	}
 
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() {
 		ITextFileBuffer buffer= fManager.getTextFileBuffer(fPath, LocationKind.NORMALIZE);
 		assertTrue(buffer == null);
 		ResourceHelper.deleteProject("project");
@@ -84,6 +96,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Tests getLocation.
 	 */
+	@Test
 	public void test1() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -98,6 +111,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Tests isSynchronized.
 	 */
+	@Test
 	public void test2() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -119,6 +133,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Tests isDirty.
 	 */
+	@Test
 	public void test3() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -136,6 +151,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Tests isShared.
 	 */
+	@Test
 	public void test4() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -161,6 +177,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Tests getModificationStamp.
 	 */
+	@Test
 	public void test5() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -182,6 +199,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test revert.
 	 */
+	@Test
 	public void test6() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -212,6 +230,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test commit.
 	 */
+	@Test
 	public void test7() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -256,6 +275,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test validateState.
 	 */
+	@Test
 	public void test8_1() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -272,6 +292,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test validateState.
 	 */
+	@Test
 	public void test8_2() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -290,6 +311,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test resetStateValidation.
 	 */
+	@Test
 	public void test9_1() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -308,6 +330,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test resetStateValidation.
 	 */
+	@Test
 	public void test9_2() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -328,17 +351,20 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#bufferCreated and IFileBufferListener#bufferDisposed
 	 */
+	@Test
 	public void test10() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void bufferCreated(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
 			}
 
+			@Override
 			public void bufferDisposed(IFileBuffer buf) {
 				--count;
 				this.buffer= buf;
@@ -372,6 +398,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#dirtyStateChanged
 	 */
+	@Test
 	public void test11_1() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -379,6 +406,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public boolean isDirty;
 
+			@Override
 			public void dirtyStateChanged(IFileBuffer buf, boolean state) {
 				++count;
 				this.buffer= buf;
@@ -422,6 +450,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#dirtyStateChanged
 	 */
+	@Test
 	public void test11_2() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -429,6 +458,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public boolean isDirty;
 
+			@Override
 			public void dirtyStateChanged(IFileBuffer buf, boolean state) {
 				++count;
 				this.buffer= buf;
@@ -471,17 +501,20 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#bufferContentAboutToBeReplaced/replaced
 	 */
+	@Test
 	public void test12_1() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer preBuffer, postBuffer;
 			public int preCount, postCount;
 
+			@Override
 			public void bufferContentAboutToBeReplaced(IFileBuffer buffer) {
 				++preCount;
 				preBuffer= buffer;
 			}
 
+			@Override
 			public void bufferContentReplaced(IFileBuffer buffer) {
 				++postCount;
 				postBuffer= buffer;
@@ -520,17 +553,20 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#bufferContentAboutToBeReplaced/replaced
 	 */
+	@Test
 	public void test12_2() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer preBuffer, postBuffer;
 			public int preCount, postCount;
 
+			@Override
 			public void bufferContentAboutToBeReplaced(IFileBuffer buffer) {
 				++preCount;
 				preBuffer= buffer;
 			}
 
+			@Override
 			public void bufferContentReplaced(IFileBuffer buffer) {
 				++postCount;
 				postBuffer= buffer;
@@ -567,6 +603,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateValidationChanged
 	 */
+	@Test
 	public void test13_1() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -574,6 +611,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public boolean isStateValidated;
 
+			@Override
 			public void stateValidationChanged(IFileBuffer buf, boolean state) {
 				++count;
 				this.buffer= buf;
@@ -611,6 +649,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateValidationChanged
 	 */
+	@Test
 	public void test13_2() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -618,6 +657,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public boolean isStateValidated;
 
+			@Override
 			public void stateValidationChanged(IFileBuffer buf, boolean state) {
 				++count;
 				this.buffer= buf;
@@ -656,6 +696,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateValidationChanged
 	 */
+	@Test
 	public void test13_3() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -663,6 +704,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public boolean isStateValidated;
 
+			@Override
 			public void stateValidationChanged(IFileBuffer buf, boolean state) {
 				++count;
 				this.buffer= buf;
@@ -701,6 +743,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateValidationChanged
 	 */
+	@Test
 	public void test13_4() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -708,6 +751,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public boolean isStateValidated;
 
+			@Override
 			public void stateValidationChanged(IFileBuffer buf, boolean state) {
 				++count;
 				this.buffer= buf;
@@ -748,12 +792,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#underlyingFileDeleted
 	 */
+	@Test
 	public void test14() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void underlyingFileDeleted(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -787,6 +833,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#underlyingFileMoved
 	 */
+	@Test
 	public void test15() throws Exception {
 		class Listener extends FileBufferListener {
 
@@ -794,6 +841,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			public int count;
 			public IPath newLocation;
 
+			@Override
 			public void underlyingFileMoved(IFileBuffer buf, IPath location) {
 				++count;
 				this.buffer= buf;
@@ -823,7 +871,7 @@ public abstract class FileBufferFunctions extends TestCase {
 							buf.append("listener.newLocation: " + listener.newLocation + "\n");
 							buf.append("newLocation: " + newLocation + "\n");
 						}
-						buf.append("buffers identical: " + new Boolean(listener.buffer == fileBuffer));
+						buf.append("buffers identical: " + Boolean.valueOf(listener.buffer == fileBuffer));
 						fail(buf.toString());
 					}
 				}
@@ -840,12 +888,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateChanging for external changes
 	 */
+	@Test
 	public void test16_1() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void stateChanging(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -879,12 +929,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateChanging for external changes
 	 */
+	@Test
 	public void test16_2() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void stateChanging(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -918,12 +970,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateChanging for external changes
 	 */
+	@Test
 	public void test16_3() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void stateChanging(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -957,12 +1011,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateChanging for internal changes
 	 */
+	@Test
 	public void test17_1() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void stateChanging(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -997,12 +1053,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateChanging for internal changes
 	 */
+	@Test
 	public void test17_2() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void stateChanging(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -1038,12 +1096,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test IFileBufferListener#stateChanging for internal changes
 	 */
+	@Test
 	public void test17_3() throws Exception {
 		class Listener extends FileBufferListener {
 
 			public IFileBuffer buffer;
 			public int count;
 
+			@Override
 			public void stateChanging(IFileBuffer buf) {
 				++count;
 				this.buffer= buf;
@@ -1080,13 +1140,14 @@ public abstract class FileBufferFunctions extends TestCase {
 	 * Test annotation model existence.
 	 * ATTENTION: This test is only effective in a workspace that contains the "org.eclipse.ui.editors" bundle.
 	 */
+	@Test
 	public void test18() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
 			ITextFileBuffer buffer= fManager.getTextFileBuffer(fPath, LocationKind.NORMALIZE);
 			assertNotNull(buffer);
 
-			Class clazz= getAnnotationModelClass();
+			Class<IAnnotationModel> clazz= getAnnotationModelClass();
 			if (clazz != null) {
 				IAnnotationModel model= buffer.getAnnotationModel();
 				assertTrue(clazz.isInstance(model));
@@ -1100,15 +1161,18 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Test notification in case of failing listener.
 	 */
+	@Test
 	public void test19() throws Exception {
 
 		class NotifiedListener extends FileBufferListener {
 
 			int notifyCount= 0;
 
+			@Override
 			public void bufferCreated(IFileBuffer buffer) {
 				notifyCount++;
 			}
+			@Override
 			public void bufferDisposed(IFileBuffer buffer) {
 				notifyCount++;
 			}
@@ -1117,10 +1181,12 @@ public abstract class FileBufferFunctions extends TestCase {
 		class ForcedException extends RuntimeException {
 			private static final long serialVersionUID= 1L;
 
+			@Override
 			public void printStackTrace(PrintStream s) {
 				s.println("!FORCED BY TEST: this entry is intentional");
 			}
 
+			@Override
 			public void printStackTrace(PrintWriter s) {
 				s.println("!FORCED BY TEST: this entry is intentional");
 			}
@@ -1130,9 +1196,11 @@ public abstract class FileBufferFunctions extends TestCase {
 		NotifiedListener notifyCounter2= new NotifiedListener();
 
 		FileBufferListener failingListener= new FileBufferListener() {
+			@Override
 			public void bufferCreated(IFileBuffer buffer) {
 				throw new ForcedException();
 			}
+			@Override
 			public void bufferDisposed(IFileBuffer buffer) {
 				throw new ForcedException();
 			}
@@ -1147,7 +1215,7 @@ public abstract class FileBufferFunctions extends TestCase {
 			ITextFileBuffer buffer= fManager.getTextFileBuffer(fPath, LocationKind.NORMALIZE);
 			assertNotNull(buffer);
 
-			Class clazz= getAnnotationModelClass();
+			Class<IAnnotationModel> clazz= getAnnotationModelClass();
 			if (clazz != null) {
 				IAnnotationModel model= buffer.getAnnotationModel();
 				assertTrue(clazz.isInstance(model));
@@ -1163,7 +1231,8 @@ public abstract class FileBufferFunctions extends TestCase {
 		assertEquals(2, notifyCounter1.notifyCount);
 		assertEquals(2, notifyCounter2.notifyCount);
 	}
-
+	
+	@Test
 	public void testGetBufferForDocument() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {
@@ -1180,6 +1249,7 @@ public abstract class FileBufferFunctions extends TestCase {
 	/*
 	 * Tests isSynchronized.
 	 */
+	@Test
 	public void testGetFileStoreAnnotationModel() throws Exception {
 		IFileStore fileStore= EFS.getNullFileSystem().getStore(new Path("/dev/null"));
 		assertNotNull(fileStore);
@@ -1187,7 +1257,7 @@ public abstract class FileBufferFunctions extends TestCase {
 		try {
 			ITextFileBuffer fileBuffer= fManager.getFileStoreTextFileBuffer(fileStore);
 			IAnnotationModel model= fileBuffer.getAnnotationModel();
-			Class clazz= getAnnotationModelClass();
+			Class<IAnnotationModel> clazz= getAnnotationModelClass();
 			if (clazz != null)
 				assertTrue(clazz.isInstance(model));
 			else
@@ -1197,6 +1267,7 @@ public abstract class FileBufferFunctions extends TestCase {
 		}
 	}
 
+	@Test
 	public void testGetFileBuffers() throws Exception {
 		fManager.connect(fPath, LocationKind.NORMALIZE, null);
 		try {

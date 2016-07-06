@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,7 +56,7 @@ public class ConsoleManager implements IConsoleManager {
 	/**
 	 * Console listeners
 	 */
-	private ListenerList fListeners = null;
+	private ListenerList<IConsoleListener> fListeners = null;
 
 	/**
 	 * List of registered consoles
@@ -174,9 +174,8 @@ public class ConsoleManager implements IConsoleManager {
 			}
 			fChanged = consoles;
 			fType = update;
-			Object[] copiedListeners= fListeners.getListeners();
-			for (int i= 0; i < copiedListeners.length; i++) {
-				fListener = (IConsoleListener)copiedListeners[i];
+			for (IConsoleListener iConsoleListener : fListeners) {
+				fListener = iConsoleListener;
                 SafeRunner.run(this);
 			}
 			fChanged = null;
@@ -201,7 +200,7 @@ public class ConsoleManager implements IConsoleManager {
 	@Override
 	public void addConsoleListener(IConsoleListener listener) {
 		if (fListeners == null) {
-			fListeners = new ListenerList();
+			fListeners = new ListenerList<>();
 		}
 		fListeners.add(listener);
 	}
@@ -297,7 +296,8 @@ public class ConsoleManager implements IConsoleManager {
 		public IStatus runInUIThread(IProgressMonitor monitor) {
 			boolean consoleFound = false;
             IWorkbenchWindow window= PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-            if (window != null && console != null) {
+			IConsole c = console;
+			if (window != null && c != null) {
                 IWorkbenchPage page= window.getActivePage();
                 if (page != null) {
                     synchronized (fConsoleViews) {
@@ -306,11 +306,11 @@ public class ConsoleManager implements IConsoleManager {
 	                            boolean consoleVisible = page.isPartVisible(consoleView);
 	                            if (consoleVisible) {
 	                                consoleFound = true;
-	                                boolean bringToTop = shouldBringToTop(console, consoleView);
+									boolean bringToTop = shouldBringToTop(c, consoleView);
 	                                if (bringToTop) {
 	                                    page.bringToTop(consoleView);
 	                                }
-	                                consoleView.display(console);
+									consoleView.display(c);
 	                            }
                             }
 						}
@@ -319,11 +319,11 @@ public class ConsoleManager implements IConsoleManager {
                     if (!consoleFound) {
                         try {
                             IConsoleView consoleView = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW, null, IWorkbenchPage.VIEW_CREATE);
-                            boolean bringToTop = shouldBringToTop(console, consoleView);
+							boolean bringToTop = shouldBringToTop(c, consoleView);
                             if (bringToTop) {
                                 page.bringToTop(consoleView);
                             }
-                            consoleView.display(console);
+							consoleView.display(c);
                         } catch (PartInitException pie) {
                             ConsolePlugin.log(pie);
                         }

@@ -15,6 +15,7 @@ package org.eclipse.ui.views.properties;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IViewReference;
@@ -84,8 +85,7 @@ public class NewPropertySheetHandler extends AbstractHandler {
 			PropertySheet sheet = (PropertySheet) activePart;
 			return (PropertyShowInContext) sheet.getShowInContext();
 		}
-		IShowInSource adapter = activePart
-				.getAdapter(IShowInSource.class);
+		IShowInSource adapter = Adapters.adapt(activePart, IShowInSource.class);
 		if (adapter != null) {
 			ShowInContext showInContext = adapter.getShowInContext();
 			return new PropertyShowInContext(activePart, showInContext);
@@ -114,8 +114,7 @@ public class NewPropertySheetHandler extends AbstractHandler {
 			secondaryId = Long.toString(System.currentTimeMillis());
 		} else {
 			IViewReference[] refs = page.getViewReferences();
-			for (int i = 0; i < refs.length; i++) {
-				IViewReference viewReference = refs[i];
+			for (IViewReference viewReference : refs) {
 				if (IPageLayout.ID_PROP_SHEET.equals(viewReference.getId())) {
 					secondaryId = Long.toString(System.currentTimeMillis());
 					PropertySheet sheet = (PropertySheet) viewReference

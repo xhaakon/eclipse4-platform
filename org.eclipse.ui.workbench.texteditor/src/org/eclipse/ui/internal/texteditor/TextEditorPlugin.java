@@ -48,7 +48,7 @@ public final class TextEditorPlugin extends AbstractUIPlugin implements IRegistr
 	/** The last edit position */
 	private EditPosition fLastEditPosition;
 	/** The action which goes to the last edit position */
-	private Set fLastEditPositionDependentActions;
+	private Set<IAction> fLastEditPositionDependentActions;
 
 	/**
 	 * The quick diff extension registry.
@@ -112,9 +112,9 @@ public final class TextEditorPlugin extends AbstractUIPlugin implements IRegistr
 	public void setLastEditPosition(EditPosition lastEditPosition) {
 		fLastEditPosition= lastEditPosition;
 		if (fLastEditPosition != null && fLastEditPositionDependentActions != null) {
-			Iterator iter= fLastEditPositionDependentActions.iterator();
+			Iterator<IAction> iter= fLastEditPositionDependentActions.iterator();
 			while (iter.hasNext())
-				((IAction)iter.next()).setEnabled(true);
+				iter.next().setEnabled(true);
 			fLastEditPositionDependentActions= null;
 		}
 	}
@@ -128,7 +128,7 @@ public final class TextEditorPlugin extends AbstractUIPlugin implements IRegistr
 		if (fLastEditPosition != null)
 			return;
 		if (fLastEditPositionDependentActions == null)
-			fLastEditPositionDependentActions= new HashSet();
+			fLastEditPositionDependentActions= new HashSet<>();
 		fLastEditPositionDependentActions.add(action);
 	}
 
@@ -145,10 +145,7 @@ public final class TextEditorPlugin extends AbstractUIPlugin implements IRegistr
 	}
 
 
-	/*
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 * @since 3.0
-	 */
+	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		fQuickDiffExtensionRegistry= new QuickDiffExtensionsRegistry();
@@ -156,10 +153,7 @@ public final class TextEditorPlugin extends AbstractUIPlugin implements IRegistr
 		Platform.getExtensionRegistry().addRegistryChangeListener(this, PLUGIN_ID);
 	}
 
-	/*
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 * @since 3.0
-	 */
+	@Override
 	public void stop(BundleContext context) throws Exception {
 		Platform.getExtensionRegistry().removeRegistryChangeListener(this);
 		fQuickDiffExtensionRegistry= null;
@@ -167,10 +161,7 @@ public final class TextEditorPlugin extends AbstractUIPlugin implements IRegistr
 		super.stop(context);
 	}
 
-	/*
-	 * @see org.eclipse.core.runtime.IRegistryChangeListener#registryChanged(org.eclipse.core.runtime.IRegistryChangeEvent)
-	 * @since 3.0
-	 */
+	@Override
 	public void registryChanged(IRegistryChangeEvent event) {
 		if (fQuickDiffExtensionRegistry != null && event.getExtensionDeltas(PLUGIN_ID, REFERENCE_PROVIDER_EXTENSION_POINT).length > 0)
 			fQuickDiffExtensionRegistry.reloadExtensions();

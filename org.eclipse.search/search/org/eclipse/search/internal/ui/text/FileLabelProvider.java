@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,11 +21,11 @@ import org.eclipse.swt.graphics.Image;
 
 import org.eclipse.core.resources.IResource;
 
+import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
-import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
 
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
@@ -48,7 +48,7 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 
 	private final WorkbenchLabelProvider fLabelProvider;
 	private final AbstractTextSearchViewPage fPage;
-	private final Comparator fMatchComparator;
+	private final Comparator<FileMatch> fMatchComparator;
 
 	private final Image fLineMatchImage;
 
@@ -59,9 +59,10 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 		fOrder= orderFlag;
 		fPage= page;
 		fLineMatchImage= SearchPluginImages.get(SearchPluginImages.IMG_OBJ_TEXT_SEARCH_LINE);
-		fMatchComparator= new Comparator() {
-			public int compare(Object o1, Object o2) {
-				return ((FileMatch) o1).getOriginalOffset() - ((FileMatch) o2).getOriginalOffset();
+		fMatchComparator= new Comparator<FileMatch>() {
+			@Override
+			public int compare(FileMatch o1, FileMatch o2) {
+				return o1.getOriginalOffset() - o2.getOriginalOffset();
 			}
 		};
 	}
@@ -74,13 +75,12 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 		return fOrder;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-	 */
+	@Override
 	public String getText(Object object) {
 		return getStyledText(object).getString();
 	}
 
+	@Override
 	public StyledString getStyledText(Object element) {
 		if (element instanceof LineElement)
 			return getLineElementLabel((LineElement) element);
@@ -116,7 +116,7 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 
 		StyledString str= new StyledString(lineNumberString, StyledString.QUALIFIER_STYLER);
 
-		Match[] matches= lineElement.getMatches(fPage.getInput());
+		FileMatch[] matches= lineElement.getMatches(fPage.getInput());
 		Arrays.sort(matches, fMatchComparator);
 
 		String content= lineElement.getContents();
@@ -127,7 +127,7 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 
 		int charsToCut= getCharsToCut(length, matches); // number of characters to leave away if the line is too long
 		for (int i= 0; i < matches.length; i++) {
-			FileMatch match= (FileMatch) matches[i];
+			FileMatch match= matches[i];
 			int start= Math.max(match.getOriginalOffset() - lineElement.getOffset(), 0);
 			// append gap between last match and the new one
 			if (pos < start) {
@@ -225,9 +225,7 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 		return coloredName;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-	 */
+	@Override
 	public Image getImage(Object element) {
 		if (element instanceof LineElement) {
 			return fLineMatchImage;
@@ -240,32 +238,24 @@ public class FileLabelProvider extends LabelProvider implements IStyledLabelProv
 		return image;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 		fLabelProvider.dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
+	@Override
 	public boolean isLabelProperty(Object element, String property) {
 		return fLabelProvider.isLabelProperty(element, property);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
+	@Override
 	public void removeListener(ILabelProviderListener listener) {
 		super.removeListener(listener);
 		fLabelProvider.removeListener(listener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
+	@Override
 	public void addListener(ILabelProviderListener listener) {
 		super.addListener(listener);
 		fLabelProvider.addListener(listener);

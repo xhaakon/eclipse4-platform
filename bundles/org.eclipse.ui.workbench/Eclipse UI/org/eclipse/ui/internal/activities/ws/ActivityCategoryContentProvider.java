@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.activities.IActivity;
@@ -42,9 +41,6 @@ public class ActivityCategoryContentProvider implements ITreeContentProvider {
      */
     private IActivityManager manager;
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.IContentProvider#dispose()
-     */
     @Override
 	public void dispose() {
         manager = null;
@@ -210,9 +206,6 @@ public class ActivityCategoryContentProvider implements ITreeContentProvider {
 		return activityCategories.toArray();
 	}
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.ITreeContentProvider#getChildren(java.lang.Object)
-     */
     @Override
 	public Object[] getChildren(Object parentElement) {
         if (parentElement instanceof IActivityManager) {
@@ -232,17 +225,11 @@ public class ActivityCategoryContentProvider implements ITreeContentProvider {
         return new Object[0];
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
-     */
     @Override
 	public Object[] getElements(Object inputElement) {
         return getChildren(inputElement);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
-     */
     @Override
 	public Object getParent(Object element) {
         if (element instanceof CategorizedActivity) {
@@ -251,9 +238,6 @@ public class ActivityCategoryContentProvider implements ITreeContentProvider {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
-     */
     @Override
 	public boolean hasChildren(Object element) {
         if (element instanceof IActivityManager || element instanceof ICategory) {
@@ -262,11 +246,10 @@ public class ActivityCategoryContentProvider implements ITreeContentProvider {
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-     */
     @Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-        manager = (IActivityManager) newInput;
+		if (newInput instanceof IActivityManager) {
+			manager = (IActivityManager) newInput;
+		}
     }
 }

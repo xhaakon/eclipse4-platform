@@ -4,11 +4,12 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Serge Beauchamp (Freescale Semiconductor) - initial API and implementation
  *     IBM Corporation - ongoing development
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -19,14 +20,14 @@ import org.eclipse.core.resources.filtermatchers.AbstractFileInfoMatcher;
 import org.eclipse.core.runtime.*;
 
 /**
- *  This class collects all the registered {@link AbstractFileInfoMatcher} instances along 
+ *  This class collects all the registered {@link AbstractFileInfoMatcher} instances along
  *  with their properties.
  */
 class FilterTypeManager implements IManager {
 
 	private static final String FILTER_ELEMENT = "filterMatcher"; //$NON-NLS-1$
 
-	private HashMap<String, IFilterMatcherDescriptor> factories = new HashMap<String, IFilterMatcherDescriptor>();
+	private HashMap<String, IFilterMatcherDescriptor> factories = new HashMap<>();
 
 	public FilterTypeManager() {
 		IExtensionPoint point = RegistryFactory.getRegistry().getExtensionPoint(ResourcesPlugin.PI_RESOURCES, ResourcesPlugin.PT_FILTER_MATCHERS);

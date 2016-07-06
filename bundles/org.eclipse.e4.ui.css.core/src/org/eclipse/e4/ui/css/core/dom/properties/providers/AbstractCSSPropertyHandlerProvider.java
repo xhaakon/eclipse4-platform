@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2012 Angelo Zerr and others.
+ * Copyright (c) 2008, 2015 Angelo Zerr and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,12 +22,6 @@ import org.w3c.dom.css.CSSStyleDeclaration;
 public abstract class AbstractCSSPropertyHandlerProvider implements
 		ICSSPropertyHandlerProvider {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.e4.ui.css.core.dom.properties.ICSSPropertyHandlerProvider#getDefaultCSSStyleDeclaration(org.eclipse.e4.ui.css.core.engine.CSSEngine,
-	 *      java.lang.Object, org.w3c.dom.css.CSSStyleDeclaration)
-	 */
 	@Override
 	public CSSStyleDeclaration getDefaultCSSStyleDeclaration(CSSEngine engine,
 			Object widget, CSSStyleDeclaration newStyle, String pseudoE)

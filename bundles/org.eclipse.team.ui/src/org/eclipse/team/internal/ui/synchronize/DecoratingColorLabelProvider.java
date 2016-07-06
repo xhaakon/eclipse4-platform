@@ -20,7 +20,7 @@ import org.eclipse.swt.graphics.Font;
 
 /**
  * Decorating label provider that supports multiple decorators that are font and color decorators.
- * 
+ *
  * @since 3.0
  */
 public class DecoratingColorLabelProvider extends DecoratingLabelProvider implements IColorProvider, IFontProvider {
@@ -33,6 +33,7 @@ public class DecoratingColorLabelProvider extends DecoratingLabelProvider implem
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
 	 */
+	@Override
 	public Color getForeground(Object element) {
 		ILabelProvider p = getLabelProvider();
 		if (p instanceof IColorProvider) {
@@ -45,6 +46,7 @@ public class DecoratingColorLabelProvider extends DecoratingLabelProvider implem
 	 * (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
 	 */
+	@Override
 	public Color getBackground(Object element) {
 		ILabelProvider p = getLabelProvider();
 		if (p instanceof IColorProvider) {
@@ -52,10 +54,11 @@ public class DecoratingColorLabelProvider extends DecoratingLabelProvider implem
 		}
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IFontProvider#getFont(java.lang.Object)
 	 */
+	@Override
 	public Font getFont(Object element) {
 		ILabelProvider p = getLabelProvider();
 		if (p instanceof IFontProvider) {

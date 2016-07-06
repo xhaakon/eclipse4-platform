@@ -1,13 +1,14 @@
 /*******************************************************************************
- *  Copyright (c) 2004, 2014 IBM Corporation and others.
+ *  Copyright (c) 2004, 2015 IBM Corporation and others.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
  *  http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  *  Contributors:
  *     IBM - Initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427, 483862
  *******************************************************************************/
 package org.eclipse.core.internal.refresh;
 
@@ -17,13 +18,12 @@ import org.eclipse.core.internal.utils.Messages;
 import org.eclipse.core.internal.utils.Policy;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
-import org.eclipse.osgi.util.NLS;
 
 /**
  * The <code>RefreshJob</code> class maintains a list of resources that
  * need to be refreshed, and periodically schedules itself to perform the
  * refreshes in the background.
- * 
+ *
  * @since 3.0
  */
 public class RefreshJob extends WorkspaceJob {
@@ -44,7 +44,7 @@ public class RefreshJob extends WorkspaceJob {
 
 	public RefreshJob() {
 		super(Messages.refresh_jobName);
-		fRequests = new ArrayList<IResource>(1);
+		fRequests = new ArrayList<>(1);
 	}
 
 	/**
@@ -72,9 +72,6 @@ public class RefreshJob extends WorkspaceJob {
 		fRequests.addAll(0, list);
 	}
 
-	/* (non-Javadoc)
-	 *  @see org.eclipse.core.runtime.jobs.Job#belongsTo(Object)
-	 */
 	@Override
 	public boolean belongsTo(Object family) {
 		return family == ResourcesPlugin.FAMILY_AUTO_REFRESH;
@@ -134,7 +131,7 @@ public class RefreshJob extends WorkspaceJob {
 		return fRequests.remove(len - 1);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.core.resources.refresh.IRefreshResult#refresh
 	 */
 	public void refresh(IResource resource) {
@@ -144,35 +141,30 @@ public class RefreshJob extends WorkspaceJob {
 		schedule(UPDATE_DELAY);
 	}
 
-	/* (non-Javadoc)
-	 * @see WorkspaceJob#runInWorkspace
-	 */
 	@Override
 	public IStatus runInWorkspace(IProgressMonitor monitor) {
 		long start = System.currentTimeMillis();
 		String msg = Messages.refresh_refreshErr;
 		MultiStatus errors = new MultiStatus(ResourcesPlugin.PI_RESOURCES, 1, msg, null);
 		long longestRefresh = 0;
+		SubMonitor subMonitor = SubMonitor.convert(monitor);
 		try {
 			if (Policy.DEBUG_AUTO_REFRESH)
 				Policy.debug(RefreshManager.DEBUG_PREFIX + " starting refresh job"); //$NON-NLS-1$
 			int refreshCount = 0;
 			int depth = 2;
-			monitor.beginTask("", IProgressMonitor.UNKNOWN); //$NON-NLS-1$
+
 			IResource toRefresh;
 			while ((toRefresh = nextRequest()) != null) {
-				if (monitor.isCanceled())
-					throw new OperationCanceledException();
 				try {
+					subMonitor.setWorkRemaining(Math.max(fRequests.size(), 100));
 					refreshCount++;
 					long refreshTime = -System.currentTimeMillis();
-					toRefresh.refreshLocal(1000 + depth, Policy.subMonitorFor(monitor, 0));
+					toRefresh.refreshLocal(1000 + depth, subMonitor.split(1));
 					refreshTime += System.currentTimeMillis();
 					if (refreshTime > longestRefresh)
 						longestRefresh = refreshTime;
 					//show occasional progress
-					if (refreshCount % 100 == 0)
-						monitor.subTask(NLS.bind(Messages.refresh_task, Integer.toString(fRequests.size())));
 					if (refreshCount % 1000 == 0) {
 						//be polite to other threads (no effect on some platforms)
 						Thread.yield();
@@ -193,7 +185,6 @@ public class RefreshJob extends WorkspaceJob {
 		} finally {
 			pathPrefixHistory = null;
 			rootPathHistory = null;
-			monitor.done();
 			if (Policy.DEBUG_AUTO_REFRESH)
 				Policy.debug(RefreshManager.DEBUG_PREFIX + " finished refresh job in: " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -202,9 +193,6 @@ public class RefreshJob extends WorkspaceJob {
 		return Status.OK_STATUS;
 	}
 
-	/* (non-Javadoc)
-	 *  @see org.eclipse.core.runtime.jobs.Job#shouldRun()
-	 */
 	@Override
 	public synchronized boolean shouldRun() {
 		return !fRequests.isEmpty();

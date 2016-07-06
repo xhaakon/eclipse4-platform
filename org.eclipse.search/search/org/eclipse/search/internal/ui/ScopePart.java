@@ -125,7 +125,7 @@ public class ScopePart {
 
 		IWorkingSetManager workingSetManager= PlatformUI.getWorkbench().getWorkingSetManager();
 		if (lruWorkingSetNames != null) {
-			Set existingWorkingSets= new HashSet(lruWorkingSetNames.length);
+			Set<IWorkingSet> existingWorkingSets= new HashSet<>(lruWorkingSetNames.length);
 			for (int i= 0; i < lruWorkingSetNames.length; i++) {
 				IWorkingSet workingSet= getWorkingSet(workingSetManager, lruWorkingSetNames[i]);
 				if (workingSet != null) {
@@ -133,7 +133,7 @@ public class ScopePart {
 				}
 			}
 			if (!existingWorkingSets.isEmpty()) {
-				return (IWorkingSet[]) existingWorkingSets.toArray(new IWorkingSet[existingWorkingSets.size()]);
+				return existingWorkingSets.toArray(new IWorkingSet[existingWorkingSets.size()]);
 			}
 		} else {
 			// Backward compatibility
@@ -230,7 +230,7 @@ public class ScopePart {
 		Assert.isNotNull(workingSets);
 		setSelectedScope(ISearchPageContainer.WORKING_SET_SCOPE);
 		fWorkingSets= null;
-		Set existingWorkingSets= new HashSet(workingSets.length);
+		Set<IWorkingSet> existingWorkingSets= new HashSet<>(workingSets.length);
 		for (int i= 0; i < workingSets.length; i++) {
 			String name= workingSets[i].getName();
 			IWorkingSet workingSet= PlatformUI.getWorkbench().getWorkingSetManager().getWorkingSet(name);
@@ -238,7 +238,7 @@ public class ScopePart {
 				existingWorkingSets.add(workingSet);
 		}
 		if (!existingWorkingSets.isEmpty())
-			fWorkingSets= (IWorkingSet[]) existingWorkingSets.toArray(new IWorkingSet[existingWorkingSets.size()]);
+			fWorkingSets= existingWorkingSets.toArray(new IWorkingSet[existingWorkingSets.size()]);
 
 		saveState();
 
@@ -309,6 +309,7 @@ public class ScopePart {
 		fUseWorkingSet.setText(SearchMessages.ScopePart_workingSetScope_text);
 		fWorkingSetText= new Text(fPart, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY);
 		fWorkingSetText.getAccessible().addAccessibleListener(new AccessibleAdapter() {
+			@Override
 			public void getName(AccessibleEvent e) {
 				e.result= SearchMessages.ScopePart_workingSetText_accessible_label;
 			}
@@ -319,6 +320,7 @@ public class ScopePart {
 		chooseWorkingSet.setText(SearchMessages.ScopePart_workingSetChooseButton_text);
 		SWTUtil.setButtonDimensionHint(chooseWorkingSet);
 		chooseWorkingSet.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (handleChooseWorkingSet()) {
 					setSelectedScope(ISearchPageContainer.WORKING_SET_SCOPE);
@@ -333,6 +335,7 @@ public class ScopePart {
 
 		// Add scope change listeners
 		SelectionAdapter scopeChangedLister= new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				handleScopeChanged(e);
 			}

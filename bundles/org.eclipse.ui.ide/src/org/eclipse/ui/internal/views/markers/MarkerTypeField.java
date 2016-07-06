@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2008 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,11 +23,6 @@ import org.eclipse.ui.views.markers.MarkerItem;
  */
 public class MarkerTypeField extends MarkerField {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.provisional.views.markers.MarkerField#getValue(org.eclipse.ui.internal.provisional.views.markers.MarkerItem)
-	 */
 	@Override
 	public String getValue(MarkerItem item) {
 		return ((MarkerSupportItem) item).getMarkerTypeName();

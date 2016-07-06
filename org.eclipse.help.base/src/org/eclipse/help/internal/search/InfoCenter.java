@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.help.internal.search;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 
 import javax.xml.parsers.*;
@@ -83,10 +84,12 @@ public final class InfoCenter implements ISearchEngine {
 				category = tocs.get(href);
 				if (category == null) {
 					category = new IHelpResource() {
+						@Override
 						public String getLabel() {
 							return label;
 						}
 
+						@Override
 						public String getHref() {
 							return href;
 						}
@@ -96,22 +99,27 @@ public final class InfoCenter implements ISearchEngine {
 			}
 		}
 
+		@Override
 		public String getLabel() {
 			return node.getAttribute("label"); //$NON-NLS-1$
 		}
 
+		@Override
 		public String getDescription() {
 			return null;
 		}
 
+		@Override
 		public IHelpResource getCategory() {
 			return category;
 		}
 
+		@Override
 		public String getHref() {
 			return node.getAttribute("href"); //$NON-NLS-1$
 		}
 
+		@Override
 		public float getScore() {
 			String value = node.getAttribute("score"); //$NON-NLS-1$
 			if (value != null)
@@ -119,10 +127,12 @@ public final class InfoCenter implements ISearchEngine {
 			return (float) 0.0;
 		}
 
+		@Override
 		public boolean getForceExternalWindow() {
 			return false;
 		}
 
+		@Override
 		public String toAbsoluteHref(String href, boolean frames) {
 			String url = baseURL;
 			if (!url.endsWith("/")) //$NON-NLS-1$
@@ -141,7 +151,7 @@ public final class InfoCenter implements ISearchEngine {
 	 * The default constructor.
 	 */
 	public InfoCenter() {
-		tocs = new Hashtable<String, IHelpResource>();
+		tocs = new Hashtable<>();
 	}
 
 	/*
@@ -150,6 +160,7 @@ public final class InfoCenter implements ISearchEngine {
 	 * @see ISearchEngine#run(String, ISearchScope,
 	 *      ISearchEngineResultCollector, IProgressMonitor)
 	 */
+	@Override
 	public void run(String query, ISearchScope scope,
 			ISearchEngineResultCollector collector, IProgressMonitor monitor)
 			throws CoreException {
@@ -162,12 +173,10 @@ public final class InfoCenter implements ISearchEngine {
 			URLConnection connection = ProxyUtil.getConnection(url);
 			monitor.beginTask(HelpBaseResources.InfoCenter_connecting, 5);
 			is = connection.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					is, "utf-8"));//$NON-NLS-1$
-			monitor.worked(1);
-			load(((Scope) scope).url, reader, collector,
-					new SubProgressMonitor(monitor, 4));
-			reader.close();
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+				monitor.worked(1);
+				load(((Scope) scope).url, reader, collector, new SubProgressMonitor(monitor, 4));
+			}
 		} catch (FileNotFoundException e) {
 			reportError(HelpBaseResources.InfoCenter_fileNotFound, e, collector);
 		} catch (IOException e) {

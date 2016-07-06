@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,10 +14,9 @@ package org.eclipse.ui.internal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.ui.internal.util.Util;
 
 /**
  * <p>
@@ -59,7 +58,7 @@ public class SelectionConversionService implements ISelectionConversionService {
 
 		while (elements.hasNext()) {
 			Object currentElement = elements.next();
-            Object resource = Util.getAdapter(currentElement, resourceClass);
+			Object resource = Adapters.adapt(currentElement, resourceClass);
             if (resource != null) {
             	result.add(resource);
             }

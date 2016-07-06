@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,7 +24,6 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -99,14 +98,11 @@ public class BuildOrderPreferencePage extends PreferencePage implements
     // (or when the preference page was opened). This represents the most recent applied state.
     private boolean defaultOrderInitiallySelected;
 
-    private IPropertyChangeListener validityChangeListener = new IPropertyChangeListener() {
-        @Override
-		public void propertyChange(PropertyChangeEvent event) {
-            if (event.getProperty().equals(FieldEditor.IS_VALID)) {
-				updateValidState();
-			}
-        }
-    };
+    private IPropertyChangeListener validityChangeListener = event -> {
+	    if (event.getProperty().equals(FieldEditor.IS_VALID)) {
+			updateValidState();
+		}
+	};
 
     /**
      * Add another project to the list at the end.

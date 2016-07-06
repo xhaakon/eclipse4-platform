@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,7 @@ public class FederatedSearchJob extends Job {
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.internal.jobs.InternalJob#run(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		try {
 			entry.getEngine().run(expression, entry.getScope(), entry.getResultCollector(), monitor);
@@ -42,6 +43,7 @@ public class FederatedSearchJob extends Job {
 			return e.getStatus();
 		}
 	}
+	@Override
 	public boolean belongsTo(Object family) {
 		return family.equals(FAMILY);
 	}

@@ -16,24 +16,26 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
  * Manager for hierarchical models
  */
 public class HierarchicalModelManager extends SynchronizeModelManager {
-	
+
 	public HierarchicalModelManager(ISynchronizePageConfiguration configuration) {
 		super(configuration);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#getSupportedModelProviders()
 	 */
+	@Override
 	protected ISynchronizeModelProviderDescriptor[] getSupportedModelProviders() {
 		return new ISynchronizeModelProviderDescriptor[] {
 		        new FlatModelProvider.FlatModelProviderDescriptor(),
 				new HierarchicalModelProvider.HierarchicalModelProviderDescriptor(),
 				new CompressedFoldersModelProvider.CompressedFolderModelProviderDescriptor() };
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.SynchronizeModelManager#createModelProvider(java.lang.String)
 	 */
+	@Override
 	protected ISynchronizeModelProvider createModelProvider(String id) {
 		if(id == null) {
 			id = getDefaultProviderId();

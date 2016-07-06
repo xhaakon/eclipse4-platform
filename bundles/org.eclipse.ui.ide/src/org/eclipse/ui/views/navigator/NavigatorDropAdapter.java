@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Patrik Suzzi <psuzzi@gmail.com> - Bug 490700
  *******************************************************************************/
 package org.eclipse.ui.views.navigator;
 
@@ -15,7 +16,7 @@ import java.util.Iterator;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
@@ -90,9 +91,6 @@ public class NavigatorDropAdapter extends PluginDropAdapter implements IOverwrit
     }
 
 
-    /* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerDropAdapter#dragOperationChanged(org.eclipse.swt.dnd.DropTargetEvent)
-	 */
 	@Override
 	public void dragOperationChanged(DropTargetEvent event) {
 		super.dragOperationChanged(event);
@@ -148,27 +146,22 @@ public class NavigatorDropAdapter extends PluginDropAdapter implements IOverwrit
      * @return the resource selection from the LocalSelectionTransfer
      */
     private IResource[] getSelectedResources() {
-        ArrayList selectedResources = new ArrayList();
+		ArrayList<IResource> selectedResources = new ArrayList<>();
 
         ISelection selection = LocalSelectionTransfer.getInstance()
                 .getSelection();
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection ssel = (IStructuredSelection) selection;
-            for (Iterator i = ssel.iterator(); i.hasNext();) {
+			for (Iterator<?> i = ssel.iterator(); i.hasNext();) {
                 Object o = i.next();
-                if (o instanceof IResource) {
-                    selectedResources.add(o);
-                }
-                else if (o instanceof IAdaptable) {
-                    IAdaptable a = (IAdaptable) o;
-                    IResource r = a.getAdapter(IResource.class);
-                    if (r != null) {
-                        selectedResources.add(r);
-                    }
+
+				IResource r = Adapters.adapt(o, IResource.class);
+				if (r != null) {
+					selectedResources.add(r);
                 }
             }
         }
-        return (IResource[]) selectedResources.toArray(new IResource[selectedResources.size()]);
+        return selectedResources.toArray(new IResource[selectedResources.size()]);
     }
 
     /**
@@ -286,13 +279,10 @@ public class NavigatorDropAdapter extends PluginDropAdapter implements IOverwrit
         // Run the import operation asynchronously.
         // Otherwise the drag source (e.g., Windows Explorer) will be blocked
         // while the operation executes. Fixes bug 16478.
-        Display.getCurrent().asyncExec(new Runnable() {
-            @Override
-			public void run() {
-                getShell().forceActive();
-				new CopyFilesAndFoldersOperation(getShell()).copyOrLinkFiles(names, target, currentOperation);
-            }
-        });
+        Display.getCurrent().asyncExec(() -> {
+		    getShell().forceActive();
+			new CopyFilesAndFoldersOperation(getShell()).copyOrLinkFiles(names, target, currentOperation);
+		});
         return problems;
     }
 
@@ -420,18 +410,15 @@ public class NavigatorDropAdapter extends PluginDropAdapter implements IOverwrit
         final String[] options = { IDialogConstants.YES_LABEL,
                 IDialogConstants.YES_TO_ALL_LABEL, IDialogConstants.NO_LABEL,
                 IDialogConstants.CANCEL_LABEL };
-        getDisplay().syncExec(new Runnable() {
-            @Override
-			public void run() {
-                MessageDialog dialog = new MessageDialog(
-                        getShell(),
-                        ResourceNavigatorMessages.DropAdapter_question, null, msg, MessageDialog.QUESTION, options, 0);
-                dialog.open();
-                int returnVal = dialog.getReturnCode();
-                String[] returnCodes = { YES, ALL, NO, CANCEL };
-                returnCode[0] = returnVal < 0 ? CANCEL : returnCodes[returnVal];
-            }
-        });
+        getDisplay().syncExec(() -> {
+		    MessageDialog dialog = new MessageDialog(
+		            getShell(),
+					ResourceNavigatorMessages.DropAdapter_question, null, msg, MessageDialog.QUESTION, 0, options);
+		    dialog.open();
+		    int returnVal = dialog.getReturnCode();
+		    String[] returnCodes = { YES, ALL, NO, CANCEL };
+		    returnCode[0] = returnVal < 0 ? CANCEL : returnCodes[returnVal];
+		});
         if (returnCode[0] == ALL) {
 			alwaysOverwrite = true;
 		}

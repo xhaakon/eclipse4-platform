@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 IBM Corporation and others.
+ * Copyright (c) 2012, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Patrik Suzzi <psuzzi@gmail.com> - Bug 473184
  ******************************************************************************/
 
 package org.eclipse.e4.ui.workbench.addons.dndaddon;
@@ -15,6 +16,7 @@ import org.eclipse.e4.ui.model.application.ui.MUIElement;
 import org.eclipse.e4.ui.model.application.ui.basic.MTrimElement;
 import org.eclipse.e4.ui.model.application.ui.menu.MToolControl;
 import org.eclipse.e4.ui.widgets.ImageBasedFrame;
+import org.eclipse.e4.ui.workbench.IPresentationEngine;
 import org.eclipse.e4.ui.workbench.addons.minmax.TrimStack;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
@@ -35,19 +37,16 @@ public class IBFDragAgent extends DragAgent {
 		super(manager);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.e4.ui.workbench.addons.dndaddon.DragAgent#getElementToDrag(org.eclipse.e4.ui.
-	 * workbench.addons.dndaddon.DnDInfo)
-	 */
 	@Override
 	public MUIElement getElementToDrag(DnDInfo info) {
 		if (!(info.curCtrl instanceof ImageBasedFrame))
 			return null;
 
 		if (!(info.curElement instanceof MTrimElement))
+			return null;
+
+		// Prevents dragging of trim elements tagged with 'NoMove'.
+		if (info.curElement.getTags().contains(IPresentationEngine.NO_MOVE))
 			return null;
 
 		ImageBasedFrame frame = (ImageBasedFrame) info.curCtrl;
@@ -62,13 +61,6 @@ public class IBFDragAgent extends DragAgent {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.e4.ui.workbench.addons.dndaddon.DragAgent#dragStart(org.eclipse.e4.ui.workbench
-	 * .addons.dndaddon.DnDInfo)
-	 */
 	@Override
 	public void dragStart(DnDInfo info) {
 		super.dragStart(info);
@@ -102,13 +94,6 @@ public class IBFDragAgent extends DragAgent {
 		info.update();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.e4.ui.workbench.addons.dndaddon.DragAgent#track(org.eclipse.e4.ui.workbench.addons
-	 * .dndaddon.DnDInfo)
-	 */
 	@Override
 	public void track(DnDInfo info) {
 		super.track(info);
@@ -124,12 +109,6 @@ public class IBFDragAgent extends DragAgent {
 			ds.setLocation(info.cursorPos.x - 5, info.cursorPos.y - 5);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.e4.ui.workbench.addons.dndaddon.DragAgent#dragFinished(boolean,
-	 * org.eclipse.e4.ui.workbench.addons.dndaddon.DnDInfo)
-	 */
 	@Override
 	public void dragFinished(boolean performDrop, DnDInfo info) {
 		dragElement.getTags().remove("LockVisibility");

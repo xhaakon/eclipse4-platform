@@ -24,10 +24,12 @@ import org.eclipse.team.internal.ui.synchronize.patch.ApplyPatchOperation;
 
 public class ApplyPatchAction extends TeamAction {
 
+	@Override
 	public boolean isEnabled() {
 		return true;
 	}
-	
+
+	@Override
 	protected void execute(IAction action) throws InvocationTargetException,
 			InterruptedException {
 		IResource[] resources = getSelectedResources();
@@ -43,14 +45,14 @@ public class ApplyPatchAction extends TeamAction {
 				TeamUIPlugin.log(e);
 			}
 		}
-		
+
 		final ApplyPatchOperation op;
 		if (isPatch) {
 			op= new ApplyPatchOperation(getTargetPart(), (IFile)resource, null, new CompareConfiguration());
 		} else {
 			op= new ApplyPatchOperation(getTargetPart(), resource);
 		}
-		BusyIndicator.showWhile(Display.getDefault(), op); 
+		BusyIndicator.showWhile(Display.getDefault(), op);
 	}
 
 }

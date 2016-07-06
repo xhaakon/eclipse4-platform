@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Sergey Prigogin (Google) - use parameterized types (bug 442021)
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 478864
  *******************************************************************************/
 package org.eclipse.core.runtime;
 
@@ -21,7 +22,7 @@ package org.eclipse.core.runtime;
  * For example,
  * <pre>
  *     IAdaptable a = [some adaptable];
- *     IFoo x = a.getAdapter(IFoo.class);
+ *     IFoo x = Adapters.getAdapter(a, IFoo.class, true);
  *     if (x != null)
  *         [do IFoo things with x]
  * </pre>
@@ -34,12 +35,16 @@ package org.eclipse.core.runtime;
  * @see IAdapterFactory
  * @see IAdapterManager
  * @see PlatformObject
+ * @see Adapters
  */
 public interface IAdaptable {
 	/**
 	 * Returns an object which is an instance of the given class
 	 * associated with this object. Returns <code>null</code> if
 	 * no such object can be found.
+	 * <p>
+	 * Clients may implement this method but should generally call {@link Adapters#adapt(Object, Class, boolean)}
+	 * rather than invoking it directly.
 	 *
 	 * @param adapter the adapter class to look up
 	 * @return a object of the given class, 

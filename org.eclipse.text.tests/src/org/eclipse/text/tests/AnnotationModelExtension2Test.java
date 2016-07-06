@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2013 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,15 +10,17 @@
  *******************************************************************************/
 package org.eclipse.text.tests;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -28,43 +30,50 @@ import org.eclipse.jface.text.source.AnnotationModel;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.IAnnotationModelListener;
 
-
 /**
  * Tests the {@link org.eclipse.jface.text.source.IAnnotationModelExtension2}.
  *
  * @since 3.4
  */
-public class AnnotationModelExtension2Test extends TestCase {
+public class AnnotationModelExtension2Test {
 
 	public class OldAnnotationModel implements IAnnotationModel {
 
-		private final HashMap fAnnotations= new HashMap();
+		private final HashMap<Annotation, Position> fAnnotations= new HashMap<>();
 
+		@Override
 		public void addAnnotation(Annotation annotation, Position position) {
 			fAnnotations.put(annotation, position);
 		}
 
+		@Override
 		public void addAnnotationModelListener(IAnnotationModelListener listener) {
 		}
 
+		@Override
 		public void connect(IDocument document) {
 		}
 
+		@Override
 		public void disconnect(IDocument document) {
 		}
 
-		public Iterator getAnnotationIterator() {
+		@Override
+		public Iterator<Annotation> getAnnotationIterator() {
 			return fAnnotations.keySet().iterator();
 		}
 
+		@Override
 		public Position getPosition(Annotation annotation) {
-			return (Position) fAnnotations.get(annotation);
+			return fAnnotations.get(annotation);
 		}
 
+		@Override
 		public void removeAnnotation(Annotation annotation) {
 			fAnnotations.remove(annotation);
 		}
 
+		@Override
 		public void removeAnnotationModelListener(IAnnotationModelListener listener) {
 		}
 
@@ -90,14 +99,8 @@ public class AnnotationModelExtension2Test extends TestCase {
 	private Annotation fAfterIn;
 	private Annotation fAfterOut;
 
-	public static Test suite() {
-		return new TestSuite(AnnotationModelExtension2Test.class);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() {
 		fDocument= new Document("How much wood\nwould a woodchuck chuck\nif a woodchuck\ncould chuck wood?\n42");
 
 		fAnnotationModel= new AnnotationModel();
@@ -123,15 +126,13 @@ public class AnnotationModelExtension2Test extends TestCase {
 		fAnnotationModel.connect(fDocument);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() {
 		fAnnotationModel.disconnect(fDocument);
 	}
 
 	private void assertEquals(Annotation[] expected, Annotation[] actual, IAnnotationModel insideModel, IAnnotationModel beforeModel, IAnnotationModel afterModel) {
-		HashSet expectedSet= new HashSet(Arrays.asList(expected));
+		HashSet<Annotation> expectedSet= new HashSet<>(Arrays.asList(expected));
 		for (int i= 0; i < actual.length; i++) {
 			if (!expectedSet.contains(actual[i])) {
 				String message= "Unexpected annotation " + getName(actual[i]) + " in result with models [" + getAnnotationModelNames(insideModel, beforeModel, afterModel) + "]";
@@ -142,8 +143,8 @@ public class AnnotationModelExtension2Test extends TestCase {
 
 		if (!expectedSet.isEmpty()) {
 			String message= "Missing annotations in result with models [" + getAnnotationModelNames(insideModel, beforeModel, afterModel) + "]";
-			for (Iterator iterator= expectedSet.iterator(); iterator.hasNext();) {
-				Annotation missing= (Annotation) iterator.next();
+			for (Iterator<Annotation> iterator= expectedSet.iterator(); iterator.hasNext();) {
+				Annotation missing= iterator.next();
 				message= message + "\n" + getName(missing);
 			}
 			assertTrue(message, false);
@@ -206,14 +207,14 @@ public class AnnotationModelExtension2Test extends TestCase {
 	}
 
 	private Annotation[] getAnnotations(boolean lookAhead, boolean lookBehind) {
-		Iterator iterator= fAnnotationModel.getAnnotationIterator(10, 11, lookAhead, lookBehind);
+		Iterator<Annotation> iterator= fAnnotationModel.getAnnotationIterator(10, 11, lookAhead, lookBehind);
 
-		ArrayList result= new ArrayList();
+		ArrayList<Annotation> result= new ArrayList<>();
 		while (iterator.hasNext()) {
 			result.add(iterator.next());
 		}
 
-		return (Annotation[]) result.toArray(new Annotation[result.size()]);
+		return result.toArray(new Annotation[result.size()]);
 	}
 
 	private void assertPermutations(boolean lookAhead, boolean lookBehind, Annotation[] expected) {
@@ -248,22 +249,26 @@ public class AnnotationModelExtension2Test extends TestCase {
 		}
 		return null;
 	}
-
+	
+	@Test
 	public void testInside() throws Exception {
 		Annotation[] expected= new Annotation[] { fInside, fInsideIn };
 		assertPermutations(false, false, expected);
 	}
-
+	
+	@Test
 	public void testAhead() throws Exception {
 		Annotation[] expected= new Annotation[] { fInside, fInsideIn, fBefore, fBeforeIn };
 		assertPermutations(true, false, expected);
 	}
-
+	
+	@Test
 	public void testBehind() throws Exception {
 		Annotation[] expected= new Annotation[] { fInside, fInsideIn, fAfter, fAfterIn };
 		assertPermutations(false, true, expected);
 	}
-
+	
+	@Test
 	public void testAheadBehind() throws Exception {
 		Annotation[] expected= new Annotation[] { fInside, fInsideIn, fInsideOut, fAfter, fAfterIn, fBefore, fBeforeIn };
 		assertPermutations(true, true, expected);

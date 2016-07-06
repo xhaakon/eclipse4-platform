@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@ package org.eclipse.help;
  * This interface models a help resource. In general, help resources are either
  * html help files, or table of contents XML files.
  * </p>
- * 
+ *
  * @since 2.0
  */
 public interface IHelpResource {
@@ -31,7 +31,7 @@ public interface IHelpResource {
 
 	/**
 	 * Returns the URL (as a string) associated with this help resource.
-	 * 
+	 *
 	 * @return the URL (as a string) associated with the resource
 	 *         <p>
 	 *         Valid URL of a help resource is:
@@ -57,7 +57,7 @@ public interface IHelpResource {
 	public String getHref();
 	/**
 	 * Returns the label of this help resource.
-	 * 
+	 *
 	 * @return the label
 	 */
 	public String getLabel();

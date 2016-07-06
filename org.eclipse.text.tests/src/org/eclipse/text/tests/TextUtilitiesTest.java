@@ -10,15 +10,14 @@
  *******************************************************************************/
 package org.eclipse.text.tests;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import org.junit.Assert;
+import org.junit.Test;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -31,11 +30,7 @@ import org.eclipse.jface.text.TextUtilities;
 /**
  * A test case for text utilities.
  */
-public class TextUtilitiesTest extends TestCase {
-
-	public static Test suite() {
-		return new TestSuite(TextUtilitiesTest.class);
-	}
+public class TextUtilitiesTest {
 
 	/**
 	 * A document which is a copy of another document.
@@ -44,7 +39,9 @@ public class TextUtilitiesTest extends TestCase {
 	private static class LazilyMirroredDocument extends Document {
 
 		private final class DocumentListener implements IDocumentListener {
+			@Override
 			public void documentAboutToBeChanged(DocumentEvent event) {}
+			@Override
 			public void documentChanged(DocumentEvent event) {
 				fEvents.add(event);
 			}
@@ -54,7 +51,7 @@ public class TextUtilitiesTest extends TestCase {
 		private final DocumentListener fDocumentListener= new DocumentListener();
 
 		/** The buffered events. */
-		private final List fEvents= new ArrayList();
+		private final List<DocumentEvent> fEvents= new ArrayList<>();
 
 		public LazilyMirroredDocument(IDocument document) {
 			document.addDocumentListener(fDocumentListener);
@@ -74,6 +71,7 @@ public class TextUtilitiesTest extends TestCase {
 		 *
 		 * @see org.eclipse.jface.text.IDocument#get()
 		 */
+		@Override
 		public String get() {
 			try {
 				flush();
@@ -91,7 +89,9 @@ public class TextUtilitiesTest extends TestCase {
 	private static class LazilyMirroredDocument2 extends Document {
 
 		private final class DocumentListener implements IDocumentListener {
+			@Override
 			public void documentAboutToBeChanged(DocumentEvent event) {}
+			@Override
 			public void documentChanged(DocumentEvent event) {
 				event= new DocumentEvent(event.getDocument(), event.getOffset(), event.getLength(), event.getText());
 				fEvents.add(event);
@@ -102,7 +102,7 @@ public class TextUtilitiesTest extends TestCase {
 		private final DocumentListener fDocumentListener= new DocumentListener();
 
 		/** The buffered events. */
-		private final List fEvents= new ArrayList();
+		private final List<DocumentEvent> fEvents= new ArrayList<>();
 
 		public LazilyMirroredDocument2(IDocument document) {
 			document.addDocumentListener(fDocumentListener);
@@ -122,6 +122,7 @@ public class TextUtilitiesTest extends TestCase {
 		 *
 		 * @see org.eclipse.jface.text.IDocument#get()
 		 */
+		@Override
 		public String get() {
 			try {
 				flush();
@@ -138,10 +139,6 @@ public class TextUtilitiesTest extends TestCase {
 	 * 
 	 * @param name the name
 	 */
-	public TextUtilitiesTest(String name) {
-		super(name);
-	}
-
 	private static DocumentEvent createRandomEvent(IDocument document, int maxLength, char character) {
 
 		int index0= (int) (Math.random() * (maxLength + 1));
@@ -157,7 +154,8 @@ public class TextUtilitiesTest extends TestCase {
 
 		return new DocumentEvent(document, offset, length, buffer.toString());
 	}
-
+	
+	@Test
 	public void testMergeEvents1() {
 		IDocument reference= new Document();
 		LazilyMirroredDocument testee= new LazilyMirroredDocument(reference);
@@ -174,14 +172,15 @@ public class TextUtilitiesTest extends TestCase {
 			Assert.fail("bad location exception");
 		}
 	}
-
+	
+	@Test
 	public void testMergeEvents() {
 		IDocument reference= new Document();
 		LazilyMirroredDocument testee= new LazilyMirroredDocument(reference);
 
 		try {
 
-			List events= new ArrayList();
+			List<DocumentEvent> events= new ArrayList<>();
 			int currentLength= 0;
 
 			events.add(new DocumentEvent(reference, 0, 0, "foo bar goo haa"));
@@ -192,8 +191,8 @@ public class TextUtilitiesTest extends TestCase {
 			events.add(new DocumentEvent(reference, 9, 2, "asd"));
 			events.add(new DocumentEvent(reference, 0, 2, "asd"));
 
-			for (Iterator iterator= events.iterator(); iterator.hasNext();) {
-				DocumentEvent event= (DocumentEvent) iterator.next();
+			for (Iterator<DocumentEvent> iterator= events.iterator(); iterator.hasNext();) {
+				DocumentEvent event= iterator.next();
 				currentLength += event.getText().length() - event.getLength();
 			}
 
@@ -204,8 +203,8 @@ public class TextUtilitiesTest extends TestCase {
 				events.add(event);
 			}
 
-			for (Iterator iterator= events.iterator(); iterator.hasNext();) {
-				DocumentEvent event= (DocumentEvent) iterator.next();
+			for (Iterator<DocumentEvent> iterator= events.iterator(); iterator.hasNext();) {
+				DocumentEvent event= iterator.next();
 
 //				System.err.println(event.getOffset() + ", " + event.getLength() + ", [" + event.getText() + "]") ;
 
@@ -226,14 +225,15 @@ public class TextUtilitiesTest extends TestCase {
 			Assert.fail("bad location exception");
 		}
 	}
-
+	
+	@Test
 	public void testMergeEvents2() {
 		IDocument reference= new Document();
 		LazilyMirroredDocument2 testee= new LazilyMirroredDocument2(reference);
 
 		try {
 
-			List events= new ArrayList();
+			List<DocumentEvent> events= new ArrayList<>();
 			int currentLength= 0;
 
 			events.add(new DocumentEvent(reference, 0, 0, "foo bar goo haa"));
@@ -244,8 +244,8 @@ public class TextUtilitiesTest extends TestCase {
 			events.add(new DocumentEvent(reference, 9, 2, "asd"));
 			events.add(new DocumentEvent(reference, 0, 2, "asd"));
 
-			for (Iterator iterator= events.iterator(); iterator.hasNext();) {
-				DocumentEvent event= (DocumentEvent) iterator.next();
+			for (Iterator<DocumentEvent> iterator= events.iterator(); iterator.hasNext();) {
+				DocumentEvent event= iterator.next();
 				currentLength += event.getText().length() - event.getLength();
 			}
 
@@ -256,8 +256,8 @@ public class TextUtilitiesTest extends TestCase {
 				events.add(event);
 			}
 
-			for (Iterator iterator= events.iterator(); iterator.hasNext();) {
-				DocumentEvent event= (DocumentEvent) iterator.next();
+			for (Iterator<DocumentEvent> iterator= events.iterator(); iterator.hasNext();) {
+				DocumentEvent event= iterator.next();
 
 				reference.replace(event.getOffset(), event.getLength(), event.getText());
 				if (Math.random() < 0.3) {
@@ -275,7 +275,8 @@ public class TextUtilitiesTest extends TestCase {
 	private static void check(IDocument reference, IDocument testee) {
 		Assert.assertEquals(reference.get(), testee.get());
 	}
-
+	
+	@Test
 	public void testIndexOf() {
 		int[] result;
 		result= TextUtilities.indexOf(new String[] {"a", "ab", "abc"}, "xxxxxxxxxx", 0);

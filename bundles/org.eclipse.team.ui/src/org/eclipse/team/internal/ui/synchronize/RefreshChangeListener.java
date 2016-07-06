@@ -31,6 +31,7 @@ public class RefreshChangeListener implements ISubscriberChangeListener, IChange
 		this.resources = resources;
 		this.collector = collector;
 	}
+	@Override
 	public void subscriberResourceChanged(ISubscriberChangeEvent[] deltas) {
 		for (int i = 0; i < deltas.length; i++) {
 			ISubscriberChangeEvent delta = deltas[i];
@@ -45,7 +46,7 @@ public class RefreshChangeListener implements ISubscriberChangeListener, IChange
 		for (Iterator it = changes.iterator(); it.hasNext();) {
 			ISubscriberChangeEvent delta = (ISubscriberChangeEvent) it.next();
 			SyncInfo info = set.getSyncInfo(delta.getResource());
-			if (info != null && interestingChange(info)) {			
+			if (info != null && interestingChange(info)) {
 				changedSyncInfos.add(info);
 			}
 		}
@@ -61,10 +62,11 @@ public class RefreshChangeListener implements ISubscriberChangeListener, IChange
 			return SyncInfo.getChange(kind) != SyncInfo.IN_SYNC;
 		}
 	}
-	
+
 	private boolean isThreeWay() {
 		return collector.getSubscriber().getResourceComparator().isThreeWay();
 	}
+	@Override
 	public int getChangeCount() {
 		return getChanges().length;
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -105,9 +105,6 @@ public class ActionSetDescriptor implements IActionSetDescriptor, IAdaptable,
     }
 
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.registry.IActionSetDescriptor#getConfigurationElement()
-     */
     @Override
 	public IConfigurationElement getConfigurationElement() {
         return configElement;
@@ -190,33 +187,21 @@ public class ActionSetDescriptor implements IActionSetDescriptor, IAdaptable,
         prefs.setValue(prefId, !newValue);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.model.IWorkbenchAdapter#getImageDescriptor(java.lang.Object)
-     */
     @Override
 	public ImageDescriptor getImageDescriptor(Object object) {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.model.IWorkbenchAdapter#getParent(java.lang.Object)
-     */
     @Override
 	public Object getParent(Object o) {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IPluginContribution#getLocalId()
-     */
     @Override
 	public String getLocalId() {
         return id;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IPluginContribution#getPluginId()
-     */
     @Override
 	public String getPluginId() {
         return pluginId;

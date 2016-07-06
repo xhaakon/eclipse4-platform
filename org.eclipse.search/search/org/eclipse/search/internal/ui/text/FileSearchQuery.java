@@ -52,7 +52,7 @@ public class FileSearchQuery implements ISearchQuery {
 		private final boolean fSearchInBinaries;
 
 		private final boolean fIsLightweightAutoRefresh;
-		private Map fCachedMatches; // map of IFile -> ArrayList of FileMatches
+		private Map<IFile, ArrayList<FileMatch>> fCachedMatches;
 		private Object fLock= new Object();
 
 		private TextSearchResultCollector(AbstractTextSearchResult result, boolean isFileSearchOnly, boolean searchInBinaries) {
@@ -63,10 +63,12 @@ public class FileSearchQuery implements ISearchQuery {
 
 		}
 
+		@Override
 		public boolean canRunInParallel() {
 			return true;
 		}
 
+		@Override
 		public boolean acceptFile(IFile file) throws CoreException {
 			if (fIsLightweightAutoRefresh && !file.exists())
 				return false;
@@ -80,15 +82,14 @@ public class FileSearchQuery implements ISearchQuery {
 			return true;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.eclipse.search.core.text.TextSearchRequestor#reportBinaryFile(org.eclipse.core.resources.IFile)
-		 */
+		@Override
 		public boolean reportBinaryFile(IFile file) {
 			return fSearchInBinaries;
 		}
 
+		@Override
 		public boolean acceptPatternMatch(TextSearchMatchAccess matchRequestor) throws CoreException {
-			ArrayList matches;
+			ArrayList<FileMatch> matches;
 			synchronized(fLock) {
 				// fCachedMatches is set to null when the caller invokes endReporting(),
 				// indicating that no further results are desired/expected, so discard
@@ -96,7 +97,7 @@ public class FileSearchQuery implements ISearchQuery {
 				if (fCachedMatches == null) {
 					return false;
 				}
-				matches= (ArrayList) fCachedMatches.get(matchRequestor.getFile());
+				matches= fCachedMatches.get(matchRequestor.getFile());
 			}
 
 			int matchOffset= matchRequestor.getMatchOffset();
@@ -119,9 +120,9 @@ public class FileSearchQuery implements ISearchQuery {
 					if (fCachedMatches == null) {
 						return false;
 					}
-					matches= (ArrayList) fCachedMatches.get(matchRequestor.getFile());
+					matches= fCachedMatches.get(matchRequestor.getFile());
 					if (matches == null) {
-						matches= new ArrayList();
+						matches= new ArrayList<>();
 						fCachedMatches.put(matchRequestor.getFile(), matches);
 					}
 					matches.add(fileMatch);
@@ -130,13 +131,13 @@ public class FileSearchQuery implements ISearchQuery {
 			return true;
 		}
 
-		private LineElement getLineElement(int offset, TextSearchMatchAccess matchRequestor, ArrayList matches) {
+		private LineElement getLineElement(int offset, TextSearchMatchAccess matchRequestor, ArrayList<FileMatch> matches) {
 			int lineNumber= 1;
 			int lineStart= 0;
 
 			if (matches != null) {
 				// match on same line as last?
-				FileMatch last= (FileMatch) matches.get(matches.size() - 1);
+				FileMatch last= matches.get(matches.size() - 1);
 				LineElement lineElement= last.getLineElement();
 				if (lineElement.contains(offset)) {
 					return lineElement;
@@ -185,10 +186,12 @@ public class FileSearchQuery implements ISearchQuery {
 			return buf.toString();
 		}
 
+		@Override
 		public void beginReporting() {
-			fCachedMatches= new HashMap();
+			fCachedMatches= new HashMap<>();
 		}
 
+		@Override
 		public void endReporting() {
 			flushMatches();
 			synchronized (fLock) {
@@ -199,10 +202,10 @@ public class FileSearchQuery implements ISearchQuery {
 		private void flushMatches() {
 			synchronized (fLock) {
 				if (fCachedMatches != null && !fCachedMatches.isEmpty()) {
-					Iterator it = fCachedMatches.values().iterator();
+					Iterator<ArrayList<FileMatch>> it = fCachedMatches.values().iterator();
 					while(it.hasNext()) {
-						ArrayList matches= (ArrayList) it.next();
-						fResult.addMatches((Match[]) matches.toArray(new Match[matches.size()]));
+						ArrayList<FileMatch> matches= it.next();
+						fResult.addMatches(matches.toArray(new Match[matches.size()]));
 					}
 					fCachedMatches.clear();
 				}
@@ -215,38 +218,40 @@ public class FileSearchQuery implements ISearchQuery {
 	private final boolean fIsRegEx;
 	private final boolean fIsCaseSensitive;
 	private final boolean fIsWholeWord;
-
 	private FileSearchResult fResult;
+	private boolean fSearchInBinaries;
 
 
 	public FileSearchQuery(String searchText, boolean isRegEx, boolean isCaseSensitive, FileTextSearchScope scope) {
-		this(searchText, isRegEx, isCaseSensitive, false, scope);
+		this(searchText, isRegEx, isCaseSensitive, false, false, scope);
 	}
 
-	public FileSearchQuery(String searchText, boolean isRegEx, boolean isCaseSensitive, boolean isWholeWord, FileTextSearchScope scope) {
+	public FileSearchQuery(String searchText, boolean isRegEx, boolean isCaseSensitive, boolean isWholeWord, boolean searchInBinaries, FileTextSearchScope scope) {
 		fSearchText= searchText;
 		fIsRegEx= isRegEx;
 		fIsCaseSensitive= isCaseSensitive;
 		fIsWholeWord= isWholeWord;
 		fScope= scope;
+		fSearchInBinaries= searchInBinaries;
 	}
 
 	public FileTextSearchScope getSearchScope() {
 		return fScope;
 	}
 
+	@Override
 	public boolean canRunInBackground() {
 		return true;
 	}
 
+	@Override
 	public IStatus run(final IProgressMonitor monitor) {
 		AbstractTextSearchResult textResult= (AbstractTextSearchResult) getSearchResult();
 		textResult.removeAll();
 
 		Pattern searchPattern= getSearchPattern();
-		boolean searchInBinaries= !isScopeAllFileTypes();
 
-		TextSearchResultCollector collector= new TextSearchResultCollector(textResult, isFileNameSearch(), searchInBinaries);
+		TextSearchResultCollector collector= new TextSearchResultCollector(textResult, isFileNameSearch(), fSearchInBinaries);
 		return TextSearchEngine.create().search(fScope, collector, searchPattern, monitor);
 	}
 
@@ -263,6 +268,7 @@ public class FileSearchQuery implements ISearchQuery {
 	}
 
 
+	@Override
 	public String getLabel() {
 		return SearchMessages.FileSearchQuery_label;
 	}
@@ -311,7 +317,7 @@ public class FileSearchQuery implements ISearchQuery {
 		FileTextSearchScope scope= FileTextSearchScope.newSearchScope(new IResource[] { file }, new String[] { "*" }, true); //$NON-NLS-1$
 
 		Pattern searchPattern= getSearchPattern();
-		TextSearchResultCollector collector= new TextSearchResultCollector(result, isFileNameSearch(), true);
+		TextSearchResultCollector collector= new TextSearchResultCollector(result, isFileNameSearch(), fSearchInBinaries);
 
 		return TextSearchEngine.create().search(scope, collector, searchPattern, monitor);
 	}
@@ -336,10 +342,12 @@ public class FileSearchQuery implements ISearchQuery {
 		return fIsWholeWord;
 	}
 
+	@Override
 	public boolean canRerun() {
 		return true;
 	}
 
+	@Override
 	public ISearchResult getSearchResult() {
 		if (fResult == null) {
 			fResult= new FileSearchResult(this);

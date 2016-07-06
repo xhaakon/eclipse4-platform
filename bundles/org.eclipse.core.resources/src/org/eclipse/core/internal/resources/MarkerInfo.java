@@ -1,19 +1,21 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488938, 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.core.internal.utils.*;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.osgi.util.NLS;
@@ -21,9 +23,9 @@ import org.eclipse.osgi.util.NLS;
 public class MarkerInfo implements IMarkerSetElement, Cloneable, IStringPoolParticipant {
 
 	// well known Integer values
-	protected static final Integer INTEGER_ONE = new Integer(1);
-	protected static final Integer INTEGER_TWO = new Integer(2);
-	protected static final Integer INTEGER_ZERO = new Integer(0);
+	protected static final Integer INTEGER_ONE = 1;
+	protected static final Integer INTEGER_TWO = 2;
+	protected static final Integer INTEGER_ZERO = 0;
 
 	//
 	protected static final long UNDEFINED_ID = -1;
@@ -116,7 +118,7 @@ public class MarkerInfo implements IMarkerSetElement, Cloneable, IStringPoolPart
 	public Map<String, Object> getAttributes(boolean makeCopy) {
 		if (attributes == null)
 			return null;
-		return makeCopy ? new MarkerAttributeMap<Object>(attributes) : attributes;
+		return makeCopy ? new MarkerAttributeMap<>(attributes) : attributes;
 	}
 
 	public Object[] getAttributes(String[] attributeNames) {
@@ -151,7 +153,7 @@ public class MarkerInfo implements IMarkerSetElement, Cloneable, IStringPoolPart
 		if (attributes == null) {
 			if (value == null)
 				return;
-			attributes = new MarkerAttributeMap<Object>();
+			attributes = new MarkerAttributeMap<>();
 			attributes.put(attributeName, value);
 		} else {
 			if (value == null) {
@@ -168,11 +170,11 @@ public class MarkerInfo implements IMarkerSetElement, Cloneable, IStringPoolPart
 		if (map == null)
 			attributes = null;
 		else {
-			attributes = new MarkerAttributeMap<Object>(map.size());
-			for (Iterator<String> i = map.keySet().iterator(); i.hasNext();) {
-				Object key = i.next();
+			attributes = new MarkerAttributeMap<>(map.size());
+			for (Entry<String, ?> entry : map.entrySet()) {
+				Object key = entry.getKey();
 				Assert.isTrue(key instanceof String);
-				Object value = map.get(key);
+				Object value = entry.getValue();
 				setAttribute((String) key, value, validate);
 			}
 		}

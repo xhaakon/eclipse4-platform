@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,12 +36,14 @@ public class XHTMLSearchParticipant extends SearchParticipantXML {
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.search.XMLSearchParticipant#handleEndElement(java.lang.String, org.eclipse.help.search.XMLSearchParticipant.IParsedXMLContent)
 	 */
+	@Override
 	protected void handleEndElement(String name, IParsedXMLContent data) {
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.search.XMLSearchParticipant#handleStartElement(java.lang.String, org.xml.sax.Attributes, org.eclipse.help.search.XMLSearchParticipant.IParsedXMLContent)
 	 */
+	@Override
 	protected void handleStartElement(String name, Attributes attributes, IParsedXMLContent data) {
 	    title = null;
 	    if (META_TAG.equalsIgnoreCase(name)) {
@@ -66,6 +68,7 @@ public class XHTMLSearchParticipant extends SearchParticipantXML {
 	    }
 	}
 
+	@Override
 	protected void handleStartDocument(IParsedXMLContent data) {
 		hasDescriptionMetaTag = false;
 	}
@@ -73,6 +76,7 @@ public class XHTMLSearchParticipant extends SearchParticipantXML {
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.search.XMLSearchParticipant#handleText(java.lang.String, org.eclipse.help.search.XMLSearchParticipant.IParsedXMLContent)
 	 */
+	@Override
 	protected void handleText(String text, IParsedXMLContent data) {
 		String stackPath = getElementStackPath();
 		IPath path = new Path(stackPath);
@@ -101,6 +105,7 @@ public class XHTMLSearchParticipant extends SearchParticipantXML {
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.search.XMLSearchParticipant#preprocess(java.io.InputStream, java.lang.String, java.lang.String)
 	 */
+	@Override
 	protected InputStream preprocess(InputStream in, String name, String locale) {
 		try {
 			return DynamicXHTMLProcessor.process(name, in, locale, false);

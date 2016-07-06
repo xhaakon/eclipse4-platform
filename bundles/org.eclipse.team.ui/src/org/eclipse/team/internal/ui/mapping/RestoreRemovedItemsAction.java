@@ -18,12 +18,13 @@ import org.eclipse.team.internal.ui.Utils;
 import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 
 public class RestoreRemovedItemsAction extends ResourceModelParticipantAction {
-	
+
 	public RestoreRemovedItemsAction(ISynchronizePageConfiguration configuration) {
 		super(null, configuration);
 		Utils.initAction(this, "action.restoreRemovedFromView."); //$NON-NLS-1$
 	}
 
+	@Override
 	public void run() {
 		ISynchronizationContext context = getSynchronizationContext();
 		if(context instanceof SubscriberMergeContext){
@@ -34,6 +35,7 @@ public class RestoreRemovedItemsAction extends ResourceModelParticipantAction {
 		super.run();
 	}
 
+	@Override
 	protected boolean isEnabledForSelection(IStructuredSelection selection) {
 		return true;
 	}

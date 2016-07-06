@@ -51,35 +51,42 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			super(id, parent, style);
 			this.listener = listener;
 		}
+		@Override
 		public void createChildren(TreeItem item) {
 			super.createChildren(item);
 		}
+		@Override
 		public void openSelection() {
 			fireOpen(new OpenEvent(this, getSelection()));
 		}
+		@Override
 		protected void internalRefresh(Object element, boolean updateLabels) {
 			TreePath[] expanded = getVisibleExpandedPaths();
 			super.internalRefresh(element, updateLabels);
 			setExpandedTreePaths(expanded);
 			checkForEmptyViewer();
 		}
+		@Override
 		protected void internalRemove(Object parent, Object[] elements) {
 			super.internalRemove(parent, elements);
 			if (parent == getInput())
 				checkForEmptyViewer();
 		}
+		@Override
 		protected void internalRemove(Object[] elements) {
 			super.internalRemove(elements);
 			checkForEmptyViewer();
 		}
+		@Override
 		protected void internalAdd(Widget widget, Object parentElement, Object[] childElements) {
 			super.internalAdd(widget, parentElement, childElements);
 			if (empty) {
 				empty = false;
 				listener.notEmpty(this);
 			}
-				
+
 		}
+		@Override
 		protected void inputChanged(Object input, Object oldInput) {
 			super.inputChanged(input, oldInput);
 			checkForEmptyViewer();
@@ -104,7 +111,8 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 		public boolean isEmpty() {
 			return empty;
 		}
-		
+
+		@Override
 		protected void initDragAndDrop() {
 			getNavigatorContentService().getDnDService().bindDragAssistant(new ResourceDragAdapterAssistant());
 			super.initDragAndDrop();
@@ -112,7 +120,7 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 	    /**
 	     * Gets the expanded elements that are visible to the user. An expanded
 	     * element is only visible if the parent is expanded.
-	     * 
+	     *
 	     * @return the visible expanded elements
 	     * @since 2.0
 	     */
@@ -147,7 +155,8 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 		public CommonSubActionBars(IActionBars parent) {
 			super(parent);
 		}
-		
+
+		@Override
 		public void setGlobalActionHandler(String actionID, IAction handler) {
 			if (handler == null) {
 				// Only remove the handler if it was set
@@ -164,7 +173,8 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 				super.setGlobalActionHandler(actionID, handler);
 			}
 		}
-		
+
+		@Override
 		public void clearGlobalActionHandlers() {
 			// When cleared, also remove the ids from the parent
 			Map handlers = getGlobalActionHandlers();
@@ -179,7 +189,8 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			}
 			super.clearGlobalActionHandlers();
 		}
-		
+
+		@Override
 		public void updateActionBars() {
 			// On update, push all or action handlers into our parent
 			Map newActionHandlers = getGlobalActionHandlers();
@@ -194,19 +205,19 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			}
 			super.updateActionBars();
 		}
-		
+
 	}
-	
+
 	public static final String TEAM_NAVIGATOR_CONTENT = "org.eclipse.team.ui.navigatorViewer"; //$NON-NLS-1$
 
 	private static final String PROP_ACTION_SERVICE_ACTION_BARS = "org.eclipse.team.ui.actionServiceActionBars"; //$NON-NLS-1$
-	
+
 	private Set extensions = new HashSet();
-	
+
 	private NavigatorActionService actionService;
 
 	private IEmptyTreeListener emptyTreeListener;
-	
+
 	/**
 	 * Create a common viewer
 	 * @param parent the parent composite of the common viewer
@@ -220,14 +231,16 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 		ISynchronizationScope scope = getScope(configuration);
 		bindTeamContentProviders(v);
 		scope.addScopeChangeListener(new ISynchronizationScopeChangeListener() {
+			@Override
 			public void scopeChanged(final ISynchronizationScope scope,
 					ResourceMapping[] newMappings, ResourceTraversal[] newTraversals) {
 				enableContentProviders(v, configuration);
-				Utils.asyncExec(new Runnable() {			
+				Utils.asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						v.refresh();
 					}
-				
+
 				}, v);
 			}
 		});
@@ -272,7 +285,7 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 		}
 		v.getNavigatorContentService().bindExtensions((String[]) toBind.toArray(new String[toBind.size()]), true);
 	}
-	
+
 	private static ISynchronizationScope getScope(ISynchronizePageConfiguration configuration) {
 		return (ISynchronizationScope)configuration.getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_SCOPE);
 	}
@@ -304,6 +317,7 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			}
 			DecorationContext decorationContext = new DecorationContext();
 			decorationContext.putProperty(SynchronizationStateTester.PROP_TESTER, new SynchronizationStateTester() {
+				@Override
 				public boolean isStateDecorationEnabled() {
 					return false;
 				}
@@ -323,6 +337,7 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			}
 			DecorationContext decorationContext = new DecorationContext();
 			decorationContext.putProperty(SynchronizationStateTester.PROP_TESTER, new SynchronizationStateTester() {
+				@Override
 				public boolean isStateDecorationEnabled() {
 					return false;
 				}
@@ -343,17 +358,20 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			this.slp = slp;
 		}
 
+		@Override
 		public StyledString getStyledText(Object element) {
 			return slp.getStyledText(element);
 		}
 
+		@Override
 		public Font getFont(Object element) {
 			// DelegatingStyledCellLabelProvider does not implement
 			// IFontProvider
 			return super.getFont(element);
 		}
 	}
-	
+
+	@Override
 	public void setInitialInput() {
 		CommonViewer viewer = (CommonViewer)getViewer();
         viewer.setInput(getInitialInput());
@@ -363,11 +381,12 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#initializeViewer(org.eclipse.jface.viewers.StructuredViewer)
 	 */
+	@Override
 	public void initializeViewer(StructuredViewer viewer) {
 		createActionService((CommonViewer)viewer, getConfiguration());
 		super.initializeViewer(viewer);
 	}
-	
+
 	private void createActionService(CommonViewer viewer, ISynchronizePageConfiguration configuration) {
 		ICommonViewerSite commonSite = createCommonViewerSite(viewer, configuration);
 		actionService = new NavigatorActionService(commonSite, viewer, viewer.getNavigatorContentService());
@@ -403,10 +422,11 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 		}
 		return getConfiguration().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_CONTEXT);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.navigator.internal.extensions.INavigatorContentServiceListener#onLoad(org.eclipse.ui.navigator.internal.extensions.NavigatorContentExtension)
 	 */
+	@Override
 	public void onLoad(INavigatorContentExtension anExtension) {
 		extensions.add(anExtension);
 		ISynchronizationContext context = getParticipant().getContext();
@@ -418,54 +438,59 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 	private ModelSynchronizeParticipant getParticipant() {
 		return (ModelSynchronizeParticipant)getConfiguration().getParticipant();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#getContextMenuId(org.eclipse.jface.viewers.StructuredViewer)
 	 */
+	@Override
 	protected String getContextMenuId(StructuredViewer viewer) {
 		return ((CommonViewer)viewer).getNavigatorContentService().getViewerDescriptor().getPopupMenuId();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#registerContextMenu(org.eclipse.jface.viewers.StructuredViewer, org.eclipse.jface.action.MenuManager)
 	 */
+	@Override
 	protected void registerContextMenu(StructuredViewer viewer, MenuManager menuMgr) {
 		actionService.prepareMenuForPlatformContributions(menuMgr,
 				viewer, false);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#fillContextMenu(org.eclipse.jface.viewers.StructuredViewer, org.eclipse.jface.action.IMenuManager)
 	 */
+	@Override
 	protected void fillContextMenu(StructuredViewer viewer, IMenuManager manager) {
 		// Clear any handlers from the menu
 		if (manager instanceof CommonMenuManager) {
 			CommonMenuManager cmm = (CommonMenuManager) manager;
 			cmm.clearHandlers();
 		}
-		
+
 		// Add the actions from the service (which willal so add the groups)
 		ISelection selection = getViewer().getSelection();
 		actionService.setContext(new ActionContext(selection));
 		actionService.fillContextMenu(manager);
-		
+
 		// Add any programmatic menu items
 		super.fillContextMenu(viewer, manager);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#dispose()
 	 */
+	@Override
 	public void dispose() {
 		TeamUI.getTeamContentProviderManager().removePropertyChangeListener(this);
 		getConfiguration().removePropertyChangeListener(this);
 		actionService.dispose();
 		super.dispose();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#updateActionBars(org.eclipse.jface.viewers.IStructuredSelection)
 	 */
+	@Override
 	protected void updateActionBars(IStructuredSelection selection) {
 		super.updateActionBars(selection);
 		if (!getConfiguration().getSite().isModal()) {
@@ -479,17 +504,19 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			actionService.fillActionBars(subActionBars);
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#createContextMenuManager(java.lang.String)
 	 */
+	@Override
 	protected MenuManager createContextMenuManager(String targetID) {
 		return new CommonMenuManager(targetID);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.StructuredViewerAdvisor#addContextMenuGroups(org.eclipse.jface.action.IMenuManager)
 	 */
+	@Override
 	protected void addContextMenuGroups(IMenuManager manager) {
 		// Don't do anything. The groups will be added by the action service
 	}
@@ -498,16 +525,19 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 		this.emptyTreeListener = emptyTreeListener;
 	}
 
+	@Override
 	public void treeEmpty(TreeViewer viewer) {
 		if (emptyTreeListener != null)
 			emptyTreeListener.treeEmpty(viewer);
 	}
 
+	@Override
 	public void notEmpty(TreeViewer viewer) {
 		if (emptyTreeListener != null)
 			emptyTreeListener.notEmpty(viewer);
 	}
 
+	@Override
 	public void propertyChange(final PropertyChangeEvent event) {
 		if (event.getProperty().equals(ITeamContentProviderManager.PROP_ENABLED_MODEL_PROVIDERS)) {
 			enableContentProviders((CommonViewer)getViewer(), getConfiguration());
@@ -515,6 +545,7 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			enableContentProviders((CommonViewer)getViewer(), getConfiguration());
 			final Viewer viewer = getViewer();
 			Utils.syncExec(new Runnable() {
+				@Override
 				public void run() {
 					Object viewerInput = ModelSynchronizePage.getViewerInput(getConfiguration(), (String)event.getNewValue());
 					if (viewer != null && viewerInput != null) {
@@ -527,7 +558,8 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			enableContentProviders((CommonViewer)getViewer(), getConfiguration());
 		}
 	}
-	
+
+	@Override
 	protected boolean handleDoubleClick(StructuredViewer viewer, DoubleClickEvent event) {
 		if (isOpenable(event.getSelection())) {
 			return true;
@@ -542,7 +574,8 @@ public class CommonViewerAdvisor extends AbstractTreeViewerAdvisor implements IN
 			return false;
 		return getParticipant().hasCompareInputFor(object);
 	}
-	
+
+	@Override
 	protected void expandToNextDiff(Object element) {
 		((TreeViewer)getViewer()).expandToLevel(element, AbstractTreeViewer.ALL_LEVELS);
 	}

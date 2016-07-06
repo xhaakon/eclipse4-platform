@@ -27,19 +27,19 @@ import org.eclipse.ui.actions.*;
 import org.eclipse.ui.navigator.INavigatorContentService;
 
 /**
- * This action group is modeled after the class of the same name in 
+ * This action group is modeled after the class of the same name in
  * the org.eclipse.ui.workbench plugin. We couldn't reuse that class
  * because of a hard dependency on the navigator.
  */
 public class RefactorActionGroup extends ActionGroup {
-    
+
 	private CopyToClipboardAction copyAction;
 	private MoveResourceAction moveAction;
 	private RenameResourceAction renameAction;
 	private ISynchronizePageSite site;
 	private DeleteResourceAction deleteAction;
 	private final INavigatorContentService navigatorContentService;
-	
+
 	public RefactorActionGroup(ISynchronizePageSite site) {
 		this(site, null);
 	}
@@ -64,13 +64,15 @@ public class RefactorActionGroup extends ActionGroup {
 		parentMenu.appendToGroup(groupId, renameAction);
 	}
 
- 	public void fillActionBars(IActionBars actionBars) {
+ 	@Override
+	public void fillActionBars(IActionBars actionBars) {
     	actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(), copyAction);
     	actionBars.setGlobalActionHandler(ActionFactory.DELETE.getId(), deleteAction);
     	actionBars.setGlobalActionHandler(ActionFactory.RENAME.getId(), renameAction);
     	actionBars.setGlobalActionHandler(ActionFactory.MOVE.getId(), moveAction);
     }
 
+	@Override
 	public void updateActionBars() {
 		copyAction.selectionChanged(getObjectSelection());
 		deleteAction.selectionChanged(getObjectSelection());
@@ -91,10 +93,12 @@ public class RefactorActionGroup extends ActionGroup {
 				.getImageDescriptor(ISharedImages.IMG_TOOL_COPY_DISABLED));
 
 		deleteAction = new DeleteResourceAction(shell) {
+			@Override
 			protected List getSelectedResources() {
 				return getSelection().toList();// Arrays.asList(Utils.getResources(getSelection().toArray()));
 			}
 
+			@Override
 			protected boolean updateSelection(IStructuredSelection selection) {
 				// TODO Auto-generated method stub
 				return super.updateSelection(selection)
@@ -110,6 +114,7 @@ public class RefactorActionGroup extends ActionGroup {
 				.getImageDescriptor(ISharedImages.IMG_TOOL_DELETE_DISABLED));
 
 		moveAction = new MoveResourceAction(shell) {
+			@Override
 			protected boolean updateSelection(IStructuredSelection selection) {
 				// TODO Auto-generated method stub
 				return super.updateSelection(selection)
@@ -120,6 +125,7 @@ public class RefactorActionGroup extends ActionGroup {
 		moveAction.setActionDefinitionId(IWorkbenchCommandConstants.FILE_MOVE);
 
 		renameAction = new RenameResourceAction(shell) {
+			@Override
 			protected boolean updateSelection(IStructuredSelection selection) {
 				// TODO Auto-generated method stub
 				return super.updateSelection(selection)
@@ -130,20 +136,20 @@ public class RefactorActionGroup extends ActionGroup {
 		renameAction
 				.setActionDefinitionId(IWorkbenchCommandConstants.FILE_RENAME);
 	}
-    
+
     private IStructuredSelection getSelection() {
         final ISelection selection= getContext().getSelection();
 
-        if (!(selection instanceof IStructuredSelection)) 
+        if (!(selection instanceof IStructuredSelection))
             return new StructuredSelection();
 
     	return new StructuredSelection(Utils.getResources(((IStructuredSelection)selection).toArray()));
 	}
-    
+
     private IStructuredSelection getObjectSelection() {
         final ISelection selection= getContext().getSelection();
 
-        if (!(selection instanceof IStructuredSelection)) 
+        if (!(selection instanceof IStructuredSelection))
             return new StructuredSelection();
 
     	return (IStructuredSelection)selection;
@@ -172,10 +178,11 @@ public class RefactorActionGroup extends ActionGroup {
 		}
 		return true;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.actions.ActionGroup#dispose()
 	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 		copyAction.dispose();

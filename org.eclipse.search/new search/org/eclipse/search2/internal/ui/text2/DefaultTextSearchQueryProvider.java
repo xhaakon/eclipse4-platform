@@ -25,38 +25,31 @@ import org.eclipse.search.ui.text.TextSearchQueryProvider;
 
 public class DefaultTextSearchQueryProvider extends TextSearchQueryProvider {
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.search.ui.text.TextSearchQueryProvider#createQuery(TextSearchInput)
-	 */
+	@Override
 	public ISearchQuery createQuery(TextSearchInput input) {
 		FileTextSearchScope scope= input.getScope();
 		String text= input.getSearchText();
 		boolean regEx= input.isRegExSearch();
 		boolean caseSensitive= input.isCaseSensitiveSearch();
 		boolean wholeWord= input.isWholeWordSearch();
+		boolean searchInBinaries= input.searchInBinaries();
 		Assert.isLegal(!(wholeWord && regEx));
-		return new FileSearchQuery(text, regEx, caseSensitive, wholeWord, scope);
+		return new FileSearchQuery(text, regEx, caseSensitive, wholeWord, searchInBinaries, scope);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.search.ui.text.TextSearchQueryProvider#createQuery(java.lang.String)
-	 */
+	@Override
 	public ISearchQuery createQuery(String searchForString) {
 		FileTextSearchScope scope= FileTextSearchScope.newWorkspaceScope(getPreviousFileNamePatterns(), false);
 		return new FileSearchQuery(searchForString, false, true, scope);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.search.ui.text.TextSearchQueryProvider#createQuery(java.lang.String, org.eclipse.core.resources.IResource[])
-	 */
+	@Override
 	public ISearchQuery createQuery(String selectedText, IResource[] resources) {
 		FileTextSearchScope scope= FileTextSearchScope.newSearchScope(resources, getPreviousFileNamePatterns(), false);
 		return new FileSearchQuery(selectedText, false, true, scope);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.search.ui.text.TextSearchQueryProvider#createQuery(java.lang.String, org.eclipse.ui.IWorkingSet[])
-	 */
+	@Override
 	public ISearchQuery createQuery(String selectedText, IWorkingSet[] ws) {
 		FileTextSearchScope scope= FileTextSearchScope.newSearchScope(ws, getPreviousFileNamePatterns(), false);
 		return new FileSearchQuery(selectedText, false, true, scope);

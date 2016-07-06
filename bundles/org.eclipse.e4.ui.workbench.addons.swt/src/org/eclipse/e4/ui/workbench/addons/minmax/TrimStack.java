@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014, 2015 IBM Corporation and others.
+ * Copyright (c) 2010, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Lars.Vogel@vogella.com - Bug 454712
+ *     Lars.Vogel@vogella.com - Bug 454712, 485851
  *     dirk.fauth@googlemail.com - Bug 446095
  ******************************************************************************/
 package org.eclipse.e4.ui.workbench.addons.minmax;
@@ -45,6 +45,7 @@ import org.eclipse.e4.ui.workbench.IPresentationEngine;
 import org.eclipse.e4.ui.workbench.IResourceUtilities;
 import org.eclipse.e4.ui.workbench.UIEvents;
 import org.eclipse.e4.ui.workbench.UIEvents.EventTags;
+import org.eclipse.e4.ui.workbench.addons.minmax.TrimStackIdHelper.TrimStackIdPart;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.renderers.swt.TrimmedPartLayout;
@@ -581,6 +582,8 @@ public class TrimStack {
 			MTrimBar bar = (MTrimBar) meParent;
 			if (bar.getSide() == SideValue.RIGHT || bar.getSide() == SideValue.LEFT)
 				orientation = SWT.VERTICAL;
+			// TrimStacks are draggable by default
+			 me.getTags().add(IPresentationEngine.DRAGGABLE);
 		}
 		trimStackTB = new ToolBar(parent, orientation | SWT.FLAT | SWT.WRAP);
 		trimStackTB.addDisposeListener(new DisposeListener() {
@@ -798,15 +801,18 @@ public class TrimStack {
 			result = modelService.find(stackId, window);
 		} else {
 			String toolControlId = toolControl.getElementId();
-			int index = toolControlId.indexOf('(');
-			String stackId = toolControlId.substring(0, index);
-			String perspId = toolControlId.substring(index + 1, toolControlId.length() - 1);
+			Map<TrimStackIdPart, String> parsedIds = TrimStackIdHelper.parseTrimStackId(toolControlId);
+
+			String stackId = parsedIds.get(TrimStackIdPart.ELEMENT_ID);
+			String perspId = parsedIds.get(TrimStackIdPart.PERSPECTIVE_ID);
 
 			MPerspective persp = null;
-			List<MPerspective> perspectives = modelService.findElements(ps.get(0), perspId,
-					MPerspective.class, null);
-			if (perspectives != null && !perspectives.isEmpty()) {
-				persp = perspectives.get(0);
+			if (perspId != null) {
+				List<MPerspective> perspectives = modelService.findElements(ps.get(0), perspId, MPerspective.class,
+						null);
+				if (perspectives != null && !perspectives.isEmpty()) {
+					persp = perspectives.get(0);
+				}
 			}
 
 			if (persp != null) {
@@ -922,9 +928,8 @@ public class TrimStack {
 				return;
 			}
 		}
-
 		trimStackTB.pack();
-		trimStackTB.getShell().layout(new Control[] { trimStackTB }, SWT.DEFER);
+		trimStackTB.requestLayout();
 	}
 
 	void restoreStack() {

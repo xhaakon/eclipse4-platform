@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,7 @@ import org.eclipse.jface.text.ISlaveDocumentManagerExtension;
 public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocumentManager, ISlaveDocumentManagerExtension {
 
 	/** Registry for master documents and their projection documents. */
-	private Map fProjectionRegistry= new HashMap();
+	private Map<IDocument, List<ProjectionDocument>> fProjectionRegistry= new HashMap<>();
 
 	/**
 	 * Registers the given projection document for the given master document.
@@ -56,9 +56,9 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 	 * @param projection the projection document
 	 */
 	private void add(IDocument master, ProjectionDocument projection) {
-		List list= (List) fProjectionRegistry.get(master);
+		List<ProjectionDocument> list= fProjectionRegistry.get(master);
 		if (list == null) {
-			list= new ArrayList(1);
+			list= new ArrayList<>(1);
 			fProjectionRegistry.put(master, list);
 		}
 		list.add(projection);
@@ -71,7 +71,7 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 	 * @param projection the projection document
 	 */
 	private void remove(IDocument master, ProjectionDocument projection) {
-		List list= (List) fProjectionRegistry.get(master);
+		List<ProjectionDocument> list= fProjectionRegistry.get(master);
 		if (list != null) {
 			list.remove(projection);
 			if (list.size() == 0)
@@ -86,7 +86,7 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 	 * @return <code>true</code> if the given document is a master document known to this manager
 	 */
 	private boolean hasProjection(IDocument master) {
-		return (fProjectionRegistry.get(master) instanceof List);
+		return (fProjectionRegistry.get(master) != null);
 	}
 
 	/**
@@ -96,8 +96,8 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 	 * @param master the document
 	 * @return an iterator for all registered projection documents or <code>null</code>
 	 */
-	private Iterator getProjectionsIterator(IDocument master) {
-		List list= (List) fProjectionRegistry.get(master);
+	private Iterator<ProjectionDocument> getProjectionsIterator(IDocument master) {
+		List<ProjectionDocument> list= fProjectionRegistry.get(master);
 		if (list != null)
 			return list.iterator();
 		return null;
@@ -111,12 +111,12 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 	 */
 	protected void fireDocumentEvent(boolean about, DocumentEvent masterEvent) {
 		IDocument master= masterEvent.getDocument();
-		Iterator e= getProjectionsIterator(master);
+		Iterator<ProjectionDocument> e= getProjectionsIterator(master);
 		if (e == null)
 			return;
 
 		while (e.hasNext()) {
-			ProjectionDocument document= (ProjectionDocument) e.next();
+			ProjectionDocument document= e.next();
 			if (about)
 				document.masterDocumentAboutToBeChanged(masterEvent);
 			else
@@ -124,23 +124,17 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentListener#documentChanged(org.eclipse.jface.text.DocumentEvent)
-	 */
+	@Override
 	public void documentChanged(DocumentEvent event) {
 		fireDocumentEvent(false, event);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.IDocumentListener#documentAboutToBeChanged(org.eclipse.jface.text.DocumentEvent)
-	 */
+	@Override
 	public void documentAboutToBeChanged(DocumentEvent event) {
 		fireDocumentEvent(true, event);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManager#createMasterSlaveMapping(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public IDocumentInformationMapping createMasterSlaveMapping(IDocument slave) {
 		if (slave instanceof ProjectionDocument) {
 			ProjectionDocument projectionDocument= (ProjectionDocument) slave;
@@ -149,9 +143,7 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManager#createSlaveDocument(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public IDocument createSlaveDocument(IDocument master) {
 		if (!hasProjection(master))
 			master.addDocumentListener(this);
@@ -170,9 +162,7 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 		return new ProjectionDocument(master);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManager#freeSlaveDocument(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public void freeSlaveDocument(IDocument slave) {
 		if (slave instanceof ProjectionDocument) {
 			ProjectionDocument projectionDocument= (ProjectionDocument) slave;
@@ -184,35 +174,27 @@ public class ProjectionDocumentManager implements IDocumentListener, ISlaveDocum
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManager#getMasterDocument(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public IDocument getMasterDocument(IDocument slave) {
 		if (slave instanceof ProjectionDocument)
 			return ((ProjectionDocument) slave).getMasterDocument();
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManager#isSlaveDocument(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public boolean isSlaveDocument(IDocument document) {
 		return (document instanceof ProjectionDocument);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManager#setAutoExpandMode(org.eclipse.jface.text.IDocument, boolean)
-	 */
+	@Override
 	public void setAutoExpandMode(IDocument slave, boolean autoExpanding) {
 		if (slave instanceof ProjectionDocument)
 			((ProjectionDocument) slave).setAutoExpandMode(autoExpanding);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ISlaveDocumentManagerExtension#getSlaveDocuments(org.eclipse.jface.text.IDocument)
-	 */
+	@Override
 	public IDocument[] getSlaveDocuments(IDocument master) {
-		List list= (List) fProjectionRegistry.get(master);
+		List<ProjectionDocument> list= fProjectionRegistry.get(master);
 		if (list != null) {
 			IDocument[] result= new IDocument[list.size()];
 			list.toArray(result);

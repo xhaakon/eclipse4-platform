@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,22 +21,27 @@ import org.eclipse.help.base.AbstractHelpScope;
 
 public class UniversalScope extends AbstractHelpScope {
 
+	@Override
 	public boolean inScope(IToc toc) {
 		return true;
 	}
 
+	@Override
 	public boolean inScope(ITopic topic) {
 		return true;
 	}
 
+	@Override
 	public boolean inScope(IIndexEntry entry) {
 		return true;
 	}
 
+	@Override
 	public boolean inScope(IIndexSee see) {
 		return true;
 	}
 
+	@Override
 	public String getName(Locale locale) {
 		// TODO Auto-generated method stub
 		return null;

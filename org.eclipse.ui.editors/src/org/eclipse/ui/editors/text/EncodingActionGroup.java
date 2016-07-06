@@ -48,6 +48,7 @@ import org.eclipse.ui.texteditor.TextEditorAction;
  * @since 2.0
  * @deprecated As of 3.1, encoding needs to be changed via properties dialog
  */
+@Deprecated
 public class EncodingActionGroup extends ActionGroup {
 
 	private static final String FILE_CONTENT_ENCODING_FORMAT= TextEditorMessages.ResourceInfo_fileContentEncodingFormat;
@@ -105,13 +106,11 @@ public class EncodingActionGroup extends ActionGroup {
 		private IEncodingSupport getEncodingSupport() {
 			ITextEditor editor= getTextEditor();
 			if (editor != null)
-				return (IEncodingSupport) editor.getAdapter(IEncodingSupport.class);
+				return editor.getAdapter(IEncodingSupport.class);
 			return null;
 		}
 
-		/*
-		 * @see IAction#run()
-		 */
+		@Override
 		public void run() {
 			IEncodingSupport s= getEncodingSupport();
 			if (s != null)
@@ -146,9 +145,7 @@ public class EncodingActionGroup extends ActionGroup {
 			return null;
 		}
 
-		/*
-		 * @see IUpdate#update()
-		 */
+		@Override
 		public void update() {
 
 			if (fEncoding == null) {
@@ -243,30 +240,27 @@ public class EncodingActionGroup extends ActionGroup {
 			super(bundle, prefix, editor);
 		}
 
-		/*
-		 * @see IUpdate#update()
-		 */
+		@Override
 		public void update() {
 			ITextEditor editor= getTextEditor();
 			setEnabled(editor != null && !editor.isDirty());
 		}
 
-		/*
-		 * @see IAction#run()
-		 */
+		@Override
 		public void run() {
 
 			ITextEditor editor= getTextEditor();
 			if (editor == null)
 				return;
 
-			IEncodingSupport encodingSupport= (IEncodingSupport) editor.getAdapter(IEncodingSupport.class);
+			IEncodingSupport encodingSupport= editor.getAdapter(IEncodingSupport.class);
 			if (encodingSupport == null)
 				return;
 
 			String title= TextEditorMessages.Editor_ConvertEncoding_Custom_dialog_title;
 			String message= TextEditorMessages.Editor_ConvertEncoding_Custom_dialog_message;
 			IInputValidator inputValidator = new IInputValidator() {
+				@Override
 				public String isValid(String newText) {
 					return (newText == null || newText.length() == 0) ? " " : null; //$NON-NLS-1$
 				}
@@ -332,7 +326,7 @@ public class EncodingActionGroup extends ActionGroup {
 
 
 	/** List of encoding actions of this group. */
-	private List fRetargetActions= new ArrayList();
+	private List<RetargetTextEditorAction> fRetargetActions= new ArrayList<>();
 
 	/**
 	 * Creates a new encoding action group for an action bar contributor.
@@ -350,25 +344,24 @@ public class EncodingActionGroup extends ActionGroup {
 		fRetargetActions.add(new RetargetTextEditorAction(TextEditorMessages.getBundleForConstructedKeys(), "Editor.ConvertEncoding.Custom.", IEncodingActionsConstants.CUSTOM, IAction.AS_PUSH_BUTTON)); //$NON-NLS-1$
 	}
 
-	/*
-	 * @see ActionGroup#fillActionBars(org.eclipse.ui.IActionBars)
-	 */
+	@Override
 	public void fillActionBars(IActionBars actionBars) {
 		IMenuManager menuManager= actionBars.getMenuManager();
 		IMenuManager editMenu= menuManager.findMenuUsingPath(IWorkbenchActionConstants.M_EDIT);
 		if (editMenu != null && fRetargetActions.size() > 0) {
 			MenuManager subMenu= new MenuManager(TextEditorMessages.Editor_ConvertEncoding_submenu_label);
 			subMenu.addMenuListener(new IMenuListener() {
+				@Override
 				public void menuAboutToShow(IMenuManager manager) {
 					update();
 				}
 			});
 
-			Iterator e= fRetargetActions.iterator();
-			subMenu.add((IAction) e.next());
+			Iterator<RetargetTextEditorAction> e= fRetargetActions.iterator();
+			subMenu.add(e.next());
 			subMenu.add(new Separator());
 			while (e.hasNext())
-				subMenu.add((IAction) e.next());
+				subMenu.add(e.next());
 
 			editMenu.add(subMenu);
 		}
@@ -381,9 +374,9 @@ public class EncodingActionGroup extends ActionGroup {
 	 */
 	public void retarget(ITextEditor editor) {
 		fTextEditor= editor;
-		Iterator e= fRetargetActions.iterator();
+		Iterator<RetargetTextEditorAction> e= fRetargetActions.iterator();
 		while (e.hasNext()) {
-			RetargetTextEditorAction a= (RetargetTextEditorAction) e.next();
+			RetargetTextEditorAction a= e.next();
 			a.setAction(editor == null ? null : editor.getAction(a.getId()));
 		}
 	}
@@ -447,9 +440,7 @@ public class EncodingActionGroup extends ActionGroup {
 			((IUpdate) a).update();
 	}
 
-	/*
-	 * @see ActionGroup#dispose()
-	 */
+	@Override
 	public void dispose() {
 		if (fTextEditor != null) {
 			fTextEditor.setAction(IEncodingActionsConstants.SYSTEM, null);

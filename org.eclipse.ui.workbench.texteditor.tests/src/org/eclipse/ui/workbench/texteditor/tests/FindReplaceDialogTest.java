@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,9 +10,19 @@
  *******************************************************************************/
 package org.eclipse.ui.workbench.texteditor.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ResourceBundle;
 
-import org.eclipse.test.OrderedTestSuite;
+import org.junit.After;
+import org.junit.FixMethodOrder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+import org.junit.runners.MethodSorters;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
@@ -31,26 +41,19 @@ import org.eclipse.jface.text.TextViewer;
 
 import org.eclipse.ui.PlatformUI;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-
 /**
  * Tests the FindReplaceDialog.
  *
  * @since 3.1
  */
-public class FindReplaceDialogTest extends TestCase {
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class FindReplaceDialogTest {
+
+	@Rule
+	public TestName testName = new TestName();
 
 	private Accessor fFindReplaceDialog;
 	private TextViewer fTextViewer;
-
-	public FindReplaceDialogTest(String name) {
-		super(name);
-	}
-
-	public static Test suite() {
-		return new OrderedTestSuite(FindReplaceDialogTest.class);
-	}
 
 	private void runEventQueue() {
 		Display display= PlatformUI.getWorkbench().getDisplay();
@@ -61,6 +64,7 @@ public class FindReplaceDialogTest extends TestCase {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
+				// do nothing
 			}
 		}
 	}
@@ -88,7 +92,8 @@ public class FindReplaceDialogTest extends TestCase {
 		fFindReplaceDialog= new Accessor(fFindReplaceDialogStubAccessor.invoke("getDialog", null), "org.eclipse.ui.texteditor.FindReplaceDialog", getClass().getClassLoader());
 	}
 
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		if (fFindReplaceDialog != null) {
 			fFindReplaceDialog.invoke("close", null);
 			fFindReplaceDialog= null;
@@ -100,7 +105,8 @@ public class FindReplaceDialogTest extends TestCase {
 		}
 	}
 
-	public void testInitialButtonState() {
+	@Test
+	public void test01InitialButtonState() {
 		openFindReplaceDialog();
 
 		Boolean value;
@@ -120,6 +126,7 @@ public class FindReplaceDialogTest extends TestCase {
 		assertFalse(checkbox.isEnabled()); // there's no word in the Find field
 	}
 
+	@Test
 	public void testDisableWholeWordIfRegEx() {
 		openFindReplaceDialog();
 
@@ -142,6 +149,7 @@ public class FindReplaceDialogTest extends TestCase {
 		assertTrue(wholeWordCheckbox.getSelection());
 	}
 
+	@Test
 	public void testDisableWholeWordIfNotWord() {
 		openFindReplaceDialog();
 
@@ -165,6 +173,7 @@ public class FindReplaceDialogTest extends TestCase {
 		assertTrue(wholeWordCheckbox.getSelection());
 	}
 
+	@Test
 	public void testFocusNotChangedWhenEnterPressed() {
 		openTextViewerAndFindReplaceDialog();
 
@@ -210,11 +219,12 @@ public class FindReplaceDialogTest extends TestCase {
 		runEventQueue();
 		assertTrue(allScopeBox.isFocusControl());
 	}
-	
+
 	private String takeScreenshot() {
-		return ScreenshotTest.takeScreenshot(FindReplaceDialogTest.class, getName(), System.out);
+		return ScreenshotTest.takeScreenshot(FindReplaceDialogTest.class, testName.getMethodName(), System.out);
 	}
 
+	@Test
 	public void testFocusNotChangedWhenButtonMnemonicPressed() {
 		if (Util.isMac())
 			return; // Mac doesn't support mnemonics.
@@ -259,7 +269,7 @@ public class FindReplaceDialogTest extends TestCase {
 		assertTrue(allScopeBox.isFocusControl());
 	}
 
-
+	@Test
 	public void testShiftEnterReversesSearchDirection() {
 		openTextViewerAndFindReplaceDialog();
 

@@ -10,6 +10,13 @@
  *******************************************************************************/
 package org.eclipse.core.filebuffers.tests;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.After;
+import org.junit.Test;
+
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 
@@ -23,28 +30,28 @@ import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
 import org.eclipse.core.filebuffers.LocationKind;
 
+import org.eclipse.jface.text.source.IAnnotationModel;
+
 /**
  * FileBuffersForNonExistingWorkspaceFiles
  */
 public class FileBuffersForNonExistingWorkspaceFiles extends FileBufferFunctions {
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#tearDown()
-	 */
-	protected void tearDown() throws Exception {
+	@Override
+	@After
+	public void tearDown() {
 		FileTool.delete(getPath());
 		super.tearDown();
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#createPath(org.eclipse.core.resources.IProject)
-	 */
+	@Override
 	protected IPath createPath(IProject project) throws Exception {
 		IFolder folder= ResourceHelper.createFolder("project/folderA/folderB/");
 		IPath filePath= folder.getLocation().append("NonExistingWorkspaceFile");
 		return filePath.makeAbsolute();
 	}
-
+	
+	@Test
 	public void testBug118199() throws Exception {
 		IFile file= getProject().getWorkspace().getRoot().getFile(getPath());
 		assertFalse(file.exists());
@@ -59,6 +66,7 @@ public class FileBuffersForNonExistingWorkspaceFiles extends FileBufferFunctions
 		assertFalse(file.exists());
 	}
 
+	@Test
 	public void testBug118199_fixed() throws Exception {
 		IFile file= getProject().getWorkspace().getRoot().getFileForLocation(getPath());
 		IPath path= file.getFullPath();
@@ -77,44 +85,35 @@ public class FileBuffersForNonExistingWorkspaceFiles extends FileBufferFunctions
 	/*
 	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#markReadOnly()
 	 */
+	@Override
 	protected void setReadOnly(boolean state) throws Exception {
 		IFileStore fileStore= FileBuffers.getFileStoreAtLocation(getPath());
 		assertNotNull(fileStore);
 		fileStore.fetchInfo().setAttribute(EFS.ATTRIBUTE_READ_ONLY, state);
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#isStateValidationSupported()
-	 */
+	@Override
 	protected boolean isStateValidationSupported() {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#deleteUnderlyingFile()
-	 */
+	@Override
 	protected boolean deleteUnderlyingFile() throws Exception {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#moveUnderlyingFile()
-	 */
+	@Override
 	protected IPath moveUnderlyingFile() throws Exception {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#modifyUnderlyingFile()
-	 */
+	@Override
 	protected boolean modifyUnderlyingFile() throws Exception {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.core.filebuffers.tests.FileBufferFunctions#getAnnotationModelClass()
-	 */
-	protected Class getAnnotationModelClass() throws Exception {
+	@Override
+	protected Class<IAnnotationModel> getAnnotationModelClass() throws Exception {
 		return null;
 	}
 }

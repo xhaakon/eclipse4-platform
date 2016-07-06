@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,12 +31,10 @@ public class ContentExtensionFileProvider extends AbstractContentExtensionProvid
 	private static final String ELEMENT_CONTENT_EXTENSION = "contentExtension"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_FILE = "file"; //$NON-NLS-1$
 	private static final String ATTRIBUTE_CONTENT = "content"; //$NON-NLS-1$
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.help.AbstractContentExtensionProvider#getContentExtensions(java.lang.String)
-	 */
+
+	@Override
 	public IContentExtension[] getContentExtensions(String locale) {
-		List extensions = new ArrayList();
+		List<IContentExtension> extensions = new ArrayList<>();
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		ContentExtensionFileParser parser = new ContentExtensionFileParser();
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor(EXTENSION_POINT_CONTENT_EXTENSION);
@@ -61,6 +59,6 @@ public class ContentExtensionFileProvider extends AbstractContentExtensionProvid
 				}
 			}
 		}
-		return (IContentExtension[])extensions.toArray(new IContentExtension[extensions.size()]);
+		return extensions.toArray(new IContentExtension[extensions.size()]);
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,8 +35,9 @@ public class CriteriaDefinitionFileProvider extends AbstractCriteriaDefinitionPr
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.AbstractCriteriaDefinitionProvider#getCriteriaDefinitionContributions(java.lang.String)
 	 */
+	@Override
 	public ICriteriaDefinitionContribution[] getCriteriaDefinitionContributions(String locale) {
-		List contributions = new ArrayList();
+		List<ICriteriaDefinitionContribution> contributions = new ArrayList<>();
 		CriteriaDefinitionFile[] criteriaDefinitionFiles = getCriteriaDefinitionFiles(locale);
 		CriteriaDefinitionFileParser parser = new CriteriaDefinitionFileParser();
 		for (int i = 0; i < criteriaDefinitionFiles.length; ++i) {
@@ -49,7 +50,7 @@ public class CriteriaDefinitionFileProvider extends AbstractCriteriaDefinitionPr
 				buffer.append(getCriteriaDefinitionFilePath(criteriaDefinitionFile));
 				buffer.append("\" at line "); //$NON-NLS-1$
 			    buffer.append(spe.getLineNumber());
-			    buffer.append(". "); //$NON-NLS-1$   
+			    buffer.append(". "); //$NON-NLS-1$
 	            buffer.append(spe.getMessage());
 
 	            // Use the contained exception.
@@ -58,18 +59,18 @@ public class CriteriaDefinitionFileProvider extends AbstractCriteriaDefinitionPr
 	                x = spe.getException();
 	            HelpPlugin.logError(buffer.toString(), x);
 
-	        } 
+	        }
 			catch (Throwable t) {
 				String msg = ERROR_READING_HELP_CRITERIA_DEFINITION_FILE + getCriteriaDefinitionFilePath(criteriaDefinitionFile) + "\" (skipping file)"; //$NON-NLS-1$
 				HelpPlugin.logError(msg, t);
 			}
 		}
-		return (ICriteriaDefinitionContribution[])contributions.toArray(new ICriteriaDefinitionContribution[contributions.size()]);
+		return contributions.toArray(new ICriteriaDefinitionContribution[contributions.size()]);
 	}
 
 	private String getCriteriaDefinitionFilePath(CriteriaDefinitionFile criteriaDefinitionFile) {
 		String pluginId = criteriaDefinitionFile.getPluginId();
-		String file = criteriaDefinitionFile.getFile();		
+		String file = criteriaDefinitionFile.getFile();
 		return ResourceLocator.getErrorPath(pluginId, file, criteriaDefinitionFile.getLocale());
 	}
 
@@ -77,7 +78,7 @@ public class CriteriaDefinitionFileProvider extends AbstractCriteriaDefinitionPr
 	 * Returns all available CriteriaDefinitionFiles for the given locale.
 	 */
 	private CriteriaDefinitionFile[] getCriteriaDefinitionFiles(String locale) {
-		List criteriaDefinitionFiles = new ArrayList();
+		List<CriteriaDefinitionFile> criteriaDefinitionFiles = new ArrayList<>();
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = registry.getConfigurationElementsFor(EXTENSION_POINT_ID_CRITERIA_DEFINITION);
 		for (int i=0;i<elements.length;++i) {
@@ -89,6 +90,6 @@ public class CriteriaDefinitionFileProvider extends AbstractCriteriaDefinitionPr
 				criteriaDefinitionFiles.add(criteriaDefinitionFile);
 			}
 		}
-		return (CriteriaDefinitionFile[])criteriaDefinitionFiles.toArray(new CriteriaDefinitionFile[criteriaDefinitionFiles.size()]);
+		return criteriaDefinitionFiles.toArray(new CriteriaDefinitionFile[criteriaDefinitionFiles.size()]);
 	}
 }

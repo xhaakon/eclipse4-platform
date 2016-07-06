@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2012 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -34,10 +34,10 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 	private static final String ELEMENT_MODIFIER = "modifier"; //$NON-NLS-1$
 	// Store this around for performance
 	private final static IExtension[] EMPTY_EXTENSION_ARRAY = new IExtension[0];
-	private static final Map scopeRegistry = Collections.synchronizedMap(new HashMap());
-	private ListenerList modifyListeners;
-	private PreferencesService service;
-	private IExtensionRegistry registry;
+	private static final Map<String, Object> scopeRegistry = Collections.synchronizedMap(new HashMap<String, Object>());
+	private ListenerList<PreferenceModifyListener> modifyListeners;
+	private final PreferencesService service;
+	private final IExtensionRegistry registry;
 
 	/*
 	 * Create and return an IStatus object with ERROR severity and the
@@ -93,7 +93,7 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 				log(new Status(IStatus.ERROR, PrefsMessages.OWNER_NAME, IStatus.ERROR, PrefsMessages.preferences_classCastListener, null));
 				return;
 			}
-			modifyListeners.add(listener);
+			modifyListeners.add((PreferenceModifyListener) listener);
 		} catch (CoreException e) {
 			log(e.getStatus());
 		}
@@ -101,10 +101,10 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 
 	/*
 	 * Apply the runtime defaults for the bundle with the given name. Check
-	 * to see if there is a preference initializer registered and if so, then run it. 
+	 * to see if there is a preference initializer registered and if so, then run it.
 	 * Otherwise call the legacy Plugin preference initialization code.
 	 */
-	public WeakReference applyRuntimeDefaults(String name, WeakReference pluginReference) {
+	public WeakReference<Object> applyRuntimeDefaults(String name, WeakReference<Object> pluginReference) {
 		IExtension[] extensions = getPrefExtensions();
 		if (extensions.length == 0) {
 			if (EclipsePreferences.DEBUG_PREFERENCE_GENERAL)
@@ -145,7 +145,7 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 		ILegacyPreferences initService = PreferencesOSGiUtils.getDefault().getLegacyPreferences();
 		if (initService != null)
 			plugin = initService.init(plugin, name);
-		return new WeakReference(plugin);
+		return new WeakReference<>(plugin);
 	}
 
 	/*
@@ -194,9 +194,9 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 	 * Return a list of the preference modify listeners. They are called during preference
 	 * import and given the chance to modify the imported tree.
 	 */
-	public PreferenceModifyListener[] getModifyListeners() {
+	public ListenerList<PreferenceModifyListener> getModifyListeners() {
 		if (modifyListeners == null) {
-			modifyListeners = new ListenerList();
+			modifyListeners = new ListenerList<>();
 			IExtension[] extensions = getPrefExtensions();
 			for (int i = 0; i < extensions.length; i++) {
 				IConfigurationElement[] elements = extensions[i].getConfigurationElements();
@@ -205,10 +205,7 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 						addModifyListener(elements[j]);
 			}
 		}
-		Object[] source = modifyListeners.getListeners();
-		PreferenceModifyListener[] result = new PreferenceModifyListener[source.length];
-		System.arraycopy(source, 0, result, 0, source.length);
-		return result;
+		return modifyListeners;
 	}
 
 	/*
@@ -252,9 +249,8 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IRegistryChangeListener#registryChanged(org.eclipse.core.runtime.IRegistryChangeEvent)
-	 */
+
+	@Override
 	public void registryChanged(IRegistryChangeEvent event) {
 		IExtensionDelta[] deltasOld = event.getExtensionDeltas(IPreferencesConstants.RUNTIME_NAME, IPreferencesConstants.PT_PREFERENCES);
 		IExtensionDelta[] deltasNew = event.getExtensionDeltas(IPreferencesConstants.PREFERS_NAME, IPreferencesConstants.PT_PREFERENCES);
@@ -292,10 +288,12 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 		try {
 			final AbstractPreferenceInitializer initializer = (AbstractPreferenceInitializer) element.createExecutableExtension(ATTRIBUTE_CLASS);
 			ISafeRunnable job = new ISafeRunnable() {
+				@Override
 				public void handleException(Throwable exception) {
 					// already logged in Platform#run()
 				}
 
+				@Override
 				public void run() throws Exception {
 					initializer.initializeDefaultPreferences();
 				}
@@ -310,7 +308,7 @@ public class PreferenceServiceRegistryHelper implements IRegistryChangeListener 
 	}
 
 	/*
-	 * A preference scope defined by the given element was added to the extension 
+	 * A preference scope defined by the given element was added to the extension
 	 * registry. Add it to our registry and make it a child of the root.
 	 */
 	private void scopeAdded(IConfigurationElement element) {

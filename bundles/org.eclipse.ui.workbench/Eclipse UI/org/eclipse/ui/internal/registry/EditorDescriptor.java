@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -391,25 +391,16 @@ public final class EditorDescriptor implements IEditorDescriptor, Serializable,
         return this.program;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorDescriptor#isInternal
-     */
     @Override
 	public boolean isInternal() {
         return getOpenMode() == OPEN_INTERNAL;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorDescriptor#isOpenInPlace
-     */
     @Override
 	public boolean isOpenInPlace() {
         return getOpenMode() == OPEN_INPLACE;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorDescriptor#isOpenExternal
-     */
     @Override
 	public boolean isOpenExternal() {
         return getOpenMode() == OPEN_EXTERNAL;
@@ -435,12 +426,10 @@ public final class EditorDescriptor implements IEditorDescriptor, Serializable,
             openMode = openModeInt.intValue();
         } else {
             // legacy: handle the older attribute names, needed to allow reading of pre-3.0-RCP workspaces
-            boolean internal = new Boolean(memento
-                    .getString(IWorkbenchConstants.TAG_INTERNAL))
-                    .booleanValue();
-            boolean openInPlace = new Boolean(memento
-                    .getString(IWorkbenchConstants.TAG_OPEN_IN_PLACE))
-                    .booleanValue();
+            boolean internal = Boolean.parseBoolean(memento
+                    .getString(IWorkbenchConstants.TAG_INTERNAL));
+            boolean openInPlace = Boolean.parseBoolean(memento
+                    .getString(IWorkbenchConstants.TAG_OPEN_IN_PLACE));
             if (internal) {
                 openMode = OPEN_INTERNAL;
             } else {
@@ -609,25 +598,16 @@ public final class EditorDescriptor implements IEditorDescriptor, Serializable,
         return "EditorDescriptor(id=" + getId() + ", label=" + getLabel() + ")"; //$NON-NLS-2$ //$NON-NLS-3$//$NON-NLS-1$
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.activities.support.IPluginContribution#getLocalId()
-     */
     @Override
 	public String getLocalId() {
         return getId();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.activities.support.IPluginContribution#getPluginId()
-     */
     @Override
 	public String getPluginId() {
         return getPluginID();
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IEditorDescriptor#getEditorManagementPolicy()
-     */
     @Override
 	public IEditorMatchingStrategy getEditorMatchingStrategy() {
         if (matchingStrategy == null && !matchingStrategyChecked) {

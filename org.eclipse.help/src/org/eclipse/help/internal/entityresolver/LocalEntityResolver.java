@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.xml.sax.SAXException;
 
 public class LocalEntityResolver implements EntityResolver {
 
+	@Override
 	public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
 		int index = systemId.lastIndexOf("/"); //$NON-NLS-1$
 		if (index >= 0) {

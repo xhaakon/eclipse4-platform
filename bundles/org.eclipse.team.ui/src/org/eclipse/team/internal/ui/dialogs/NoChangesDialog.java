@@ -26,7 +26,7 @@ public class NoChangesDialog extends DetailsDialog {
     private ResourceMappingHierarchyArea selectedMappingsArea;
 	private final ISynchronizationScope scope;
 	private final String description;
-    
+
 	public NoChangesDialog(Shell parentShell, String dialogTitle, String message, String description, ISynchronizationScope scope) {
 		super(parentShell, dialogTitle);
 		this.message = message;
@@ -34,10 +34,12 @@ public class NoChangesDialog extends DetailsDialog {
 		this.scope = scope;
 	}
 
+	@Override
 	protected void initializeStyle() {
 		// Use the default dialog style
 	}
-	
+
+	@Override
 	protected Composite createDropDownDialogArea(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -53,6 +55,7 @@ public class NoChangesDialog extends DetailsDialog {
         return composite;
 	}
 
+	@Override
 	protected void createMainDialogArea(Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
@@ -63,10 +66,11 @@ public class NoChangesDialog extends DetailsDialog {
 		createMessageArea(composite);
 	}
 
+	@Override
 	protected void updateEnablements() {
 		// Nothing to do
 	}
-	
+
 	/*
 	 * Code copied from IconandMessageDialog
 	 */
@@ -94,7 +98,7 @@ public class NoChangesDialog extends DetailsDialog {
         }
         return composite;
     }
-	
+
 	/*
 	 * Code copied from IconandMessageDialog
 	 */
@@ -112,7 +116,8 @@ public class NoChangesDialog extends DetailsDialog {
 
         final Image[] image = new Image[1];
         display.syncExec(new Runnable() {
-            public void run() {
+            @Override
+			public void run() {
                 image[0] = display.getSystemImage(imageID);
             }
         });
@@ -120,14 +125,16 @@ public class NoChangesDialog extends DetailsDialog {
         return image[0];
     }
 
-    public boolean isHelpAvailable() {
+    @Override
+	public boolean isHelpAvailable() {
     	return false;
     }
-    
-    protected boolean includeCancelButton() {
+
+    @Override
+	protected boolean includeCancelButton() {
     	return false;
     }
-    
+
 	public static void open(Shell shell, String title, String message, String description, ISynchronizationScope scope) {
 		new NoChangesDialog(shell, title, message, description, scope).open();
 	}

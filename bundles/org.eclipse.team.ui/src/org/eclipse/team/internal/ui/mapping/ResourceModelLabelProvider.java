@@ -35,6 +35,7 @@ public class ResourceModelLabelProvider extends
 		SynchronizationLabelProvider implements IFontProvider, IResourceChangeListener, ITreePathLabelProvider {
 
 	public static final FastDiffFilter CONFLICT_FILTER = new FastDiffFilter() {
+		@Override
 		public boolean select(IDiff diff) {
 			if (diff instanceof IThreeWayDiff) {
 				IThreeWayDiff twd = (IThreeWayDiff) diff;
@@ -43,11 +44,12 @@ public class ResourceModelLabelProvider extends
 			return false;
 		}
 	};
-	
+
 	private ILabelProvider provider;
 	private ResourceModelContentProvider contentProvider;
 	private ImageManager localImageManager;
 
+	@Override
 	public void init(ICommonContentExtensionSite site) {
 		ITreeContentProvider aContentProvider = site.getExtension().getContentProvider();
 		if (aContentProvider instanceof ResourceModelContentProvider) {
@@ -56,7 +58,8 @@ public class ResourceModelLabelProvider extends
 		}
 		super.init(site);
 	}
-	
+
+	@Override
 	public void dispose() {
 		ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
 		if (localImageManager != null)
@@ -69,22 +72,24 @@ public class ResourceModelLabelProvider extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.mapping.SynchronizationOperationLabelProvider#getBaseLabelProvider()
 	 */
+	@Override
 	protected ILabelProvider getDelegateLabelProvider() {
 		if (provider == null)
 			provider = new WorkbenchLabelProvider();
 		return provider ;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.AbstractSynchronizationLabelProvider#getSyncDelta(java.lang.Object)
 	 */
+	@Override
 	protected IDiff getDiff(Object elementOrPath) {
 		IResource resource = getResource(elementOrPath);
 		IResourceDiffTree tree = getDiffTree(elementOrPath);
 		if (tree != null && resource != null) {
 			IDiff delta = tree.getDiff(resource.getFullPath());
 			return delta;
-		}		
+		}
 		return null;
 	}
 
@@ -95,17 +100,19 @@ public class ResourceModelLabelProvider extends
 		}
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.AbstractSynchronizeLabelProvider#isIncludeOverlays()
 	 */
+	@Override
 	protected boolean isIncludeOverlays() {
 		return true;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.AbstractSynchronizeLabelProvider#isBusy(java.lang.Object)
 	 */
+	@Override
 	protected boolean isBusy(Object elementOrPath) {
 		IResource resource = getResource(elementOrPath);
 		IResourceDiffTree tree = getDiffTree(elementOrPath);
@@ -114,7 +121,7 @@ public class ResourceModelLabelProvider extends
 		}
 		return super.isBusy(elementOrPath);
 	}
-	
+
 	private TreePath internalGetPath(Object elementOrPath) {
 		if (elementOrPath instanceof TreePath) {
 			return (TreePath) elementOrPath;
@@ -125,6 +132,7 @@ public class ResourceModelLabelProvider extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.AbstractSynchronizeLabelProvider#hasDecendantConflicts(java.lang.Object)
 	 */
+	@Override
 	protected boolean hasDecendantConflicts(Object elementOrPath) {
 		IResource resource = getResource(elementOrPath);
 		IResourceDiffTree tree = getDiffTree(elementOrPath);
@@ -147,10 +155,11 @@ public class ResourceModelLabelProvider extends
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.resources.IResourceChangeListener#resourceChanged(org.eclipse.core.resources.IResourceChangeEvent)
 	 */
+	@Override
 	public void resourceChanged(IResourceChangeEvent event) {
 		String[] markerTypes = new String[] {IMarker.PROBLEM};
 		final Set handledResources = new HashSet();
-		
+
 		// Accumulate all distinct resources that have had problem marker
 		// changes
 		for (int idx = 0; idx < markerTypes.length; idx++) {
@@ -164,7 +173,7 @@ public class ResourceModelLabelProvider extends
 					}
 				}
 			}
-		
+
 		if (!handledResources.isEmpty()) {
 			final IResource[] resources = (IResource[]) handledResources.toArray(new IResource[handledResources.size()]);
 		    updateLabels(resources);
@@ -173,13 +182,15 @@ public class ResourceModelLabelProvider extends
 
 	protected void updateLabels(final Object[] resources) {
 		Utils.asyncExec(new Runnable() {
+			@Override
 			public void run() {
 				contentProvider.getStructuredViewer().update(
 						resources, null);
 			}
 		}, contentProvider.getStructuredViewer());
 	}
-	
+
+	@Override
 	protected String getDelegateText(Object elementOrPath) {
 		if (getConfiguration() != null) {
 			String label = getTraversalCalculator().getLabel(elementOrPath);
@@ -188,14 +199,15 @@ public class ResourceModelLabelProvider extends
 		}
 		return super.getDelegateText(internalGetElement(elementOrPath));
 	}
-	
+
+	@Override
 	protected Image getDelegateImage(Object elementOrPath) {
 		if (getConfiguration() != null && getTraversalCalculator().isCompressedFolder(elementOrPath)) {
 			return getImageManager().getImage(TeamUIPlugin.getImageDescriptor(ITeamUIImages.IMG_COMPRESSED_FOLDER));
 		}
 		return super.getDelegateImage(internalGetElement(elementOrPath));
 	}
-	
+
 	private Object internalGetElement(Object elementOrPath) {
 		if (elementOrPath instanceof TreePath) {
 			TreePath tp = (TreePath) elementOrPath;
@@ -203,7 +215,7 @@ public class ResourceModelLabelProvider extends
 		}
 		return elementOrPath;
 	}
-	
+
 	protected ResourceModelTraversalCalculator getTraversalCalculator() {
 		return ResourceModelTraversalCalculator.getTraversalCalculator(getConfiguration());
 	}
@@ -211,7 +223,8 @@ public class ResourceModelLabelProvider extends
 	private ISynchronizePageConfiguration getConfiguration() {
 		return (ISynchronizePageConfiguration)getExtensionSite().getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_PAGE_CONFIGURATION);
 	}
-	
+
+	@Override
 	public void updateLabel(ViewerLabel label, TreePath elementPath) {
 		label.setImage(getImage(elementPath));
 		label.setText(getText(elementPath));
@@ -219,7 +232,7 @@ public class ResourceModelLabelProvider extends
 		if (f != null)
 			label.setFont(f);
 	}
-	
+
 	protected ImageManager getImageManager() {
 		ISynchronizationContext context = getContext();
 		if (context != null) {

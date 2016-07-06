@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2013 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -60,9 +60,7 @@ public final class HyperlinkDetectorRegistry {
 			}
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.hyperlink.IHyperlinkDetector#detectHyperlinks(org.eclipse.jface.text.ITextViewer, org.eclipse.jface.text.IRegion, boolean)
-		 */
+		@Override
 		public IHyperlink[] detectHyperlinks(ITextViewer textViewer, IRegion region, boolean canShowMultipleHyperlinks) {
 			if (!isEnabled())
 				return null;
@@ -90,9 +88,7 @@ public final class HyperlinkDetectorRegistry {
 			fContext= context;
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.hyperlink.IHyperlinkDetectorExtension#dispose()
-		 */
+		@Override
 		public void dispose() {
 			if (fHyperlinkDetector instanceof AbstractHyperlinkDetector)
 				((AbstractHyperlinkDetector)fHyperlinkDetector).dispose();
@@ -102,10 +98,7 @@ public final class HyperlinkDetectorRegistry {
 			fContext= null;
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.hyperlink.IHyperlinkDetectorExtension#getStateMask()
-		 * @since 3.3
-		 */
+		@Override
 		public int getStateMask() {
 			return fStateMask;
 		}
@@ -165,7 +158,7 @@ public final class HyperlinkDetectorRegistry {
 		Assert.isLegal(targetId != null);
 		initHyperlinkDetectorDescriptors();
 
-		List result= new ArrayList();
+		List<HyperlinkDetectorDelegate> result= new ArrayList<>();
 		for (int i= 0; i < fHyperlinkDetectorDescriptors.length; i++) {
 			if (targetId.equals(fHyperlinkDetectorDescriptors[i].getTargetId())) {
 				HyperlinkDetectorDelegate detector= new HyperlinkDetectorDelegate(fHyperlinkDetectorDescriptors[i]);
@@ -173,7 +166,7 @@ public final class HyperlinkDetectorRegistry {
 				detector.setContext(context);
 			}
 		}
-		return (IHyperlinkDetector[])result.toArray(new IHyperlinkDetector[result.size()]);
+		return result.toArray(new IHyperlinkDetector[result.size()]);
 	}
 
 }

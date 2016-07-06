@@ -1,12 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Mickael Istria (Red Hat Inc.) - Bug 488938, 488937
  *******************************************************************************/
 package org.eclipse.core.internal.utils;
 
@@ -139,7 +140,7 @@ public class UniversalUniqueIdentifier implements java.io.Serializable {
 	/**
 	 * Answers the node address attempting to mask the IP
 	 * address of this machine.
-	 * 
+	 *
 	 * @return byte[] the node address
 	 */
 	private static byte[] computeNodeAddress() {
@@ -149,7 +150,7 @@ public class UniversalUniqueIdentifier implements java.io.Serializable {
 		// Seed the secure randomizer with some oft-varying inputs
 		int thread = Thread.currentThread().hashCode();
 		long time = System.currentTimeMillis();
-		int objectId = System.identityHashCode(new String());
+		int objectId = System.identityHashCode(""); //$NON-NLS-1$
 		ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
 		DataOutputStream out = new DataOutputStream(byteOut);
 		byte[] ipAddress = getIPAddress();
@@ -324,7 +325,7 @@ public class UniversalUniqueIdentifier implements java.io.Serializable {
 		return fgClockAdjustment == 0 ? timestamp : timestamp.add(BigInteger.valueOf(fgClockAdjustment));
 	}
 
-	/** 
+	/**
 	 This representation is compatible with the (byte[]) constructor.
 
 	 @see #UniversalUniqueIdentifier(byte[])
@@ -345,13 +346,14 @@ public class UniversalUniqueIdentifier implements java.io.Serializable {
 	}
 
 	public String toStringAsBytes() {
-		String result = "{"; //$NON-NLS-1$
+		StringBuilder result = new StringBuilder("{"); //$NON-NLS-1$
 
 		for (int i = 0; i < fBits.length; i++) {
-			result += fBits[i];
+			result.append(fBits[i]);
 			if (i < fBits.length + 1)
-				result += ","; //$NON-NLS-1$
+				result.append(',');
 		}
-		return result + "}"; //$NON-NLS-1$
+		result.append('}');
+		return result.toString();
 	}
 }

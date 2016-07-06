@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -66,18 +66,12 @@ public class NewWizardDropDownAction extends Action implements
             }
         }
 
-        /* (non-Javadoc)
-         * @see org.eclipse.jface.action.IMenuCreator#getMenu(org.eclipse.swt.widgets.Control)
-         */
         @Override
 		public Menu getMenu(Control parent) {
             createDropDownMenuMgr();
             return dropDownMenuMgr.createContextMenu(parent);
         }
 
-        /* (non-Javadoc)
-         * @see org.eclipse.jface.action.IMenuCreator#getMenu(org.eclipse.swt.widgets.Menu)
-         */
         @Override
 		public Menu getMenu(Menu parent) {
             createDropDownMenuMgr();
@@ -95,9 +89,6 @@ public class NewWizardDropDownAction extends Action implements
             return menu;
         }
 
-        /* (non-Javadoc)
-         * @see org.eclipse.jface.action.IMenuCreator#dispose()
-         */
         @Override
 		public void dispose() {
 			if (dropDownMenuMgr != null) {
@@ -160,9 +151,6 @@ public class NewWizardDropDownAction extends Action implements
     }
 
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.actions.ActionFactory.IWorkbenchAction#dispose()
-     */
     @Override
 	public void dispose() {
         if (workbenchWindow == null) {

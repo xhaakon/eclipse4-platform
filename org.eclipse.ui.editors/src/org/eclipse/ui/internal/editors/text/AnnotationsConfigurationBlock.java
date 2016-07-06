@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,6 +55,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.editors.text.OverlayPreferenceStore.OverlayKey;
 
 import org.eclipse.ui.texteditor.AnnotationPreference;
 import org.eclipse.ui.texteditor.DefaultMarkerAnnotationAccess;
@@ -94,13 +95,16 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 	private static final class ItemContentProvider implements IStructuredContentProvider {
 
+		@Override
 		public Object[] getElements(Object inputElement) {
 			return (ListItem[]) inputElement;
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		}
 	}
@@ -108,10 +112,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 	private final class ItemLabelProvider extends LabelProvider {
 
+		@Override
 		public String getText(Object element) {
 			return ((ListItem)element).label;
 		}
 
+		@Override
 		public Image getImage(Object element) {
 			ListItem item= (ListItem)element;
 			return item.image;
@@ -120,6 +126,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 
 	private static class ArrayLabelProvider extends LabelProvider {
+		@Override
 		public String getText(Object element) {
 			return ((String[]) element)[0].toString();
 		}
@@ -148,7 +155,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 	private final ListItem[] fListModel;
 
 	private ComboViewer fDecorationViewer;
-	private final Set fImageKeys= new HashSet();
+	private final Set<String> fImageKeys= new HashSet<>();
 
 	public AnnotationsConfigurationBlock(OverlayPreferenceStore store) {
 		Assert.isNotNull(store);
@@ -160,11 +167,11 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 	private OverlayPreferenceStore.OverlayKey[] createOverlayStoreKeys(MarkerAnnotationPreferences preferences) {
 
-		ArrayList overlayKeys= new ArrayList();
-		Iterator e= preferences.getAnnotationPreferences().iterator();
+		ArrayList<OverlayKey> overlayKeys= new ArrayList<>();
+		Iterator<AnnotationPreference> e= preferences.getAnnotationPreferences().iterator();
 
 		while (e.hasNext()) {
-			AnnotationPreference info= (AnnotationPreference) e.next();
+			AnnotationPreference info= e.next();
 			overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.STRING, info.getColorPreferenceKey()));
 			overlayKeys.add(new OverlayPreferenceStore.OverlayKey(OverlayPreferenceStore.BOOLEAN, info.getTextPreferenceKey()));
 			if (info.getHighlightPreferenceKey() != null)
@@ -182,9 +189,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		return keys;
 	}
 
-	/*
-	 * @see org.eclipse.ui.internal.editors.text.IPreferenceConfigurationBlock#createControl(org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	public Control createControl(Composite parent) {
 
 		PixelConverter pixelConverter= new PixelConverter(parent);
@@ -294,16 +299,19 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 
 		fAnnotationTypeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				handleAnnotationListSelection();
 			}
 		});
 
 		fShowInTextCheckBox.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ListItem item= getSelectedItem();
 				final boolean value= fShowInTextCheckBox.getSelection();
@@ -328,10 +336,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		});
 
 		fShowInOverviewRulerCheckBox.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ListItem item= getSelectedItem();
 				fStore.setValue(item.overviewRulerKey, fShowInOverviewRulerCheckBox.getSelection());
@@ -340,10 +350,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		});
 
 		fShowInVerticalRulerCheckBox.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ListItem item= getSelectedItem();
 				fStore.setValue(item.verticalRulerKey, fShowInVerticalRulerCheckBox.getSelection());
@@ -352,10 +364,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		});
 
 		fIsNextPreviousTargetCheckBox.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ListItem item= getSelectedItem();
 				fStore.setValue(item.isNextPreviousNavigationKey, fIsNextPreviousTargetCheckBox.getSelection());
@@ -364,10 +378,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		});
 
 		foregroundColorButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// do nothing
 			}
 
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ListItem item= getSelectedItem();
 				PreferenceConverter.setValue(fStore, item.colorKey, fAnnotationForegroundColorEditor.getColorValue());
@@ -377,9 +393,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 		fDecorationViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
-			/*
-			 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-			 */
+			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				String[] decoration= (String[]) ((IStructuredSelection) fDecorationViewer.getSelection()).getFirstElement();
 				ListItem item= getSelectedItem();
@@ -428,6 +442,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 	 * @see org.eclipse.ui.internal.editors.text.IPreferenceConfigurationBlock#applyData(java.lang.Object)
 	 * @since 3.4
 	 */
+	@Override
 	public void applyData(Object data) {
 		if (!(data instanceof String))
 			return;
@@ -437,6 +452,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 			if (data.equals(element.label)) {
 				final Control control= fAnnotationTypeViewer.getControl();
 				control.getDisplay().asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						control.setFocus();
 						fAnnotationTypeViewer.setSelection(new StructuredSelection(element), true);
@@ -447,22 +463,16 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		}
 	}
 
-	/*
-	 * @see org.eclipse.ui.internal.editors.text.IPreferenceConfigurationBlock#canPerformOk()
-	 */
+	@Override
 	public boolean canPerformOk() {
 		return true;
 	}
 
-	/*
-	 * @see PreferencePage#performOk()
-	 */
+	@Override
 	public void performOk() {
 	}
 
-	/*
-	 * @see PreferencePage#performDefaults()
-	 */
+	@Override
 	public void performDefaults() {
 		fStore.loadDefaults();
 		fAnnotationTypeViewer.refresh();
@@ -502,10 +512,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 
 
+	@Override
 	public void initialize() {
 
 		fAnnotationTypeViewer.setInput(fListModel);
 		fAnnotationTypeViewer.getControl().getDisplay().asyncExec(new Runnable() {
+			@Override
 			public void run() {
 				if (fAnnotationTypeViewer != null && !fAnnotationTypeViewer.getControl().isDisposed()) {
 					fAnnotationTypeViewer.setSelection(new StructuredSelection(fListModel[0]));
@@ -516,11 +528,11 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 	}
 
 	private ListItem[] createAnnotationTypeListModel(MarkerAnnotationPreferences preferences) {
-		ArrayList listModelItems= new ArrayList();
-		Iterator e= preferences.getAnnotationPreferences().iterator();
+		ArrayList<ListItem> listModelItems= new ArrayList<>();
+		Iterator<AnnotationPreference> e= preferences.getAnnotationPreferences().iterator();
 
 		while (e.hasNext()) {
-			AnnotationPreference info= (AnnotationPreference) e.next();
+			AnnotationPreference info= e.next();
 			if (info.isIncludeOnPreferencePage()) {
 				String label= info.getPreferenceLabel();
 				if (containsMoreThanOne(preferences.getAnnotationPreferences().iterator(), label))
@@ -533,18 +545,11 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 			}
 		}
 
-		Comparator comparator= new Comparator() {
-			/*
-			 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-			 */
-			public int compare(Object o1, Object o2) {
-				if (!(o2 instanceof ListItem))
-					return -1;
-				if (!(o1 instanceof ListItem))
-					return 1;
-
-				String label1= ((ListItem)o1).label;
-				String label2= ((ListItem)o2).label;
+		Comparator<ListItem> comparator= new Comparator<ListItem>() {
+			@Override
+			public int compare(ListItem o1, ListItem o2) {
+				String label1= o1.label;
+				String label2= o2.label;
 
 				return Collator.getInstance().compare(label1, label2);
 
@@ -640,13 +645,13 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		return copy;
 	}
 
-	private boolean containsMoreThanOne(Iterator annotationPrefernceIterator, String label) {
+	private boolean containsMoreThanOne(Iterator<AnnotationPreference> annotationPrefernceIterator, String label) {
 		if (label == null)
 			return false;
 
 		int count= 0;
 		while (annotationPrefernceIterator.hasNext()) {
-			if (label.equals(((AnnotationPreference)annotationPrefernceIterator.next()).getPreferenceLabel()))
+			if (label.equals(annotationPrefernceIterator.next().getPreferenceLabel()))
 				count++;
 
 			if (count == 2)
@@ -655,14 +660,12 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 		return false;
 	}
 
-	/*
-	 * @see IPreferenceConfigurationBlock#dispose()
-	 */
+	@Override
 	public void dispose() {
 		ImageRegistry registry= EditorsPlugin.getDefault().getImageRegistry();
 
-		for (Iterator it= fImageKeys.iterator(); it.hasNext();) {
-			String string= (String) it.next();
+		for (Iterator<String> it= fImageKeys.iterator(); it.hasNext();) {
+			String string= it.next();
 			registry.remove(string);
 		}
 
@@ -681,7 +684,7 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 
 		if (changed) {
 			String[] selection= null;
-			ArrayList list= new ArrayList();
+			ArrayList<String[]> list= new ArrayList<>();
 
 			// highlighting
 			if (item.highlightKey != null) {
@@ -705,8 +708,8 @@ class AnnotationsConfigurationBlock implements IPreferenceConfigurationBlock {
 			// set selection
 			if (selection == null) {
 				String val= item.textStyleKey == null ? SQUIGGLES[1] : fStore.getString(item.textStyleKey);
-				for (Iterator iter= list.iterator(); iter.hasNext();) {
-					String[] elem= (String[]) iter.next();
+				for (Iterator<String[]> iter= list.iterator(); iter.hasNext();) {
+					String[] elem= iter.next();
 					if (elem[1].equals(val)) {
 						selection= elem;
 						break;

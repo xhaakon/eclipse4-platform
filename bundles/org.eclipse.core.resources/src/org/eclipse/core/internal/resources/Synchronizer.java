@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -28,7 +29,7 @@ public class Synchronizer implements ISynchronizer {
 	protected SyncInfoWriter writer;
 
 	// Registry of sync partners. Set of qualified names.
-	protected Set<QualifiedName> registry = new HashSet<QualifiedName>(5);
+	protected Set<QualifiedName> registry = new HashSet<>(5);
 
 	public Synchronizer(Workspace workspace) {
 		super();
@@ -81,7 +82,7 @@ public class Synchronizer implements ISynchronizer {
 		Assert.isLegal(partner != null);
 		Assert.isLegal(root != null);
 
-		IWorkspaceRunnable body = new IWorkspaceRunnable() {
+		ICoreRunnable body = new ICoreRunnable() {
 			@Override
 			public void run(IProgressMonitor monitor) throws CoreException {
 				IResourceVisitor visitor = new IResourceVisitor() {
@@ -165,7 +166,7 @@ public class Synchronizer implements ISynchronizer {
 				input.close();
 			}
 		} catch (Exception e) {
-			//don't let runtime exceptions such as ArrayIndexOutOfBounds prevent startup 
+			//don't let runtime exceptions such as ArrayIndexOutOfBounds prevent startup
 			String msg = NLS.bind(Messages.resources_readMeta, sourceLocation);
 			throw new ResourceException(IResourceStatus.FAILED_READ_METADATA, sourceLocation, msg, e);
 		}

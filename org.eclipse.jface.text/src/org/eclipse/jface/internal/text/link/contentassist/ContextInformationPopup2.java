@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,7 +84,7 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 	private StyledText fContextInfoText;
 	private TextPresentation fTextPresentation;
 
-	private Stack fContextFrameStack= new Stack();
+	private Stack<ContextFrame> fContextFrameStack= new Stack<>();
 
 
 	/**
@@ -107,6 +107,7 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 	public String showContextProposals(final boolean autoActivated) {
 		final StyledText styledText= fViewer.getTextWidget();
 		BusyIndicator.showWhile(styledText.getDisplay(), new Runnable() {
+			@Override
 			public void run() {
 
 				int position= fViewer.getSelectedRange().x;
@@ -145,6 +146,7 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 	public void showContextInformation(final IContextInformation info, final int position) {
 		Control control= fViewer.getTextWidget();
 		BusyIndicator.showWhile(control.getDisplay(), new Runnable() {
+			@Override
 			public void run() {
 				internalShowContextInfo(info, position);
 				hideContextSelector();
@@ -289,7 +291,7 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 			}
 
 			if (size > 0) {
-				ContextFrame current= (ContextFrame) fContextFrameStack.peek();
+				ContextFrame current= fContextFrameStack.peek();
 				internalShowContextFrame(current, false);
 			} else {
 
@@ -347,9 +349,11 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 		fContextSelectorTable.setForeground(c);
 
 		fContextSelectorTable.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				insertSelectedContext();
 				hideContextSelector();
@@ -459,9 +463,7 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 		return (Helper2.okToUse(fContextInfoPopup) || Helper2.okToUse(fContextSelectorShell));
 	}
 
-	/*
-	 * @see IContentAssistListener#verifyKey(VerifyEvent)
-	 */
+	@Override
 	public boolean verifyKey(VerifyEvent e) {
 		if (Helper2.okToUse(fContextSelectorShell))
 			return contextSelectorKeyPressed(e);
@@ -572,9 +574,7 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 		return true;
 	}
 
-	/*
-	 * @see IEventConsumer#processEvent(VerifyEvent)
-	 */
+	@Override
 	public void processEvent(VerifyEvent event) {
 		if (Helper2.okToUse(fContextSelectorShell))
 			contextSelectorProcessEvent(event);
@@ -619,8 +619,9 @@ class ContextInformationPopup2 implements IContentAssistListener2 {
 		 */
 		fContextInfoPopup.getDisplay().asyncExec(new Runnable() {
 
-			private ContextFrame fFrame= (ContextFrame) fContextFrameStack.peek();
+			private ContextFrame fFrame= fContextFrameStack.peek();
 
+			@Override
 			public void run() {
 				if (Helper2.okToUse(fContextInfoPopup) && fFrame == fContextFrameStack.peek()) {
 					int offset= fViewer.getSelectedRange().x;

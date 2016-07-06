@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 IBM Corporation and others.
+ * Copyright (c) 2013, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 472654
  *******************************************************************************/
 package org.eclipse.e4.ui.workbench.renderers.swt;
 
@@ -20,8 +21,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -57,7 +56,7 @@ public class SashLayout extends Layout {
 		}
 	}
 
-	List<SashRect> sashes = new ArrayList<SashRect>();
+	List<SashRect> sashes = new ArrayList<>();
 
 	boolean draggingSashes = false;
 	List<SashRect> sashesToDrag;
@@ -140,22 +139,6 @@ public class SashLayout extends Layout {
 			public void mouseDoubleClick(MouseEvent e) {
 			}
 		});
-
-		host.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				// for (SashRect sr : sashes) {
-				// Color color;
-				// if (sr.container.isHorizontal())
-				// color = e.display.getSystemColor(SWT.COLOR_MAGENTA);
-				// else
-				// color = e.display.getSystemColor(SWT.COLOR_CYAN);
-				// e.gc.setForeground(color);
-				// e.gc.setBackground(color);
-				// e.gc.fillRectangle(sr.rect);
-				// }
-			}
-		});
 	}
 
 	@Override
@@ -233,7 +216,7 @@ public class SashLayout extends Layout {
 	}
 
 	protected List<SashRect> getSashRects(int x, int y) {
-		List<SashRect> srs = new ArrayList<SashRect>();
+		List<SashRect> srs = new ArrayList<>();
 		Rectangle target = new Rectangle(x - 5, y - 5, 10, 10);
 		for (SashRect sr : sashes) {
 			if (!sr.container.getTags().contains(IPresentationEngine.NO_MOVE)
@@ -326,7 +309,7 @@ public class SashLayout extends Layout {
 	}
 
 	private List<MUIElement> getVisibleChildren(MGenericTile<?> sashContainer) {
-		List<MUIElement> visKids = new ArrayList<MUIElement>();
+		List<MUIElement> visKids = new ArrayList<>();
 		for (MUIElement child : sashContainer.getChildren()) {
 			if (child.isToBeRendered() && child.isVisible())
 				visKids.add(child);

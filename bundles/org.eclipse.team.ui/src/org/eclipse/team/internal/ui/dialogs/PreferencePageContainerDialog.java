@@ -29,24 +29,24 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.team.internal.ui.*;
 
-public class PreferencePageContainerDialog extends TrayDialog 
+public class PreferencePageContainerDialog extends TrayDialog
 	implements IPreferencePageContainer, IPageChangeProvider {
 
 	private PreferencePage[] pages;
 	private PreferencePage currentPage;
-	
+
 	private Composite fTitleArea;
 	private Label fTitleImage;
 	private CLabel fMessageLabel;
-	
+
 	private String fMessage;
 	private Color fNormalMsgAreaBackground;
 	private Image fErrorMsgImage;
 
 	private Button fOkButton;
-	
+
 	private ListenerList pageChangedListeners = new ListenerList();
-	
+
 	/**
 	 * The Composite in which a page is shown.
 	 */
@@ -60,7 +60,7 @@ public class PreferencePageContainerDialog extends TrayDialog
 	private Point fMinimumPageSize = new Point(200,200);
     private TabFolder tabFolder;
     private Map pageMap = new HashMap();
-    
+
 	/**
 	 * Must declare our own images as the JFaceResource images will not be created unless
 	 * a property/preference dialog has been shown
@@ -72,26 +72,27 @@ public class PreferencePageContainerDialog extends TrayDialog
 		reg.put(PREF_DLG_TITLE_IMG, ImageDescriptor.createFromFile(PreferenceDialog.class, "images/pref_dialog_title.gif"));//$NON-NLS-1$
 		reg.put(PREF_DLG_IMG_TITLE_ERROR, ImageDescriptor.createFromFile(Dialog.class, "images/message_error.gif"));//$NON-NLS-1$
 	}
-		
+
 	public PreferencePageContainerDialog(Shell shell, PreferencePage[] pages) {
 		super(shell);
 		this.pages = pages;
 	}
-	
+
 	/**
 	 * @see Dialog#okPressed()
 	 */
+	@Override
 	protected void okPressed() {
 		for (int i = 0; i < pages.length; i++) {
             PreferencePage page = pages[i];
 			page.performOk();
         }
-		
+
 		handleSave();
-		
+
 		super.okPressed();
 	}
-	
+
 	/**
 	 * Sets the title for this dialog.
 	 * @param title the title.
@@ -102,57 +103,60 @@ public class PreferencePageContainerDialog extends TrayDialog
 			shell.setText(title);
 		}
 	}
-	
+
 	/**
 	 * @see Dialog#createDialogArea(Composite)
 	 */
-	protected Control createDialogArea(Composite parent) {		
+	@Override
+	protected Control createDialogArea(Composite parent) {
 		Composite composite = (Composite)super.createDialogArea(parent);
 		((GridLayout) composite.getLayout()).numColumns = 1;
-		
+
 		createDescriptionArea(composite);
-		
+
 		if (isSinglePage()) {
 		    createSinglePageArea(composite, pages[0]);
 		} else {
 		    createMultiplePageArea(composite);
 		}
-			
+
 		// Build the separator line
 		Label separator = new Label(composite, SWT.HORIZONTAL | SWT.SEPARATOR);
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
 		separator.setLayoutData(gd);
-	
-		setTitle(TeamUIMessages.PreferencePageContainerDialog_6); 
+
+		setTitle(TeamUIMessages.PreferencePageContainerDialog_6);
 		applyDialogFont(parent);
-		
+
 		composite.addHelpListener(new HelpListener(){
+			@Override
 			public void helpRequested(HelpEvent e) {
 				currentPage.performHelp();
 			}
-			
+
 		});
-		
+
 		return composite;
 	}
-	
+
     private void createMultiplePageArea(Composite composite) {
 		// create a tab folder for the page
 		tabFolder = new TabFolder(composite, SWT.NONE);
-		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));		
-		
+		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
+
 		for (int i = 0; i < pages.length; i++) {
             PreferencePage page = pages[i];
 			// text decoration options
 			TabItem tabItem = new TabItem(tabFolder, SWT.NONE);
-			tabItem.setText(page.getTitle());//		
+			tabItem.setText(page.getTitle());//
 			tabItem.setControl(createPageArea(tabFolder, page));
 			pageMap.put(tabItem, page);
         }
-		
+
 		tabFolder.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent e) {
+            @Override
+			public void widgetSelected(SelectionEvent e) {
                 updatePageSelection();
             }
         });
@@ -201,9 +205,9 @@ public class PreferencePageContainerDialog extends TrayDialog
 		layout.horizontalSpacing = 0;
 		titleComposite.setLayout(layout);
 		titleComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
+
 		createMessageArea(titleComposite);
-	
+
 		Label titleBarSeparator = new Label(titleComposite, SWT.HORIZONTAL | SWT.SEPARATOR);
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 		titleBarSeparator.setLayoutData(gd);
@@ -216,7 +220,7 @@ public class PreferencePageContainerDialog extends TrayDialog
 	 * @return the created title area composite
 	 */
 	private Composite createMessageArea(Composite parent) {
-		
+
 		// Create the title area which will contain
 		// a title, message, and image.
 		fTitleArea = new Composite(parent, SWT.NONE);
@@ -226,25 +230,26 @@ public class PreferencePageContainerDialog extends TrayDialog
 		layout.verticalSpacing = 0;
 		layout.horizontalSpacing = 0;
 		layout.numColumns = 2;
-		
+
 		// Get the colors for the title area
 		Display display = parent.getDisplay();
 		Color bg = JFaceColors.getBannerBackground(display);
 		Color fg = JFaceColors.getBannerForeground(display);
-		
+
 		GridData layoutData = new GridData(GridData.FILL_BOTH);
 		fTitleArea.setLayout(layout);
 		fTitleArea.setLayoutData(layoutData);
 		fTitleArea.setBackground(bg);
-	
+
 		// Message label
 		fMessageLabel = new CLabel(fTitleArea, SWT.LEFT);
 		fMessageLabel.setBackground(bg);
 		fMessageLabel.setForeground(fg);
 		fMessageLabel.setText(" ");//$NON-NLS-1$
 		fMessageLabel.setFont(JFaceResources.getBannerFont());
-		
+
 		final IPropertyChangeListener fontListener = new IPropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent event) {
 				if(JFaceResources.BANNER_FONT.equals(event.getProperty()) ||
 					JFaceResources.DIALOG_FONT.equals(event.getProperty())) {
@@ -252,23 +257,24 @@ public class PreferencePageContainerDialog extends TrayDialog
 				}
 			}
 		};
-		
+
 		fMessageLabel.addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent event) {
 				JFaceResources.getFontRegistry().removeListener(fontListener);
 			}
 		});
-		
+
 		JFaceResources.getFontRegistry().addListener(fontListener);
-				
+
 		GridData gd = new GridData(GridData.FILL_BOTH);
 		fMessageLabel.setLayoutData(gd);
-	
+
 		// Title image
 		fTitleImage = new Label(fTitleArea, SWT.LEFT);
 		fTitleImage.setBackground(bg);
 		fTitleImage.setImage(TeamUIPlugin.getPlugin().getImageRegistry().get(PREF_DLG_TITLE_IMG));
-		gd = new GridData(); 
+		gd = new GridData();
 		gd.horizontalAlignment = GridData.END;
 		fTitleImage.setLayoutData(gd);
 		updateMessage();
@@ -297,7 +303,7 @@ public class PreferencePageContainerDialog extends TrayDialog
 		fMinimumPageSize.x = size.x;
 		fMinimumPageSize.y = size.y;
 	}
-	
+
 	/**
 	 * Display the given error message. The currently displayed message
 	 * is saved and will be redisplayed when the error message is set
@@ -314,21 +320,21 @@ public class PreferencePageContainerDialog extends TrayDialog
 				fTitleImage.setImage(TeamUIPlugin.getPlugin().getImageRegistry().get(PREF_DLG_TITLE_IMG));
 				fTitleArea.layout(true);
 			}
-	
+
 			// show the message
 			setMessage(fMessage);
-	
+
 		} else {
 			fMessageLabel.setText(errorMessage);
 			if (fMessageLabel.getImage() == null) {
 				// we were not previously showing an error
-							
+
 				// lazy initialize the error background color and image
 				if (fErrorMsgImage == null) {
 					fErrorMsgImage = TeamUIPlugin.getPlugin().getImageRegistry().get(PREF_DLG_IMG_TITLE_ERROR);
 				}
-	
-				// show the error	
+
+				// show the error
 				fNormalMsgAreaBackground = fMessageLabel.getBackground();
 				fMessageLabel.setBackground(JFaceColors.getErrorBackground(fMessageLabel.getDisplay()));
 				fMessageLabel.setImage(fErrorMsgImage);
@@ -340,7 +346,7 @@ public class PreferencePageContainerDialog extends TrayDialog
 	/**
 	 * Set the message text. If the message line currently displays an error,
 	 * the message is stored and will be shown after a call to clearErrorMessage
-	 * @param newMessage 
+	 * @param newMessage
 	 */
 	public void setMessage(String newMessage) {
 		fMessage = newMessage;
@@ -352,25 +358,26 @@ public class PreferencePageContainerDialog extends TrayDialog
 			fMessageLabel.setText(fMessage);
 		}
 	}
-	
+
 	/**
 	 * @see IPreferencePageContainer#updateMessage()
 	 */
+	@Override
 	public void updateMessage() {
 	    if (currentPage != null) {
 			String pageMessage = currentPage.getMessage();
 			String pageErrorMessage = currentPage.getErrorMessage();
-	
+
 			// Adjust the font
 			if (pageMessage == null && pageErrorMessage == null)
 				fMessageLabel.setFont(JFaceResources.getBannerFont());
 			else
 				fMessageLabel.setFont(JFaceResources.getDialogFont());
-	
-			// Set the message and error message	
+
+			// Set the message and error message
 			if (pageMessage == null) {
 			    if (isSinglePage()) {
-			        setMessage(TeamUIMessages.PreferencePageContainerDialog_6); 
+			        setMessage(TeamUIMessages.PreferencePageContainerDialog_6);
 			    } else {
 			    	//remove mnemonic see bug 75886
 			    	String title = currentPage.getTitle();
@@ -383,10 +390,11 @@ public class PreferencePageContainerDialog extends TrayDialog
 			setErrorMessage(pageErrorMessage);
 	    }
 	}
-	
+
 	/**
 	 * @see IPreferencePageContainer#getPreferenceStore()
 	 */
+	@Override
 	public IPreferenceStore getPreferenceStore() {
 		return null;
 	}
@@ -394,6 +402,7 @@ public class PreferencePageContainerDialog extends TrayDialog
 	/**
 	 * @see IPreferencePageContainer#updateButtons()
 	 */
+	@Override
 	public void updateButtons() {
 		if (fOkButton != null) {
 		    boolean isValid = true;
@@ -411,18 +420,20 @@ public class PreferencePageContainerDialog extends TrayDialog
 	/**
 	 * @see IPreferencePageContainer#updateTitle()
 	 */
+	@Override
 	public void updateTitle() {
 		updateMessage();
 	}
-	
+
 	/**
 	 * @see Dialog#createButtonsForButtonBar(Composite)
 	 */
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		fOkButton= createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true);
 		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
 	}
-	
+
 	/**
 	 * Save the values specified in the pages.
 	 * <p>
@@ -445,36 +456,40 @@ public class PreferencePageContainerDialog extends TrayDialog
 				try {
 					((IPersistentPreferenceStore) store).save();
 				} catch (IOException e) {
-					Utils.handle(e); 
+					Utils.handle(e);
 				}
 			}
         }
 	}
 
-    
-    public void addPageChangedListener(final IPageChangedListener listener) {
+
+    @Override
+	public void addPageChangedListener(final IPageChangedListener listener) {
     	pageChangedListeners.add(listener);
 	}
 
+	@Override
 	public Object getSelectedPage() {
 		return currentPage;
 	}
 
+	@Override
 	public void removePageChangedListener(IPageChangedListener listener) {
 		pageChangedListeners.remove(listener);
 	}
-	
+
 	private void firePageChanged(final PageChangedEvent event) {
         Object[] listeners = pageChangedListeners.getListeners();
         for (int i = 0; i < listeners.length; i++) {
             final IPageChangedListener l = (IPageChangedListener) listeners[i];
             SafeRunnable.run(new SafeRunnable() {
-                public void run() {
+                @Override
+				public void run() {
                     l.pageChanged(event);
                 }
             });
         }
     }
-	
-	
+
+
 }

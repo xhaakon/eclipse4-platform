@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,6 @@ package org.eclipse.ui.internal.preferences;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import org.eclipse.jface.resource.FontRegistry;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -38,33 +37,21 @@ public class ThemeAdapter extends PropertyMapAdapter {
         this.targetTheme = targetTheme;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.PropertyMapAdapter#attachListener()
-     */
     @Override
 	protected void attachListener() {
         targetTheme.addPropertyChangeListener(listener);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.PropertyMapAdapter#detachListener()
-     */
     @Override
 	protected void detachListener() {
         targetTheme.removePropertyChangeListener(listener);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#getKeySet()
-     */
     @Override
 	public Set keySet() {
         return getKeySet(targetTheme);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#getValue(java.lang.String, java.lang.Class)
-     */
     @Override
 	public Object getValue(String propertyId, Class propertyType) {
         return getValue(targetTheme, propertyId, propertyType);
@@ -102,7 +89,7 @@ public class ThemeAdapter extends PropertyMapAdapter {
         }
 
         if (propertyType == Integer.class) {
-            return new Integer(targetTheme.getInt(propertyId));
+			return Integer.valueOf(targetTheme.getInt(propertyId));
         }
 
         if (propertyType == Boolean.class) {
@@ -112,17 +99,11 @@ public class ThemeAdapter extends PropertyMapAdapter {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#propertyExists(java.lang.String)
-     */
     @Override
 	public boolean propertyExists(String propertyId) {
         return keySet().contains(propertyId);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.internal.preferences.IPropertyMap#setValue(java.lang.String)
-     */
     @Override
 	public void setValue(String propertyId, Object newValue) {
         throw new UnsupportedOperationException();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,57 +56,31 @@ public class LocalSelectionTransfer extends
 		return INSTANCE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.util.LocalSelectionTransfer#getSelection()
-	 */
 	@Override
 	public ISelection getSelection() {
 		return jfaceTransfer.getSelection();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.util.LocalSelectionTransfer#getSelectionSetTime()
-	 */
 	@Override
 	public long getSelectionSetTime() {
 		return jfaceTransfer.getSelectionSetTime();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.util.LocalSelectionTransfer#setSelection(org.eclipse.jface.viewers.ISelection)
-	 */
 	@Override
 	public void setSelection(ISelection s) {
 		jfaceTransfer.setSelection(s);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.jface.util.LocalSelectionTransfer#setSelectionSetTime(long)
-	 */
 	@Override
 	public void setSelectionSetTime(long time) {
 		jfaceTransfer.setSelectionSetTime(time);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.util.LocalSelectionTransfer#javaToNative(java.lang.Object, org.eclipse.swt.dnd.TransferData)
-	 */
 	@Override
 	public void javaToNative(Object object, TransferData transferData) {
 		jfaceTransfer.javaToNative(object, transferData);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.util.LocalSelectionTransfer#nativeToJava(org.eclipse.swt.dnd.TransferData)
-	 */
 	@Override
 	public Object nativeToJava(TransferData transferData) {
 		return jfaceTransfer.nativeToJava(transferData);

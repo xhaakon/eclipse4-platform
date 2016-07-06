@@ -4,10 +4,11 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources.mapping;
 
@@ -21,7 +22,7 @@ import org.eclipse.core.runtime.*;
 public final class ProposedResourceDelta extends PlatformObject implements IResourceDelta {
 	protected static int KIND_MASK = 0xFF;
 
-	private HashMap<String, ProposedResourceDelta> children = new HashMap<String, ProposedResourceDelta>(8);
+	private HashMap<String, ProposedResourceDelta> children = new HashMap<>(8);
 	private IPath movedFromPath;
 	private IPath movedToPath;
 	private IResource resource;
@@ -31,25 +32,16 @@ public final class ProposedResourceDelta extends PlatformObject implements IReso
 		this.resource = resource;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#accept(org.eclipse.core.resources.IResourceDeltaVisitor)
-	 */
 	@Override
 	public void accept(IResourceDeltaVisitor visitor) throws CoreException {
 		accept(visitor, 0);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#accept(org.eclipse.core.resources.IResourceDeltaVisitor, boolean)
-	 */
 	@Override
 	public void accept(IResourceDeltaVisitor visitor, boolean includePhantoms) throws CoreException {
 		accept(visitor, includePhantoms ? IContainer.INCLUDE_PHANTOMS : 0);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#accept(org.eclipse.core.resources.IResourceDeltaVisitor, int)
-	 */
 	@Override
 	public void accept(IResourceDeltaVisitor visitor, int memberFlags) throws CoreException {
 		if (!visitor.visit(this))
@@ -79,9 +71,6 @@ public final class ProposedResourceDelta extends PlatformObject implements IReso
 		this.status |= (flags & ~KIND_MASK);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#findMember(org.eclipse.core.runtime.IPath)
-	 */
 	@Override
 	public IResourceDelta findMember(IPath path) {
 		int segmentCount = path.segmentCount();
@@ -98,28 +87,19 @@ public final class ProposedResourceDelta extends PlatformObject implements IReso
 		return current;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getAffectedChildren()
-	 */
 	@Override
 	public IResourceDelta[] getAffectedChildren() {
 		return getAffectedChildren(ADDED | REMOVED | CHANGED, IResource.NONE);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getAffectedChildren(int)
-	 */
 	@Override
 	public IResourceDelta[] getAffectedChildren(int kindMask) {
 		return getAffectedChildren(kindMask, IResource.NONE);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getAffectedChildren(int, int)
-	 */
 	@Override
 	public IResourceDelta[] getAffectedChildren(int kindMask, int memberFlags) {
-		List<ProposedResourceDelta> result = new ArrayList<ProposedResourceDelta>();
+		List<ProposedResourceDelta> result = new ArrayList<>();
 		for (Iterator<ProposedResourceDelta> iter = children.values().iterator(); iter.hasNext();) {
 			ProposedResourceDelta child = iter.next();
 			if ((child.getKind() & kindMask) != 0)
@@ -136,65 +116,41 @@ public final class ProposedResourceDelta extends PlatformObject implements IReso
 		return children.get(name);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getFlags()
-	 */
 	@Override
 	public int getFlags() {
 		return status & ~KIND_MASK;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getFullPath()
-	 */
 	@Override
 	public IPath getFullPath() {
 		return getResource().getFullPath();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getKind()
-	 */
 	@Override
 	public int getKind() {
 		return status & KIND_MASK;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getMarkerDeltas()
-	 */
 	@Override
 	public IMarkerDelta[] getMarkerDeltas() {
 		return new IMarkerDelta[0];
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getMovedFromPath()
-	 */
 	@Override
 	public IPath getMovedFromPath() {
 		return movedFromPath;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getMovedToPath()
-	 */
 	@Override
 	public IPath getMovedToPath() {
 		return movedToPath;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getProjectRelativePath()
-	 */
 	@Override
 	public IPath getProjectRelativePath() {
 		return getResource().getProjectRelativePath();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDelta#getResource()
-	 */
 	@Override
 	public IResource getResource() {
 		return resource;

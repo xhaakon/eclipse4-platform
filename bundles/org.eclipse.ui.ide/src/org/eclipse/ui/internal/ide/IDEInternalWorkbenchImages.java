@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2010 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -57,6 +57,8 @@ public final class IDEInternalWorkbenchImages {
 
 	public final static String IMG_ETOOL_PROBLEMS_VIEW_WARNING= "IMG_ETOOL_PROBLEMS_VIEW_WARNING"; //$NON-NLS-1$
 
+	public final static String IMG_ETOOL_PROBLEMS_VIEW_INFO = "IMG_ETOOL_PROBLEMS_VIEW_INFO"; //$NON-NLS-1$
+
     public final static String IMG_LCL_FLAT_LAYOUT = "IMG_LCL_FLAT_LAYOUT"; //$NON-NLS-1$
 
     public final static String IMG_LCL_HIERARCHICAL_LAYOUT = "IMG_LCL_HIERARCHICAL_LAYOUT"; //$NON-NLS-1$
@@ -107,6 +109,7 @@ public final class IDEInternalWorkbenchImages {
 	public static final String IMG_ELCL_QUICK_FIX_ENABLED = "IMG_ELCL_QUICK_FIX_ENABLED"; //$NON-NLS-1$
 	public static final String IMG_OBJS_FIXABLE_WARNING= "IMG_OBJS_FIXABLE_WARNING"; //$NON-NLS-1$
 	public static final String IMG_OBJS_FIXABLE_ERROR= "IMG_OBJS_FIXABLE_ERROR"; //$NON-NLS-1$
+	public static final String IMG_OBJS_FIXABLE_INFO = "IMG_OBJS_FIXABLE_INFO"; //$NON-NLS-1$
 
 
     /**

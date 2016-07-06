@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,7 @@ public class ViewerComparator {
 	/**
 	 * The comparator to use to sort a viewer's contents.
 	 */
-	private Comparator comparator;
+	private Comparator<? super String> comparator;
 
 	/**
      * Creates a new {@link ViewerComparator}, which uses the default comparator
@@ -58,12 +58,15 @@ public class ViewerComparator {
 	}
 
 	/**
-     * Creates a new {@link ViewerComparator}, which uses the given comparator
-     * to sort strings.
-     *
+	 * Creates a new {@link ViewerComparator}, which uses the given comparator
+	 * to sort strings. The default implementation of
+	 * {@link ViewerComparator#compare(Viewer, Object, Object)} expects this
+	 * comparator to be able to compare the {@link String}s provided by the
+	 * viewer's label provider.
+	 *
 	 * @param comparator
 	 */
-	public ViewerComparator(Comparator comparator){
+	public ViewerComparator(Comparator<? super String> comparator) {
 		this.comparator = comparator;
 	}
 
@@ -72,7 +75,7 @@ public class ViewerComparator {
 	 *
 	 * @return the comparator used to sort strings
 	 */
-	protected Comparator getComparator() {
+	protected Comparator<? super String> getComparator() {
 		if (comparator == null){
 			comparator = Policy.getComparator();
 		}
@@ -173,9 +176,10 @@ public class ViewerComparator {
     /**
      * Sorts the given elements in-place, modifying the given array.
      * <p>
-     * The default implementation of this method uses the
-     * java.util.Arrays#sort algorithm on the given array,
-     * calling <code>compare</code> to compare elements.
+	 * The default implementation of this method uses the
+	 * {@link java.util.Arrays#sort(Object[], Comparator)} algorithm on the
+	 * given array, calling {@link #compare(Viewer, Object, Object)} to compare
+	 * elements.
      * </p>
      * <p>
      * Subclasses may reimplement this method to provide a more optimized implementation.
@@ -186,21 +190,27 @@ public class ViewerComparator {
      */
 	public void sort(final Viewer viewer, Object[] elements) {
 		try {
-			Arrays.sort(elements, new Comparator() {
-				@Override
-				public int compare(Object a, Object b) {
-					return ViewerComparator.this.compare(viewer, a, b);
-				}
-			});
+			Arrays.sort(elements, (a, b) -> ViewerComparator.this.compare(viewer, a, b));
 		} catch (IllegalArgumentException e) {
-			String msg = "Workaround for comparator violation:\n\t- set system property java.util.Arrays.useLegacyMergeSort=true\n\t- use a 1.6 JRE "  //$NON-NLS-1$
-					+ "\nmessage: " + e.getLocalizedMessage() //$NON-NLS-1$
+			String msg = e.toString()
+					+ "\nWorkaround for comparator violation:\n\tSet system property -Djava.util.Arrays.useLegacyMergeSort=true" //$NON-NLS-1$
 					+ "\nthis: " + getClass().getName() //$NON-NLS-1$
 					+ "\ncomparator: " + (comparator != null ? comparator.getClass().getName() : null) //$NON-NLS-1$
 					+ "\narray:"; //$NON-NLS-1$
+			StringBuilder labels = new StringBuilder();
+			long timeout = System.currentTimeMillis() + 5000;
 			for (Object element : elements) {
-				msg += "\n\t" + getLabel(viewer, element); //$NON-NLS-1$
+				labels.append("\n\t"); //$NON-NLS-1$
+				if (labels.length() > 50000) {
+					labels.append("... (more elements)"); //$NON-NLS-1$
+					break;
+				} else if (System.currentTimeMillis() > timeout) {
+					labels.append("... (timeout)"); //$NON-NLS-1$
+					break;
+				}
+				labels.append(getLabel(viewer, element));
 			}
+			msg += labels;
 			Policy.getLog().log(new Status(IStatus.ERROR, "org.eclipse.jface", msg)); //$NON-NLS-1$
 			throw e;
 		}

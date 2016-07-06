@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,8 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Tom Eicher (Avaloq Evolution AG) - block selection mode
+ *     Holger Voormann - Word Wrap - https://bugs.eclipse.org/bugs/show_bug.cgi?id=35779
+ *     Florian Weßling <flo@cdhq.de> - Word Wrap - https://bugs.eclipse.org/bugs/show_bug.cgi?id=35779
  *******************************************************************************/
 
 package org.eclipse.jface.text;
@@ -66,9 +68,7 @@ public class CursorLinePainter implements IPainter, LineBackgroundListener {
 		fHighlightColor= highlightColor;
 	}
 
-	/*
-	 * @see LineBackgroundListener#lineGetBackground(LineBackgroundEvent)
-	 */
+	@Override
 	public void lineGetBackground(LineBackgroundEvent event) {
 		// don't use cached line information because of asynchronous painting
 
@@ -172,17 +172,28 @@ public class CursorLinePainter implements IPainter, LineBackgroundListener {
 		StyledText textWidget= fViewer.getTextWidget();
 		// check for https://bugs.eclipse.org/bugs/show_bug.cgi?id=64898
 		// this is a guard against the symptoms but not the actual solution
-		if (0 <= widgetOffset && widgetOffset <= textWidget.getCharCount()) {
-			Point upperLeft= textWidget.getLocationAtOffset(widgetOffset);
-			int width= textWidget.getClientArea().width + textWidget.getHorizontalPixel();
-			int height= textWidget.getLineHeight(widgetOffset);
-			textWidget.redraw(0, upperLeft.y, width, height, false);
+		int charCount= textWidget.getCharCount();
+		if (widgetOffset > charCount) {
+			return;
 		}
+		Point upperLeft= textWidget.getLocationAtOffset(widgetOffset);
+		int width= textWidget.getClientArea().width + textWidget.getHorizontalPixel();
+
+		// different height if word wrap is activated and line is not empty
+		int height;
+		if (position.length == 0 || !textWidget.getWordWrap()) {
+			height= textWidget.getLineHeight(widgetOffset);
+		} else {
+			int offsetEnd= widgetOffset + position.length - 1;
+			if (offsetEnd >= charCount) {
+				offsetEnd= charCount - 1;
+			}
+			height= textWidget.getTextBounds(widgetOffset, offsetEnd).height;
+		}
+		textWidget.redraw(0, upperLeft.y, width, height, false);
 	}
 
-	/*
-	 * @see IPainter#deactivate(boolean)
-	 */
+	@Override
 	public void deactivate(boolean redraw) {
 		if (fIsActive) {
 			fIsActive= false;
@@ -204,15 +215,11 @@ public class CursorLinePainter implements IPainter, LineBackgroundListener {
 		}
 	}
 
-	/*
-	 * @see IPainter#dispose()
-	 */
+	@Override
 	public void dispose() {
 	}
 
-	/*
-	 * @see IPainter#paint(int)
-	 */
+	@Override
 	public void paint(int reason) {
 		if (fViewer.getDocument() == null) {
 			deactivate(false);
@@ -265,9 +272,7 @@ public class CursorLinePainter implements IPainter, LineBackgroundListener {
 		}
 	}
 
-	/*
-	 * @see IPainter#setPositionManager(IPaintPositionManager)
-	 */
+	@Override
 	public void setPositionManager(IPaintPositionManager manager) {
 		fPositionManager = manager;
 	}

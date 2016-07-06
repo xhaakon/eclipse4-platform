@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -60,9 +60,7 @@ public class ProjectionSupport {
 			super(sourceViewer, access);
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.source.AnnotationPainter#findAnnotationModel(org.eclipse.jface.text.source.ISourceViewer)
-		 */
+		@Override
 		protected IAnnotationModel findAnnotationModel(ISourceViewer sourceViewer) {
 			if (sourceViewer instanceof ProjectionViewer) {
 				ProjectionViewer projectionViewer= (ProjectionViewer) sourceViewer;
@@ -71,9 +69,7 @@ public class ProjectionSupport {
 			return null;
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.source.AnnotationPainter#skip(org.eclipse.jface.text.source.Annotation)
-		 */
+		@Override
 		protected boolean skip(Annotation annotation) {
 			if (annotation instanceof ProjectionAnnotation)
 				return !((ProjectionAnnotation) annotation).isCollapsed();
@@ -83,9 +79,7 @@ public class ProjectionSupport {
 	}
 
 	private static class ProjectionDrawingStrategy implements AnnotationPainter.IDrawingStrategy {
-		/*
-		 * @see org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy#draw(org.eclipse.swt.graphics.GC, org.eclipse.swt.custom.StyledText, int, int, org.eclipse.swt.graphics.Color)
-		 */
+		@Override
 		public void draw(Annotation annotation, GC gc, StyledText textWidget, int offset, int length, Color color) {
 			if (annotation instanceof ProjectionAnnotation) {
 				ProjectionAnnotation projectionAnnotation= (ProjectionAnnotation) annotation;
@@ -136,16 +130,12 @@ public class ProjectionSupport {
 
 	private class ProjectionListener implements IProjectionListener {
 
-		/*
-		 * @see org.eclipse.jface.text.source.projection.IProjectionListener#projectionEnabled()
-		 */
+		@Override
 		public void projectionEnabled() {
 			doEnableProjection();
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.source.projection.IProjectionListener#projectionDisabled()
-		 */
+		@Override
 		public void projectionDisabled() {
 			doDisableProjection();
 		}
@@ -154,7 +144,7 @@ public class ProjectionSupport {
 	private ProjectionViewer fViewer;
 	private IAnnotationAccess fAnnotationAccess;
 	private ISharedTextColors fSharedTextColors;
-	private List fSummarizableTypes;
+	private List<String> fSummarizableTypes;
 	private IInformationControlCreator fInformationControlCreator;
 	private IInformationControlCreator fInformationPresenterControlCreator;
 	private ProjectionListener fProjectionListener;
@@ -193,7 +183,7 @@ public class ProjectionSupport {
 	 */
 	public void addSummarizableAnnotationType(String annotationType) {
 		if (fSummarizableTypes == null) {
-			fSummarizableTypes= new ArrayList();
+			fSummarizableTypes= new ArrayList<>();
 			fSummarizableTypes.add(annotationType);
 		} else if (!fSummarizableTypes.contains(annotationType))
 			fSummarizableTypes.add(annotationType);
@@ -336,7 +326,7 @@ public class ProjectionSupport {
 		if (fSummarizableTypes != null) {
 			int size= fSummarizableTypes.size();
 			for (int i= 0; i < size; i++)
-				summary.addAnnotationType((String) fSummarizableTypes.get(i));
+				summary.addAnnotationType(fSummarizableTypes.get(i));
 		}
 		return summary;
 	}
@@ -357,11 +347,12 @@ public class ProjectionSupport {
 	 * @return the adapter or <code>null</code>
 	 *
 	 */
-	public Object getAdapter(ISourceViewer viewer, Class required) {
+	@SuppressWarnings("unchecked")
+	public <T> T getAdapter(ISourceViewer viewer, Class<T> required) {
 		if (ProjectionAnnotationModel.class.equals(required)) {
 			if (viewer instanceof ProjectionViewer) {
 				ProjectionViewer projectionViewer= (ProjectionViewer) viewer;
-				return projectionViewer.getProjectionAnnotationModel();
+				return (T) projectionViewer.getProjectionAnnotationModel();
 			}
 		}
 		return null;

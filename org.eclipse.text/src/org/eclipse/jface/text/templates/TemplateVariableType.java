@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,7 @@ public final class TemplateVariableType {
 	/** The name of the type. */
 	private final String fName;
 	/** The parameter list. */
-	private final List fParams;
+	private final List<String> fParams;
 
 	TemplateVariableType(String name) {
 		this(name, new String[0]);
@@ -40,7 +40,7 @@ public final class TemplateVariableType {
 		Assert.isLegal(name != null);
 		Assert.isLegal(params != null);
 		fName= name;
-		fParams= Collections.unmodifiableList(new ArrayList(Arrays.asList(params)));
+		fParams= Collections.unmodifiableList(new ArrayList<>(Arrays.asList(params)));
 	}
 
 	/**
@@ -53,17 +53,15 @@ public final class TemplateVariableType {
 	}
 
 	/**
-	 * Returns the unmodifiable and possibly empty list of parameters (element type: {@link String})
+	 * Returns the unmodifiable and possibly empty list of parameters
 	 *
 	 * @return the list of parameters
 	 */
-	public List getParams() {
+	public List<String> getParams() {
 		return fParams;
 	}
 
-	/*
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof TemplateVariableType) {
 			TemplateVariableType other= (TemplateVariableType) obj;
@@ -72,17 +70,12 @@ public final class TemplateVariableType {
 		return false;
 	}
 
-	/*
-	 * @see java.lang.Object#hashCode()
-	 */
+	@Override
 	public int hashCode() {
 		return fName.hashCode() + fParams.hashCode();
 	}
 
-	/*
-	 * @see java.lang.Object#toString()
-	 * @since 3.3
-	 */
+	@Override
 	public String toString() {
 		return fName + fParams.toString();
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2009 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.SafeRunner;
 import org.eclipse.core.runtime.Status;
@@ -111,13 +112,16 @@ public class GenericFileBufferOperationRunner {
 			synchronized (fCompletionLock) {
 
 				executeInContext(new Runnable() {
+					@Override
 					public void run() {
 						synchronized(fCompletionLock) {
 							try {
 								SafeRunner.run(new ISafeRunnable() {
+									@Override
 									public void handleException(Throwable throwable) {
 										fThrowable= throwable;
 									}
+									@Override
 									public void run() throws Exception {
 										performOperation(synchronizedFileBuffers, operation, progressMonitor);
 									}
@@ -197,21 +201,21 @@ public class GenericFileBufferOperationRunner {
 	}
 
 	private IFileBuffer[] findUnsynchronizedFileBuffers(IFileBuffer[] fileBuffers) {
-		ArrayList list= new ArrayList();
+		ArrayList<IFileBuffer> list= new ArrayList<>();
 		for (int i= 0; i < fileBuffers.length; i++) {
 			if (!fileBuffers[i].isSynchronizationContextRequested())
 				list.add(fileBuffers[i]);
 		}
-		return (IFileBuffer[]) list.toArray(new IFileBuffer[list.size()]);
+		return list.toArray(new IFileBuffer[list.size()]);
 	}
 
 	private IFileBuffer[] findSynchronizedFileBuffers(IFileBuffer[] fileBuffers) {
-		ArrayList list= new ArrayList();
+		ArrayList<IFileBuffer> list= new ArrayList<>();
 		for (int i= 0; i < fileBuffers.length; i++) {
 			if (fileBuffers[i].isSynchronizationContextRequested())
 				list.add(fileBuffers[i]);
 		}
-		return (IFileBuffer[]) list.toArray(new IFileBuffer[list.size()]);
+		return list.toArray(new IFileBuffer[list.size()]);
 	}
 
 	private IFileBuffer[] createFileBuffers(IPath[] locations, IProgressMonitor progressMonitor) throws CoreException {
@@ -228,7 +232,7 @@ public class GenericFileBufferOperationRunner {
 
 		} catch (CoreException x) {
 			try {
-				releaseFileBuffers(locations, Progress.getMonitor());
+				releaseFileBuffers(locations, new NullProgressMonitor());
 			} catch (CoreException e) {
 			}
 			throw x;
@@ -252,13 +256,13 @@ public class GenericFileBufferOperationRunner {
 	}
 
 	private IFileBuffer[] findFileBuffersToSave(IFileBuffer[] fileBuffers) {
-		ArrayList list= new ArrayList();
+		ArrayList<IFileBuffer> list= new ArrayList<>();
 		for (int i= 0; i < fileBuffers.length; i++) {
 			IFileBuffer buffer= fileBuffers[i];
 			if (!buffer.isDirty())
 				list.add(buffer);
 		}
-		return (IFileBuffer[]) list.toArray(new IFileBuffer[list.size()]);
+		return list.toArray(new IFileBuffer[list.size()]);
 	}
 
 	private boolean isCommitable(IFileBuffer[] fileBuffers) {
@@ -270,7 +274,7 @@ public class GenericFileBufferOperationRunner {
 	}
 
 	protected ISchedulingRule computeCommitRule(IFileBuffer[] fileBuffers) {
-		ArrayList list= new ArrayList();
+		ArrayList<ISchedulingRule> list= new ArrayList<>();
 		for (int i= 0; i < fileBuffers.length; i++) {
 			ISchedulingRule rule= fileBuffers[i].computeCommitRule();
 			if (rule != null)

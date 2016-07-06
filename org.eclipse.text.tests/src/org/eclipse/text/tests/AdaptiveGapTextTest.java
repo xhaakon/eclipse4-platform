@@ -10,28 +10,29 @@
  *******************************************************************************/
 package org.eclipse.text.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class AdaptiveGapTextTest extends AbstractGapTextTest {
-	protected void setUp() {
+	
+	@Before
+	public void setUp() {
 		fText= new GapText(2, 10, 0.5f);
 		fText.set("xxxxx");
 	}
 
-	public static Test suite() {
-		return new TestSuite(AdaptiveGapTextTest.class);
-	}
-
-	protected void tearDown () {
+	@After
+	public void tearDown () {
 		fText= null;
 	}
 
+	@Test
 	public void testSet() {
 		assertGap(5, 7);
 	}
 
+	@Test
 	public void testGetText1() {
 		String[] expected= {
 			"xyxxxx",
@@ -48,6 +49,7 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 
 	}
 
+	@Test
 	public void testGetText2() {
 		String[] expected= {
 			"yxxxxx",
@@ -64,6 +66,7 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 
 	}
 
+	@Test
 	public void testInsert() {
 		fText.replace(2, 0, "y");
 		assertGap(3, 4);
@@ -78,6 +81,7 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 		assertGap(8, 10);
 	}
 
+	@Test
 	public void testRemoveGapOverlapping() {
 		fText.replace(2, 2, null);
 		assertGap(2, 6);
@@ -85,7 +89,8 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 		fText.replace(1, 2, null);
 		assertGap(1, 3);
 	}
-
+	
+	@Test
 	public void testRemoveGapOverlapping2() {
 		fText.replace(0, 0, "aaaaazzzzzyyyyy");
 		assertGap(15, 21);
@@ -96,7 +101,8 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 		assertGap(5, 7);
 		assertContents("aaaaaxxx");
 	}
-
+	
+	@Test
 	public void testRemoveRemoteFromGap() {
 		fText.replace(0, 0, "aaaaazzzzzyyyyy");
 		assertGap(15, 21);
@@ -114,6 +120,7 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 
 	}
 
+	@Test
 	public void testRemoveAtLeftGapEdge() {
 		fText.replace(4, 0, "xxx");
 		assertGap(7, 9);
@@ -122,7 +129,8 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 		fText.replace(6, 1, null);
 		assertGap(6, 8);
 	}
-
+	
+	@Test
 	public void testRemoveAtRightGapEdge() {
 		fText.replace(4, 0, "xxx");
 		assertGap(7, 9);
@@ -131,7 +139,8 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 		fText.replace(7, 1, null);
 		assertGap(7, 9);
 	}
-
+	
+	@Test
 	public void testReplace() {
 		fText.replace(2, 2, "yy");
 		assertGap(4, 6);
@@ -142,7 +151,8 @@ public class AdaptiveGapTextTest extends AbstractGapTextTest {
 		fText.replace(14, 0, "yyy");
 		assertGap(17, 19);
 	}
-
+	
+	@Test
 	public void testRemoveReallocateBeforeGap() throws Exception {
 	    fText.replace(0, 0, "yyyyyzzzzz");
 	    assertGap(10, 15);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -146,16 +146,16 @@ public class WorkbenchEditorsDialog extends SelectionDialog {
             String[] array = s.getArray(BOUNDS);
             if (array != null) {
                 bounds = new Rectangle(0, 0, 0, 0);
-                bounds.x = new Integer(array[0]).intValue();
-                bounds.y = new Integer(array[1]).intValue();
-                bounds.width = new Integer(array[2]).intValue();
-                bounds.height = new Integer(array[3]).intValue();
+                bounds.x = Integer.valueOf(array[0]).intValue();
+                bounds.y = Integer.valueOf(array[1]).intValue();
+                bounds.width = Integer.valueOf(array[2]).intValue();
+                bounds.height = Integer.valueOf(array[3]).intValue();
             }
             array = s.getArray(COLUMNS);
             if (array != null) {
                 columnsWidth = new int[array.length];
                 for (int i = 0; i < columnsWidth.length; i++) {
-					columnsWidth[i] = new Integer(array[i]).intValue();
+					columnsWidth[i] = Integer.valueOf(array[i]).intValue();
 				}
             }
         }

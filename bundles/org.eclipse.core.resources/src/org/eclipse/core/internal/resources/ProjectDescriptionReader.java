@@ -1,15 +1,17 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Project Path Variable Support
- * Markus Schorn (Wind River) - [306575] Save snapshot location with project
- * James Blackburn (Broadcom Corp.) - ongoing development
+ *     Markus Schorn (Wind River) - [306575] Save snapshot location with project
+ *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -30,7 +32,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Reads serialized project descriptions.
- * 
+ *
  * Note: Suppress warnings on whole class because of unusual use of objectStack.
  */
 @SuppressWarnings({"unchecked"})
@@ -103,8 +105,8 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 
 	/**
 	 * Returns the SAXParser to use when parsing project description files.
-	 * @throws ParserConfigurationException 
-	 * @throws SAXException 
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
 	 */
 	private static synchronized SAXParser createParser() throws ParserConfigurationException, SAXException {
 		//the parser can't be used concurrently, so only use singleton when workspace is locked
@@ -118,7 +120,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 
 	/**
 	 * Returns the SAXParserFactory to use when parsing project description files.
-	 * @throws ParserConfigurationException 
+	 * @throws ParserConfigurationException
 	 */
 	private static synchronized SAXParserFactory createParserFactory() throws ParserConfigurationException {
 		if (singletonParserFactory == null) {
@@ -349,7 +351,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 				if (elementName.equals(PROJECT)) {
 					//top of stack is list of project references
 					// Referenced projects are just project names and, therefore,
-					// are also IResource names and cannot have leading/trailing 
+					// are also IResource names and cannot have leading/trailing
 					// whitespace.
 					((ArrayList<String>) objectStack.peek()).add(charBuffer.toString().trim());
 					state = S_PROJECTS;
@@ -544,18 +546,18 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 				HashMap<IPath, LinkedList<FilterDescription>> map = ((HashMap<IPath, LinkedList<FilterDescription>>) objectStack.peek());
 				LinkedList<FilterDescription> list = map.get(filter.getResource().getProjectRelativePath());
 				if (list == null) {
-					list = new LinkedList<FilterDescription>();
+					list = new LinkedList<>();
 					map.put(filter.getResource().getProjectRelativePath(), list);
 				}
 				list.add(filter);
 			} else {
-				// if the project is null, that means that we're loading a project description to retrieve 
+				// if the project is null, that means that we're loading a project description to retrieve
 				// some meta data only.
-				String key = new String(); // an empty key;
+				String key = ""; // an empty key; //$NON-NLS-1$
 				HashMap<String, LinkedList<FilterDescription>> map = ((HashMap<String, LinkedList<FilterDescription>>) objectStack.peek());
 				LinkedList<FilterDescription> list = map.get(key);
 				if (list == null) {
-					list = new LinkedList<FilterDescription>();
+					list = new LinkedList<>();
 					map.put(key, list);
 				}
 				list.add(filter);
@@ -584,7 +586,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 	}
 
 	/**
-	 * For backwards compatibility, link locations in the local file system are represented 
+	 * For backwards compatibility, link locations in the local file system are represented
 	 * in the project description under the "location" tag.
 	 * @param elementName
 	 */
@@ -604,7 +606,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 	}
 
 	/**
-	 * Link locations that are not stored in the local file system are represented 
+	 * Link locations that are not stored in the local file system are represented
 	 * in the project description under the "locationURI" tag.
 	 * @param elementName
 	 */
@@ -678,12 +680,12 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 
 	private void endFilterId(String elementName) {
 		if (elementName.equals(ID)) {
-			Long newId = new Long(charBuffer.toString());
+			Long newId = Long.parseLong(charBuffer.toString());
 			// objectStack has a FilterDescription on it. Set the name
 			// on this FilterDescription.
 			long oldId = ((FilterDescription) objectStack.peek()).getId();
 			if (oldId != 0) {
-				parseProblem(NLS.bind(Messages.projRead_badFilterName, new Long(oldId), newId));
+				parseProblem(NLS.bind(Messages.projRead_badFilterName, oldId, newId));
 			} else {
 				((FilterDescription) objectStack.peek()).setId(newId.longValue());
 			}
@@ -703,7 +705,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 				if (project != null) {
 					((FilterDescription) objectStack.peek()).setResource(newPath.isEmpty() ? (IResource) project : project.getFolder(newPath));
 				} else {
-					// if the project is null, that means that we're loading a project description to retrieve 
+					// if the project is null, that means that we're loading a project description to retrieve
 					// some meta data only.
 					((FilterDescription) objectStack.peek()).setResource(null);
 				}
@@ -918,7 +920,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 
 	public ProjectDescription read(InputSource input) {
 		problems = new MultiStatus(ResourcesPlugin.PI_RESOURCES, IResourceStatus.FAILED_READ_METADATA, Messages.projRead_failureReadingProjectDesc, null);
-		objectStack = new Stack<Object>();
+		objectStack = new Stack<>();
 		state = S_INITIAL;
 		try {
 			createParser().parse(input, this);
@@ -960,7 +962,7 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 	}
 
 	/**
-	 * Reads and returns a project description stored at the given location, or 
+	 * Reads and returns a project description stored at the given location, or
 	 * temporary location.
 	 */
 	public ProjectDescription read(IPath location, IPath tempLocation) throws IOException {
@@ -1018,8 +1020,8 @@ public class ProjectDescriptionReader extends DefaultHandler implements IModelOb
 				if (elementName.equals(DICTIONARY)) {
 					state = S_DICTIONARY;
 					// Push 2 strings for the key/value pair to be read
-					objectStack.push(new String()); // key
-					objectStack.push(new String()); // value
+					objectStack.push(""); // key //$NON-NLS-1$
+					objectStack.push(""); // value //$NON-NLS-1$
 				}
 				break;
 			case S_DICTIONARY :

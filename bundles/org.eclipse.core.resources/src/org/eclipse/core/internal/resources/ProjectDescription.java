@@ -4,13 +4,14 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Martin Oberhuber (Wind River) - [245937] setLinkLocation() detects non-change
  *     Serge Beauchamp (Freescale Semiconductor) - [229633] Project Path Variable Support
  *     Markus Schorn (Wind River) - [306575] Save snapshot location with project
  *     Broadcom Corporation - build configurations and references
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -43,18 +44,18 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	// Build configuration + References state
 	/** Id of the currently active build configuration */
 	protected String activeConfiguration = IBuildConfiguration.DEFAULT_CONFIG_NAME;
-	/** 
-	 * The 'real' build configuration names set on this project. 
+	/**
+	 * The 'real' build configuration names set on this project.
 	 * This doesn't contain the generated 'default' build configuration with name
 	 * {@link IBuildConfiguration#DEFAULT_CONFIG_NAME}
-	 * when no build configurations have been defined. 
+	 * when no build configurations have been defined.
 	 */
 	protected String[] configNames = EMPTY_STRING_ARRAY;
 	// Static + Dynamic project level references
 	protected IProject[] staticRefs = EMPTY_PROJECT_ARRAY;
 	protected IProject[] dynamicRefs = EMPTY_PROJECT_ARRAY;
 	/** Map from config name in this project -> build configurations in other projects */
-	protected HashMap<String, IBuildConfiguration[]> dynamicConfigRefs = new HashMap<String, IBuildConfiguration[]>(1);
+	protected HashMap<String, IBuildConfiguration[]> dynamicConfigRefs = new HashMap<>(1);
 
 	// Cache of the build configurations
 	protected volatile IBuildConfiguration[] cachedBuildConfigs;
@@ -122,7 +123,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	 * Returns a copy of the given array of build configs with all duplicates removed
 	 */
 	private IBuildConfiguration[] copyAndRemoveDuplicates(IBuildConfiguration[] values) {
-		Set<IBuildConfiguration> set = new LinkedHashSet<IBuildConfiguration>(Arrays.asList(values));
+		Set<IBuildConfiguration> set = new LinkedHashSet<>(Arrays.asList(values));
 		return set.toArray(new IBuildConfiguration[set.size()]);
 	}
 
@@ -159,7 +160,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	 * @return collection of build config references
 	 */
 	private Collection<BuildConfiguration> getBuildConfigReferencesFromProjects(IProject[] projects) {
-		List<BuildConfiguration> refs = new ArrayList<BuildConfiguration>(projects.length);
+		List<BuildConfiguration> refs = new ArrayList<>(projects.length);
 		for (int i = 0; i < projects.length; i++)
 			refs.add(new BuildConfiguration(projects[i], null));
 		return refs;
@@ -171,7 +172,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	 * @return List<IProject>
 	 */
 	private Collection<IProject> getProjectsFromBuildConfigRefs(IBuildConfiguration[] refs) {
-		LinkedHashSet<IProject> projects = new LinkedHashSet<IProject>(refs.length);
+		LinkedHashSet<IProject> projects = new LinkedHashSet<>(refs.length);
 		for (int i = 0; i < refs.length; i++)
 			projects.add(refs[i].getProject());
 		return projects;
@@ -208,9 +209,9 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	/**
 	 * The main entrance point to fetch the full set of Project references.
 	 *
-	 * Returns the union of all the description's references. Includes static and dynamic 
+	 * Returns the union of all the description's references. Includes static and dynamic
 	 * project level references as well as build configuration references for the configuration
-	 * with the given id. 
+	 * with the given id.
 	 * Duplicates are omitted.  The calculation is optimized by caching the result.
 	 * Note that these BuildConfiguration references may have <code>null</code> name.  They must
 	 * be resolved using {@link BuildConfiguration#getBuildConfig()} before use.
@@ -221,7 +222,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 			return EMPTY_BUILD_CONFIG_REFERENCE_ARRAY;
 		IBuildConfiguration[] refs = cachedConfigRefs.get(configName);
 		if (refs == null) {
-			Set<IBuildConfiguration> references = new LinkedHashSet<IBuildConfiguration>();
+			Set<IBuildConfiguration> references = new LinkedHashSet<>();
 			IBuildConfiguration[] dynamicBuildConfigs = dynamicConfigRefs.containsKey(configName) ? dynamicConfigRefs.get(configName) : EMPTY_BUILD_CONFIG_REFERENCE_ARRAY;
 			Collection<BuildConfiguration> dynamic = getBuildConfigReferencesFromProjects(dynamicRefs);
 			Collection<BuildConfiguration> statik = getBuildConfigReferencesFromProjects(staticRefs);
@@ -260,9 +261,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return makeCopy ? (IBuildConfiguration[]) configs.clone() : configs;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getBuildConfigReferences(String)
-	 */
 	@Override
 	public IBuildConfiguration[] getBuildConfigReferences(String configName) {
 		return getBuildConfigRefs(configName, true);
@@ -284,9 +282,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return makeCopy ? (Map<String, IBuildConfiguration[]>) dynamicConfigRefs.clone() : dynamicConfigRefs;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getBuildSpec()
-	 */
 	@Override
 	public ICommand[] getBuildSpec() {
 		return getBuildSpec(true);
@@ -305,17 +300,11 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getComment()
-	 */
 	@Override
 	public String getComment() {
 		return comment;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getDynamicReferences()
-	 */
 	@Override
 	public IProject[] getDynamicReferences() {
 		return getDynamicReferences(true);
@@ -385,17 +374,11 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return FileUtil.toPath(location);
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getLocationURI()
-	 */
 	@Override
 	public URI getLocationURI() {
 		return location;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getNatureIds()
-	 */
 	@Override
 	public String[] getNatureIds() {
 		return getNatureIds(true);
@@ -407,9 +390,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return makeCopy ? (String[]) natures.clone() : natures;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#getReferencedProjects()
-	 */
 	@Override
 	public IProject[] getReferencedProjects() {
 		return getReferencedProjects(true);
@@ -421,7 +401,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return makeCopy ? (IProject[]) staticRefs.clone() : staticRefs;
 	}
 
-	/** 
+	/**
 	 * Returns the URI to load a resource snapshot from.
 	 * May return <code>null</code> if no snapshot is set.
 	 * <p>
@@ -440,9 +420,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return snapshotLocation;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#hasNature(String)
-	 */
 	@Override
 	public boolean hasNature(String natureID) {
 		String[] natureIDs = getNatureIds(false);
@@ -553,9 +530,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#newCommand()
-	 */
 	@Override
 	public ICommand newCommand() {
 		return new BuildCommand();
@@ -569,9 +543,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		activeConfiguration = configName;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setBuildSpec(ICommand[])
-	 */
 	@Override
 	public void setBuildSpec(ICommand[] value) {
 		Assert.isLegal(value != null);
@@ -591,17 +562,11 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		buildSpec = result;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setComment(String)
-	 */
 	@Override
 	public void setComment(String value) {
 		comment = value;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setDynamicReferences(IProject[])
-	 */
 	@Override
 	public void setDynamicReferences(IProject[] value) {
 		Assert.isLegal(value != null);
@@ -610,13 +575,10 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	}
 
 	public void setBuildConfigReferences(HashMap<String, IBuildConfiguration[]> refs) {
-		dynamicConfigRefs = new HashMap<String, IBuildConfiguration[]>(refs);
+		dynamicConfigRefs = new HashMap<>(refs);
 		clearCachedReferences(null);
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setDynamicConfigReferences(String, IBuildConfiguration[])
-	 */
 	@Override
 	public void setBuildConfigReferences(String configName, IBuildConfiguration[] references) {
 		Assert.isLegal(configName != null);
@@ -627,14 +589,10 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		clearCachedReferences(configName);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see IProjectDescription#setBuildConfigurations(String[])
-	 */
 	@Override
 	public void setBuildConfigs(String[] names) {
 		// Remove references for deleted buildConfigs
-		LinkedHashSet<String> buildConfigNames = new LinkedHashSet<String>();
+		LinkedHashSet<String> buildConfigNames = new LinkedHashSet<>();
 
 		if (names == null || names.length == 0) {
 			configNames = EMPTY_STRING_ARRAY;
@@ -700,7 +658,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		if (description != null) {
 			//addition or modification
 			if (tempMap == null)
-				tempMap = new HashMap<IPath, LinkDescription>(10);
+				tempMap = new HashMap<>(10);
 			else
 				//copy on write to protect against concurrent read
 				tempMap = (HashMap<IPath, LinkDescription>) tempMap.clone();
@@ -733,10 +691,10 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	synchronized public void addFilter(IPath path, FilterDescription description) {
 		Assert.isNotNull(description);
 		if (filterDescriptions == null)
-			filterDescriptions = new HashMap<IPath, LinkedList<FilterDescription>>(10);
+			filterDescriptions = new HashMap<>(10);
 		LinkedList<FilterDescription> descList = filterDescriptions.get(path);
 		if (descList == null) {
-			descList = new LinkedList<FilterDescription>();
+			descList = new LinkedList<>();
 			filterDescriptions.put(path, descList);
 		}
 		descList.add(description);
@@ -773,7 +731,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		if (description != null) {
 			// addition or modification
 			if (tempMap == null)
-				tempMap = new HashMap<String, VariableDescription>(10);
+				tempMap = new HashMap<>(10);
 			else
 				// copy on write to protect against concurrent read
 				tempMap = (HashMap<String, VariableDescription>) tempMap.clone();
@@ -809,7 +767,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		if (descriptions != null) {
 			// addition
 			if (filterDescriptions == null)
-				filterDescriptions = new HashMap<IPath, LinkedList<FilterDescription>>(10);
+				filterDescriptions = new HashMap<>(10);
 			Object oldValue = filterDescriptions.put(path, descriptions);
 			if (oldValue != null && descriptions.equals(oldValue)) {
 				//not actually changed anything
@@ -831,9 +789,6 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setLocation(IPath)
-	 */
 	@Override
 	public void setLocation(IPath path) {
 		this.location = path == null ? null : URIUtil.toURI(path);
@@ -844,25 +799,16 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		this.location = location;
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setName(String)
-	 */
 	@Override
 	public void setName(String value) {
 		super.setName(value);
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setNatureIds(String[])
-	 */
 	@Override
 	public void setNatureIds(String[] value) {
 		natures = value.clone();
 	}
 
-	/* (non-Javadoc)
-	 * @see IProjectDescription#setReferencedProjects(IProject[])
-	 */
 	@Override
 	public void setReferencedProjects(IProject[] value) {
 		Assert.isLegal(value != null);
@@ -880,10 +826,10 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	 * consulting with the Platform Core team.
 	 * </p>
 	 * @param snapshotLocation the location URI or
-	 *    <code>null</code> to clear the setting 
+	 *    <code>null</code> to clear the setting
 	 * @see IProject#loadSnapshot(int, URI, IProgressMonitor)
 	 * @see #getSnapshotLocationURI()
-	 * @since 3.6 
+	 * @since 3.6
 	 */
 	public void setSnapshotLocationURI(URI snapshotLocation) {
 		this.snapshotLocation = snapshotLocation;
@@ -894,7 +840,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 	}
 
 	/**
-	 * Updates the dynamic build configuration and reference state to that of the passed in 
+	 * Updates the dynamic build configuration and reference state to that of the passed in
 	 * description.
 	 * Copies in:
 	 * <ul>
@@ -922,7 +868,7 @@ public class ProjectDescription extends ModelObject implements IProjectDescripti
 		}
 		if (configRefsHaveChanges(dynamicConfigRefs, description.dynamicConfigRefs)) {
 			changed = true;
-			dynamicConfigRefs = new HashMap<String, IBuildConfiguration[]>(description.dynamicConfigRefs);
+			dynamicConfigRefs = new HashMap<>(description.dynamicConfigRefs);
 		}
 		if (changed)
 			clearCachedReferences(null);

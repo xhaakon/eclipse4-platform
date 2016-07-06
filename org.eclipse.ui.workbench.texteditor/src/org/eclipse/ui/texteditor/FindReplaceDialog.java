@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     SAP SE, christian.georgi@sap.com - Bug 487357: Make find dialog content scrollable
  *******************************************************************************/
 package org.eclipse.ui.texteditor;
 
@@ -19,6 +20,9 @@ import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -79,9 +83,7 @@ class FindReplaceDialog extends Dialog {
 	 * Updates the find replace dialog on activation changes.
 	 */
 	class ActivationListener extends ShellAdapter {
-		/*
-		 * @see ShellListener#shellActivated(ShellEvent)
-		 */
+		@Override
 		public void shellActivated(ShellEvent e) {
 			fActiveShell= (Shell)e.widget;
 			updateButtonState();
@@ -91,9 +93,7 @@ class FindReplaceDialog extends Dialog {
 
 		}
 
-		/*
-		 * @see ShellListener#shellDeactivated(ShellEvent)
-		 */
+		@Override
 		public void shellDeactivated(ShellEvent e) {
 			fGiveFocusToFindField= false;
 
@@ -125,9 +125,7 @@ class FindReplaceDialog extends Dialog {
 			fIgnoreNextEvent= true;
 		}
 
-		/*
-		 * @see ModifyListener#modifyText(ModifyEvent)
-		 */
+		@Override
 		public void modifyText(ModifyEvent e) {
 
 			// XXX: Workaround for Combo bug on Linux (see bug 404202 and bug 410603)
@@ -172,8 +170,8 @@ class FindReplaceDialog extends Dialog {
 	 */
 	boolean fIsRegExInit;
 
-	private List fFindHistory;
-	private List fReplaceHistory;
+	private List<String> fFindHistory;
+	private List<String> fReplaceHistory;
 	private IRegion fOldScope;
 
 	private boolean fIsTargetEditable;
@@ -228,7 +226,7 @@ class FindReplaceDialog extends Dialog {
 	 * Holds the mnemonic/button pairs for all buttons.
 	 * @since 3.7
 	 */
-	private HashMap fMnemonicButtonMap= new HashMap();
+	private HashMap<Character, Button> fMnemonicButtonMap= new HashMap<>();
 
 
 	/**
@@ -242,8 +240,8 @@ class FindReplaceDialog extends Dialog {
 		fTarget= null;
 
 		fDialogPositionInit= null;
-		fFindHistory= new ArrayList(HISTORY_SIZE - 1);
-		fReplaceHistory= new ArrayList(HISTORY_SIZE - 1);
+		fFindHistory= new ArrayList<>(HISTORY_SIZE - 1);
+		fReplaceHistory= new ArrayList<>(HISTORY_SIZE - 1);
 
 		fWrapInit= false;
 		fCaseInit= false;
@@ -259,10 +257,7 @@ class FindReplaceDialog extends Dialog {
 		setBlockOnOpen(false);
 	}
 
-	/*
-	 * @see org.eclipse.jface.dialogs.Dialog#isResizable()
-	 * @since 3.4
-	 */
+	@Override
 	protected boolean isResizable() {
 		return true;
 	}
@@ -271,6 +266,7 @@ class FindReplaceDialog extends Dialog {
 	 * Returns this dialog's parent shell.
 	 * @return the dialog's parent shell
 	 */
+	@Override
 	public Shell getParentShell() {
 		return super.getParentShell();
 	}
@@ -286,9 +282,7 @@ class FindReplaceDialog extends Dialog {
 		return control != null && !control.isDisposed();
 	}
 
-	/*
-	 * @see org.eclipse.jface.window.Window#create()
-	 */
+	@Override
 	public void create() {
 
 		super.create();
@@ -330,29 +324,32 @@ class FindReplaceDialog extends Dialog {
 		panel.setLayout(layout);
 
 		fFindNextButton= makeButton(panel, EditorMessages.FindReplace_FindNextButton_label, 102, true, new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (isIncrementalSearch() && !isRegExSearchAvailableAndChecked())
 					initIncrementalBaseLocation();
 
 				fNeedsInitialFindBeforeReplace= false;
-				performSearch((e.stateMask == SWT.SHIFT) ^ isForwardSearch());
+				performSearch(((e.stateMask & SWT.MODIFIER_MASK) == SWT.SHIFT) ^ isForwardSearch());
 				updateFindHistory();
 			}
 		});
 		setGridData(fFindNextButton, SWT.FILL, true, SWT.FILL, false);
 
 		fReplaceFindButton= makeButton(panel, EditorMessages.FindReplace_ReplaceFindButton_label, 103, false, new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (fNeedsInitialFindBeforeReplace)
-					performSearch((e.stateMask == SWT.SHIFT) ^ isForwardSearch());
+					performSearch(((e.stateMask & SWT.MODIFIER_MASK) == SWT.SHIFT) ^ isForwardSearch());
 				if (performReplaceSelection())
-					performSearch((e.stateMask == SWT.SHIFT) ^ isForwardSearch());
+					performSearch(((e.stateMask & SWT.MODIFIER_MASK) == SWT.SHIFT) ^ isForwardSearch());
 				updateFindAndReplaceHistory();
 			}
 		});
 		setGridData(fReplaceFindButton, SWT.FILL, false, SWT.FILL, false);
 
 		fReplaceSelectionButton= makeButton(panel, EditorMessages.FindReplace_ReplaceSelectionButton_label, 104, false, new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (fNeedsInitialFindBeforeReplace)
 					performSearch();
@@ -364,6 +361,7 @@ class FindReplaceDialog extends Dialog {
 		setGridData(fReplaceSelectionButton, SWT.FILL, false, SWT.FILL, false);
 
 		fReplaceAllButton= makeButton(panel, EditorMessages.FindReplace_ReplaceAllButton_label, 105, false, new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				performReplaceAll();
 				updateFindAndReplaceHistory();
@@ -404,23 +402,37 @@ class FindReplaceDialog extends Dialog {
 		return panel;
 	}
 
-	/*
-	 * @see org.eclipse.jface.window.Window#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	protected Control createContents(Composite parent) {
-
 		Composite panel= new Composite(parent, SWT.NULL);
 		GridLayout layout= new GridLayout();
 		layout.numColumns= 1;
 		layout.makeColumnsEqualWidth= true;
 		panel.setLayout(layout);
-		panel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		setGridData(panel, SWT.FILL, true, SWT.FILL, true);
 
-		Composite inputPanel= createInputPanel(panel);
+		ScrolledComposite scrolled= new ScrolledComposite(panel, SWT.V_SCROLL);
+		setGridData(scrolled, SWT.FILL, true, SWT.FILL, true);
+
+		Composite mainArea = new Composite(scrolled, SWT.NONE);
+		setGridData(mainArea, SWT.FILL, true, SWT.FILL, true);
+		mainArea.setLayout(new GridLayout(1, true));
+
+		Composite inputPanel= createInputPanel(mainArea);
 		setGridData(inputPanel, SWT.FILL, true, SWT.TOP, false);
 
-		Composite configPanel= createConfigPanel(panel);
+		Composite configPanel= createConfigPanel(mainArea);
 		setGridData(configPanel, SWT.FILL, true, SWT.TOP, true);
+
+		scrolled.setContent(mainArea);
+		scrolled.setExpandHorizontal(true);
+		scrolled.setExpandVertical(true);
+		scrolled.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e) {
+				scrolled.setMinHeight(mainArea.computeSize(SWT.DEFAULT, SWT.DEFAULT).y);
+			}
+		});
 
 		Composite buttonPanelB= createButtonSection(panel);
 		setGridData(buttonPanelB, SWT.RIGHT, true, SWT.BOTTOM, false);
@@ -429,6 +441,7 @@ class FindReplaceDialog extends Dialog {
 		setGridData(statusBar, SWT.FILL, true, SWT.BOTTOM, false);
 
 		panel.addTraverseListener(new TraverseListener() {
+			@Override
 			public void keyTraversed(TraverseEvent e) {
 				if (e.detail == SWT.TRAVERSE_RETURN) {
 					if (!Util.isMac()) {
@@ -445,7 +458,7 @@ class FindReplaceDialog extends Dialog {
 				else if (e.detail == SWT.TRAVERSE_MNEMONIC) {
 					Character mnemonic= new Character(Character.toLowerCase(e.character));
 					if (fMnemonicButtonMap.containsKey(mnemonic)) {
-						Button button= (Button)fMnemonicButtonMap.get(mnemonic);
+						Button button= fMnemonicButtonMap.get(mnemonic);
 						if ((fFindField.isFocusControl() || fReplaceField.isFocusControl() || (button.getStyle() & SWT.PUSH) != 0)
 								&& button.isEnabled()) {
 							Event event= new Event();
@@ -505,11 +518,13 @@ class FindReplaceDialog extends Dialog {
 		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		SelectionListener selectionListener= new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (isIncrementalSearch() && !isRegExSearchAvailableAndChecked())
 					initIncrementalBaseLocation();
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		};
@@ -558,6 +573,7 @@ class FindReplaceDialog extends Dialog {
 		setGridData(fGlobalRadioButton, SWT.LEFT, false, SWT.CENTER, false);
 		fGlobalRadioButton.setSelection(fGlobalInit);
 		fGlobalRadioButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!fGlobalRadioButton.getSelection() || !fUseSelectedLines)
 					return;
@@ -565,6 +581,7 @@ class FindReplaceDialog extends Dialog {
 				useSelectedLines(false);
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
@@ -576,6 +593,7 @@ class FindReplaceDialog extends Dialog {
 		fSelectedRangeRadioButton.setSelection(!fGlobalInit);
 		fUseSelectedLines= !fGlobalInit;
 		fSelectedRangeRadioButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (!fSelectedRangeRadioButton.getSelection() || fUseSelectedLines)
 					return;
@@ -583,6 +601,7 @@ class FindReplaceDialog extends Dialog {
 				useSelectedLines(true);
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
@@ -638,6 +657,7 @@ class FindReplaceDialog extends Dialog {
 	private Composite createInputPanel(Composite parent) {
 
 		ModifyListener listener= new ModifyListener() {
+			@Override
 			public void modifyText(ModifyEvent e) {
 				updateButtonState();
 			}
@@ -711,10 +731,12 @@ class FindReplaceDialog extends Dialog {
 		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		SelectionListener selectionListener= new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				storeSettings();
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		};
@@ -745,6 +767,7 @@ class FindReplaceDialog extends Dialog {
 		setGridData(fIncrementalCheckBox, SWT.LEFT, false, SWT.CENTER, false);
 		fIncrementalCheckBox.setSelection(fIncrementalInit);
 		fIncrementalCheckBox.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (isIncrementalSearch() && !isRegExSearch())
 					initIncrementalBaseLocation();
@@ -752,6 +775,7 @@ class FindReplaceDialog extends Dialog {
 				storeSettings();
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
@@ -763,9 +787,7 @@ class FindReplaceDialog extends Dialog {
 		((GridData)fIsRegExCheckBox.getLayoutData()).horizontalSpan= 2;
 		fIsRegExCheckBox.setSelection(fIsRegExInit);
 		fIsRegExCheckBox.addSelectionListener(new SelectionAdapter() {
-			/*
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-			 */
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				boolean newState= fIsRegExCheckBox.getSelection();
 				fIncrementalCheckBox.setEnabled(!newState);
@@ -777,9 +799,7 @@ class FindReplaceDialog extends Dialog {
 		storeButtonWithMnemonicInMap(fIsRegExCheckBox);
 		fWholeWordCheckBox.setEnabled(!isRegExSearchAvailableAndChecked());
 		fWholeWordCheckBox.addSelectionListener(new SelectionAdapter() {
-			/*
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-			 */
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateButtonState();
 			}
@@ -816,6 +836,7 @@ class FindReplaceDialog extends Dialog {
 	/*
 	 * @see Dialog#buttonPressed
 	 */
+	@Override
 	protected void buttonPressed(int buttonID) {
 		if (buttonID == 101)
 			close();
@@ -971,23 +992,11 @@ class FindReplaceDialog extends Dialog {
 		return fDialogPositionInit;
 	}
 
-	/*
-	 * @see org.eclipse.jface.dialogs.Dialog#getInitialSize()
-	 * @since 3.5
-	 */
-	protected Point getInitialSize() {
-		Point initialSize= super.getInitialSize();
-		Point minSize= getShell().computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		if (initialSize.x < minSize.x)
-			return minSize;
-		return initialSize;
-	}
-
 	/**
 	 * Returns the dialog's history.
 	 * @return the dialog's history
 	 */
-	private List getFindHistory() {
+	private List<String> getFindHistory() {
 		return fFindHistory;
 	}
 
@@ -1008,7 +1017,7 @@ class FindReplaceDialog extends Dialog {
 	 * Returns the dialog's replace history.
 	 * @return the dialog's replace history
 	 */
-	private List getReplaceHistory() {
+	private List<String> getReplaceHistory() {
 		return fReplaceHistory;
 	}
 
@@ -1045,6 +1054,7 @@ class FindReplaceDialog extends Dialog {
 	/**
 	 * @see org.eclipse.jface.window.Window#close()
 	 */
+	@Override
 	public boolean close() {
 		handleDialogClose();
 		return super.close();
@@ -1131,7 +1141,7 @@ class FindReplaceDialog extends Dialog {
 			} else {
 				if ("".equals(fFindField.getText())) { //$NON-NLS-1$
 					if (fFindHistory.size() > 0)
-						fFindField.setText((String) fFindHistory.get(0));
+						fFindField.setText(fFindHistory.get(0));
 					else
 						fFindField.setText(""); //$NON-NLS-1$
 				}
@@ -1295,7 +1305,7 @@ class FindReplaceDialog extends Dialog {
 		if (editor == null)
 			return null;
 
-		return (IEditorStatusLine) editor.getAdapter(IEditorStatusLine.class);
+		return editor.getAdapter(IEditorStatusLine.class);
 	}
 
 	/**
@@ -1351,6 +1361,7 @@ class FindReplaceDialog extends Dialog {
 
 			class ReplaceAllRunnable implements Runnable {
 				public int numberOfOccurrences;
+				@Override
 				public void run() {
 					numberOfOccurrences= replaceAll(findString, replaceString == null ? "" : replaceString, isForwardSearch(), isCaseSensitiveSearch(), isWholeWordSearch(), isRegExSearchAvailableAndChecked());	//$NON-NLS-1$
 				}
@@ -1628,7 +1639,7 @@ class FindReplaceDialog extends Dialog {
 	 * @param combo combo to be updated
 	 * @param content to be put into the combo
 	 */
-	private void updateCombo(Combo combo, List content) {
+	private void updateCombo(Combo combo, List<String> content) {
 		combo.removeAll();
 		for (int i= 0; i < content.size(); i++) {
 			combo.add(content.get(i).toString());
@@ -1669,7 +1680,7 @@ class FindReplaceDialog extends Dialog {
 	 * @param combo to be updated
 	 * @param history to be put into the combo
 	 */
-	private void updateHistory(Combo combo, List history) {
+	private void updateHistory(Combo combo, List<String> history) {
 		String findString= combo.getText();
 		int index= history.indexOf(findString);
 		if (index != 0) {
@@ -1751,6 +1762,7 @@ class FindReplaceDialog extends Dialog {
 	 *
 	 * @param shell the new parent shell
 	 */
+	@Override
 	public void setParentShell(Shell shell) {
 		if (shell != fParentShell) {
 
@@ -1781,10 +1793,7 @@ class FindReplaceDialog extends Dialog {
 		return fDialogSettings;
 	}
 
-	/*
-	 * @see org.eclipse.jface.dialogs.Dialog#getDialogBoundsSettings()
-	 * @since 3.2
-	 */
+	@Override
 	protected IDialogSettings getDialogBoundsSettings() {
 		String sectionName= getClass().getName() + "_dialogBounds"; //$NON-NLS-1$
 		IDialogSettings settings= TextEditorPlugin.getDefault().getDialogSettings();
@@ -1794,10 +1803,7 @@ class FindReplaceDialog extends Dialog {
 		return section;
 	}
 
-	/*
-	 * @see org.eclipse.jface.dialogs.Dialog#getDialogBoundsStrategy()
-	 * @since 3.2
-	 */
+	@Override
 	protected int getDialogBoundsStrategy() {
 		return DIALOG_PERSISTLOCATION | DIALOG_PERSISTSIZE;
 	}
@@ -1817,7 +1823,7 @@ class FindReplaceDialog extends Dialog {
 
 		String[] findHistory= s.getArray("findhistory"); //$NON-NLS-1$
 		if (findHistory != null) {
-			List history= getFindHistory();
+			List<String> history= getFindHistory();
 			history.clear();
 			for (int i= 0; i < findHistory.length; i++)
 				history.add(findHistory[i]);
@@ -1825,7 +1831,7 @@ class FindReplaceDialog extends Dialog {
 
 		String[] replaceHistory= s.getArray("replacehistory"); //$NON-NLS-1$
 		if (replaceHistory != null) {
-			List history= getReplaceHistory();
+			List<String> history= getReplaceHistory();
 			history.clear();
 			for (int i= 0; i < replaceHistory.length; i++)
 				history.add(replaceHistory[i]);
@@ -1844,7 +1850,7 @@ class FindReplaceDialog extends Dialog {
 		s.put("incremental", fIncrementalInit); //$NON-NLS-1$
 		s.put("isRegEx", fIsRegExInit); //$NON-NLS-1$
 
-		List history= getFindHistory();
+		List<String> history= getFindHistory();
 		String findString= getFindString();
 		if (findString.length() > 0)
 			history.add(0, findString);
@@ -1865,11 +1871,11 @@ class FindReplaceDialog extends Dialog {
 	 * @param sectionName the section name
 	 * @since 3.2
 	 */
-	private void writeHistory(List history, IDialogSettings settings, String sectionName) {
+	private void writeHistory(List<String> history, IDialogSettings settings, String sectionName) {
 		int itemCount= history.size();
-		Set distinctItems= new HashSet(itemCount);
+		Set<String> distinctItems= new HashSet<>(itemCount);
 		for (int i= 0; i < itemCount; i++) {
-			String item= (String)history.get(i);
+			String item= history.get(i);
 			if (distinctItems.contains(item)) {
 				history.remove(i--);
 				itemCount--;

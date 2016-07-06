@@ -18,10 +18,10 @@ import org.eclipse.team.ui.synchronize.ModelOperation;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * A model operation that builds the scope of the operation's 
+ * A model operation that builds the scope of the operation's
  * manager. Clients who want to build the scope can do the following:
  * <p>
- * 
+ *
  * @see ISynchronizationScopeManager
  * @since 3.2
  */
@@ -34,6 +34,7 @@ public class BuildScopeOperation extends ModelOperation {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.operations.ModelOperation#execute(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected void execute(IProgressMonitor monitor)
 			throws InvocationTargetException, InterruptedException {
 		// Do nothing since we only want to build the scope

@@ -22,10 +22,11 @@ public class SynchronizeWizardRegistry extends RegistryReader {
 	public static final String PT_SYNCHRONIZE_WIZARDS = "synchronizeWizards"; //$NON-NLS-1$
 	private static final String TAG_SYNCHRONIZE_WIZARD = "wizard"; //$NON-NLS-1$
 	private Map wizards = new HashMap();
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.registry.RegistryReader#readElement(org.eclipse.core.runtime.IConfigurationElement)
 	 */
+	@Override
 	protected boolean readElement(IConfigurationElement element) {
 		if (element.getName().equals(TAG_SYNCHRONIZE_WIZARD)) {
 			String descText = getDescription(element);
@@ -40,7 +41,7 @@ public class SynchronizeWizardRegistry extends RegistryReader {
 		}
 		return false;
 	}
-	
+
 	public SynchronizeWizardDescription[] getSynchronizeWizards() {
 		return (SynchronizeWizardDescription[])wizards.values().toArray(new SynchronizeWizardDescription[wizards.size()]);
 	}

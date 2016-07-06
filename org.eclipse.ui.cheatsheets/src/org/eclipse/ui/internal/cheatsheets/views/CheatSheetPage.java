@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2007 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,7 @@ import org.eclipse.ui.internal.cheatsheets.ICheatSheetResource;
 import org.eclipse.ui.internal.cheatsheets.Messages;
 import org.eclipse.ui.internal.cheatsheets.actions.IMenuContributor;
 import org.eclipse.ui.internal.cheatsheets.data.CheatSheet;
+import org.eclipse.ui.internal.cheatsheets.data.Item;
 
 public class CheatSheetPage extends Page implements IMenuContributor {
 	// Colors
@@ -44,11 +45,11 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 
 	private CheatSheet cheatSheet;
 
-	private ArrayList viewItemList;
+	private ArrayList<ViewItem> viewItemList;
 
 	private CheatSheetViewer viewer;
 
-	public CheatSheetPage(CheatSheet cheatSheet, ArrayList viewItemList,
+	public CheatSheetPage(CheatSheet cheatSheet, ArrayList<ViewItem> viewItemList,
 			CheatSheetViewer cheatSheetViewer) {
 		super();
 		this.cheatSheet = cheatSheet;
@@ -56,12 +57,13 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 		this.viewer = cheatSheetViewer;
 	}
 
+	@Override
 	public void createPart(Composite parent) {
-		CheatSheetStopWatch.startStopWatch("CheatSheetPage.createPart()"); //$NON-NLS-1$		
+		CheatSheetStopWatch.startStopWatch("CheatSheetPage.createPart()"); //$NON-NLS-1$
 		super.createPart(parent);
 		HyperlinkGroup hyperlinkGroup = toolkit.getHyperlinkGroup();
 		hyperlinkGroup.setHyperlinkUnderlineMode(HyperlinkSettings.UNDERLINE_HOVER);
-		
+
 		CheatSheetStopWatch
 				.printLapTime(
 						"CheatSheetPage.createPart()", "Time in CheatSheetPage.createInfoArea() after super.createInfoArea(): "); //$NON-NLS-1$ //$NON-NLS-2$
@@ -79,13 +81,11 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 						"CheatSheetPage.createInfoArea()", "Time in CheatSheetPage.createPart() before add loop: "); //$NON-NLS-1$ //$NON-NLS-2$
 		// Get the content info from the parser. This makes up all items except
 		// the intro item.
-		ArrayList items = cheatSheet.getItems();
+		ArrayList<Item> items = cheatSheet.getItems();
 		for (int i = 0; i < items.size(); i++) {
 			Color color = (i % 2) == 0 ? getInactiveColor1() : getInactiveColor2();
 
-			CoreItem coreItem = new CoreItem(this,
-					(org.eclipse.ui.internal.cheatsheets.data.Item) items
-							.get(i), color, viewer);
+			CoreItem coreItem = new CoreItem(this, items.get(i), color, viewer);
 			viewItemList.add(coreItem);
 		}
 		CheatSheetStopWatch
@@ -104,16 +104,18 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 	/**
 	 * Creates the cheatsheet's title areawhich will consists of a title and
 	 * image.
-	 * 
+	 *
 	 * @param parent
 	 *            the SWT parent for the title area composite
 	 */
+	@Override
 	protected String getTitle() {
 		if (cheatSheet != null && cheatSheet.getTitle() != null)
 			return cheatSheet.getTitle();
 		return ICheatSheetResource.EMPTY_STRING;
 	}
 
+	@Override
 	public void dispose() {
 		super.dispose();
 
@@ -124,7 +126,7 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 
 		if (activeColor != null)
 			activeColor.dispose();
-		
+
 		if (introColor != null)
 			introColor.dispose();
 		inactiveColor1 = null;
@@ -133,6 +135,7 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 		introColor = null;
 	}
 
+	@Override
 	protected void init(Display display) {
 		super.init(display);
 		computeColors(display);
@@ -142,7 +145,7 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 		RGB rgb;
 		RGB white = new RGB(255, 255, 255);
 		RGB black = new RGB(0, 0, 0);
-		
+
 		if (isReverseVideo()) {
 			computeReverseVideoColors(display);
 			return;
@@ -164,8 +167,8 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 				rgb = FormColors.blend(rgb, white, 90);
 			}
 			// final check - if gray
-			if (Math.abs(rgb.blue-rgb.green) <5 && 
-					Math.abs(rgb.blue-rgb.red)<5 && 
+			if (Math.abs(rgb.blue-rgb.green) <5 &&
+					Math.abs(rgb.blue-rgb.red)<5 &&
 					Math.abs(rgb.green-rgb.red)<5) {
 				// blend with blue
 				rgb = FormColors.blend(rgb, new RGB(100, 100, 255), 90);
@@ -203,19 +206,20 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 		RGB white = new RGB(255, 255, 255);
         // Create new colors, they will get disposed
         RGB rgb = background.getRGB();
-		activeColor = new Color(display, rgb ); 
+		activeColor = new Color(display, rgb );
 		rgb = FormColors.blend(rgb, white, 85);
 		inactiveColor1 = new Color(display, rgb);
 		rgb = FormColors.blend(rgb, white, 85);
-		inactiveColor2 = new Color(display, rgb ); 
-        introColor = new Color(display, rgb ); 
+		inactiveColor2 = new Color(display, rgb );
+        introColor = new Color(display, rgb );
 	}
-	
+
 	private boolean isReverseVideo() {
         Color bg = toolkit.getColors().getBackground();
 		return ((bg.getBlue() + bg.getRed() + bg.getGreen()) < 380);
 	}
 
+	@Override
 	public void initialized() {
 		for (Iterator iter = viewItemList.iterator(); iter.hasNext();) {
 			ViewItem item = (ViewItem) iter.next();
@@ -234,13 +238,14 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 	public FormToolkit getToolkit() {
 		return toolkit;
 	}
-	
+
 	private int contributeRestartItem(Menu menu, int index) {
 		MenuItem item = new MenuItem(menu, SWT.PUSH, index++);
 		item.setText(Messages.RESTART_MENU);
 		item.setImage(CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_RETURN));
-		
+
 		item.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				viewer.restart();
 			}
@@ -248,6 +253,7 @@ public class CheatSheetPage extends Page implements IMenuContributor {
 		return index;
 	}
 
+	@Override
 	public int contributeToViewMenu(Menu menu, int index) {
 		return contributeRestartItem(menu, index);
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -70,9 +70,10 @@ public class SearchResults implements ISearchHitCollector {
 	/* (non-Javadoc)
 	 * @see org.eclipse.help.internal.search.ISearchHitCollector#addHits(List, String)
 	 */
+	@Override
 	public void addHits(List<SearchHit> hits, String highlightTerms) {
 		String urlEncodedWords = URLCoder.encode(highlightTerms);
-		List<SearchHit> searchHitList = new ArrayList<SearchHit>();
+		List<SearchHit> searchHitList = new ArrayList<>();
 		float scoreScale = 1.0f;
 		boolean scoreScaleSet = false;
 
@@ -273,7 +274,7 @@ public class SearchResults implements ISearchHitCollector {
 		if (wSets == null)
 			return null;
 
-		scopes = new ArrayList<AdaptableHelpResource>(wSets.length);
+		scopes = new ArrayList<>(wSets.length);
 		for (int w = 0; w < wSets.length; w++) {
 			AdaptableHelpResource[] elements = wSets[w].getElements();
 			for (int i = 0; i < elements.length; i++)
@@ -286,7 +287,7 @@ public class SearchResults implements ISearchHitCollector {
 		if (wSets == null)
 			return null;
 
-		ArrayList<CriterionResource> criteriaScopes = new ArrayList<CriterionResource>(wSets.length);
+		ArrayList<CriterionResource> criteriaScopes = new ArrayList<>(wSets.length);
 		for (int w = 0; w < wSets.length; w++) {
 			CriterionResource[] elements = wSets[w].getCriteria();
 			for (int i = 0; i < elements.length; i++)
@@ -295,6 +296,7 @@ public class SearchResults implements ISearchHitCollector {
 		return criteriaScopes;
 	}
 
+	@Override
 	public void addQTCException(QueryTooComplexException exception) throws QueryTooComplexException {
 		this.searchException = exception;
 	}

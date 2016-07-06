@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2007 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,15 +43,13 @@ public class AddTaskAction extends AddMarkerAction {
 		super(bundle, prefix, editor, IMarker.TASK, false);
 	}
 
-	/*
-	 * @see IAction#run()
-	 */
+	@Override
 	public void run() {
 
 		IResource resource= getResource();
 		if (resource == null)
 			return;
-		Map attributes= getInitialAttributes();
+		Map<String, Object> attributes= getInitialAttributes();
 
 		TaskPropertiesDialog dialog= new TaskPropertiesDialog(getTextEditor().getSite().getShell());
 		dialog.setResource(resource);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2013 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Tom Hochstein (Freescale) - Bug 409996 - 'Restore Defaults' does not work properly on Project Properties > Resource tab
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 472784, 474273
  *******************************************************************************/
 package org.eclipse.ui.ide.dialogs;
 
@@ -20,7 +21,6 @@ import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -210,13 +210,9 @@ public final class ResourceEncodingFieldEditor extends AbstractEncodingFieldEdit
 					shell,
 					IDEWorkbenchMessages.ResourceEncodingFieldEditor_EncodingConflictTitle,
 					null,
-					NLS
-							.bind(
-									IDEWorkbenchMessages.ResourceEncodingFieldEditor_EncodingConflictMessage,
-									encoding, descriptionCharset),
-					MessageDialog.WARNING, new String[] {
-							IDialogConstants.YES_LABEL,
-							IDialogConstants.NO_LABEL }, 0) {
+					NLS.bind(IDEWorkbenchMessages.ResourceEncodingFieldEditor_EncodingConflictMessage, encoding,
+							descriptionCharset),
+					MessageDialog.WARNING, 0, IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL) {
 				@Override
 				protected int getShellStyle() {
 					return super.getShellStyle() | SWT.SHEET;
@@ -232,43 +228,40 @@ public final class ResourceEncodingFieldEditor extends AbstractEncodingFieldEdit
 
 		final String finalEncoding = encoding;
 
-		Job charsetJob = new Job(IDEWorkbenchMessages.IDEEncoding_EncodingJob) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				try {
-					if (!hasSameEncoding) {
-						if (resource instanceof IContainer) {
-							((IContainer) resource).setDefaultCharset(
-									finalEncoding, monitor);
-						} else {
-							((IFile) resource).setCharset(finalEncoding,
-									monitor);
-						}
+		Job charsetJob = Job.create(IDEWorkbenchMessages.IDEEncoding_EncodingJob, monitor -> {
+			try {
+				if (!hasSameEncoding) {
+					if (resource instanceof IContainer) {
+						((IContainer) resource).setDefaultCharset(
+								finalEncoding, monitor);
+					} else {
+						((IFile) resource).setCharset(finalEncoding,
+								monitor);
 					}
-					if (!hasSameSeparateDerivedEncodings) {
-						Preferences prefs = new ProjectScope((IProject) resource).getNode(ResourcesPlugin.PI_RESOURCES);
-						boolean newValue = !getStoredSeparateDerivedEncodingsValue();
-						// Remove the pref if it's the default, otherwise store it.
-						if (newValue == DEFAULT_PREF_SEPARATE_DERIVED_ENCODINGS)
-							prefs.remove(ResourcesPlugin.PREF_SEPARATE_DERIVED_ENCODINGS);
-						else
-							prefs.putBoolean(ResourcesPlugin.PREF_SEPARATE_DERIVED_ENCODINGS, newValue);
-						prefs.flush();
-					}
-					return Status.OK_STATUS;
-				} catch (CoreException e) {// If there is an error return the
-					// default
-					IDEWorkbenchPlugin
-							.log(
-									IDEWorkbenchMessages.ResourceEncodingFieldEditor_ErrorStoringMessage,
-									e.getStatus());
-					return e.getStatus();
-				} catch (BackingStoreException e) {
-					IDEWorkbenchPlugin.log(IDEWorkbenchMessages.ResourceEncodingFieldEditor_ErrorStoringMessage, e);
-					return new Status(IStatus.ERROR, IDEWorkbenchPlugin.IDE_WORKBENCH, e.getMessage(), e);
 				}
+				if (!hasSameSeparateDerivedEncodings) {
+					Preferences prefs = new ProjectScope((IProject) resource).getNode(ResourcesPlugin.PI_RESOURCES);
+					boolean newValue = !getStoredSeparateDerivedEncodingsValue();
+					// Remove the pref if it's the default, otherwise store it.
+					if (newValue == DEFAULT_PREF_SEPARATE_DERIVED_ENCODINGS)
+						prefs.remove(ResourcesPlugin.PREF_SEPARATE_DERIVED_ENCODINGS);
+					else
+						prefs.putBoolean(ResourcesPlugin.PREF_SEPARATE_DERIVED_ENCODINGS, newValue);
+					prefs.flush();
+				}
+				return Status.OK_STATUS;
+			} catch (CoreException e1) {// If there is an error return the
+				// default
+				IDEWorkbenchPlugin
+						.log(
+								IDEWorkbenchMessages.ResourceEncodingFieldEditor_ErrorStoringMessage,
+								e1.getStatus());
+				return e1.getStatus();
+			} catch (BackingStoreException e2) {
+				IDEWorkbenchPlugin.log(IDEWorkbenchMessages.ResourceEncodingFieldEditor_ErrorStoringMessage, e2);
+				return new Status(IStatus.ERROR, IDEWorkbenchPlugin.IDE_WORKBENCH, e2.getMessage(), e2);
 			}
-		};
+		});
 
 		charsetJob.schedule();
 

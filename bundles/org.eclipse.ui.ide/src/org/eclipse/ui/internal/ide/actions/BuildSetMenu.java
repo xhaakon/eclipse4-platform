@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2006 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,6 @@ import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.widgets.Menu;
@@ -36,13 +35,10 @@ public class BuildSetMenu extends ContributionItem {
 
     boolean dirty = true;
 
-    private IMenuListener menuListener = new IMenuListener() {
-        @Override
-		public void menuAboutToShow(IMenuManager manager) {
-            manager.markDirty();
-            dirty = true;
-        }
-    };
+    private IMenuListener menuListener = manager -> {
+	    manager.markDirty();
+	    dirty = true;
+	};
 
     private IAction selectBuildWorkingSetAction;
 

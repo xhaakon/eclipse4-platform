@@ -1,9 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others. All rights reserved. This program and the
- * accompanying materials are made available under the terms of the Eclipse Public License v1.0
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors: IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.help.internal.toc;
@@ -35,7 +36,7 @@ public class Toc extends UAElement implements IToc2 {
 
 	private ITocContribution contribution;
 	private ITopic topic;
-	private Map href2TopicMap;
+	private Map<String, ITopic> href2TopicMap;
 
 	public Toc(IToc src) {
 		super(NAME, src);
@@ -55,8 +56,8 @@ public class Toc extends UAElement implements IToc2 {
 	/*
 	 * Creates a mapping of all topic hrefs to ITopics.
 	 */
-	private Map createHref2TopicMap() {
-		Map map = new HashMap();
+	private Map<String, ITopic> createHref2TopicMap() {
+		Map<String, ITopic> map = new HashMap<>();
 		if (topic != null) {
 			map.put(topic.getHref(), topic);
 		}
@@ -71,7 +72,7 @@ public class Toc extends UAElement implements IToc2 {
 	 * Creates a mapping of all topic hrefs to ITopics under the given ITopic and stores in the
 	 * given Map.
 	 */
-	private void createHref2TopicMapAux(Map map, ITopic topic) {
+	private void createHref2TopicMapAux(Map<String, ITopic> map, ITopic topic) {
 		String href = topic.getHref();
 		if (href != null) {
 			map.put(href, topic);
@@ -93,14 +94,17 @@ public class Toc extends UAElement implements IToc2 {
 		}
 	}
 
+	@Override
 	public String getHref() {
 		return getAttribute(ATTRIBUTE_HREF);
 	}
 
+	@Override
 	public String getIcon() {
 		return getAttribute(ATTRIBUTE_ICON);
 	}
 
+	@Override
 	public boolean isSorted() {
 		return "true".equalsIgnoreCase(getAttribute(ATTRIBUTE_SORT)); //$NON-NLS-1$
 	}
@@ -108,13 +112,14 @@ public class Toc extends UAElement implements IToc2 {
 	/*
 	 * Returns a mapping of all topic hrefs to ITopics.
 	 */
-	private Map getHref2TopicMap() {
+	private Map<String, ITopic> getHref2TopicMap() {
 		if (href2TopicMap == null) {
 			href2TopicMap = createHref2TopicMap();
 		}
 		return href2TopicMap;
 	}
 
+	@Override
 	public String getLabel() {
 		return getAttribute(ATTRIBUTE_LABEL);
 	}
@@ -127,39 +132,48 @@ public class Toc extends UAElement implements IToc2 {
 		return getAttribute(ATTRIBUTE_TOPIC);
 	}
 
+	@Override
 	public ITopic getTopic(String href) {
 		if (href == null) {
 			if (topic == null) {
 				topic = new ITopic2() {
 
+					@Override
 					public String getHref() {
 						return getTopic();
 					}
 
+					@Override
 					public String getLabel() {
 						return Toc.this.getLabel();
 					}
 
+					@Override
 					public ITopic[] getSubtopics() {
 						return getTopics();
 					}
 
+					@Override
 					public boolean isEnabled(IEvaluationContext context) {
 						return Toc.this.isEnabled(context);
 					}
 
+					@Override
 					public IUAElement[] getChildren() {
 						return new IUAElement[0];
 					}
 
+					@Override
 					public ICriteria[] getCriteria() {
 						return Toc.this.getCriteria();
 					}
 
+					@Override
 					public String getIcon() {
 						return null;
 					}
 
+					@Override
 					public boolean isSorted() {
 						return false;
 					}
@@ -167,16 +181,18 @@ public class Toc extends UAElement implements IToc2 {
 			}
 			return topic;
 		} else {
-			return (ITopic) getHref2TopicMap().get(href);
+			return getHref2TopicMap().get(href);
 		}
 	}
 
+	@Override
 	public ITopic[] getTopics() {
-		return (ITopic[]) getChildren(ITopic.class);
+		return getChildren(ITopic.class);
 	}
-	
+
+	@Override
 	public ICriteria[] getCriteria() {
-		return (ICriteria[]) getChildren(ICriteria.class);
+		return getChildren(ICriteria.class);
 	}
 
 	public void setLabel(String label) {
@@ -202,5 +218,5 @@ public class Toc extends UAElement implements IToc2 {
 	public void setTocContribution(ITocContribution contribution) {
 		this.contribution = contribution;
 	}
-	
+
 }

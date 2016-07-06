@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -18,16 +18,16 @@ import org.eclipse.core.runtime.preferences.*;
 /**
  * This class represents a preference node in the "bundle_defaults" scope. This scope is
  * used to represent default values which are set by the bundle in either its preference
- * initializer or in a file included with the bundle. 
- * 
+ * initializer or in a file included with the bundle.
+ *
  * This differs from the regular default scope because it does not contain values set
  * by the product preference customization or the command-line.
- * 
+ *
  * @since 3.3
  */
 public class BundleDefaultPreferences extends EclipsePreferences {
 
-	private static Set loadedNodes = Collections.synchronizedSet(new HashSet());
+	private static Set<String> loadedNodes = Collections.synchronizedSet(new HashSet<String>());
 	private String qualifier;
 	private int segmentCount;
 	private IEclipsePreferences loadLevel;
@@ -57,9 +57,8 @@ public class BundleDefaultPreferences extends EclipsePreferences {
 			return;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#getLoadLevel()
-	 */
+
+	@Override
 	protected IEclipsePreferences getLoadLevel() {
 		if (loadLevel == null) {
 			if (qualifier == null)
@@ -75,25 +74,22 @@ public class BundleDefaultPreferences extends EclipsePreferences {
 		return loadLevel;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#isAlreadyLoaded(org.eclipse.core.runtime.preferences.IEclipsePreferences)
-	 */
+
+	@Override
 	protected boolean isAlreadyLoaded(IEclipsePreferences node) {
 		return loadedNodes.contains(node.name());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#loaded()
-	 */
+
+	@Override
 	protected void loaded() {
 		loadedNodes.add(name());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#load()
-	 */
+
+	@Override
 	protected void load() {
-		// ensure that the same node in the "default" scope is loaded so this one is 
+		// ensure that the same node in the "default" scope is loaded so this one is
 		// initialized properly
 		String relativePath = DefaultPreferences.getScopeRelativePath(absolutePath());
 		if (relativePath != null) {
@@ -102,9 +98,8 @@ public class BundleDefaultPreferences extends EclipsePreferences {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.preferences.EclipsePreferences#internalCreate(org.eclipse.core.internal.preferences.EclipsePreferences, java.lang.String, java.lang.Object)
-	 */
+
+	@Override
 	protected EclipsePreferences internalCreate(EclipsePreferences nodeParent, String nodeName, Object context) {
 		return new BundleDefaultPreferences(nodeParent, nodeName);
 	}

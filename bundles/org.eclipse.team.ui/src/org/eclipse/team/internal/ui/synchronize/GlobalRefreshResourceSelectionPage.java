@@ -30,22 +30,23 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.views.navigator.ResourceComparator;
 
 /**
- * Page that allows the user to select a set of resources that are managed by a subscriber 
+ * Page that allows the user to select a set of resources that are managed by a subscriber
  * participant. Callers can provide a scope hint to determine the initial selection for the
  * resource list. By default, the resources in the current selection are checked, otherwise
  * all resources are checked.
- * 
+ *
  * @since 3.0
  */
 public class GlobalRefreshResourceSelectionPage extends GlobalRefreshElementSelectionPage {
-	
+
 	private List resources;
-	
+
 	/**
 	 * Content provider that accepts a <code>SubscriberParticipant</code> as input and
 	 * returns the participants root resources.
 	 */
 	class MyContentProvider extends BaseWorkbenchContentProvider {
+		@Override
 		public Object[] getChildren(Object element) {
 			if(element instanceof List) {
 				return ((List)element).toArray(new IResource[((List)element).size()]);
@@ -53,13 +54,14 @@ public class GlobalRefreshResourceSelectionPage extends GlobalRefreshElementSele
 			return super.getChildren(element);
 		}
 	}
-	
+
 	/**
 	 * Label decorator that will display the full path for participant roots that are folders. This
 	 * is useful for participants that have non-project roots.
 	 */
 	class MyLabelProvider extends LabelProvider {
 		private LabelProvider workbenchProvider = new WorkbenchLabelProvider();
+		@Override
 		public String getText(Object element) {
 			if(element instanceof IContainer) {
 				IContainer c = (IContainer)element;
@@ -68,25 +70,27 @@ public class GlobalRefreshResourceSelectionPage extends GlobalRefreshElementSele
 				}
 			}
 			return workbenchProvider.getText(element);
-		}	
+		}
+		@Override
 		public Image getImage(Object element) {
 			return workbenchProvider.getImage(element);
 		}
 	}
-		
+
 	/**
 	 * Create a new page for the given participant. The scope hint will determine the initial selection.
-	 * 
+	 *
 	 * @param resources the resources to synchronize
 	 */
 	public GlobalRefreshResourceSelectionPage(IResource[] resources) {
-		super(TeamUIMessages.GlobalRefreshResourceSelectionPage_1); 
+		super(TeamUIMessages.GlobalRefreshResourceSelectionPage_1);
 		// Caching the roots so that the decorator doesn't have to recompute all the time.
 		this.resources = Arrays.asList(resources);
-		setDescription(TeamUIMessages.GlobalRefreshResourceSelectionPage_2); 
-		setTitle(TeamUIMessages.GlobalRefreshResourceSelectionPage_3); 
+		setDescription(TeamUIMessages.GlobalRefreshResourceSelectionPage_2);
+		setTitle(TeamUIMessages.GlobalRefreshResourceSelectionPage_3);
 	}
-	
+
+	@Override
 	protected ContainerCheckedTreeViewer createViewer(Composite top) {
 		GridData data;
 		ContainerCheckedTreeViewer fViewer = new ContainerCheckedTreeViewer(top, SWT.BORDER);
@@ -98,6 +102,7 @@ public class GlobalRefreshResourceSelectionPage extends GlobalRefreshElementSele
 		fViewer.setLabelProvider(new DecoratingLabelProvider(new MyLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator()));
 		fViewer.addCheckStateListener(new ICheckStateListener() {
 
+			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				updateOKStatus();
 			}
@@ -106,11 +111,13 @@ public class GlobalRefreshResourceSelectionPage extends GlobalRefreshElementSele
 		fViewer.setInput(resources);
 		return fViewer;
 	}
-	
+
+	@Override
 	protected void checkAll() {
 		getViewer().setCheckedElements(resources.toArray());
 	}
-	
+
+	@Override
 	protected boolean checkWorkingSetElements() {
 		List allWorkingSetResources = new ArrayList();
 		IWorkingSet[] workingSets = getWorkingSets();
@@ -127,11 +134,11 @@ public class GlobalRefreshResourceSelectionPage extends GlobalRefreshElementSele
 		IResource[] resources = new IResource[objects.length];
 		for (int i = 0; i < resources.length; i++) {
 			resources[i] = (IResource)objects[i];
-			
+
 		}
 		return resources;
 	}
-	
+
 	public ISynchronizeScope getSynchronizeScope() {
 		if (isWorkingSetSelected()) {
 			return new WorkingSetScope(getWorkingSets());

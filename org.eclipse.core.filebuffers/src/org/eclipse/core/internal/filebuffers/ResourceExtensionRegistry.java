@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2008 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,6 +42,7 @@ public class ResourceExtensionRegistry extends ExtensionsRegistry {
 	 * @param locationKind the kind of the given location
 	 * @return the set of content types for the location
 	 */
+	@Override
 	protected IContentType[] findContentTypes(IPath location, LocationKind locationKind) {
 		if (locationKind != LocationKind.LOCATION) {
 			IFile file= FileBuffers.getWorkspaceFileAtLocation(location);
@@ -58,6 +59,7 @@ public class ResourceExtensionRegistry extends ExtensionsRegistry {
 	 * @return the sharable document factory
 	 * @deprecated As of 3.5
 	 */
+	@Deprecated
 	org.eclipse.core.filebuffers.IDocumentFactory getDocumentFactory(IFile file) {
 		org.eclipse.core.filebuffers.IDocumentFactory factory= getDocumentFactory(findContentTypes(file));
 		if (factory == null) {
@@ -114,9 +116,9 @@ public class ResourceExtensionRegistry extends ExtensionsRegistry {
 	 * @return the sharable set of document setup participants
 	 */
 	IDocumentSetupParticipant[] getDocumentSetupParticipants(IFile file) {
-		Set participants= new HashSet();
+		Set<IDocumentSetupParticipant> participants= new HashSet<>();
 
-		List p= getDocumentSetupParticipants(findContentTypes(file));
+		List<IDocumentSetupParticipant> p= getDocumentSetupParticipants(findContentTypes(file));
 		if (p != null)
 			participants.addAll(p);
 

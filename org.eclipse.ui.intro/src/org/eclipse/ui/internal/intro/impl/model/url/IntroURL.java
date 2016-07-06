@@ -12,7 +12,6 @@
 package org.eclipse.ui.internal.intro.impl.model.url;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.Properties;
 
 import org.eclipse.core.commands.ParameterizedCommand;
@@ -40,7 +39,6 @@ import org.eclipse.ui.internal.intro.impl.model.AbstractIntroPage;
 import org.eclipse.ui.internal.intro.impl.model.IntroLaunchBarElement;
 import org.eclipse.ui.internal.intro.impl.model.IntroModelRoot;
 import org.eclipse.ui.internal.intro.impl.model.IntroPartPresentation;
-import org.eclipse.ui.internal.intro.impl.model.IntroTheme;
 import org.eclipse.ui.internal.intro.impl.model.IntroURLAction;
 import org.eclipse.ui.internal.intro.impl.model.loader.ExtensionPointManager;
 import org.eclipse.ui.internal.intro.impl.model.loader.ModelLoaderUtil;
@@ -113,6 +111,9 @@ public class IntroURL implements IIntroURL {
     public static final String VALUE_HOME = "home"; //$NON-NLS-1$
     public static final String VALUE_TRUE = "true"; //$NON-NLS-1$
     public static final String VALUE_FALSE = "false"; //$NON-NLS-1$
+	public static final String VALUE_CLOSE = "close"; //$NON-NLS-1$
+	public static final String VALUE_STANDBY = "standby"; //$NON-NLS-1$
+	public static final String VALUE_LAUNCHBAR = "launchbar"; //$NON-NLS-1$
 
 
 
@@ -250,15 +251,24 @@ public class IntroURL implements IIntroURL {
     }
 
     /**
-     * Set the Workbench Intro Part state. Forces the Intro view to open, if not
-     * yet created.
-     * 
-     * @param state
-     */
+	 * Set the Workbench Intro Part state. Forces the Intro view to open, if not yet created.
+	 * 
+	 * Historically this value was "true" (show standby) or "false" (show normal). In Neon we add
+	 * "close", "standby" and "launchbar".
+	 * 
+	 * @param state
+	 * @return true if the intro was shown, or false if the intro could not be shown
+	 */
     private boolean setStandbyState(String state) {
         if (state == null)
             return false;
-        boolean standby = state.equals(VALUE_TRUE) ? true : false;
+		if (state.equals(VALUE_CLOSE)) {
+			return IntroPlugin.closeIntro();
+		} else if (state.equals(VALUE_LAUNCHBAR)) {
+			return switchToLaunchBar();
+		}
+		boolean standby = state.equals(VALUE_TRUE) || state.equals(VALUE_STANDBY);
+
         IIntroPart introPart = IntroPlugin.showIntro(standby);
         if (introPart == null)
             return false;
@@ -521,11 +531,8 @@ public class IntroURL implements IIntroURL {
      * @return
      */
     private AbstractIntroPage findPageToShow(String pageId) {
-        // get all cached models.
-        Hashtable models = ExtensionPointManager.getInst().getIntroModels();
-        Enumeration values = models.elements();
-        while (values.hasMoreElements()) {
-            IntroModelRoot model = (IntroModelRoot) values.nextElement();
+		// check all cached models.
+		for (IntroModelRoot model : ExtensionPointManager.getInst().getIntroModels().values()) {
             AbstractIntroPage page = (AbstractIntroPage) model.findChild(
                 pageId, AbstractIntroElement.ABSTRACT_PAGE);
             if (page != null)
@@ -653,22 +660,15 @@ public class IntroURL implements IIntroURL {
 
         CustomizableIntroPart cpart = (CustomizableIntroPart) intro;
         IntroModelRoot modelRoot = IntroPlugin.getDefault().getIntroModelRoot();
-        String pageId = modelRoot.getCurrentPageId();
-        IntroTheme theme = modelRoot.getTheme();
         Rectangle bounds = cpart.getControl().getBounds();
         Rectangle startBounds = Geometry.toDisplay(cpart.getControl()
             .getParent(), bounds);
 
-        IWorkbenchWindow window = PlatformUI.getWorkbench()
-            .getActiveWorkbenchWindow();
-        IntroLaunchBarElement launchBarElement = modelRoot.getPresentation()
-            .getLaunchBarElement();
-        if (launchBarElement==null)
-        	return true;
-        IntroLaunchBar launchBar = new IntroLaunchBar(launchBarElement
-            .getOrientation(), pageId, launchBarElement, theme);
-        
-        launchBar.createInActiveWindow();
+		IntroLaunchBarElement launchBarElement = modelRoot.getPresentation().getLaunchBarElement();
+		if (launchBarElement == null)
+			return true;
+		IWorkbenchWindow window = intro.getIntroSite().getWorkbenchWindow();
+		IntroLaunchBar launchBar = IntroLaunchBar.create(window, modelRoot, launchBarElement);
 
         PlatformUI.getWorkbench().getIntroManager().setIntroStandby(intro, true);
 

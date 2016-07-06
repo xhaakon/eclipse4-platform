@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,30 +56,24 @@ public class FileInPlaceEditorInput extends FileEditorInput implements
             switch (delta.getKind()) {
             case IResourceDelta.REMOVED:
                 if ((IResourceDelta.MOVED_TO & delta.getFlags()) != 0) {
-                    changeRunnable = new Runnable() {
-                        @Override
-						public void run() {
-                            IPath path = delta.getMovedToPath();
-                            IFile newFile = delta.getResource().getWorkspace()
-                                    .getRoot().getFile(path);
-                            if (newFile != null && embeddedEditor != null) {
-                                embeddedEditor
-                                        .sourceChanged(new FileInPlaceEditorInput(
-                                                newFile));
-                            }
-                        }
-                    };
+                    changeRunnable = () -> {
+					    IPath path = delta.getMovedToPath();
+					    IFile newFile = delta.getResource().getWorkspace()
+					            .getRoot().getFile(path);
+					    if (newFile != null && embeddedEditor != null) {
+					        embeddedEditor
+					                .sourceChanged(new FileInPlaceEditorInput(
+					                        newFile));
+					    }
+					};
                 } else {
-                    changeRunnable = new Runnable() {
-                        @Override
-						public void run() {
-                            if (embeddedEditor != null) {
-                                embeddedEditor.sourceDeleted();
-                                embeddedEditor.getSite().getPage().closeEditor(
-                                        embeddedEditor, true);
-                            }
-                        }
-                    };
+                    changeRunnable = () -> {
+					    if (embeddedEditor != null) {
+					        embeddedEditor.sourceDeleted();
+					        embeddedEditor.getSite().getPage().closeEditor(
+					                embeddedEditor, true);
+					    }
+					};
 
                 }
 
@@ -104,9 +98,6 @@ public class FileInPlaceEditorInput extends FileEditorInput implements
         super(file);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IInPlaceEditorInput#setInPlaceEditor(org.eclipse.ui.IInPlaceEditor)
-     */
     @Override
 	public void setInPlaceEditor(IInPlaceEditor editor) {
         if (embeddedEditor != editor) {

@@ -12,7 +12,7 @@ package org.eclipse.team.internal.ui.wizards;
 
 /**
  * Stores URL history for importing project sets window.
- * 
+ *
  */
 public class PsfUrlStore extends PsfStore {
 
@@ -32,14 +32,17 @@ public class PsfUrlStore extends PsfStore {
 		// Singleton
 	}
 
+	@Override
 	protected String getPreviousTag() {
 		return PREVIOUS;
 	}
 
+	@Override
 	protected String getListTag() {
 		return URLS;
 	}
 
+	@Override
 	public String getSuggestedDefault() {
 		return getPrevious();
 	}

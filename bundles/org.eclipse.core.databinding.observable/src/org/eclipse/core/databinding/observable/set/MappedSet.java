@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2009 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Matthew Hall - bug 263693
+ *     Stefan Xenos <sxenos@gmail.com> - Bug 335792
  *******************************************************************************/
 
 package org.eclipse.core.databinding.observable.set;
@@ -39,6 +40,8 @@ import org.eclipse.core.databinding.observable.map.MapDiff;
  * @deprecated This class is deprecated.
  */
 @Deprecated
+// OK to hide warnings on a deprecated class
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MappedSet extends ObservableSet {
 
 	private final IObservableMap wrappedMap;
@@ -133,10 +136,10 @@ public class MappedSet extends ObservableSet {
 	protected boolean handleAddition(Object mapValue) {
 		Integer count = (Integer) valueCounts.get(mapValue);
 		if (count == null) {
-			valueCounts.put(mapValue, new Integer(1));
+			valueCounts.put(mapValue, Integer.valueOf(1));
 			return true;
 		}
-		valueCounts.put(mapValue, new Integer(count.intValue() + 1));
+		valueCounts.put(mapValue, Integer.valueOf(count.intValue() + 1));
 		return false;
 	}
 
@@ -150,7 +153,7 @@ public class MappedSet extends ObservableSet {
 			valueCounts.remove(mapValue);
 			return true;
 		}
-		valueCounts.put(mapValue, new Integer(count.intValue() - 1));
+		valueCounts.put(mapValue, Integer.valueOf(count.intValue() - 1));
 		return false;
 	}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -60,9 +60,6 @@ public class HelpSearchContributionItem extends ControlContribution {
 		this.window = window;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.ControlContribution#createControl(org.eclipse.swt.widgets.Composite)
-	 */
 	@Override
 	protected Control createControl(Composite parent) {
 		combo = new Combo(parent, SWT.NONE);
@@ -93,9 +90,6 @@ public class HelpSearchContributionItem extends ControlContribution {
 		return combo;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.action.ControlContribution#computeWidth(org.eclipse.swt.widgets.Control)
-	 */
 	@Override
 	protected int computeWidth(Control control) {
 		return control.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x;

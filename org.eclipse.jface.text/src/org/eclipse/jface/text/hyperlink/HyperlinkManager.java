@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,9 +69,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 			fName= name;
 		}
 
-		/*
-		 * @see java.lang.Object#toString()
-		 */
+		@Override
 		public String toString() {
 			return fName;
 		}
@@ -269,7 +267,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 	 * @since 3.7
 	 */
 	private IHyperlink[] findHyperlinks(IRegion region) {
-		List allHyperlinks= new ArrayList(fHyperlinkDetectors.length * 2);
+		List<IHyperlink> allHyperlinks= new ArrayList<>(fHyperlinkDetectors.length * 2);
 		synchronized (fHyperlinkDetectors) {
 			for (int i= 0, length= fHyperlinkDetectors.length; i < length; i++) {
 				IHyperlinkDetector detector= fHyperlinkDetectors[i];
@@ -306,18 +304,18 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 
 		if (fDetectionStrategy != ALL) {
 			int maxLength= computeLongestHyperlinkLength(allHyperlinks);
-			Iterator iter= new ArrayList(allHyperlinks).iterator();
+			Iterator<IHyperlink> iter= new ArrayList<>(allHyperlinks).iterator();
 			while (iter.hasNext()) {
-				IHyperlink hyperlink= (IHyperlink)iter.next();
+				IHyperlink hyperlink= iter.next();
 				if (hyperlink.getHyperlinkRegion().getLength() < maxLength)
 					allHyperlinks.remove(hyperlink);
 			}
 		}
 
 		if (fDetectionStrategy == LONGEST_REGION_FIRST)
-			return new IHyperlink[] {(IHyperlink)allHyperlinks.get(0)};
+			return new IHyperlink[] {allHyperlinks.get(0)};
 
-		return (IHyperlink[])allHyperlinks.toArray(new IHyperlink[allHyperlinks.size()]);
+		return allHyperlinks.toArray(new IHyperlink[allHyperlinks.size()]);
 
 	}
 
@@ -327,12 +325,12 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 	 * @param hyperlinks the list of hyperlinks
 	 * @return the length of the longest detected
 	 */
-	protected int computeLongestHyperlinkLength(List hyperlinks) {
+	protected int computeLongestHyperlinkLength(List<? extends IHyperlink> hyperlinks) {
 		Assert.isLegal(hyperlinks != null && !hyperlinks.isEmpty());
-		Iterator iter= hyperlinks.iterator();
+		Iterator<? extends IHyperlink> iter= hyperlinks.iterator();
 		int length= Integer.MIN_VALUE;
 		while (iter.hasNext()) {
-			IRegion region= ((IHyperlink)iter.next()).getHyperlinkRegion();
+			IRegion region= iter.next().getHyperlinkRegion();
 			if (region.getLength() < length)
 				continue;
 			length= region.getLength();
@@ -349,9 +347,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 		return JFaceTextUtil.getOffsetForCursorLocation(fTextViewer);
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.KeyListener#keyPressed(org.eclipse.swt.events.KeyEvent)
-	 */
+	@Override
 	public void keyPressed(KeyEvent event) {
 
 		if (!isRegisteredStateMask((event.keyCode | event.stateMask) & SWT.MODIFIER_MASK)) {
@@ -364,22 +360,16 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 		// do not show hyperlink, since that would often be confusing (e.g. when pressing Ctrl+C)
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.KeyListener#keyReleased(org.eclipse.swt.events.KeyEvent)
-	 */
+	@Override
 	public void keyReleased(KeyEvent event) {
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-	 */
+	@Override
 	public void mouseDoubleClick(MouseEvent e) {
 
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
-	 */
+	@Override
 	public void mouseDown(MouseEvent event) {
 
 		if (fHyperlinkPresenter instanceof IHyperlinkPresenterExtension) {
@@ -417,9 +407,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 		showHyperlinks(false);
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
-	 */
+	@Override
 	public void mouseUp(MouseEvent e) {
 
 		if (!fActive) {
@@ -436,9 +424,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 			fActiveHyperlinks[0].open();
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events.MouseEvent)
-	 */
+	@Override
 	public void mouseMove(MouseEvent event) {
 		if (fHyperlinkPresenter instanceof IHyperlinkPresenterExtension) {
 			if (!((IHyperlinkPresenterExtension)fHyperlinkPresenter).canHideHyperlinks())
@@ -492,31 +478,21 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.swt.events.FocusListener#focusGained(org.eclipse.swt.events.FocusEvent)
-	 */
+	@Override
 	public void focusGained(FocusEvent e) {}
 
-	/*
-	 * @see org.eclipse.swt.events.FocusListener#focusLost(org.eclipse.swt.events.FocusEvent)
-	 */
+	@Override
 	public void focusLost(FocusEvent event) {
 		deactivate();
 	}
 
-	/*
-	 * @see org.eclipse.swt.widgets.Listener#handleEvent(org.eclipse.swt.widgets.Event)
-	 * @since 3.2
-	 */
+	@Override
 	public void handleEvent(Event event) {
 		//key up
 		deactivate();
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.ITextListener#textChanged(TextEvent)
-	 * @since 3.2
-	 */
+	@Override
 	public void textChanged(TextEvent event) {
 		if (event.getDocumentEvent() != null)
 			deactivate();
@@ -527,6 +503,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 	 *
 	 * @since 3.4
 	 */
+	@Override
 	public void mouseExit(MouseEvent e) {
 		if (fHyperlinkPresenter instanceof IHyperlinkPresenterExtension) {
 			if (!((IHyperlinkPresenterExtension)fHyperlinkPresenter).canHideHyperlinks())
@@ -540,6 +517,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 	 *
 	 * @since 3.4
 	 */
+	@Override
 	public void mouseEnter(MouseEvent e) {
 	}
 
@@ -548,6 +526,7 @@ public class HyperlinkManager implements ITextListener, Listener, KeyListener, M
 	 *
 	 * @since 3.4
 	 */
+	@Override
 	public void mouseHover(MouseEvent e) {
 	}
 

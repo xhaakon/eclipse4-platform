@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2005 IBM Corporation and others.
+ * Copyright (c) 2004, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -57,11 +57,6 @@ final class LegacyCommandListenerWrapper implements ICommandListener {
 		this.bindingManager = bindingManager;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.commands.ICommandListener#commandChanged(org.eclipse.commands.CommandEvent)
-	 */
 	@Override
 	public final void commandChanged(final CommandEvent commandEvent) {
 		final ICommand command = new CommandLegacyWrapper(commandEvent.getCommand(),

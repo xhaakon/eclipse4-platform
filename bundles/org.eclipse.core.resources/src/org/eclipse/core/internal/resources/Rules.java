@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM - Initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -100,9 +101,6 @@ class Rules implements IResourceRuleFactory, ILifecycleListener {
 		return fac;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.internal.events.ILifecycleListener#handleEvent(org.eclipse.core.internal.events.LifecycleEvent)
-	 */
 	@Override
 	public void handleEvent(LifecycleEvent event) {
 		//clear resource rule factory for projects that are about to be closed
@@ -131,7 +129,7 @@ class Rules implements IResourceRuleFactory, ILifecycleListener {
 	 */
 	@Override
 	public ISchedulingRule derivedRule(IResource resource) {
-		//team hook currently cannot change this rule	
+		//team hook currently cannot change this rule
 		return null;
 	}
 
@@ -202,7 +200,7 @@ class Rules implements IResourceRuleFactory, ILifecycleListener {
 			return factoryFor(resources[0]).validateEditRule(resources);
 		}
 		//gather rules for each resource from appropriate factory
-		HashSet<ISchedulingRule> rules = new HashSet<ISchedulingRule>();
+		HashSet<ISchedulingRule> rules = new HashSet<>();
 		IResource[] oneResource = new IResource[1];
 		for (int i = 0; i < resources.length; i++) {
 			if (resources[i].getType() == IResource.ROOT)

@@ -15,16 +15,17 @@ import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.team.TeamHook;
 
 /**
- * The internal abstract superclass of all TeamHook implementations.  This superclass
+ * The internal abstract superclass of all {@link TeamHook} implementations.  This superclass
  * provides access to internal non-API methods that are not available from the API
  * package. Plugin developers should not subclass this class.
- * 
+ *
  * @see TeamHook
  */
 public class InternalTeamHook {
-	/* (non-Javadoc)
-	 * Internal implementation of TeamHook#setRulesFor(IProject,IResourceRuleFactory)
+	/**
+	 * Internal implementation of {@link TeamHook#setRuleFactory(IProject, IResourceRuleFactory)}.
 	 */
+	@SuppressWarnings("javadoc") // Suppress the "method in not visible" warning.
 	protected void setRuleFactory(IProject project, IResourceRuleFactory factory) {
 		Workspace workspace = ((Workspace) project.getWorkspace());
 		((Rules) workspace.getRuleFactory()).setRuleFactory(project, factory);

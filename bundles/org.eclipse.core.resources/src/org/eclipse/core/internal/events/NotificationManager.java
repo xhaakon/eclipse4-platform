@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.jobs.Job;
 
 public class NotificationManager implements IManager, ILifecycleListener {
 	class NotifyJob extends Job {
-		private final IWorkspaceRunnable noop = new IWorkspaceRunnable() {
+		private final ICoreRunnable noop = new ICoreRunnable() {
 			@Override
 			public void run(IProgressMonitor monitor) {
 				// do nothing
@@ -97,7 +97,7 @@ public class NotificationManager implements IManager, ILifecycleListener {
 
 	private ResourceChangeListenerList listeners;
 
-	protected boolean notificationRequested = false;
+	protected volatile boolean notificationRequested = false;
 	private Job notifyJob;
 	Workspace workspace;
 
@@ -131,7 +131,7 @@ public class NotificationManager implements IManager, ILifecycleListener {
 	}
 
 	/**
-	 * The main broadcast point for notification deltas 
+	 * The main broadcast point for notification deltas
 	 */
 	public void broadcastChanges(ElementTree lastState, ResourceChangeEvent event, boolean lockTree) {
 		final int type = event.getType();
@@ -210,7 +210,7 @@ public class NotificationManager implements IManager, ILifecycleListener {
 	}
 
 	/**
-	 * Computes and returns the resource delta for the given event type and the 
+	 * Computes and returns the resource delta for the given event type and the
 	 * given current tree state.
 	 */
 	protected ResourceDelta getDelta(ElementTree tree, int type) {

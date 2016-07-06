@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,15 +34,17 @@ public class RemoteExtensionProvider extends AbstractContentExtensionProvider {
 
 	public RemoteExtensionProvider() {
 		RemoteHelp.addPreferenceChangeListener(new IPreferenceChangeListener() {
+			@Override
 			public void preferenceChange(PreferenceChangeEvent event) {
 				contentChanged();
 			}
 		});
 	}
 
+	@Override
 	public IContentExtension[] getContentExtensions(String locale) {
 		if (RemoteHelp.isEnabled()) {
-			List<IContentExtension> contributions = new ArrayList<IContentExtension>();
+			List<IContentExtension> contributions = new ArrayList<>();
 			PreferenceFileHandler handler = new PreferenceFileHandler();
 			String isEnabled[] = handler.isEnabled();
 			for (int ic = 0; ic < handler.getTotalRemoteInfocenters(); ic++) {
@@ -64,8 +66,7 @@ public class RemoteExtensionProvider extends AbstractContentExtensionProvider {
 							reader = new DocumentReader();
 						}
 						UAElement element = reader.read(in);
-						IContentExtension[] children = (IContentExtension[]) element
-								.getChildren(IContentExtension.class);
+						IContentExtension[] children = element.getChildren(IContentExtension.class);
 						for (int contrib = 0; contrib < children.length; contrib++) {
 							contributions.add(children[contrib]);
 						}

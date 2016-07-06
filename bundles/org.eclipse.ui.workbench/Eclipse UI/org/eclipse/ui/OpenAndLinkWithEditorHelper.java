@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2012 IBM Corporation and others.
+ * Copyright (c) 2008, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,18 +39,13 @@ public abstract class OpenAndLinkWithEditorHelper {
 
 
 	private final class InternalListener implements IOpenListener, ISelectionChangedListener, IDoubleClickListener {
-		/*
-		 * @see org.eclipse.jface.viewers.IOpenListener#open(org.eclipse.jface.viewers.OpenEvent)
-		 */
+
 		@Override
 		public final void open(OpenEvent event) {
 			lastOpenSelection = event.getSelection();
 			OpenAndLinkWithEditorHelper.this.open(lastOpenSelection, OpenStrategy.activateOnOpen());
 		}
 
-		/*
-		 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-		 */
 		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
 			final ISelection selection = event.getSelection();
@@ -59,9 +54,6 @@ public abstract class OpenAndLinkWithEditorHelper {
 			lastOpenSelection = null;
 		}
 
-		/*
-		 * @see org.eclipse.jface.viewers.IDoubleClickListener#doubleClick(org.eclipse.jface.viewers.DoubleClickEvent)
-		 */
 		@Override
 		public void doubleClick(DoubleClickEvent event) {
 			if (!OpenStrategy.activateOnOpen())

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.propertytester;
 
@@ -14,14 +15,14 @@ import java.util.ArrayList;
 
 /**
  * A string pattern matcher, supporting "*" and "?" wild cards.
- * 
+ *
  * @since 3.2
  */
 public class StringMatcher {
 	private static final char SINGLE_WILD_CARD = '\u0000';
 
 	/**
-	 * Boundary value beyond which we don't need to search in the text 
+	 * Boundary value beyond which we don't need to search in the text
 	 */
 	private int bound = 0;
 
@@ -39,14 +40,14 @@ public class StringMatcher {
 	private String segments[];
 
 	/**
-	 * StringMatcher constructor takes in a String object that is a simple 
+	 * StringMatcher constructor takes in a String object that is a simple
 	 * pattern which may contain '*' for 0 and many characters and
-	 * '?' for exactly one character.  
+	 * '?' for exactly one character.
 	 *
-	 * Literal '*' and '?' characters must be escaped in the pattern 
+	 * Literal '*' and '?' characters must be escaped in the pattern
 	 * e.g., "\*" means literal "*", etc.
 	 *
-	 * Escaping any other character (including the escape character itself), 
+	 * Escaping any other character (including the escape character itself),
 	 * just results in that character in the pattern.
 	 * e.g., "\a" means "a" and "\\" means "\"
 	 *
@@ -63,12 +64,12 @@ public class StringMatcher {
 		parseWildCards();
 	}
 
-	/** 
+	/**
 	 * @param text a simple regular expression that may only contain '?'(s)
 	 * @param start the starting index in the text for search, inclusive
 	 * @param end the stopping point of search, exclusive
 	 * @param p a simple regular expression that may contain '?'
-	 * @return the starting index in the text of the pattern , or -1 if not found 
+	 * @return the starting index in the text of the pattern , or -1 if not found
 	 */
 	private int findPosition(String text, int start, int end, String p) {
 		boolean hasWildCard = p.indexOf(SINGLE_WILD_CARD) >= 0;
@@ -86,10 +87,10 @@ public class StringMatcher {
 	}
 
 	/**
-	 * Given the starting (inclusive) and the ending (exclusive) positions in the   
-	 * <code>text</code>, determine if the given substring matches with aPattern  
+	 * Given the starting (inclusive) and the ending (exclusive) positions in the
+	 * <code>text</code>, determine if the given substring matches with aPattern
 	 * @return true if the specified portion of the text matches the pattern
-	 * @param text a String object that contains the substring to match 
+	 * @param text a String object that contains the substring to match
 	 */
 	public boolean match(String text) {
 		if (text == null)
@@ -142,7 +143,7 @@ public class StringMatcher {
 	 * Parses the pattern into segments separated by wildcard '*' characters.
 	 */
 	private void parseWildCards() {
-		if (pattern.startsWith("*"))//$NON-NLS-1$
+		if (pattern.startsWith("*")) //$NON-NLS-1$
 			hasLeadingStar = true;
 		if (pattern.endsWith("*")) {//$NON-NLS-1$
 			/* make sure it's not an escaped wildcard */
@@ -151,7 +152,7 @@ public class StringMatcher {
 			}
 		}
 
-		ArrayList<String> temp = new ArrayList<String>();
+		ArrayList<String> temp = new ArrayList<>();
 
 		int pos = 0;
 		StringBuffer buf = new StringBuffer();
@@ -199,7 +200,7 @@ public class StringMatcher {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return boolean
 	 * @param text a String to match
 	 * @param tStart the starting index of match, inclusive

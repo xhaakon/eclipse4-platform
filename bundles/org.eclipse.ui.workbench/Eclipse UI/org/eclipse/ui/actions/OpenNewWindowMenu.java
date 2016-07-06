@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,9 +71,9 @@ public class OpenNewWindowMenu extends PerspectiveMenu {
         this.pageInput = input;
     }
 
-    /* (non-Javadoc)
-     * Opens a new window with a particular perspective and input.
-     */
+	/**
+	 * Opens a new window with a particular perspective and input.
+	 */
     @Override
 	protected void run(IPerspectiveDescriptor desc) {
         // Verify page input.

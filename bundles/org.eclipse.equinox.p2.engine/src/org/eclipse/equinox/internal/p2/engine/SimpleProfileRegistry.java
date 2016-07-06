@@ -144,7 +144,7 @@ public class SimpleProfileRegistry implements IProfileRegistry, IAgentService {
 			DebugHelper.debug(PROFILE_REGISTRY, "SimpleProfileRegistry.updateSelfProfile"); //$NON-NLS-1$
 		boolean changed = false;
 		//only update if self is a roaming profile
-		if (Boolean.valueOf(selfProfile.getProperty(IProfile.PROP_ROAMING)).booleanValue())
+		if (Boolean.parseBoolean(selfProfile.getProperty(IProfile.PROP_ROAMING)))
 			changed = updateRoamingProfile(selfProfile);
 
 		if (changed)
@@ -731,9 +731,13 @@ public class SimpleProfileRegistry implements IProfileRegistry, IAgentService {
 				xmlReader.parse(new InputSource(stream));
 				profileHandlers.put(profileHandler.getProfileId(), profileHandler);
 			} catch (SAXException e) {
-				throw new IOException(e.getMessage());
+				IOException ioException = new IOException(e.getMessage());
+				ioException.initCause(e);
+				throw ioException;
 			} catch (ParserConfigurationException e) {
-				throw new IOException(e.getMessage());
+				IOException ioException = new IOException(e.getMessage());
+				ioException.initCause(e);
+				throw ioException;
 			} finally {
 				stream.close();
 			}

@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Andrey Loskutov <loskutov@gmx.de> - generified interface, bug 462760
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 472784
  *******************************************************************************/
 package org.eclipse.ui.actions;
 
@@ -27,9 +28,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -120,24 +120,18 @@ public class RefreshAction extends WorkspaceAction {
 					IDEWorkbenchMessages.RefreshAction_dialogTitle, // dialog
 					// title
 					null, // use default window icon
-					message, MessageDialog.QUESTION, new String[] {
+					message, MessageDialog.QUESTION, 0,
 							IDialogConstants.YES_LABEL,
-							IDialogConstants.NO_LABEL }, 0) {
+							IDialogConstants.NO_LABEL) {
 				@Override
 				protected int getShellStyle() {
 					return super.getShellStyle() | SWT.SHEET;
 				}
-			}; // yes is the
-			// default
+			};
 
 			// Must prompt user in UI thread (we're in the operation thread
 			// here).
-			getShell().getDisplay().syncExec(new Runnable() {
-				@Override
-				public void run() {
-					dialog.open();
-				}
-			});
+			getShell().getDisplay().syncExec(() -> dialog.open());
 
 			// Do the deletion back in the operation thread
 			if (dialog.getReturnCode() == 0) { // yes was chosen
@@ -226,28 +220,21 @@ public class RefreshAction extends WorkspaceAction {
 		}
 		return new WorkspaceModifyOperation(rule) {
 			@Override
-			public void execute(IProgressMonitor monitor) {
+			public void execute(IProgressMonitor mon) {
+				SubMonitor subMonitor = SubMonitor.convert(mon, resources.size());
 				MultiStatus errors = null;
-				monitor.beginTask("", resources.size() * 1000); //$NON-NLS-1$
-				monitor.setTaskName(getOperationMessage());
+				subMonitor.setTaskName(getOperationMessage());
 				Iterator<? extends IResource> resourcesEnum = resources.iterator();
-				try {
-					while (resourcesEnum.hasNext()) {
-						try {
-							IResource resource = resourcesEnum.next();
-							refreshResource(resource, new SubProgressMonitor(monitor, 1000));
-						} catch (CoreException e) {
-							errors = recordError(errors, e);
-						}
-						if (monitor.isCanceled()) {
-							throw new OperationCanceledException();
-						}
+				while (resourcesEnum.hasNext()) {
+					try {
+						IResource resource = resourcesEnum.next();
+						refreshResource(resource, subMonitor.split(1));
+					} catch (CoreException e) {
+						errors = recordError(errors, e);
 					}
-					if (errors != null) {
-						errorStatus[0] = errors;
-					}
-				} finally {
-					monitor.done();
+				}
+				if (errors != null) {
+					errorStatus[0] = errors;
 				}
 			}
 		};

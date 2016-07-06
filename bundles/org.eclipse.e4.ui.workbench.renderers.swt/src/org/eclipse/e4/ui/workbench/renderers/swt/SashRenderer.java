@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 IBM Corporation and others.
+ * Copyright (c) 2009, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,20 +33,16 @@ import org.osgi.service.event.Event;
  */
 public class SashRenderer extends SWTPartRenderer {
 
-	private static final int UNDEFINED_WEIGHT = -1;
 	private static final int DEFAULT_WEIGHT = 5000;
 
 	private int processedContent = 0;
 
-
 	@SuppressWarnings("unchecked")
 	@Inject
 	@Optional
-	private void subscribeTopicOrientationChanged(
-			@UIEventTopic(UIEvents.GenericTile.TOPIC_HORIZONTAL) Event event) {
+	private void subscribeTopicOrientationChanged(@UIEventTopic(UIEvents.GenericTile.TOPIC_HORIZONTAL) Event event) {
 		// Ensure that this event is for a MPartSashContainer
-		MUIElement element = (MUIElement) event
-				.getProperty(UIEvents.EventTags.ELEMENT);
+		MUIElement element = (MUIElement) event.getProperty(UIEvents.EventTags.ELEMENT);
 		if (element.getRenderer() != SashRenderer.this) {
 			return;
 		}
@@ -56,11 +52,9 @@ public class SashRenderer extends SWTPartRenderer {
 	@SuppressWarnings("unchecked")
 	@Inject
 	@Optional
-	private void subscribeTopicSashWeightChanged(
-			@UIEventTopic(UIEvents.UIElement.TOPIC_CONTAINERDATA) Event event) {
+	private void subscribeTopicSashWeightChanged(@UIEventTopic(UIEvents.UIElement.TOPIC_CONTAINERDATA) Event event) {
 		// Ensure that this event is for a MPartSashContainer
-		MUIElement element = (MUIElement) event
-				.getProperty(UIEvents.EventTags.ELEMENT);
+		MUIElement element = (MUIElement) event.getProperty(UIEvents.EventTags.ELEMENT);
 		if (element.getRenderer() != SashRenderer.this) {
 			return;
 		}
@@ -75,8 +69,9 @@ public class SashRenderer extends SWTPartRenderer {
 			return;
 		}
 		// layout the containing Composite
-		while (!(pscModel.getWidget() instanceof Composite))
+		while (!(pscModel.getWidget() instanceof Composite)) {
 			pscModel = pscModel.getParent();
+		}
 
 		Composite s = (Composite) pscModel.getWidget();
 		Layout layout = s.getLayout();
@@ -123,24 +118,20 @@ public class SashRenderer extends SWTPartRenderer {
 			}
 		}
 		// This is a 'root' sash container, create a composite
-		if (sashComposite == null)
+		if (sashComposite == null) {
 			sashComposite = new Composite((Composite) parent, SWT.NONE);
+		}
 		sashComposite.setLayout(new SashLayout(sashComposite, element));
 
 		return sashComposite;
 	}
 
 	@Override
-	public void childRendered(MElementContainer<MUIElement> parentElement,
-			MUIElement element) {
+	public void childRendered(MElementContainer<MUIElement> parentElement, MUIElement element) {
 		super.childRendered(parentElement, element);
 
 		// Ensure that the element's 'containerInfo' is initialized
-		int weight = getWeight(element);
-		if (weight == UNDEFINED_WEIGHT) {
-			element.setContainerData(Integer.toString(DEFAULT_WEIGHT));
-		}
-
+		ensureLayoutWeight(element);
 		forceLayout(parentElement);
 	}
 
@@ -158,8 +149,7 @@ public class SashRenderer extends SWTPartRenderer {
 	}
 
 	@Override
-	public void hideChild(MElementContainer<MUIElement> parentElement,
-			MUIElement child) {
+	public void hideChild(MElementContainer<MUIElement> parentElement, MUIElement child) {
 		super.hideChild(parentElement, child);
 
 		forceLayout(parentElement);
@@ -169,28 +159,32 @@ public class SashRenderer extends SWTPartRenderer {
 	public Object getUIContainer(MUIElement element) {
 		// OK, find the 'root' of the sash container
 		MUIElement parentElement = element.getParent();
-		while (parentElement.getRenderer() == this
-				&& !(parentElement.getWidget() instanceof Composite))
+		while (parentElement.getRenderer() == this && !(parentElement.getWidget() instanceof Composite)) {
 			parentElement = parentElement.getParent();
+		}
 
-		if (parentElement.getWidget() instanceof Composite)
+		if (parentElement.getWidget() instanceof Composite) {
 			return parentElement.getWidget();
-
+		}
 		return null;
 	}
 
-	private static int getWeight(MUIElement element) {
-		String info = element.getContainerData();
-		if (info == null || info.length() == 0) {
-			element.setContainerData(Integer.toString(10000));
-			info = element.getContainerData();
-		}
+	/*
+	 * Container data is used by the SashLayout to determine the size of the
+	 * control
+	 */
+	private static void ensureLayoutWeight(MUIElement element) {
+		int weight = DEFAULT_WEIGHT;
 
-		try {
-			int value = Integer.parseInt(info);
-			return value;
-		} catch (NumberFormatException e) {
-			return UNDEFINED_WEIGHT;
+		String info = element.getContainerData();
+		if (info != null && info.length() > 0) {
+			try {
+				int value = Integer.parseInt(info);
+				weight = value;
+			} catch (NumberFormatException e) {
+				// continue to use the default value
+			}
 		}
+		element.setContainerData(Integer.toString(weight));
 	}
 }

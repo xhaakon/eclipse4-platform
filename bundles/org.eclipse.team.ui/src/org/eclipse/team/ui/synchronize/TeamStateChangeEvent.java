@@ -21,7 +21,7 @@ import org.eclipse.team.ui.mapping.ITeamStateChangeEvent;
  * An implementation of {@link ITeamStateChangeEvent}.
  * <p>
  * This class is not intended to be subclassed by clients.
- * 
+ *
  * @since 3.2
  */
 public class TeamStateChangeEvent implements ITeamStateChangeEvent {
@@ -29,11 +29,11 @@ public class TeamStateChangeEvent implements ITeamStateChangeEvent {
 	private Set changes = new HashSet();
 	private Set addedRoots = new HashSet();
 	private Set removedRoots = new HashSet();
-	
+
 	public TeamStateChangeEvent() {
 		super();
 	}
-	
+
 	/**
 	 * Convenience constructor for creating an event from a subscriber change.
 	 * @param deltas the set of subscriber changes
@@ -42,11 +42,11 @@ public class TeamStateChangeEvent implements ITeamStateChangeEvent {
 		for (int i = 0; i < deltas.length; i++) {
 			ISubscriberChangeEvent event = deltas[i];
 			IResource resource = event.getResource();
-			if ((event.getFlags() & ISubscriberChangeEvent.ROOT_ADDED) != 0) 
+			if ((event.getFlags() & ISubscriberChangeEvent.ROOT_ADDED) != 0)
 				rootAdded(resource);
-			if ((event.getFlags() & ISubscriberChangeEvent.ROOT_REMOVED) != 0) 
+			if ((event.getFlags() & ISubscriberChangeEvent.ROOT_REMOVED) != 0)
 				rootRemoved(resource);
-			if ((event.getFlags() & ISubscriberChangeEvent.SYNC_CHANGED) != 0) 
+			if ((event.getFlags() & ISubscriberChangeEvent.SYNC_CHANGED) != 0)
 				changed(resource);
 			// Indicate that the ancestors may have changed as well
 			while (resource.getType() != IResource.PROJECT) {
@@ -83,6 +83,7 @@ public class TeamStateChangeEvent implements ITeamStateChangeEvent {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateChangeEvent#getAddedRoots()
 	 */
+	@Override
 	public IResource[] getAddedRoots() {
 		return (IResource[]) addedRoots.toArray(new IResource[addedRoots.size()]);
 	}
@@ -90,6 +91,7 @@ public class TeamStateChangeEvent implements ITeamStateChangeEvent {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateChangeEvent#getRemovedRoots()
 	 */
+	@Override
 	public IResource[] getRemovedRoots() {
 		return (IResource[]) removedRoots.toArray(new IResource[removedRoots.size()]);
 	}
@@ -97,6 +99,7 @@ public class TeamStateChangeEvent implements ITeamStateChangeEvent {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateChangeEvent#getChangedResources()
 	 */
+	@Override
 	public IResource[] getChangedResources() {
 		return (IResource[]) changes.toArray(new IResource[changes.size()]);
 	}
@@ -104,6 +107,7 @@ public class TeamStateChangeEvent implements ITeamStateChangeEvent {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.IDecoratedStateChangeEvent#hasChange(org.eclipse.core.resources.IResource)
 	 */
+	@Override
 	public boolean hasChange(IResource resource) {
 		if (changes.contains(resource))
 			return true;

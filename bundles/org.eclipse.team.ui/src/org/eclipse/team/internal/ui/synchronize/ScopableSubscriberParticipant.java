@@ -19,22 +19,23 @@ import org.eclipse.team.ui.synchronize.*;
  * Subscriber participant that supports filtering using scopes.
  */
 public abstract class ScopableSubscriberParticipant extends SubscriberParticipant {
-	
+
 	/**
 	 * No arg constructor used to create workspace scope and for
 	 * creation of persisted participant after startup
 	 */
 	public ScopableSubscriberParticipant() {
 	}
-	
+
 	public ScopableSubscriberParticipant(ISynchronizeScope scope) {
 		super(scope);
 	}
-	
-	
+
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.subscriber.SubscriberParticipant#setSubscriber(org.eclipse.team.core.subscribers.Subscriber)
 	 */
+	@Override
 	protected void setSubscriber(Subscriber subscriber) {
 		super.setSubscriber(subscriber);
 		try {
@@ -47,7 +48,7 @@ public abstract class ScopableSubscriberParticipant extends SubscriberParticipan
 			setSecondaryId(Long.toString(System.currentTimeMillis()));
 		}
 	}
-	
+
 	/**
 	 * Return the descriptor for this participant
 	 * @return the descriptor for this participant

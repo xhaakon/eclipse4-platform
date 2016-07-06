@@ -29,11 +29,11 @@ import org.eclipse.ui.forms.widgets.Hyperlink;
 /**
  * Section shown in a participant page to show the changes for this participant. This
  * includes a diff viewer for browsing the changes.
- * 
+ *
  * @since 3.0
  */
 public class SyncInfoSetChangesSection extends ForwardingChangesSection {
-	
+
 	/**
 	 * Boolean that indicates whether the error page is being shown.
 	 * This is used to avoid redrawing the error page when new events come in
@@ -45,47 +45,54 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 	 * change notification so that we can update message to user and totals.
 	 */
 	private SynchronizePageActionGroup changedListener = new SynchronizePageActionGroup() {
+		@Override
 		public void modelChanged(ISynchronizeModelElement root) {
 			calculateDescription();
 		}
 	};
-	
+
 	/**
 	 * Listener registered with the subscriber sync info set which contains
 	 * all out-of-sync resources for the subscriber.
 	 */
 	private ISyncInfoSetChangeListener subscriberListener = new ISyncInfoSetChangeListener() {
+		@Override
 		public void syncInfoSetReset(SyncInfoSet set, IProgressMonitor monitor) {
 			// Handled by output set listener
 		}
+		@Override
 		public void syncInfoChanged(ISyncInfoSetChangeEvent event, IProgressMonitor monitor) {
 			calculateDescription();
 		}
+		@Override
 		public void syncInfoSetErrors(SyncInfoSet set, ITeamStatus[] errors, IProgressMonitor monitor) {
 			// Handled by output set listener
 		}
 	};
-	
+
 	/**
 	 * Listener registered with the output sync info set which contains
-	 * only the visible sync info. 
+	 * only the visible sync info.
 	 */
 	private ISyncInfoSetChangeListener outputSetListener = new ISyncInfoSetChangeListener() {
+		@Override
 		public void syncInfoSetReset(SyncInfoSet set, IProgressMonitor monitor) {
 			calculateDescription();
 		}
+		@Override
 		public void syncInfoChanged(ISyncInfoSetChangeEvent event, IProgressMonitor monitor) {
 			// Input changed listener will call calculateDescription()
 			// The input will then react to output set changes
 		}
+		@Override
 		public void syncInfoSetErrors(SyncInfoSet set, ITeamStatus[] errors, IProgressMonitor monitor) {
 			calculateDescription();
 		}
 	};
-	
+
 	/**
 	 * Create a changes section on the following page.
-	 * 
+	 *
 	 * @param parent the parent control
 	 * @param page the page showing this section
 	 * @param configuration the configuration for the synchronize page
@@ -93,22 +100,25 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 	public SyncInfoSetChangesSection(Composite parent, AbstractSynchronizePage page, ISynchronizePageConfiguration configuration) {
 		super(parent, page, configuration);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.ChangesSection#initializeChangesViewer()
 	 */
+	@Override
 	protected void initializeChangesViewer() {
 		super.initializeChangesViewer();
 		getConfiguration().addActionContribution(changedListener);
 		getParticipantSyncInfoSet().addSyncSetChangedListener(subscriberListener);
 		getVisibleSyncInfoSet().addSyncSetChangedListener(outputSetListener);
 	}
-	
+
+	@Override
 	protected void calculateDescription() {
 		SyncInfoTree syncInfoTree = getVisibleSyncInfoSet();
 		if (syncInfoTree.getErrors().length > 0) {
 			if (!showingError) {
 				TeamUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						updatePage(getErrorComposite(getContainer()));
 						showingError = true;
@@ -117,11 +127,12 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 			}
 			return;
 		}
-		
+
 		showingError = false;
 		super.calculateDescription();
 	}
 
+	@Override
 	protected long getChangesInMode(int candidateMode) {
 		SyncInfoSet participantSet = getParticipantSyncInfoSet();
 		long numChanges;
@@ -133,7 +144,7 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 			numChanges = participantSet.countFor(SyncInfo.INCOMING, SyncInfo.DIRECTION_MASK);
 			break;
 		case ISynchronizePageConfiguration.BOTH_MODE:
-			numChanges = participantSet.countFor(SyncInfo.INCOMING, SyncInfo.DIRECTION_MASK) 
+			numChanges = participantSet.countFor(SyncInfo.INCOMING, SyncInfo.DIRECTION_MASK)
 				+ participantSet.countFor(SyncInfo.OUTGOING, SyncInfo.DIRECTION_MASK);
 			break;
 		default:
@@ -142,11 +153,12 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 		}
 		return numChanges;
 	}
-	
+
 	/*
 	 * Return the candidate mode based on the presence of unfiltered changes
 	 * and the modes supported by the page.
 	 */
+	@Override
 	protected int getCandidateMode() {
 		SyncInfoSet participantSet = getParticipantSyncInfoSet();
 		SynchronizePageConfiguration configuration = (SynchronizePageConfiguration)getConfiguration();
@@ -170,14 +182,15 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 		}
 		return configuration.getMode();
 	}
-	
+
+	@Override
 	public void dispose() {
 		super.dispose();
 		getConfiguration().removeActionContribution(changedListener);
 		getParticipantSyncInfoSet().removeSyncSetChangedListener(subscriberListener);
 		getVisibleSyncInfoSet().removeSyncSetChangedListener(outputSetListener);
 	}
-	
+
 	private Composite getErrorComposite(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setBackground(getListBackgroundColor());
@@ -186,59 +199,63 @@ public class SyncInfoSetChangesSection extends ForwardingChangesSection {
 		composite.setLayout(layout);
 		GridData data = new GridData(GridData.FILL_BOTH);
 		data.grabExcessVerticalSpace = true;
-		composite.setLayoutData(data);	
+		composite.setLayoutData(data);
 
 		Hyperlink link = new Hyperlink(composite, SWT.WRAP);
-		link.setText(TeamUIMessages.ChangesSection_8); 
+		link.setText(TeamUIMessages.ChangesSection_8);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
 			public void linkActivated(HyperlinkEvent e) {
 				showErrors();
 			}
 		});
 		link.setBackground(getListBackgroundColor());
 		link.setUnderlined(true);
-		
+
 		link = new Hyperlink(composite, SWT.WRAP);
-		link.setText(TeamUIMessages.ChangesSection_9); 
+		link.setText(TeamUIMessages.ChangesSection_9);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
 			public void linkActivated(HyperlinkEvent e) {
 				getPage().reset();
 			}
 		});
 		link.setBackground(getListBackgroundColor());
 		link.setUnderlined(true);
-		
-		createDescriptionLabel(composite, NLS.bind(TeamUIMessages.ChangesSection_10, new String[] { Utils.shortenText(SynchronizeView.MAX_NAME_LENGTH, getConfiguration().getParticipant().getName()) })); 
+
+		createDescriptionLabel(composite, NLS.bind(TeamUIMessages.ChangesSection_10, new String[] { Utils.shortenText(SynchronizeView.MAX_NAME_LENGTH, getConfiguration().getParticipant().getName()) }));
 
 		return composite;
 	}
-	
+
 	/* private */ void showErrors() {
 		ITeamStatus[] status = getVisibleSyncInfoSet().getErrors();
-		String title = TeamUIMessages.ChangesSection_11; 
+		String title = TeamUIMessages.ChangesSection_11;
 		if (status.length == 1) {
 			ErrorDialog.openError(getShell(), title, status[0].getMessage(), status[0]);
 		} else {
-			MultiStatus multi = new MultiStatus(TeamUIPlugin.ID, 0, status, TeamUIMessages.ChangesSection_12, null); 
+			MultiStatus multi = new MultiStatus(TeamUIPlugin.ID, 0, status, TeamUIMessages.ChangesSection_12, null);
 			ErrorDialog.openError(getShell(), title, null, multi);
 		}
 	}
-	
+
+	@Override
 	protected int getChangesCount() {
 		return getParticipantSyncInfoSet().size();
 	}
-	
+
+	@Override
 	protected long getVisibleChangesCount() {
 		return getVisibleSyncInfoSet().size();
 	}
-	
+
 	/*
 	 * Return the sync info set that contains the visible resources
 	 */
 	private SyncInfoTree getVisibleSyncInfoSet() {
 		return (SyncInfoTree)getConfiguration().getProperty(ISynchronizePageConfiguration.P_SYNC_INFO_SET);
 	}
-	
+
 	/*
 	 * Return the sync info set for the participant that contains all the resources
 	 * including those that may not be visible due to filters (e.g. mode)

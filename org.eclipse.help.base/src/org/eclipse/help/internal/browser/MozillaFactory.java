@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,7 @@ public class MozillaFactory implements IBrowserFactory, IExecutableExtension {
 	/*
 	 * @see IBrowserFactory#isAvailable()
 	 */
+	@Override
 	public boolean isAvailable() {
 		if (!isSupportedOS(System.getProperty("os.name"))) { //$NON-NLS-1$
 			return false;
@@ -91,6 +92,7 @@ public class MozillaFactory implements IBrowserFactory, IExecutableExtension {
 	/*
 	 * @see IBrowserFactory#createBrowser()
 	 */
+	@Override
 	public IBrowser createBrowser() {
 		// Create single browser for all clients
 		if (browserInstance == null) {
@@ -103,6 +105,7 @@ public class MozillaFactory implements IBrowserFactory, IExecutableExtension {
 	 * @see org.eclipse.core.runtime.IExecutableExtension#setInitializationData(org.eclipse.core.runtime.IConfigurationElement,
 	 *      java.lang.String, java.lang.Object)
 	 */
+	@Override
 	public void setInitializationData(IConfigurationElement config,
 			String propertyName, Object data) throws CoreException {
 		try {

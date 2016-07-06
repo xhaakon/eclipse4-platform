@@ -12,7 +12,9 @@
    <extension-point id="markerSupport" name="%ExtPoint.markerSupport" schema="schema/markerSupport.exsd"/>
    <extension-point id="filesystemSupport" name="%ExtPoint.fileSystemSupport" schema="schema/filesystemSupport.exsd"/>
    <extension-point id="editorAssociationOverride" name="%ExtPoint.editorAssociationOverride" schema="schema/editorAssociationOverride.exsd"/>
-
+   <extension-point id="unassociatedEditorStrategy" name="%ExtPoint.unassociatedEditorStrategy" schema="schema/unassociatedEditorStrategy.exsd"/>
+   <extension-point id="projectConfigurators" name="%ExtPoint.projectConfigurator" schema="schema/projectConfigurators.exsd"/>
+   
    <extension
          point="org.eclipse.ui.importWizards">
 
@@ -540,6 +542,12 @@
       <keyword
             id="org.eclipse.ui.ide.settings"
             label="%PreferenceKeywords.Settings"/>
+      <keyword
+            id="org.eclipse.ui.ide.unassociated"
+            label="%PreferenceKeywords.unassociated"/>
+      <keyword
+            id="org.eclipse.ui.ide.save"
+            label="%PreferenceKeywords.Save"/>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
@@ -573,6 +581,15 @@
          <keywordReference id="org.eclipse.ui.ide.state"/>
       </page>
       <page
+            name="%PreferencePages.AutoSave"
+            category="org.eclipse.ui.preferencePages.Editors"
+            class="org.eclipse.ui.internal.ide.dialogs.AutoSavePreferencePage"
+            id="org.eclipse.ui.preferencePages.AutoSave">
+         <keywordReference id="org.eclipse.ui.ide.editors"/>
+         <keywordReference id="org.eclipse.ui.ide.dirty"/>
+         <keywordReference id="org.eclipse.ui.ide.save"/>
+      </page>
+      <page
             name="%PreferencePages.Perspectives"
             category="org.eclipse.ui.preferencePages.Workbench"
             class="org.eclipse.ui.internal.ide.dialogs.IDEPerspectivesPreferencePage"
@@ -583,10 +600,11 @@
       <page
             name="%PreferencePages.FileEditors"
             category="org.eclipse.ui.preferencePages.Editors"
-            class="org.eclipse.ui.ExtensionFactory:fileAssociationsPreferencePage"
+            class="org.eclipse.ui.internal.ide.ExtendedFileEditorsPreferencePage"
             id="org.eclipse.ui.preferencePages.FileEditors">
          <keywordReference id="org.eclipse.ui.ide.editing"/>
          <keywordReference id="org.eclipse.ui.ide.editors"/>
+         <keywordReference id="org.eclipse.ui.ide.unassociated"/>
       </page>
       <page
             name="%PreferencePages.Views"
@@ -1014,6 +1032,11 @@
             name="%command.showInSystemExplorer.name"
             id="org.eclipse.ui.ide.showInSystemExplorer"
             description="%command.showInSystemExplorer.description">
+         <commandParameter
+               id="org.eclipse.ui.ide.showInSystemExplorer.path"
+               name="%commandParameter.resourceSystemPath"
+               optional="true">
+         </commandParameter>
       </command>
    </extension>
 
@@ -1154,6 +1177,20 @@
             contextId="org.eclipse.ui.contexts.dialogAndWindow"
             sequence="M2+M3+F3"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
+      <key
+            commandId="org.eclipse.ui.window.fullscreenmode"
+            contextId="org.eclipse.ui.contexts.window"
+            platform="win32"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M3+F11">
+      </key>
+      <key
+            commandId="org.eclipse.ui.window.fullscreenmode"
+            contextId="org.eclipse.ui.contexts.window"
+            platform="gtk"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M3+F11">
+      </key>
    </extension>
 
    <extension
@@ -1292,6 +1329,11 @@
           <adapter
                 type="org.eclipse.core.resources.IResource">
           </adapter>
+       </factory>
+       <factory
+             adaptableType="org.eclipse.ui.ide.FileStoreEditorInput"
+             class="org.eclipse.ui.internal.ide.model.FileStoreInputAdapterFactory">
+          <adapter type="org.eclipse.core.filesystem.IFileStore"/>
        </factory>
        <factory
              adaptableType="org.eclipse.ui.internal.views.markers.ExtendedMarkersView"
@@ -1666,11 +1708,17 @@
          point="org.eclipse.ui.menus">
          <menuContribution
             locationURI="menu:window?after=org.eclipse.ui.editors">
-         <command
-               commandId="org.eclipse.ui.ToggleCoolbarAction"
-               tooltip="%menu.toggleCoolbar.tooltip"
-               style="push">
-         </command>
+         <menu
+               id="org.eclipse.ui.appearance"
+               label="%menu.window.appearance.label"
+               mnemonic="%menu.window.appearance.mnemonic"
+               tooltip="%menu.window.appearance.tooltip">
+            <command
+                  commandId="org.eclipse.ui.ToggleCoolbarAction"
+                  style="push"
+                  tooltip="%menu.toggleCoolbar.tooltip">
+            </command>
+         </menu>
       </menuContribution>
 
 
@@ -2308,6 +2356,13 @@
             properties="input"
             type="org.eclipse.ui.IWorkbenchPart">
       </propertyTester>
+      <propertyTester
+            class="org.eclipse.ui.internal.ide.handlers.PagePropertyTester"
+            id="org.eclipse.ui.ide.pagepropertytester"
+            namespace="org.eclipse.ui.ide.page"
+            properties="activePreferencePage"
+            type="org.eclipse.swt.widgets.Shell">
+      </propertyTester>
    </extension>
    <extension
          point="org.eclipse.core.resources.filterMatchers">
@@ -2377,6 +2432,13 @@
                      property="org.eclipse.ui.ide.editor.input">
                </test>
             </with>
+            <with
+                  variable="activeShell">
+               <test
+                     property="org.eclipse.ui.ide.page.activePreferencePage"
+                     value="org.eclipse.ui.internal.ide.dialogs.ResourceInfoPage">
+               </test>
+            </with>
              </or>
       </definition>
    </extension>
@@ -2390,6 +2452,159 @@
          <hiddenToolBarItem id="print">
          </hiddenToolBarItem>
       </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.unassociatedEditorStrategy">
+      <strategy
+            class="org.eclipse.ui.internal.ide.SystemEditorOrTextEditorStrategy"
+            id="org.eclipse.ui.ide.systemEditorThenTextEditor"
+            interactive="false"
+            label="%systemEditorThenTextEditor">
+      </strategy>
+      <strategy
+            class="org.eclipse.ui.internal.ide.TextEditorStrategy"
+            id="org.eclipse.ui.ide.textEditor"
+            interactive="false"
+            label="%textEditor">
+      </strategy>
+      <strategy
+            class="org.eclipse.ui.internal.ide.AskUserViaPopupUnassociatedEditorStrategy"
+            id="org.eclipse.ui.ide.askUserForUnassociatedEditor"
+            interactive="true"
+            label="%askUserViaPopup">
+      </strategy>
+   </extension>
+   <extension
+         id="org.eclipse.ui.ide.autoSave"
+         point="org.eclipse.e4.workbench.model">
+      <fragment
+            apply="notexists"
+            uri="model/fragment.e4xmi">
+      </fragment>
+   </extension>
+   <!-- Smart Import -->
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:file?after=new.ext">
+         <command
+               commandId="org.eclipse.e4.ui.importer.openDirectory"
+               id="org.eclipse.e4.ui.importer.openDirectory.menu"
+               mnemonic="%importProjectsFromFolder_mnemonic"
+               style="push">
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+         <command
+               commandId="org.eclipse.e4.ui.importer.configureProject"
+               id="org.eclipse.e4.ui.importer.configureProject.popupMenu"
+               mnemonic="%configureProject_mnemonic"
+               style="push">
+               <visibleWhen>
+				<with variable="selection">
+					<count value="1"/>
+					<iterate ifEmpty="false">
+						<instanceof value="org.eclipse.core.resources.IProject"/>
+					</iterate>
+				</with>
+	       	  </visibleWhen>
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.eclipse.ui.appearance?after=org.eclipse.ui.ToggleCoolbarAction">
+         <command
+               commandId="org.eclipse.ui.window.fullscreenmode"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <!--
+                 bug 492811: remove test in 4.7 once
+                 org.eclipse.ui.cocoa.fullscreenWindow is removed
+                -->
+               <not>
+                  <systemTest
+                        property="osgi.ws"
+                        value="cocoa">
+                  </systemTest>
+               </not>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="org.eclipse.e4.ui.importer.openDirectory"
+            name="%importProjectsFromFolder_command">
+      </command>
+      <command
+            id="org.eclipse.e4.ui.importer.configureProject"
+            name="%configureProject_command">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.eclipse.ui.internal.wizards.datatransfer.OpenFolderCommand"
+            commandId="org.eclipse.e4.ui.importer.openDirectory">
+      </handler>
+      <handler
+            class="org.eclipse.ui.internal.wizards.datatransfer.ConfigureProjectHandler"
+            commandId="org.eclipse.e4.ui.importer.configureProject">
+            <enabledWhen>
+                <with variable="selection">
+                    <count value="1"/>
+                    <iterate ifEmpty="false">
+                        <instanceof value="org.eclipse.core.resources.IProject"/>
+                    </iterate>
+                </with>
+            </enabledWhen>            
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commandImages">
+      <image
+            commandId="org.eclipse.e4.ui.importer.openDirectory"
+            icon="$nl$/icons/full/etool16/importdir_wiz.png">
+      </image>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.ide.projectConfigurators">
+      <projectConfigurator
+            class="org.eclipse.ui.internal.wizards.datatransfer.EclipseWorkspaceConfigurator"
+            label="%importer.eclipseWorkspace">
+         <activeWhen>
+            <hasFolder
+                  path=".metadata">
+            </hasFolder>
+         </activeWhen>
+      </projectConfigurator>
+   </extension>
+      <extension
+         point="org.eclipse.ui.ide.projectConfigurators">
+      <projectConfigurator
+            class="org.eclipse.ui.internal.wizards.datatransfer.EclipseProjectConfigurator"
+            label="%importer.eclipseProject">
+      </projectConfigurator>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <wizard
+            category="org.eclipse.ui.Basic"
+            class="org.eclipse.ui.internal.wizards.datatransfer.SmartImportWizard"
+            icon="$nl$/icons/full/etool16/importdir_wiz.png"
+            id="org.eclipse.e4.ui.importer.wizard"
+            name="%importProjectsFromFolderWizard_name">
+         <description>
+            %importProjectsFromFolderWizard_description
+         </description>
+      </wizard>
    </extension>
 
 </plugin>

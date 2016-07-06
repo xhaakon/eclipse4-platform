@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2014 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -63,8 +63,8 @@ public class PluginIndex {
 			// resolved
 			return;
 		}
-		indexIDs = new ArrayList<String>();
-		resolvedPaths = new ArrayList<String>();
+		indexIDs = new ArrayList<>();
+		resolvedPaths = new ArrayList<>();
 		Bundle bundle = Platform.getBundle(pluginId);
 		if (bundle == null) {
 			return;
@@ -141,9 +141,7 @@ public class PluginIndex {
 
 			return false;
 		}
-		InputStream in = null;
-		try {
-			in = ProxyUtil.getStream(url);
+		try (InputStream in = ProxyUtil.getStream(url)) {
 			Properties prop = new Properties();
 			prop.load(in);
 			String lucene = prop
@@ -159,13 +157,6 @@ public class PluginIndex {
 		} catch (IOException ioe) {
 			HelpBasePlugin.logError(
 					"IOException accessing prebuilt index.", ioe); //$NON-NLS-1$
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-				}
-			}
 		}
 		return true;
 	}
@@ -190,6 +181,7 @@ public class PluginIndex {
 		return "/" + prefix.substring(0, prefix.length() - 1); //$NON-NLS-1$
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if ( !(obj instanceof PluginIndex) ) {
 			return false;
@@ -198,10 +190,12 @@ public class PluginIndex {
 		return pluginId.equals(index.pluginId) && path.equals(index.path);
 	}
 
+	@Override
 	public int hashCode() {
 		return pluginId.hashCode() + path.hashCode();
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer ret = new StringBuffer(pluginId);
 		ret.append(":"); //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2010 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -779,9 +779,6 @@ public abstract class WorkbenchAdvisor {
 
 		final Throwable [] error = new Throwable[1];
 		Thread initThread = new Thread() {
-			/* (non-Javadoc)
-			 * @see java.lang.Thread#run()
-			 */
 			@Override
 			public void run() {
 				try {

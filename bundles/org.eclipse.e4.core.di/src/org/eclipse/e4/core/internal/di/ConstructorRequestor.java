@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2015 IBM Corporation and others.
+ * Copyright (c) 2010, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,10 +28,8 @@ public class ConstructorRequestor extends Requestor<Constructor<?>> {
 	@Override
 	public Object execute() throws InjectionException {
 		Object result = null;
-		boolean wasAccessible = true;
 		if (!location.isAccessible()) {
 			location.setAccessible(true);
-			wasAccessible = false;
 		}
 		boolean pausedRecording = false;
 		if ((primarySupplier != null)) {
@@ -40,12 +38,10 @@ public class ConstructorRequestor extends Requestor<Constructor<?>> {
 		}
 		try {
 			result = location.newInstance(actualArgs);
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException | IllegalAccessException e) {
 			throw new InjectionException(e);
 		} catch (InstantiationException e) {
 			throw new InjectionException("Unable to instantiate " + location, e); //$NON-NLS-1$
-		} catch (IllegalAccessException e) {
-			throw new InjectionException(e);
 		} catch (InvocationTargetException e) {
 			Throwable originalException = e.getCause();
 			// Errors such as ThreadDeath or OutOfMemoryError should not be trapped
@@ -55,8 +51,6 @@ public class ConstructorRequestor extends Requestor<Constructor<?>> {
 			}
 			throw new InjectionException((originalException != null) ? originalException : e);
 		} finally {
-			if (!wasAccessible)
-				location.setAccessible(false);
 			if (pausedRecording)
 				primarySupplier.resumeRecording();
 			clearResolvedArgs();

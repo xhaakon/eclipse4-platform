@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,18 +38,18 @@ import org.eclipse.jface.text.contentassist.IContextInformationValidator;
  */
 public abstract class TemplateCompletionProcessor implements IContentAssistProcessor {
 
-	private static final class ProposalComparator implements Comparator {
-		public int compare(Object o1, Object o2) {
-			return ((TemplateProposal) o2).getRelevance() - ((TemplateProposal) o1).getRelevance();
+	private static final class ProposalComparator implements Comparator<ICompletionProposal> {
+		@Override
+		public int compare(ICompletionProposal o1, ICompletionProposal o2) {
+			int r1= o1 instanceof TemplateProposal ? ((TemplateProposal) o1).getRelevance() : 0;
+			int r2= o2 instanceof TemplateProposal ? ((TemplateProposal) o2).getRelevance() : 0;
+			return r2 - r1;
 		}
 	}
 
-	private static final Comparator fgProposalComparator= new ProposalComparator();
+	private static final Comparator<ICompletionProposal> fgProposalComparator= new ProposalComparator();
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer,
-	 *      int)
-	 */
+	@Override
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 
 		ITextSelection selection= (ITextSelection) viewer.getSelectionProvider().getSelection();
@@ -68,7 +68,7 @@ public abstract class TemplateCompletionProcessor implements IContentAssistProce
 
 		Template[] templates= getTemplates(context.getContextType().getId());
 
-		List matches= new ArrayList();
+		List<ICompletionProposal> matches= new ArrayList<>();
 		for (int i= 0; i < templates.length; i++) {
 			Template template= templates[i];
 			try {
@@ -82,7 +82,7 @@ public abstract class TemplateCompletionProcessor implements IContentAssistProce
 
 		Collections.sort(matches, fgProposalComparator);
 
-		return (ICompletionProposal[]) matches.toArray(new ICompletionProposal[matches.size()]);
+		return matches.toArray(new ICompletionProposal[matches.size()]);
 	}
 
 	/**
@@ -101,6 +101,7 @@ public abstract class TemplateCompletionProcessor implements IContentAssistProce
 	 * @deprecated use the version specifying <code>IRegion</code> as third parameter
 	 * @since 3.1
 	 */
+	@Deprecated
 	protected ICompletionProposal createProposal(Template template, TemplateContext context, Region region, int relevance) {
 		return createProposal(template, context, (IRegion) region, relevance);
 	}
@@ -214,37 +215,27 @@ public abstract class TemplateCompletionProcessor implements IContentAssistProce
 	 */
 	protected abstract Image getImage(Template template);
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeContextInformation(org.eclipse.jface.text.ITextViewer, int)
-	 */
+	@Override
 	public IContextInformation[] computeContextInformation(ITextViewer viewer, int documentOffset) {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getCompletionProposalAutoActivationCharacters()
-	 */
+	@Override
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationAutoActivationCharacters()
-	 */
+	@Override
 	public char[] getContextInformationAutoActivationCharacters() {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getErrorMessage()
-	 */
+	@Override
 	public String getErrorMessage() {
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationValidator()
-	 */
+	@Override
 	public IContextInformationValidator getContextInformationValidator() {
 		return null;
 	}

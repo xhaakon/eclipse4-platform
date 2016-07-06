@@ -32,7 +32,7 @@ import org.eclipse.ui.part.Page;
 /**
  * Displays a history page combined with the compare/merge infrastructure. This only works properly if the
  * history page adapts to an {@link IHistoryCompareAdapter}.
- * 
+ *
  * @since 3.3
  */
 public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
@@ -42,12 +42,13 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 	private final Object object;
 	private final IHistoryPageSource pageSource;
 	private final IPropertyChangeListener changeListener = new IPropertyChangeListener() {
+		@Override
 		public void propertyChange(PropertyChangeEvent event) {
 			handlePropertyChange(event);
 		}
 	};
 	private boolean isReplace;
-	
+
 	/**
 	 * Create a history page compare editor input for the given page and object.
 	 * @param configuration the compare configuration
@@ -59,18 +60,20 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 		this.pageSource = pageSource;
 		this.object = object;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.CompareEditorInput#prepareInput(org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected Object prepareInput(IProgressMonitor monitor)
 			throws InvocationTargetException, InterruptedException {
 		return object;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.CompareEditorInput#handleDispose()
 	 */
+	@Override
 	protected void handleDispose() {
 		super.handleDispose();
 		if (historyPage != null) {
@@ -78,10 +81,11 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 			historyPage.dispose();
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageCompareEditorInput#createPage(org.eclipse.compare.CompareViewerPane, org.eclipse.jface.action.IToolBarManager)
 	 */
+	@Override
 	protected IPage createPage(CompareViewerPane parent, IToolBarManager toolBarManager) {
 		site = new DialogHistoryPageSite(parent.getShell());
 		historyPage = (IHistoryPage)pageSource.createPage(object);
@@ -98,10 +102,11 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 		historyPage.addPropertyChangeListener(changeListener);
 		return (IPage)historyPage;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageCompareEditorInput#asCompareInput(org.eclipse.jface.viewers.ISelection)
 	 */
+	@Override
 	protected ICompareInput asCompareInput(ISelection selection) {
 		ICompareInput compareInput = super.asCompareInput(selection);
 		if (compareInput != null)
@@ -122,6 +127,7 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageCompareEditorInput#getSelectionProvider()
 	 */
+	@Override
 	protected ISelectionProvider getSelectionProvider() {
 		return site.getSelectionProvider();
 	}
@@ -129,6 +135,7 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.PageCompareEditorInput#prepareInput(org.eclipse.compare.structuremergeviewer.ICompareInput, org.eclipse.compare.CompareConfiguration, org.eclipse.core.runtime.IProgressMonitor)
 	 */
+	@Override
 	protected void prepareInput(ICompareInput input,
 			CompareConfiguration configuration, IProgressMonitor monitor)
 			throws InvocationTargetException {
@@ -155,12 +162,14 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 		if (event.getSource() == historyPage) {
 			if (event.getProperty().equals(IHistoryPage.P_NAME)) {
 				Display.getDefault().asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						setTitle(historyPage.getName());
 					}
 				});
 			} else if (event.getProperty().equals(IHistoryPage.P_DESCRIPTION)) {
 				Display.getDefault().asyncExec(new Runnable() {
+					@Override
 					public void run() {
 						setPageDescription(historyPage.getDescription());
 					}
@@ -168,10 +177,11 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 			}
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.CompareEditorInput#isEditionSelectionDialog()
 	 */
+	@Override
 	public boolean isEditionSelectionDialog() {
 		return isReplaceDialog();
 	}
@@ -195,19 +205,21 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 	public void setReplace(boolean isReplace) {
 		this.isReplace = isReplace;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.CompareEditorInput#getOKButtonLabel()
 	 */
+	@Override
 	public String getOKButtonLabel() {
 		if (isReplaceDialog())
 			return TeamUIMessages.HistoryPageCompareEditorInput_0;
 		return super.getOKButtonLabel();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.compare.CompareEditorInput#okPressed()
 	 */
+	@Override
 	public boolean okPressed() {
 		if (!isReplaceDialog())
 			return super.okPressed();
@@ -220,11 +232,11 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * A replace has been requested. This method will be
 	 * invoked if {@link #isReplaceDialog()} is <code>true</code>
-	 * and the user has clicked the "Replace" button. 
+	 * and the user has clicked the "Replace" button.
 	 * By default, this method does nothing.
 	 * Subclasses may override.
 	 * @param selectedObject the selected object
@@ -233,5 +245,5 @@ public class HistoryPageCompareEditorInput extends PageCompareEditorInput {
 	protected void performReplace(Object selectedObject) throws CoreException {
 		// By default, do nothing
 	}
-	
+
 }

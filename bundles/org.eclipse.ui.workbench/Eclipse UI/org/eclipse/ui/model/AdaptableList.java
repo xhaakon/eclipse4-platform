@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2008 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,6 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IAdaptable;
 
@@ -108,9 +107,6 @@ public class AdaptableList extends WorkbenchAdapter implements IAdaptable {
         return children.size();
     }
 
-    /* (non-Javadoc)
-     * @see IAdaptable#getAdapter
-     */
     @Override
 	public Object getAdapter(Class adapter) {
         if (adapter == IWorkbenchAdapter.class) {
@@ -119,9 +115,6 @@ public class AdaptableList extends WorkbenchAdapter implements IAdaptable {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see IWorkbenchAdapter
-     */
     @Override
 	public Object[] getChildren(Object o) {
         // @issue suspicious - does not reference parameter
@@ -149,9 +142,6 @@ public class AdaptableList extends WorkbenchAdapter implements IAdaptable {
 				.size()));
 	}
 
-    /* (non-javadoc)
-     * For debugging purposes only.
-     */
     @Override
 	public String toString() {
         return children.toString();

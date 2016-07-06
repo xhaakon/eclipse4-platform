@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2009 IBM Corporation and others.
+ * Copyright (c) 2007, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -231,7 +231,7 @@ public class ListBinding extends Binding {
 							// TODO - at this point, the two lists will be out
 							// of sync if an error occurred...
 						} finally {
-							validationStatusObservable.setValue(multiStatus);
+							setValidationStatus(multiStatus);
 
 							if (destination == getTarget()) {
 								updatingTarget = false;
@@ -243,6 +243,15 @@ public class ListBinding extends Binding {
 				});
 			}
 		}
+	}
+
+	private void setValidationStatus(final IStatus status) {
+		validationStatusObservable.getRealm().exec(new Runnable() {
+			@Override
+			public void run() {
+				validationStatusObservable.setValue(status);
+			}
+		});
 	}
 
 	/**

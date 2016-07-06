@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2014 IBM Corporation and others.
+ * Copyright (c) 2003, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,30 +25,30 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
  * This method allows clients to call a number of
  * methods that modify resources and only have resource
  * change event notifications reported at the end of the entire
- * batch. This mechanism is used to avoid unnecessary builds 
+ * batch. This mechanism is used to avoid unnecessary builds
  * and notifications.
  * </p>
  * <p>
  * Platform may decide to perform notifications during the operation.
- * The reason for this is that it is possible for multiple threads 
- * to be modifying the workspace concurrently. When one thread finishes modifying 
- * the workspace, a notification is required to prevent responsiveness problems, 
+ * The reason for this is that it is possible for multiple threads
+ * to be modifying the workspace concurrently. When one thread finishes modifying
+ * the workspace, a notification is required to prevent responsiveness problems,
  * even if the other operation has not yet completed.
  * </p>
  * <p>
- * A WorkspaceJob is the asynchronous equivalent of IWorkspaceRunnable
+ * A WorkspaceJob is the asynchronous equivalent of ICoreRunnable
  * </p>
  * <p>
- * Note that the workspace is not locked against other threads during the execution 
- * of a workspace job. Other threads can be modifying the workspace concurrently 
- * with a workspace job.  To obtain exclusive access to a portion of the workspace, 
+ * Note that the workspace is not locked against other threads during the execution
+ * of a workspace job. Other threads can be modifying the workspace concurrently
+ * with a workspace job.  To obtain exclusive access to a portion of the workspace,
  * set the scheduling rule on the job to be a resource scheduling rule.  The
- * interface <tt>IResourceRuleFactory</tt> is used to create a  scheduling rule 
+ * interface <tt>IResourceRuleFactory</tt> is used to create a  scheduling rule
  * for a particular workspace modification operation.
  * </p>
- * @see IWorkspaceRunnable
+ * @see ICoreRunnable
  * @see org.eclipse.core.resources.IResourceRuleFactory
- * @see IWorkspace#run(IWorkspaceRunnable, ISchedulingRule, int, IProgressMonitor)
+ * @see IWorkspace#run(ICoreRunnable, ISchedulingRule, int, IProgressMonitor)
  * @since 3.0
  */
 public abstract class WorkspaceJob extends InternalWorkspaceJob {
@@ -56,7 +56,7 @@ public abstract class WorkspaceJob extends InternalWorkspaceJob {
 	 * Creates a new workspace job with the specified name. The job name is
 	 * a human-readable value that is displayed to users. The name does not
 	 * need to be unique, but it must not be <code>null</code>.
-	 * 
+	 *
 	 * @param name the name of the job
 	 */
 	public WorkspaceJob(String name) {
@@ -65,16 +65,16 @@ public abstract class WorkspaceJob extends InternalWorkspaceJob {
 
 	/**
 	 * Runs the operation, reporting progress to and accepting
-	 * cancelation requests from the given progress monitor.
+	 * cancellation requests from the given progress monitor.
 	 * <p>
 	 * Implementors of this method should check the progress monitor
-	 * for cancelation when it is safe and appropriate to do so.  The cancelation
-	 * request should be propagated to the caller by throwing 
+	 * for cancellation when it is safe and appropriate to do so.  The cancellation
+	 * request should be propagated to the caller by throwing
 	 * <code>OperationCanceledException</code>.
 	 * </p>
-	 * 
+	 *
 	 * @param monitor a progress monitor, or <code>null</code> if progress
-	 *    reporting and cancelation are not desired
+	 *     reporting and cancellation are not desired
 	 * @return the result of running the operation
 	 * @exception CoreException if this operation fails.
 	 */

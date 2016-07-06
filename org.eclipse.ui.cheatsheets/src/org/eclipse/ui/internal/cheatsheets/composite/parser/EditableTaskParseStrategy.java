@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,15 +19,17 @@ import org.eclipse.ui.internal.cheatsheets.registry.CheatSheetRegistryReader;
 import org.w3c.dom.Node;
 
 public class EditableTaskParseStrategy implements ITaskParseStrategy {
-	
+
 	private boolean editableChildErrorReported;
-	
+
+	@Override
 	public void init() {
 		editableChildErrorReported = false;
 	}
 
+	@Override
 	public boolean parseElementNode(Node childNode, Node parentNode,
-			AbstractTask parentTask, IStatusContainer status) {	
+			AbstractTask parentTask, IStatusContainer status) {
 		boolean isElementHandled = true;
 		String nodeName = childNode.getNodeName();
 		if (CompositeCheatSheetParser.isAbstractTask(nodeName)) {
@@ -44,6 +46,7 @@ public class EditableTaskParseStrategy implements ITaskParseStrategy {
 		return isElementHandled;
 	}
 
+	@Override
 	public void parsingComplete(AbstractTask parentTask, IStatusContainer status) {
 		if (parentTask.getKind() == null) {
 			String message = NLS.bind(

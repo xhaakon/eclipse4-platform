@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,19 +7,18 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 476403, 478769, 490586
  *******************************************************************************/
 package org.eclipse.core.runtime;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Map;
-import org.eclipse.core.internal.runtime.*;
+import org.eclipse.core.internal.runtime.InternalPlatform;
+import org.eclipse.core.internal.runtime.Messages;
 import org.eclipse.core.runtime.preferences.*;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.service.debug.DebugOptions;
-import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.*;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -93,11 +92,10 @@ import org.osgi.util.tracker.ServiceTracker;
  * class is used and {@link #start(BundleContext)} and {@link #stop(BundleContext)} are
  * called as life cycle methods.
  * </p><p>
- * If the plugin.xml of a plug-in indicates &lt;?eclipse version="3.0"?&gt; and its prerequisite list includes
- * <code>org.eclipse.core.runtime.compatibility</code>, the {@link #Plugin(IPluginDescriptor)}
- * constructor is used and {@link #startup()} and {@link #shutdown()} are called as life cycle methods.
- * Note that in this situation, start() is called before startup() and stop() is called
- * after shutdown.
+ * The {@link #Plugin(IPluginDescriptor)} constructor was called only for
+ * plug-ins which explicitly require the org.eclipse.core.runtime.compatibility
+ * plug-in. It is not called anymore as Eclipse 4.6 removed this plug-in.
+ *
  * </p><p>
  * If the plugin.xml of your plug-in does <b>not</b> indicate &lt;?eclipse version="3.0"?&gt; it is therefore
  * not a 3.0 plug-in. Consequently the {@link #Plugin(IPluginDescriptor)} is used and {@link #startup()} and
@@ -136,12 +134,6 @@ public abstract class Plugin implements BundleActivator {
 	 * DebugOptions service tracker
 	 */
 	private ServiceTracker<DebugOptions,DebugOptions> debugTracker = null;
-
-	/** The plug-in descriptor.
-	 * @deprecated Marked as deprecated to suppress deprecation warnings.
-	 */
-	@Deprecated
-	private IPluginDescriptor descriptor;
 
 	/**
 	 * The base name (value <code>"preferences"</code>) for the file which is used for
@@ -199,42 +191,21 @@ public abstract class Plugin implements BundleActivator {
 	}
 
 	/**
-	 * Creates a new plug-in runtime object for the given plug-in descriptor.
-	 * <p>
-	 * Instances of plug-in runtime classes are automatically created
-	 * by the platform in the course of plug-in activation.
-	 * <b>Clients must never explicitly call this method.</b>
-	 * </p>
-	 * <p>
-	 * Note: The class loader typically has monitors acquired during invocation of this method.  It is
-	 * strongly recommended that this method avoid synchronized blocks or other thread locking mechanisms,
-	 * as this would lead to deadlock vulnerability.
-	 * </p>
+	 * As the org.eclipse.core.runtime.compatibility plug-in has been removed in
+	 * Eclipse 4.6 this method is not supported anymore.
 	 *
-	 * @param descriptor the plug-in descriptor
-	 * @see #getDescriptor()
-	 * @deprecated
 	 * In Eclipse 3.0 this constructor has been replaced by {@link #Plugin()}.
 	 * Implementations of <code>MyPlugin(IPluginDescriptor descriptor)</code> should be changed to
 	 * <code>MyPlugin()</code> and call <code>super()</code> instead of <code>super(descriptor)</code>.
-	 * The <code>MyPlugin(IPluginDescriptor descriptor)</code> constructor is called only for plug-ins
-	 * which explicitly require the org.eclipse.core.runtime.compatibility plug-in.
+	 *
+	 * The <code>MyPlugin(IPluginDescriptor descriptor)</code> constructor was called only for plug-ins
+	 * which explicitly require the org.eclipse.core.runtime.compatibility plug-in. It is not called anymore.
+	 *
+	 * @deprecated
 	 */
 	@Deprecated
 	public Plugin(IPluginDescriptor descriptor) {
-		Assert.isNotNull(descriptor);
-		Assert.isTrue(!CompatibilityHelper.hasPluginObject(descriptor), NLS.bind(Messages.plugin_deactivatedLoad, this.getClass().getName(), descriptor.getUniqueIdentifier() + " is not activated")); //$NON-NLS-1$
-		this.descriptor = descriptor;
-
-		// on plugin start, find and start the corresponding bundle.
-		bundle = InternalPlatform.getDefault().getBundle(descriptor.getUniqueIdentifier());
-		try {
-			InternalPlatform.start(bundle);
-		} catch (BundleException e) {
-			String message = NLS.bind(Messages.plugin_startupProblems, descriptor.getUniqueIdentifier());
-			IStatus status = new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, e);
-			InternalPlatform.getDefault().log(status);
-		}
+		// intentionally left empty
 	}
 
 	/**
@@ -270,21 +241,20 @@ public abstract class Plugin implements BundleActivator {
 	}
 
 	/**
-	 * Returns the plug-in descriptor for this plug-in runtime object.
+	 * As the org.eclipse.core.runtime.compatibility plug-in has been removed in
+	 * Eclipse 4.6 this method is not supported anymore.
 	 *
-	 * @return the plug-in descriptor for this plug-in runtime object
-	 * @deprecated
 	 * <code>IPluginDescriptor</code> was refactored in Eclipse 3.0.
-	 * The <code>getDescriptor()</code> method may only be called by plug-ins
-	 * which explicitly require the org.eclipse.core.runtime.compatibility plug-in.
-	 * See the comments on {@link IPluginDescriptor} and its methods for details.
+	 *
+	 * The <code>getDescriptor()</code> method was only be called by plug-ins
+	 * which explicitly require the org.eclipse.core.runtime.compatibility
+	 * plug-in. It is not called anymore.
+	 *
+	 * @deprecated
 	 */
 	@Deprecated
 	public final IPluginDescriptor getDescriptor() {
-		if (descriptor != null)
-			return descriptor;
-
-		return initializeDescriptor(getBundle().getSymbolicName());
+		return null;
 	}
 
 	/**
@@ -349,8 +319,8 @@ public abstract class Plugin implements BundleActivator {
 	 * @deprecated Replaced by {@link IEclipsePreferences}. Preferences are now stored according
 	 * to scopes in the {@link IPreferencesService}. The return value of this method corresponds to
 	 * a combination of the {@link InstanceScope} and the {@link DefaultScope}. To set preferences
-	 * for your plug-in, use <tt>new InstanceScope().getNode(&lt;yourPluginId&gt;)</tt>.  To set default
-	 * preferences for your plug-in, use <tt>new DefaultScope().getNode(&lt;yourPluginId&gt;)</tt>.
+	 * for your plug-in, use <tt>InstanceScope.INSTANCE.getNode(&lt;yourPluginId&gt;)</tt>.  To set default
+	 * preferences for your plug-in, use <tt>DefaultScope.INSTANCE.getNode(&lt;yourPluginId&gt;)</tt>.
 	 * To lookup an integer preference value for your plug-in, use
 	 * <tt>Platform.getPreferencesService().getInt(&lt;yourPluginId&gt;, &lt;preferenceKey&gt;, &lt;defaultValue&gt;, null)</tt>.
 	 * Similar methods exist on {@link IPreferencesService} for obtaining other kinds
@@ -594,121 +564,54 @@ public abstract class Plugin implements BundleActivator {
 			BundleContext context = debugBundle.getBundleContext();
 			if (context == null)
 				return null;
-			debugTracker = new ServiceTracker<DebugOptions,DebugOptions>(context, DebugOptions.class.getName(), null);
+			debugTracker = new ServiceTracker<>(context, DebugOptions.class.getName(), null);
 			debugTracker.open();
 		}
 		return this.debugTracker.getService();
 	}
 
 	/**
-	 * Shuts down this plug-in and discards all plug-in state.
-	 * <p>
-	 * This method should be re-implemented in subclasses that need to do something
-	 * when the plug-in is shut down.  Implementors should call the inherited method
-	 * to ensure that any system requirements can be met.
-	 * </p>
-	 * <p>
-	 * Plug-in shutdown code should be robust. In particular, this method
-	 * should always make an effort to shut down the plug-in. Furthermore,
-	 * the code should not assume that the plug-in was started successfully,
-	 * as this method will be invoked in the event of a failure during startup.
-	 * </p>
-	 * <p>
-	 * Note 1: If a plug-in has been started, this method will be automatically
-	 * invoked by the platform when the platform is shut down.
-	 * </p>
-	 * <p>
-	 * Note 2: This method is intended to perform simple termination
-	 * of the plug-in environment. The platform may terminate invocations
-	 * that do not complete in a timely fashion.
-	 * </p>
-	 * <b>Clients must never explicitly call this method.</b>
-	 * <p>
+	 * As the org.eclipse.core.runtime.compatibility plug-in has been removed in
+	 * Eclipse 4.6 this method is not supported anymore.
 	 *
-	 * @exception CoreException if this method fails to shut down
-	 *   this plug-in
+	 * In Eclipse 3.0 this method has been replaced by
+	 * {@link Plugin#stop(BundleContext context)}. Implementations of
+	 * <code>shutdown()</code> should be changed to override
+	 * <code>stop(BundleContext context)</code> and call
+	 * <code>super.stop(context)</code> instead of <code>super.shutdown()</code>
+	 * .
+	 *
+	 * The <code>shutdown()</code> method was called only for plug-ins which
+	 * explicitly required the org.eclipse.core.runtime.compatibility plug-in.
+	 * It is not called anymore.
+	 *
 	 * @deprecated
-	 * In Eclipse 3.0 this method has been replaced by {@link Plugin#stop(BundleContext context)}.
-	 * Implementations of <code>shutdown()</code> should be changed to override
-	 * <code>stop(BundleContext context)</code> and call <code>super.stop(context)</code>
-	 * instead of <code>super.shutdown()</code>.
-	 * The <code>shutdown()</code> method is called only for plug-ins which explicitly require the
-	 * org.eclipse.core.runtime.compatibility plug-in.
 	 */
 	@Deprecated
 	public void shutdown() throws CoreException {
-		if (CompatibilityHelper.initializeCompatibility() == null)
-			return;
-		Throwable exception = null;
-		Method m;
-		try {
-			m = descriptor.getClass().getMethod("doPluginDeactivation", new Class[0]); //$NON-NLS-1$
-			m.invoke(descriptor);
-		} catch (SecurityException e) {
-			exception = e;
-		} catch (NoSuchMethodException e) {
-			exception = e;
-		} catch (IllegalArgumentException e) {
-			exception = e;
-		} catch (IllegalAccessException e) {
-			exception = e;
-		} catch (InvocationTargetException e) {
-			exception = e;
-		}
-		if (exception == null)
-			return;
-		String message = NLS.bind(Messages.plugin_shutdownProblems, descriptor.getUniqueIdentifier());
-		IStatus status = new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, exception);
-		InternalPlatform.getDefault().log(status);
+		// intentionally left empty
 	}
 
 	/**
-	 * Starts up this plug-in.
-	 * <p>
-	 * This method should be overridden in subclasses that need to do something
-	 * when this plug-in is started.  Implementors should call the inherited method
-	 * to ensure that any system requirements can be met.
-	 * </p>
-	 * <p>
-	 * If this method throws an exception, it is taken as an indication that
-	 * plug-in initialization has failed; as a result, the plug-in will not
-	 * be activated; moreover, the plug-in will be marked as disabled and
-	 * ineligible for activation for the duration.
-	 * </p>
-	 * <p>
-	 * Plug-in startup code should be robust. In the event of a startup failure,
-	 * the plug-in's <code>shutdown</code> method will be invoked automatically,
-	 * in an attempt to close open files, etc.
-	 * </p>
-	 * <p>
-	 * Note 1: This method is automatically invoked by the platform
-	 * the first time any code in the plug-in is executed.
-	 * </p>
-	 * <p>
-	 * Note 2: This method is intended to perform simple initialization
-	 * of the plug-in environment. The platform may terminate initializers
-	 * that do not complete in a timely fashion.
-	 * </p>
-	 * <p>
-	 * Note 3: The class loader typically has monitors acquired during invocation of this method.  It is
-	 * strongly recommended that this method avoid synchronized blocks or other thread locking mechanisms,
-	 * as this would lead to deadlock vulnerability.
-	 * </p>
-	 * <b>Clients must never explicitly call this method.</b>
-	 * <p>
+	 * As the org.eclipse.core.runtime.compatibility plug-in has been removed in
+	 * Eclipse 4.6 this method is not supported anymore.
 	 *
-	 * @exception CoreException if this plug-in did not start up properly
+	 * In Eclipse 3.0 this method has been replaced by
+	 * {@link Plugin#start(BundleContext context)}. Implementations of
+	 * <code>startup()</code> should be changed to extend
+	 * <code>start(BundleContext context)</code> and call
+	 * <code>super.start(context)</code> instead of
+	 * <code>super.startup()</code>.
+	 *
+	 * The <code>startup()</code> method was called only for plug-ins which
+	 * explicitly required the org.eclipse.core.runtime.compatibility plug-in.
+	 * It is not called anymore.
+	 *
 	 * @deprecated
-	 * In Eclipse 3.0 this method has been replaced by {@link Plugin#start(BundleContext context)}.
-	 * Implementations of <code>startup()</code> should be changed to extend
-	 * <code>start(BundleContext context)</code> and call <code>super.start(context)</code>
-	 * instead of <code>super.startup()</code>.
-	 * The <code>startup()</code> method is called only for plug-ins which explicitly require the
-	 * org.eclipse.core.runtime.compatibility plug-in.
 	 */
 	@Deprecated
 	public void startup() throws CoreException {
-		//default implementation does nothing
+		// intentionally left empty
 	}
 
 	/**
@@ -721,7 +624,7 @@ public abstract class Plugin implements BundleActivator {
 		if (myBundle == null)
 			return ""; //$NON-NLS-1$
 		String name = myBundle.getSymbolicName();
-		return name == null ? new Long(myBundle.getBundleId()).toString() : name;
+		return name == null ? Long.toString(myBundle.getBundleId()) : name;
 	}
 
 	/**
@@ -768,30 +671,6 @@ public abstract class Plugin implements BundleActivator {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		bundle = context.getBundle();
-		initializeDescriptor(bundle.getSymbolicName());
-	}
-
-	/**
-	 * @deprecated Marked as deprecated to suppress deprecation warnings.
-	 */
-	@Deprecated
-	private IPluginDescriptor initializeDescriptor(String symbolicName) {
-		if (CompatibilityHelper.initializeCompatibility() == null)
-			return null;
-
-		//This associate a descriptor to any real bundle that uses this to start
-		if (symbolicName == null)
-			return null;
-
-		IPluginDescriptor tmp = CompatibilityHelper.getPluginDescriptor(symbolicName);
-
-		//Runtime descriptor is never set to support dynamic re-installation of compatibility
-		if (!symbolicName.equals(Platform.PI_RUNTIME))
-			descriptor = tmp;
-
-		CompatibilityHelper.setPlugin(tmp, this);
-		CompatibilityHelper.setActive(tmp);
-		return tmp;
 	}
 
 	/**

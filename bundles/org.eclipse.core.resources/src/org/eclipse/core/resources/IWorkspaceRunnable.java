@@ -1,42 +1,35 @@
 /*******************************************************************************
- *  Copyright (c) 2000, 2009 IBM Corporation and others.
+ *  Copyright (c) 2000, 2015 IBM Corporation and others.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
  *  http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  *  Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.core.resources;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.*;
 
 /**
- * A runnable which executes as a batch operation within the workspace.
- * The <code>IWorkspaceRunnable</code> interface should be implemented
- * by any class whose instances are intended to be run by
- * <code>IWorkspace.run</code>.
+ * This interface is structurally equivalent to {@link ICoreRunnable}. New code should use
+ * {@link ICoreRunnable} instead of {@code IWorkspaceRunnable}.
  * <p>
  * Clients may implement this interface.
  * </p>
- * @see IWorkspace#run(IWorkspaceRunnable, IProgressMonitor)
+ * @see IWorkspace#run(ICoreRunnable, IProgressMonitor)
  */
-public interface IWorkspaceRunnable {
+public interface IWorkspaceRunnable extends ICoreRunnable {
 	/**
-	 * Runs the operation reporting progress to and accepting
-	 * cancellation requests from the given progress monitor.
-	 * <p>
-	 * Implementors of this method should check the progress monitor
-	 * for cancellation when it is safe and appropriate to do so.  The cancellation
-	 * request should be propagated to the caller by throwing 
-	 * <code>OperationCanceledException</code>.
-	 * </p>
-	 * 
-	 * @param monitor a progress monitor, or <code>null</code> if progress
-	 *    reporting and cancellation are not desired
-	 * @exception CoreException if this operation fails.
+	 * @param monitor a progress monitor, or {@code null} if progress reporting and
+	 *     cancellation are not desired.  The monitor is only valid for the duration
+	 *     of the invocation of this method.  Callers may call {@link IProgressMonitor#done()}
+	 *     after this method returns or throws an exception, but this is not strictly
+	 *     required.
+	 * @exception CoreException if this operation fails
+	 * @exception OperationCanceledException if this operation is canceled
 	 */
+	@Override
 	public void run(IProgressMonitor monitor) throws CoreException;
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2007 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -85,7 +85,7 @@ public abstract class ViewItem {
 	private Font boldFont;
 	private Font regularFont;
 	private boolean initialized = false;
-	protected ArrayList listOfSubItemCompositeHolders;
+	protected ArrayList<SubItemCompositeHolder> listOfSubItemCompositeHolders;
 
 	/**
 	 * Constructor for ViewItem.
@@ -118,8 +118,9 @@ public abstract class ViewItem {
 		}
 		CheatSheetStopWatch.printLapTime("ViewItem.addItem()", "Time in addItem() after create mainItemComposite: "); //$NON-NLS-1$ //$NON-NLS-2$
 
-		
+
 		mainItemComposite.addExpansionListener(new ExpansionAdapter() {
+			@Override
 			public void expansionStateChanged(ExpansionEvent e) {
 				page.getForm().reflow(true);
 			}
@@ -154,6 +155,7 @@ public abstract class ViewItem {
 			number++;
 			ImageHyperlink helpButton = createButton(titleComposite, CheatSheetPlugin.getPlugin().getImage(ICheatSheetResource.CHEATSHEET_ITEM_HELP), this, itemColor, Messages.HELP_BUTTON_TOOLTIP);
 			helpButton.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
 				public void linkActivated(HyperlinkEvent e) {
 					// If we have a context id, handle this first and ignore an hrefs
 					if(item.getContextId() != null) {
@@ -171,7 +173,7 @@ public abstract class ViewItem {
 			mainItemComposite.setTextClient(titleComposite);
 			GridLayout layout = new GridLayout(number, false);
 			GridData data = new GridData(GridData.FILL_BOTH);
-	
+
 			titleComposite.setLayout(layout);
 			titleComposite.setLayoutData(data);
 			layout.marginWidth = 0;
@@ -190,6 +192,7 @@ public abstract class ViewItem {
 
 		bodyText = page.getToolkit().createFormText(bodyWrapperComposite, false);
 		bodyText.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Action copyAction = viewer.getCopyAction();
 				if (copyAction!=null)
@@ -197,11 +200,13 @@ public abstract class ViewItem {
 			}
 		});
 		bodyText.addFocusListener(new FocusListener() {
+			@Override
 			public void focusGained(FocusEvent e) {
 				Action copyAction = viewer.getCopyAction();
 				if (copyAction!=null)
 					copyAction.setEnabled(bodyText.canCopy());
 			}
+			@Override
 			public void focusLost(FocusEvent e) {
 				Action copyAction = viewer.getCopyAction();
 				if (copyAction!=null)
@@ -211,7 +216,7 @@ public abstract class ViewItem {
 //		bodyText = toolkit.createLabel(bodyWrapperComposite, item.getDescription(), SWT.WRAP);
 		bodyText.setText(item.getDescription(), item.getDescription().startsWith(IParserTags.FORM_START_TAG), false);
 
-		//Set up the body text portion here.		
+		//Set up the body text portion here.
 		bodyText.setBackground(itemColor);
 		bodyText.setLayoutData(new TableWrapData(TableWrapData.FILL_GRAB));
 		CheatSheetStopWatch.printLapTime("ViewItem.addItem()", "Time in addItem() after create FormText: "); //$NON-NLS-1$ //$NON-NLS-2$
@@ -237,7 +242,7 @@ public abstract class ViewItem {
 		}
 		regularFont = new Font(mainItemComposite.getDisplay(), fontDatas);
 		CheatSheetStopWatch.printLapTime("ViewItem.addItem()", "Time in addItem() after font initlization: "); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		setBold(false);
 		CheatSheetStopWatch.printLapTime("ViewItem.addItem()", "Time in addItem() after setBold: "); //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -272,7 +277,7 @@ public abstract class ViewItem {
 			bodyText.dispose();
 		if (buttonComposite != null)
 			buttonComposite.dispose();
-		if (completionComposite != null) 
+		if (completionComposite != null)
 			completionComposite.dispose();
 		if (bodyComp != null)
 			bodyComp.dispose();
@@ -348,7 +353,7 @@ public abstract class ViewItem {
 	public boolean isExpanded() {
 		return mainItemComposite.isExpanded();
 	}
-	
+
 	public boolean isCompletionMessageExpanded() {
 	    return completionMessageExpanded;
     }
@@ -356,13 +361,13 @@ public abstract class ViewItem {
 	/**
      * Returns whether or not cheat sheet viewer containing this item is in
      * a modal dialog.
-     * 
+     *
      * @return whether the cheat sheet viewer is in a modal dialog
 	 */
 	public boolean isInDialogMode() {
 		return viewer.isInDialogMode();
 	}
-	
+
 	/*package*/
 	boolean isSkipped() {
 		return isSkipped;
@@ -431,7 +436,7 @@ public abstract class ViewItem {
 		setBackgroundColor(buttonComposite, color);
 		setBackgroundColor(completionComposite, color);
 	}
-	
+
 	/*
 	 * Set the background color of this composite and its children.
 	 * If the composite is null do nothing.
@@ -459,7 +464,7 @@ public abstract class ViewItem {
 		}
 		bold = value;
 	}
-	
+
 	//collapse or expand the item
 	/*package*/
 	void setButtonsVisible(boolean isVisible) {
@@ -472,13 +477,13 @@ public abstract class ViewItem {
 				buttonComposite.setVisible(isVisible);
 			}
 		}
-		
+
 		if(isVisible && initialized) {
 			FormToolkit.ensureVisible(getMainItemComposite());
 		}
 		buttonExpanded = isVisible;
 	}
-	
+
 	protected void setCompletionMessageExpanded(boolean isFinalItem) {
 		if (hasCompletionMessage()) {
 			if (completionComposite == null) {
@@ -490,12 +495,12 @@ public abstract class ViewItem {
 			}
 		}
 	}
-	
+
 	abstract void createCompletionComposite(boolean isFinalItem);
 
 	protected void setCompletionMessageCollapsed() {
 		if (completionComposite != null) {
-			if (completionMessageExpanded) {				
+			if (completionMessageExpanded) {
 				completionComposite.dispose();
 				completionComposite = null;
 				page.getForm().reflow(true);
@@ -529,7 +534,7 @@ public abstract class ViewItem {
 	//marks the item as complete.
 	/*package*/
 	void setComplete() {
-		completed = true;		
+		completed = true;
 		checkDoneLabel.setImage(getCompleteImage());
 
 		if(initialized) {
@@ -601,7 +606,7 @@ public abstract class ViewItem {
 	public void initialized() {
 		initialized = true;
 	}
-	
+
 	public boolean canCopy() {
 		return (bodyText!=null && !bodyText.isDisposed())?bodyText.canCopy():false;
 	}
@@ -609,7 +614,7 @@ public abstract class ViewItem {
 		if (bodyText!=null && !bodyText.isDisposed())
 			bodyText.copy();
 	}
-	
+
    abstract boolean hasCompletionMessage();
 
 }

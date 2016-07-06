@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,18 +33,18 @@ public class Context extends UAElement implements IContext3 {
 	public static final String ELEMENT_DESCRIPTION = "description"; //$NON-NLS-1$
 	public static final String ATTRIBUTE_ID = "id"; //$NON-NLS-1$
 	public static final String ATTRIBUTE_PLUGIN_ID = "pluginId"; //$NON-NLS-1$
-	
+
 	public Context(Element src) {
 		super(src);
 	}
-	
+
 	public Context(IContext src, String id) {
 		super(NAME);
 		setId(id);
-		children = new ArrayList();
+		children = new ArrayList<>();
 		mergeContext(src);
 	}
-	
+
 	public void mergeContext(IContext src) {
 	    String text = src.getText();
 		if (getText() == null || getText().length() == 0) {
@@ -76,26 +76,31 @@ public class Context extends UAElement implements IContext3 {
 		}
 	}
 
+	@Override
 	public String getCategory(IHelpResource topic) {
 		return null;
 	}
-	
+
 	public String getId() {
 		return getAttribute(ATTRIBUTE_ID);
 	}
-	
+
+	@Override
 	public ICommandLink[] getRelatedCommands() {
-		return (ICommandLink[])getChildren(ICommandLink.class);
-	}
-	
-	public IHelpResource[] getRelatedTopics() {
-		return (IHelpResource[])getChildren(IHelpResource.class);
+		return getChildren(ICommandLink.class);
 	}
 
+	@Override
+	public IHelpResource[] getRelatedTopics() {
+		return getChildren(IHelpResource.class);
+	}
+
+	@Override
 	public String getStyledText() {
 		return null;
 	}
-	
+
+	@Override
 	public String getText() {
 		Node node = getElement().getFirstChild();
 		while (node != null) {
@@ -113,9 +118,10 @@ public class Context extends UAElement implements IContext3 {
 			}
 			node = node.getNextSibling();
 		}
-		return null; 
+		return null;
 	}
-	
+
+	@Override
 	public String getTitle() {
 		String title = getAttribute(ATTRIBUTE_TITLE);
 		if (title == null || title.length() == 0) {
@@ -145,5 +151,5 @@ public class Context extends UAElement implements IContext3 {
 		    description.appendChild(document.createTextNode(text));
 		}
 	}
-	
+
 }

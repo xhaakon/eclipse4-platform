@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -88,10 +88,7 @@ class ContextInformationPopup implements IContentAssistListener {
 			fPresenter = presenter;
 		}
 
-		/*
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 * @since 3.0
-		 */
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof ContextFrame) {
 				ContextFrame frame= (ContextFrame) obj;
@@ -100,10 +97,7 @@ class ContextInformationPopup implements IContentAssistListener {
 			return super.equals(obj);
 		}
 
-		/*
-		 * @see java.lang.Object#hashCode()
-		 * @since 3.1
-		 */
+		@Override
 		public int hashCode() {
 			return (fInformation.hashCode() << 16) | fBeginOffset;
 		}
@@ -123,7 +117,7 @@ class ContextInformationPopup implements IContentAssistListener {
 	private StyledText fContextInfoText;
 	private TextPresentation fTextPresentation;
 
-	private Stack fContextFrameStack= new Stack();
+	private Stack<ContextFrame> fContextFrameStack= new Stack<>();
 	/**
 	 * The content assist subject control.
 	 *
@@ -187,6 +181,7 @@ class ContextInformationPopup implements IContentAssistListener {
 	public String showContextProposals(final boolean autoActivated) {
 		final Control control= fContentAssistSubjectControlAdapter.getControl();
 		BusyIndicator.showWhile(control.getDisplay(), new Runnable() {
+			@Override
 			public void run() {
 
 				int offset= fContentAssistSubjectControlAdapter.getSelectedRange().x;
@@ -223,8 +218,8 @@ class ContextInformationPopup implements IContentAssistListener {
 						}
 
 						// also check all other contexts
-						for (Iterator it= fContextFrameStack.iterator(); it.hasNext(); ) {
-							ContextFrame stackFrame= (ContextFrame) it.next();
+						for (Iterator<ContextFrame> it= fContextFrameStack.iterator(); it.hasNext(); ) {
+							ContextFrame stackFrame= it.next();
 							if (stackFrame.equals(frame)) {
 								validateContextInformation();
 								return;
@@ -258,6 +253,7 @@ class ContextInformationPopup implements IContentAssistListener {
 	public void showContextInformation(final IContextInformation info, final int offset) {
 		Control control= fContentAssistSubjectControlAdapter.getControl();
 		BusyIndicator.showWhile(control.getDisplay(), new Runnable() {
+			@Override
 			public void run() {
 				if (info == null)
 					validateContextInformation();
@@ -325,7 +321,7 @@ class ContextInformationPopup implements IContentAssistListener {
 		if (fContextFrameStack.isEmpty())
 			return false;
 		// stack not empty
-		ContextFrame top= (ContextFrame) fContextFrameStack.peek();
+		ContextFrame top= fContextFrameStack.peek();
 		return frame.equals(top);
 	}
 
@@ -370,9 +366,7 @@ class ContextInformationPopup implements IContentAssistListener {
 			if (fContentAssistant.addContentAssistListener(this, ContentAssistant.CONTEXT_INFO_POPUP)) {
 				if (fContentAssistSubjectControlAdapter.getControl() != null) {
 					fTextWidgetSelectionListener= new SelectionAdapter() {
-						/*
-						 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-						 */
+						@Override
 						public void widgetSelected(SelectionEvent e) {
 							validateContextInformation();
 						}};
@@ -466,12 +460,12 @@ class ContextInformationPopup implements IContentAssistListener {
 
 			int size= fContextFrameStack.size();
 			if (size > 0) {
-				fLastContext= (ContextFrame) fContextFrameStack.pop();
+				fLastContext= fContextFrameStack.pop();
 				-- size;
 			}
 
 			if (size > 0) {
-				ContextFrame current= (ContextFrame) fContextFrameStack.peek();
+				ContextFrame current= fContextFrameStack.peek();
 				internalShowContextFrame(current, false);
 			} else {
 
@@ -514,9 +508,11 @@ class ContextInformationPopup implements IContentAssistListener {
 
 		fContextSelectorShell.addControlListener(new ControlListener() {
 
+			@Override
 			public void controlMoved(ControlEvent e) {
 			}
 
+			@Override
 			public void controlResized(ControlEvent e) {
 				fContextSelectorPopupSize= fContextSelectorShell.getSize();
 			}
@@ -528,6 +524,7 @@ class ContextInformationPopup implements IContentAssistListener {
 			final StyledText textWidget= fViewer.getTextWidget();
 
 			final VerifyKeyListener verifyListener= new VerifyKeyListener() {
+				@Override
 				public void verifyKey(VerifyEvent event) {
 					if (isActive() && event.keyCode == 13 && event.character == '\r' && event.widget == textWidget) {
 						event.doit= false;
@@ -540,6 +537,7 @@ class ContextInformationPopup implements IContentAssistListener {
 			textViewerExtension.prependVerifyKeyListener(verifyListener);
 
 			fContextSelectorShell.addDisposeListener(new DisposeListener() {
+				@Override
 				public void widgetDisposed(DisposeEvent e) {
 					textViewerExtension.removeVerifyKeyListener(verifyListener);
 				}
@@ -570,9 +568,11 @@ class ContextInformationPopup implements IContentAssistListener {
 		fContextSelectorTable.setForeground(c);
 
 		fContextSelectorTable.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				insertSelectedContext();
 				hideContextSelector();
@@ -688,7 +688,7 @@ class ContextInformationPopup implements IContentAssistListener {
 	 */
 	public boolean hasFocus() {
 		if (Helper.okToUse(fContextSelectorShell))
-			return (fContextSelectorShell.isFocusControl() || fContextSelectorTable.isFocusControl());
+			return fContextSelectorShell.getDisplay().getActiveShell() == fContextSelectorShell;
 
 		return false;
 	}
@@ -711,9 +711,7 @@ class ContextInformationPopup implements IContentAssistListener {
 		return (Helper.okToUse(fContextInfoPopup) || Helper.okToUse(fContextSelectorShell));
 	}
 
-	/*
-	 * @see IContentAssistListener#verifyKey(VerifyEvent)
-	 */
+	@Override
 	public boolean verifyKey(VerifyEvent e) {
 		if (Helper.okToUse(fContextSelectorShell))
 			return contextSelectorKeyPressed(e);
@@ -826,9 +824,7 @@ class ContextInformationPopup implements IContentAssistListener {
 		return true;
 	}
 
-	/*
-	 * @see IEventConsumer#processEvent(VerifyEvent)
-	 */
+	@Override
 	public void processEvent(VerifyEvent event) {
 		if (Helper.okToUse(fContextSelectorShell))
 			contextSelectorProcessEvent(event);
@@ -876,8 +872,9 @@ class ContextInformationPopup implements IContentAssistListener {
 
 		fContextInfoPopup.getDisplay().asyncExec(new Runnable() {
 
-			private ContextFrame fFrame= (ContextFrame) fContextFrameStack.peek();
+			private ContextFrame fFrame= fContextFrameStack.peek();
 
+			@Override
 			public void run() {
 				// only do this if no other frames have been added in between
 				if (!fContextFrameStack.isEmpty() && fFrame == fContextFrameStack.peek()) {
@@ -885,7 +882,7 @@ class ContextInformationPopup implements IContentAssistListener {
 
 					// iterate all contexts on the stack
 					while (Helper.okToUse(fContextInfoPopup) && !fContextFrameStack.isEmpty()) {
-						ContextFrame top= (ContextFrame) fContextFrameStack.peek();
+						ContextFrame top= fContextFrameStack.peek();
 						if (top.fValidator == null || !top.fValidator.isContextInformationValid(offset)) {
 							hideContextInfoPopup(); // loop variant: reduces the number of contexts on the stack
 						} else if (top.fPresenter != null && top.fPresenter.updatePresentation(offset, fTextPresentation)) {

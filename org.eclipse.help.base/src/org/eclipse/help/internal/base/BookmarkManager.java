@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -57,14 +57,17 @@ public class BookmarkManager extends Observable {
 			this.href = href;
 		}
 
+		@Override
 		public String getHref() {
 			return href;
 		}
 
+		@Override
 		public String getLabel() {
 			return label;
 		}
 
+		@Override
 		public boolean equals(Object object) {
 			if (object == null)
 				return false;
@@ -166,7 +169,7 @@ public class BookmarkManager extends Observable {
 		if (bookmarks==null) {
 			String value = readBookmarks();
 			StringTokenizer tokenizer = new StringTokenizer(value, ","); //$NON-NLS-1$
-			bookmarks = new ArrayList<Bookmark>();
+			bookmarks = new ArrayList<>();
 			while (tokenizer.hasMoreTokens()) {
 				String bookmark = tokenizer.nextToken();
 				// url and title are separated by vertical bar

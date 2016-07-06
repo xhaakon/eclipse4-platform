@@ -32,7 +32,7 @@ import org.eclipse.ui.PlatformUI;
 public class MergeIncomingChangesAction extends ModelParticipantAction implements IHandlerListener {
 
 	IHandler handler;
-	
+
 	public MergeIncomingChangesAction(ISynchronizePageConfiguration configuration) {
 		super(null, configuration);
 		// TODO: We're past the API freeze so we need to access the property by string
@@ -41,7 +41,8 @@ public class MergeIncomingChangesAction extends ModelParticipantAction implement
 			handler = new MergeAllActionHandler(configuration);
 		handler.addHandlerListener(this);
 	}
-	
+
+	@Override
 	public void runWithEvent(Event event) {
 		if (handler == null || !handler.isEnabled())
 			return;
@@ -60,7 +61,7 @@ public class MergeIncomingChangesAction extends ModelParticipantAction implement
 			handle(e);
 		}
 	}
-	
+
 	private void handle(Throwable throwable) {
 		if (throwable instanceof ExecutionException) {
 			ExecutionException ee = (ExecutionException) throwable;
@@ -74,15 +75,17 @@ public class MergeIncomingChangesAction extends ModelParticipantAction implement
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.mapping.ModelProviderAction#isEnabledForSelection(org.eclipse.jface.viewers.IStructuredSelection)
 	 */
+	@Override
 	protected boolean isEnabledForSelection(IStructuredSelection selection) {
 		return handler.isEnabled();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.operations.ModelProviderAction#getDiffFilter()
 	 */
 	protected FastDiffFilter getDiffFilter() {
 		return new FastDiffFilter() {
+			@Override
 			public boolean select(IDiff node) {
 				if (node instanceof IThreeWayDiff) {
 					IThreeWayDiff twd = (IThreeWayDiff) node;
@@ -94,11 +97,13 @@ public class MergeIncomingChangesAction extends ModelParticipantAction implement
 			}
 		};
 	}
-	
+
+	@Override
 	protected void handleTargetSaveableChange() throws InvocationTargetException, InterruptedException {
 		final SaveableComparison currentBuffer = getActiveSaveable();
 		if (currentBuffer != null && currentBuffer.isDirty()) {
-			PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {	
+			PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {
+				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
 						InterruptedException {
 					try {
@@ -119,8 +124,9 @@ public class MergeIncomingChangesAction extends ModelParticipantAction implement
 	/**
 	 * @param handlerEvent
 	 */
+	@Override
 	public void handlerChanged(HandlerEvent handlerEvent) {
 		setEnabled(handler.isEnabled());
 	}
-	
+
 }

@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -23,7 +23,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 /**
  * The Preferences bundle activator.
  */
-public class Activator implements BundleActivator, ServiceTrackerCustomizer {
+public class Activator implements BundleActivator, ServiceTrackerCustomizer<Object, Object> {
 
 	public static final String PI_PREFERENCES = "org.eclipse.equinox.preferences"; //$NON-NLS-1$
 
@@ -36,10 +36,10 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 	private static final String PROP_CUSTOMIZATION = "eclipse.pluginCustomization"; //$NON-NLS-1$
 
 	/**
-	 * Track the registry service - only register preference service if the registry is 
+	 * Track the registry service - only register preference service if the registry is
 	 * available
 	 */
-	private ServiceTracker registryServiceTracker;
+	private ServiceTracker<?, ?> registryServiceTracker;
 
 	/**
 	 * The bundle associated this plug-in
@@ -49,16 +49,15 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 	/**
 	 * This plugin provides a Preferences service.
 	 */
-	private ServiceRegistration preferencesService = null;
+	private ServiceRegistration<IPreferencesService> preferencesService;
 
 	/**
 	 * This plugin provides the OSGi Preferences service.
 	 */
-	private ServiceRegistration osgiPreferencesService = null;
+	private ServiceRegistration<org.osgi.service.prefs.PreferencesService> osgiPreferencesService;
 
-	/* (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-	 */
+
+	@Override
 	public void start(BundleContext context) throws Exception {
 		bundleContext = context;
 		// Open the services first before processing the command-line args, order is important! (Bug 150288)
@@ -67,17 +66,16 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 
 		boolean shouldRegister = !"false".equalsIgnoreCase(context.getProperty(PROP_REGISTER_PERF_SERVICE)); //$NON-NLS-1$
 		if (shouldRegister) {
-			preferencesService = bundleContext.registerService(IPreferencesService.class.getName(), PreferencesService.getDefault(), new Hashtable());
-			osgiPreferencesService = bundleContext.registerService(org.osgi.service.prefs.PreferencesService.class.getName(), new OSGiPreferencesServiceManager(bundleContext), null);
+			preferencesService = bundleContext.registerService(IPreferencesService.class, PreferencesService.getDefault(), new Hashtable<String, Object>());
+			osgiPreferencesService = bundleContext.registerService(org.osgi.service.prefs.PreferencesService.class, new OSGiPreferencesServiceManager(bundleContext), null);
 		}
 		// use the string for the class name here in case the registry isn't around
-		registryServiceTracker = new ServiceTracker(bundleContext, "org.eclipse.core.runtime.IExtensionRegistry", this); //$NON-NLS-1$
+		registryServiceTracker = new ServiceTracker<>(bundleContext, "org.eclipse.core.runtime.IExtensionRegistry", this); //$NON-NLS-1$
 		registryServiceTracker.open();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-	 */
+
+	@Override
 	public void stop(BundleContext context) throws Exception {
 		PreferencesOSGiUtils.getDefault().closeServices();
 		if (registryServiceTracker != null) {
@@ -99,10 +97,9 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 		return bundleContext;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
-	 */
-	public synchronized Object addingService(ServiceReference reference) {
+
+	@Override
+	public synchronized Object addingService(ServiceReference<Object> reference) {
 		Object service = bundleContext.getService(reference);
 		// this check is important as it avoids early loading of PreferenceServiceRegistryHelper and allows
 		// this bundle to operate with out necessarily resolving against the registry
@@ -126,17 +123,15 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 		return service;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
-	 */
-	public void modifiedService(ServiceReference reference, Object service) {
+
+	@Override
+	public void modifiedService(ServiceReference<Object> reference, Object service) {
 		// nothing to do
 	}
 
-	/* (non-Javadoc)
-	 * @see org.osgi.util.tracker.ServiceTrackerCustomizer#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
-	 */
-	public synchronized void removedService(ServiceReference reference, Object service) {
+
+	@Override
+	public synchronized void removedService(ServiceReference<Object> reference, Object service) {
 		PreferencesService.getDefault().setRegistryHelper(null);
 		bundleContext.ungetService(reference);
 	}
@@ -153,9 +148,9 @@ public class Activator implements BundleActivator, ServiceTrackerCustomizer {
 			return;
 		}
 
-		ServiceTracker environmentTracker = new ServiceTracker(bundleContext, EnvironmentInfo.class.getName(), null);
+		ServiceTracker<?, EnvironmentInfo> environmentTracker = new ServiceTracker<>(bundleContext, EnvironmentInfo.class, null);
 		environmentTracker.open();
-		EnvironmentInfo environmentInfo = (EnvironmentInfo) environmentTracker.getService();
+		EnvironmentInfo environmentInfo = environmentTracker.getService();
 		environmentTracker.close();
 		if (environmentInfo == null)
 			return;

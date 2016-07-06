@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -108,9 +108,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 			fGap= gap;
 		}
 
-		/*
-		 * @see Layout#computeSize(Composite, int, int, boolean)
-		 */
+		@Override
 		protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache) {
 			Control[] children= composite.getChildren();
 			Point s= children[children.length - 1].computeSize(SWT.DEFAULT, SWT.DEFAULT, flushCache);
@@ -119,9 +117,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 			return s;
 		}
 
-		/*
-		 * @see Layout#layout(Composite, boolean)
-		 */
+		@Override
 		protected void layout(Composite composite, boolean flushCache) {
 			Rectangle clArea= composite.getClientArea();
 			StyledText textWidget= getTextWidget();
@@ -140,11 +136,16 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 				width -= overviewRulerWidth + fGap;
 			}
 
+			ScrollBar horizontalBar= textWidget.getHorizontalBar();
+			final boolean hScrollVisible= horizontalBar != null && horizontalBar.getVisible();
 			if (fVerticalRuler != null && fIsVerticalRulerVisible) {
 				int verticalRulerWidth= fVerticalRuler.getWidth();
 				final Control verticalRulerControl= fVerticalRuler.getControl();
 				int oldWidth= verticalRulerControl.getBounds().width;
-				verticalRulerControl.setBounds(clArea.x, clArea.y + topTrim, verticalRulerWidth, clArea.height - scrollbarHeight - topTrim);
+				int rulerHeight= clArea.height - topTrim;
+				if (hScrollVisible)
+					rulerHeight-= scrollbarHeight;
+				verticalRulerControl.setBounds(clArea.x, clArea.y + topTrim, verticalRulerWidth, rulerHeight);
 				if (flushCache && getVisualAnnotationModel() != null && oldWidth == verticalRulerWidth)
 					verticalRulerControl.redraw();
 
@@ -162,16 +163,24 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 				int[] arrowHeights= getVerticalScrollArrowHeights(textWidget, bottomOffset);
 				
 				int overviewRulerX= clArea.x + clArea.width - overviewRulerWidth - 1;
-				fOverviewRuler.getControl().setBounds(overviewRulerX, clArea.y + arrowHeights[0], overviewRulerWidth, clArea.height - arrowHeights[0] - arrowHeights[1] - scrollbarHeight);
-				
+				boolean noSpaceForHeader= (arrowHeights[0] <= 0 && arrowHeights[1] <= 0 && !hScrollVisible);
 				Control headerControl= fOverviewRuler.getHeaderControl();
-				boolean noArrows= arrowHeights[0] < 6 && arrowHeights[1] < 6; // need at least 6px to render the header control
-				if (noArrows || arrowHeights[0] < arrowHeights[1] && arrowHeights[0] < scrollbarHeight && arrowHeights[1] > scrollbarHeight) {
-					// // not enough space for header at top => move to bottom
-					int headerHeight= noArrows ? scrollbarHeight : arrowHeights[1];
-					headerControl.setBounds(overviewRulerX, clArea.y + clArea.height - arrowHeights[1] - scrollbarHeight, overviewRulerWidth, headerHeight);
+				Control rulerControl= fOverviewRuler.getControl();
+				if (noSpaceForHeader) {
+					// If we don't have space to draw because we don't have arrows and the horizontal scroll is invisible, 
+					// use the whole space for the ruler and leave the headerControl without any space (will actually be invisible).
+					rulerControl.setBounds(overviewRulerX, clArea.y, overviewRulerWidth, clArea.height);
+					headerControl.setBounds(0, 0, 0, 0);
 				} else {
-					headerControl.setBounds(overviewRulerX, clArea.y, overviewRulerWidth, arrowHeights[0]);
+					boolean smallArrows= arrowHeights[0] < 6 && arrowHeights[1] < 6; // need at least 6px to render the header control
+					rulerControl.setBounds(overviewRulerX, clArea.y + arrowHeights[0], overviewRulerWidth, clArea.height - arrowHeights[0] - arrowHeights[1] - scrollbarHeight);
+					if (smallArrows || arrowHeights[0] < arrowHeights[1] && arrowHeights[0] < scrollbarHeight && arrowHeights[1] > scrollbarHeight) {
+						// not enough space for header at top => move to bottom
+						int headerHeight= smallArrows ? scrollbarHeight : arrowHeights[1];
+						headerControl.setBounds(overviewRulerX, clArea.y + clArea.height - arrowHeights[1] - scrollbarHeight, overviewRulerWidth, headerHeight);
+					} else {
+						headerControl.setBounds(overviewRulerX, clArea.y, overviewRulerWidth, arrowHeights[0]);
+					}
 				}
 				headerControl.redraw();
 			}
@@ -188,7 +197,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		 */
 		private int[] getVerticalScrollArrowHeights(StyledText textWidget, int bottomOffset) {
 			ScrollBar verticalBar= textWidget.getVerticalBar();
-			if (verticalBar == null || !verticalBar.isVisible())
+			if (verticalBar == null || !verticalBar.getVisible())
 				return new int[] { 0, 0 };
 			
 			int[] arrowHeights= computeScrollArrowHeights(textWidget, bottomOffset);
@@ -202,7 +211,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 				try {
 					int fakeHeight= 1000;
 					bottomOffset= bottomOffset - originalSize.y + fakeHeight;
-					textWidget.setSize(originalSize.x, fakeHeight);
+					textWidget.setSize(originalSize.x + 100, fakeHeight);
 					verticalBar.setValues(0, 0, 1 << 30, 1, 10, 10);
 					arrowHeights= computeScrollArrowHeights(textWidget, bottomOffset);
 					fScrollArrowHeights= arrowHeights;
@@ -225,8 +234,11 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		private int[] computeScrollArrowHeights(StyledText textWidget, int bottomOffset) {
 			ScrollBar verticalBar= textWidget.getVerticalBar();
 			Rectangle thumbTrackBounds= verticalBar.getThumbTrackBounds();
-			if (thumbTrackBounds.height == 0) // SWT returns bogus values on Cocoa in this case, see https://bugs.eclipse.org/352990
+			if (thumbTrackBounds.height == 0) {
+				// SWT returns bogus values on Cocoa in this case, see https://bugs.eclipse.org/352990
+				// SWT returns bogus values on Windows when the control is too small, see https://bugs.eclipse.org/485540
 				return new int[] { 0, 0 };
+			}
 			
 			int topArrowHeight= thumbTrackBounds.y;
 			int bottomArrowHeight= bottomOffset - (thumbTrackBounds.y + thumbTrackBounds.height);
@@ -294,7 +306,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 	 * Stack of saved selections in the underlying document
 	 * @since 3.0
 	 */
-	protected final Stack fSelections= new Stack();
+	protected final Stack<Position> fSelections= new Stack<>();
 	/**
 	 * Position updater for saved selections
 	 * @since 3.0
@@ -383,9 +395,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		createControl(parent, styles);
 	}
 
-	/*
-	 * @see TextViewer#createControl(Composite, int)
-	 */
+	@Override
 	protected void createControl(Composite parent, int styles) {
 
 		if (fVerticalRuler != null || fOverviewRuler != null) {
@@ -414,18 +424,14 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		return new RulerLayout(GAP_SIZE_1);
 	}
 
-	/*
-	 * @see TextViewer#getControl()
-	 */
+	@Override
 	public Control getControl() {
 		if (fComposite != null)
 			return fComposite;
 		return super.getControl();
 	}
 
-	/*
-	 * @see ISourceViewer#setAnnotationHover(IAnnotationHover)
-	 */
+	@Override
 	public void setAnnotationHover(IAnnotationHover annotationHover) {
 		fAnnotationHover= annotationHover;
 	}
@@ -443,9 +449,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		fOverviewRulerAnnotationHover= annotationHover;
 	}
 
-	/*
-	 * @see ISourceViewer#configure(SourceViewerConfiguration)
-	 */
+	@Override
 	public void configure(SourceViewerConfiguration configuration) {
 
 		if (getTextWidget() == null)
@@ -549,10 +553,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#setHoverEnrichMode(org.eclipse.jface.text.ITextViewerExtension8.EnrichMode)
-	 * @since 3.4
-	 */
+	@Override
 	public void setHoverEnrichMode(EnrichMode mode) {
 		super.setHoverEnrichMode(mode);
 		if (fVerticalRulerHoveringController != null)
@@ -561,32 +562,24 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 			fOverviewRulerHoveringController.getInternalAccessor().setHoverEnrichMode(mode);
 	}
 
-	/*
-	 * @see TextViewer#activatePlugins()
-	 */
+	@Override
 	public void activatePlugins() {
 		ensureAnnotationHoverManagerInstalled();
 		ensureOverviewHoverManagerInstalled();
 		super.activatePlugins();
 	}
 
-	/*
-	 * @see ISourceViewer#setDocument(IDocument, IAnnotationModel)
-	 */
+	@Override
 	public void setDocument(IDocument document) {
 		setDocument(document, null, -1, -1);
 	}
 
-	/*
-	 * @see ISourceViewer#setDocument(IDocument, IAnnotationModel, int, int)
-	 */
+	@Override
 	public void setDocument(IDocument document, int visibleRegionOffset, int visibleRegionLength) {
 		setDocument(document, null, visibleRegionOffset, visibleRegionLength);
 	}
 
-	/*
-	 * @see ISourceViewer#setDocument(IDocument, IAnnotationModel)
-	 */
+	@Override
 	public void setDocument(IDocument document, IAnnotationModel annotationModel) {
 		setDocument(document, annotationModel, -1, -1);
 	}
@@ -621,9 +614,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see ISourceViewer#setDocument(IDocument, IAnnotationModel, int, int)
-	 */
+	@Override
 	public void setDocument(IDocument document, IAnnotationModel annotationModel, int modelRangeOffset, int modelRangeLength) {
 		disposeVisualAnnotationModel();
 
@@ -651,9 +642,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 			fOverviewRuler.setModel(fVisualAnnotationModel);
 	}
 
-	/*
-	 * @see ISourceViewer#getAnnotationModel()
-	 */
+	@Override
 	public IAnnotationModel getAnnotationModel() {
 		if (fVisualAnnotationModel instanceof IAnnotationModelExtension) {
 			IAnnotationModelExtension extension= (IAnnotationModelExtension) fVisualAnnotationModel;
@@ -662,10 +651,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		return null;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ISourceViewerExtension3#getQuickAssistAssistant()
-	 * @since 3.2
-	 */
+	@Override
 	public IQuickAssistAssistant getQuickAssistAssistant() {
 		return fQuickAssistAssistant;
 	}
@@ -675,31 +661,23 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 	 *
 	 * @since 3.4
 	 */
+	@Override
 	public final ContentAssistantFacade getContentAssistantFacade() {
 		return fContentAssistantFacade;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ISourceViewerExtension3#getQuickAssistInvocationContext()
-	 * @since 3.2
-	 */
+	@Override
 	public IQuickAssistInvocationContext getQuickAssistInvocationContext() {
 		Point selection= getSelectedRange();
 		return new TextInvocationContext(this, selection.x, selection.y);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ISourceViewerExtension2#getVisualAnnotationModel()
-	 * @since 3.0
-	 */
+	@Override
 	public IAnnotationModel getVisualAnnotationModel() {
 		return fVisualAnnotationModel;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ISourceViewerExtension2#unconfigure()
-	 * @since 3.0
-	 */
+	@Override
 	public void unconfigure() {
 		clearRememberedSelection();
 
@@ -758,9 +736,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		setHyperlinkDetectors(null, SWT.NONE);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.TextViewer#handleDispose()
-	 */
+	@Override
 	protected void handleDispose() {
 		unconfigure();
 
@@ -776,9 +752,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		super.handleDispose();
 	}
 
-	/*
-	 * @see ITextOperationTarget#canDoOperation(int)
-	 */
+	@Override
 	public boolean canDoOperation(int operation) {
 
 		if (getTextWidget() == null || (!redraws() && operation != FORMAT))
@@ -914,7 +888,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		if (!fSelections.isEmpty()) {
 
 			final IDocument document= getDocument();
-			final Position position= (Position) fSelections.pop();
+			final Position position= fSelections.pop();
 
 			try {
 				document.removePosition(fSelectionCategory, position);
@@ -954,9 +928,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		fSelectionCategory= null;
 	}
 
-	/*
-	 * @see ITextOperationTarget#doOperation(int)
-	 */
+	@Override
 	public void doOperation(int operation) {
 
 		if (getTextWidget() == null || (!redraws() && operation != FORMAT))
@@ -1085,10 +1057,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see ITextOperationTargetExtension#enableOperation(int, boolean)
-	 * @since 2.0
-	 */
+	@Override
 	public void enableOperation(int operation, boolean enable) {
 
 		switch (operation) {
@@ -1127,16 +1096,12 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see ISourceViewer#setRangeIndicator(Annotation)
-	 */
+	@Override
 	public void setRangeIndicator(Annotation rangeIndicator) {
 		fRangeIndicator= rangeIndicator;
 	}
 
-	/*
-	 * @see ISourceViewer#setRangeIndication(int, int, boolean)
-	 */
+	@Override
 	public void setRangeIndication(int start, int length, boolean moveCursor) {
 
 		if (moveCursor) {
@@ -1150,9 +1115,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see ISourceViewer#getRangeIndication()
-	 */
+	@Override
 	public IRegion getRangeIndication() {
 		if (fRangeIndicator != null && fVisualAnnotationModel != null) {
 			Position position= fVisualAnnotationModel.getPosition(fRangeIndicator);
@@ -1163,17 +1126,13 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		return null;
 	}
 
-	/*
-	 * @see ISourceViewer#removeRangeIndication()
-	 */
+	@Override
 	public void removeRangeIndication() {
 		if (fRangeIndicator != null && fVisualAnnotationModel != null)
 			fVisualAnnotationModel.removeAnnotation(fRangeIndicator);
 	}
 
-	/*
-	 * @see ISourceViewer#showAnnotations(boolean)
-	 */
+	@Override
 	public void showAnnotations(boolean show) {
 		boolean old= fIsVerticalRulerVisible;
 
@@ -1200,7 +1159,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 			return true;
 
 		if (fVerticalRuler instanceof CompositeRuler) {
-			Iterator iter= ((CompositeRuler)fVerticalRuler).getDecoratorIterator();
+			Iterator<IVerticalRulerColumn> iter= ((CompositeRuler)fVerticalRuler).getDecoratorIterator();
 			return iter.hasNext() && iter.next() instanceof AnnotationRulerColumn && !iter.hasNext();
 		}
 		return false;
@@ -1244,10 +1203,7 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ISourceViewerExtension#showAnnotationsOverview(boolean)
-	 * @since 2.1
-	 */
+	@Override
 	public void showAnnotationsOverview(boolean show) {
 		boolean old= fIsOverviewRulerVisible;
 		fIsOverviewRulerVisible= (show && fOverviewRuler != null);
@@ -1263,11 +1219,8 @@ public class SourceViewer extends TextViewer implements ISourceViewer, ISourceVi
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.ISourceViewerExtension3#getCurrentAnnotationHover()
-	 * @since 3.2
-	 */
-    public IAnnotationHover getCurrentAnnotationHover() {
+    @Override
+	public IAnnotationHover getCurrentAnnotationHover() {
     	if (fVerticalRulerHoveringController == null)
     		return null;
     	return fVerticalRulerHoveringController.getCurrentAnnotationHover();

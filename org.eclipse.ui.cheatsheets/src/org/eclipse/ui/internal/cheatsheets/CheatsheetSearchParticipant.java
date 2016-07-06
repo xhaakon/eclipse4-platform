@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,22 +27,23 @@ public class CheatsheetSearchParticipant extends SearchParticipantXML {
 	private static final String INTRO_DESC = "cheatsheet/intro/description"; //$NON-NLS-1$
 
 	private static final String ITEM_DESC = "cheatsheet/item/description"; //$NON-NLS-1$
-	
+
 	private static final String CCS_DESC = "compositeCheatsheet/taskGroup/intro"; //$NON-NLS-1$
 
 	/**
 	 * Returns all the documents that this participant knows about. This method
 	 * is only used for participants that handle documents outside of the help
 	 * system's TOC.
-	 * 
+	 *
 	 * @return a set of hrefs for documents managed by this participant.
 	 */
-	public Set getAllDocuments(String locale) {
-		HashSet set = new HashSet();
+	@Override
+	public Set<String> getAllDocuments(String locale) {
+		HashSet<String> set = new HashSet<>();
 		IConfigurationElement[] elements = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(
-						ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID + '.' 
-						+ CheatSheetRegistryReader.CHEAT_SHEET_CONTENT); 
+						ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID + '.'
+						+ CheatSheetRegistryReader.CHEAT_SHEET_CONTENT);
 		for (int i = 0; i < elements.length; i++) {
 			IConfigurationElement element = elements[i];
 			if (!element.getName().equals(CheatSheetRegistryReader.TAG_CHEATSHEET))
@@ -64,21 +65,23 @@ public class CheatsheetSearchParticipant extends SearchParticipantXML {
 		return set;
 	}
 
-	public Set getContributingPlugins() {
+	@Override
+	public Set<String> getContributingPlugins() {
 		IConfigurationElement[] elements = Platform.getExtensionRegistry()
 				.getConfigurationElementsFor(
-						ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID + '.' 
+						ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID + '.'
 						+ CheatSheetRegistryReader.CHEAT_SHEET_CONTENT);
-		HashSet set = new HashSet();
+		HashSet<String> set = new HashSet<>();
 		for (int i = 0; i < elements.length; i++) {
 			IConfigurationElement element = elements[i];
-			if (element.getName().equals(CheatSheetRegistryReader.TAG_CHEATSHEET)) { 
+			if (element.getName().equals(CheatSheetRegistryReader.TAG_CHEATSHEET)) {
 			    set.add(element.getContributor().getName());
 			}
 		}
 		return set;
 	}
 
+	@Override
 	protected void handleStartElement(String name, Attributes attributes,
 			IParsedXMLContent data) {
 		if (name.equals(IParserTags.CHEATSHEET)) {
@@ -91,15 +94,17 @@ public class CheatsheetSearchParticipant extends SearchParticipantXML {
 			data.addText(attributes.getValue(IParserTags.TITLE));
 	    } else if (name.equals(IParserTags.SUBITEM)) {
 		    data.addText(attributes.getValue(IParserTags.LABEL));
-	    } else if (name.equals(ICompositeCheatsheetTags.TASK ) 
+	    } else if (name.equals(ICompositeCheatsheetTags.TASK )
 	    		|| name.equals(ICompositeCheatsheetTags.TASK_GROUP)) {
-		    data.addText(attributes.getValue(ICompositeCheatsheetTags.NAME));	
+		    data.addText(attributes.getValue(ICompositeCheatsheetTags.NAME));
 	    }
 	}
 
+	@Override
 	protected void handleEndElement(String name, IParsedXMLContent data) {
 	}
 
+	@Override
 	protected void handleText(String text, IParsedXMLContent data) {
 		String stackPath = getElementStackPath();
 		String top = getTopElement();
@@ -120,12 +125,13 @@ public class CheatsheetSearchParticipant extends SearchParticipantXML {
 		}
 	}
 
+	@Override
 	public boolean open(String id) {
 		Action openAction = new OpenCheatSheetAction(id);
 		openAction.run();
 		return true;
 	}
-	
+
 	private static boolean isExtensionValid(String fileName, String id, String pluginId) {
 		if (fileName.indexOf('\\') != -1) {
 			CheatSheetPlugin.logError("Error in cheat sheet extension id " + id + " from plug-in " + pluginId + ": path should not contain back-slashes (\\): " + fileName + ". This cheat sheet will not be indexed for searching.", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2011 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,7 @@ import org.eclipse.core.runtime.IPath;
 /**
  * Object representing the bundle defaults scope in the Eclipse preferences
  * hierarchy. Can be used as a context for searching for preference
- * values (in the IPreferencesService APIs) or for determining the 
+ * values (in the IPreferencesService APIs) or for determining the
  * correct preference node to set values in the store.
  * <p>
  * The bundle defaults are the defaults are default values which have
@@ -37,7 +37,7 @@ import org.eclipse.core.runtime.IPath;
 public final class BundleDefaultsScope extends AbstractScope {
 
 	/**
-	 * String constant (value of <code>"default"</code>) used for the 
+	 * String constant (value of <code>"default"</code>) used for the
 	 * scope name for the default preference scope.
 	 */
 	public static final String SCOPE = "bundle_defaults"; //$NON-NLS-1$
@@ -45,7 +45,7 @@ public final class BundleDefaultsScope extends AbstractScope {
 	/**
 	 * Singleton instance of a Bundle Defaults Scope object. Typical usage is:
 	 * <code>BundleDefaultsScope.INSTANCE.getNode(...);</code>
-	 * 
+	 *
 	 * @since 3.4
 	 */
 	public static final IScopeContext INSTANCE = new BundleDefaultsScope();
@@ -58,23 +58,20 @@ public final class BundleDefaultsScope extends AbstractScope {
 		super();
 	}
 
-	/*
-	 * @see org.eclipse.core.runtime.preferences.IScopeContext#getName()
-	 */
+
+	@Override
 	public String getName() {
 		return SCOPE;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.preferences.IScopeContext#getNode(java.lang.String)
-	 */
+
+	@Override
 	public IEclipsePreferences getNode(String qualifier) {
 		return super.getNode(qualifier);
 	}
 
-	/*
-	 * @see org.eclipse.core.runtime.preferences.IScopeContext#getLocation()
-	 */
+
+	@Override
 	public IPath getLocation() {
 		// We don't persist defaults so return null.
 		return null;

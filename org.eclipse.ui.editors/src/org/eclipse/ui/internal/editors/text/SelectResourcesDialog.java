@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,7 +62,7 @@ class SelectResourcesDialog extends Dialog {
 	}
 
 	private SelectResourcesBlock fResourceGroup;
-    private List fAcceptedFileTypes = new ArrayList();
+    private List<Object> fAcceptedFileTypes = new ArrayList<>();
     private IResource[] fInput;
     private String fTitle;
     private String fInstruction;
@@ -77,10 +77,7 @@ class SelectResourcesDialog extends Dialog {
 		fAcceptableLocationsFilter= acceptableLocationsFilter;
 	}
 
-	/*
-	 * @see org.eclipse.jface.dialogs.Dialog#isResizable()
-	 * @since 3.4
-	 */
+	@Override
 	protected boolean isResizable() {
 		return true;
 	}
@@ -95,13 +92,11 @@ class SelectResourcesDialog extends Dialog {
 	}
 	
 	public IResource[] getSelectedResources() {
-		List items= fResourceGroup.getAllCheckedListItems();
-		return (IResource[]) items.toArray(new IResource[items.size()]);
+		List<Object> items= fResourceGroup.getAllCheckedListItems();
+		return items.toArray(new IResource[items.size()]);
 	}
 
-	/*
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 
@@ -109,9 +104,7 @@ class SelectResourcesDialog extends Dialog {
 			newShell.setText(fTitle);
 	}
 
-	/*
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite composite= (Composite) super.createDialogArea(parent);
 		Label label= new Label(composite, SWT.LEFT);
@@ -120,6 +113,7 @@ class SelectResourcesDialog extends Dialog {
 
 		fResourceGroup= new SelectResourcesBlock(composite, ResourcesPlugin.getWorkspace().getRoot(), getResourceProvider(IResource.FOLDER | IResource.PROJECT), WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider(), getResourceProvider(IResource.FILE), WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider(), SWT.NONE, useHeightHint(parent));
 		fResourceGroup.addCheckStateListener(new ICheckStateListener() {
+			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				updateSelectionCount();
 			}
@@ -142,9 +136,10 @@ class SelectResourcesDialog extends Dialog {
 
     private ITreeContentProvider getResourceProvider(final int resourceType) {
         return new WorkbenchContentProvider() {
-            public Object[] getChildren(Object o) {
+            @Override
+			public Object[] getChildren(Object o) {
             	if (o instanceof IWorkspaceRoot) {
-            		HashSet projects= new HashSet();
+            		HashSet<IResource> projects= new HashSet<>();
             		for (int i= 0; i < fInput.length; i++) {
             			IResource project= fInput[i].getProject();
             			if ((project.getType() & resourceType) > 0)
@@ -163,7 +158,7 @@ class SelectResourcesDialog extends Dialog {
                     }
 
                     //filter out the desired resource types
-                    ArrayList results = new ArrayList();
+                    ArrayList<IResource> results = new ArrayList<>();
                     for (int i = 0; i < members.length; i++) {
                         //And the test bits with the resource types to see if they are what we want
                         if ((members[i].getType() & resourceType) > 0 && (resourceType != IResource.FILE || fAcceptableLocationsFilter == null || fAcceptableLocationsFilter.accept(members[i]))) {
@@ -175,7 +170,7 @@ class SelectResourcesDialog extends Dialog {
 
                 //input element case
                 if (o instanceof ArrayList)
-                	return ((ArrayList) o).toArray();
+                	return ((ArrayList<?>) o).toArray();
 
                 return new Object[0];
             }
@@ -195,6 +190,7 @@ class SelectResourcesDialog extends Dialog {
 		Button selectButton= createButton(buttonComposite, IDialogConstants.SELECT_ALL_ID, TextEditorMessages.SelectResourcesDialog_selectAll, false);
 
 		SelectionListener listener= new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				fResourceGroup.setAllSelections(true);
 				updateSelectionCount();
@@ -207,6 +203,7 @@ class SelectResourcesDialog extends Dialog {
 		Button deselectButton= createButton(buttonComposite, IDialogConstants.DESELECT_ALL_ID, TextEditorMessages.SelectResourcesDialog_deselectAll, false);
 
 		listener= new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				fResourceGroup.setAllSelections(false);
 				updateSelectionCount();
@@ -220,6 +217,7 @@ class SelectResourcesDialog extends Dialog {
 		Button selectTypesButton= createButton(buttonComposite, IDialogConstants.SELECT_TYPES_ID, TextEditorMessages.SelectResourcesDialog_filterSelection, false);
 
 		listener= new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				handleSelectFileTypes();
 			}
@@ -248,16 +246,18 @@ class SelectResourcesDialog extends Dialog {
     private void filterSelection() {
 
     	final IFilter filter= new IFilter() {
+			@Override
 			public boolean accept(IResource resource) {
 				return hasAcceptedFileType(resource);
 			}
 		};
 
-		List list= fResourceGroup.getAllWhiteCheckedItems();
-		final IResource[] resources= (IResource[]) list.toArray(new IResource[list.size()]);
+		List<Object> list= fResourceGroup.getAllWhiteCheckedItems();
+		final IResource[] resources= list.toArray(new IResource[list.size()]);
 
         Runnable runnable = new Runnable() {
-            public void run() {
+            @Override
+			public void run() {
             	setSelection(resources, filter);
 			}
         };
@@ -276,7 +276,7 @@ class SelectResourcesDialog extends Dialog {
 
 		String extension= resourceName.substring(separatorIndex + 1);
 
-		Iterator e= fAcceptedFileTypes.iterator();
+		Iterator<Object> e= fAcceptedFileTypes.iterator();
 		while (e.hasNext()) {
 			if (extension.equalsIgnoreCase((String) e.next()))
 				return true;
@@ -291,17 +291,17 @@ class SelectResourcesDialog extends Dialog {
 	}
 
 	protected void setSelection(IResource[] input, IFilter filter) {
-		Map selectionMap= new Hashtable();
+		Map<IContainer, List<Object>> selectionMap= new Hashtable<>();
 		for (int i= 0; i < input.length; i++) {
 			IResource resource= input[i];
 			if ((resource.getType() & IResource.FILE) > 0) {
 				if (filter.accept(resource)) {
-					List files= null;
+					List<Object> files= null;
 					IContainer parent= resource.getParent();
 					if (selectionMap.containsKey(parent))
-						files= (List) selectionMap.get(parent);
+						files= selectionMap.get(parent);
 					else
-						files= new ArrayList();
+						files= new ArrayList<>();
 
 					files.add(resource);
 					selectionMap.put(parent, files);
@@ -313,11 +313,11 @@ class SelectResourcesDialog extends Dialog {
 		updateSelectionCount();
 	}
 
-	private void setSelection(Map selectionMap, IContainer parent, IFilter filter) {
+	private void setSelection(Map<IContainer, List<Object>> selectionMap, IContainer parent, IFilter filter) {
 		try {
 
 			IResource[] resources= parent.members();
-			List selections= new ArrayList();
+			List<Object> selections= new ArrayList<>();
 
 			for (int i= 0; i < resources.length; i++) {
 				IResource resource= resources[i];
@@ -348,7 +348,7 @@ class SelectResourcesDialog extends Dialog {
 	}
 
 	private void updateSelectionCount() {
-		List listItems= fResourceGroup.getAllCheckedListItems();
+		List<Object> listItems= fResourceGroup.getAllCheckedListItems();
 		int checkedFiles= listItems == null ? 0 : listItems.size();
 		StringBuffer buffer= new StringBuffer();
 		switch (checkedFiles) {

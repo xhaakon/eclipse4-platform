@@ -32,7 +32,7 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	private String name;
 	private ImageDescriptor imageDescriptor;
 	private IConfigurationElement configurationElement;
-	
+
 	/**
 	 *	Creates a new instance of this class
 	 *
@@ -46,18 +46,18 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	 * element. That is, create the instance of the class the isv supplied in
 	 * the extension point.
 	 * @return the instance of the configuration wizard of type {@link IConfigurationWizard}
-	 * 
+	 *
 	 * @throws CoreException if an error occurs creating the extension
 	 */
 	public Object createExecutableExtension() throws CoreException {
 		return TeamUIPlugin.createExtension(configurationElement, ConfigureProjectWizard.ATT_CLASS);
 	}
-	
+
 	/**
 	 * Creates the instance of the wizard and initializes with the given input.
 	 * @param projects the projects being shared by this wizard
 	 * @return the wizard instance of type {@link IConfigurationWizard}
-	 * @throws CoreException if an error occurs creating the extension 
+	 * @throws CoreException if an error occurs creating the extension
 	 */
 	public IWizard createExecutableExtension(IProject[] projects) throws CoreException {
 		IWorkbench workbench = PlatformUI.getWorkbench();
@@ -82,10 +82,11 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 		}
 		return wizard;
 	}
-	
+
 	/*
 	 * Method declared on IAdaptable.
 	 */
+	@Override
 	public Object getAdapter(Class adapter) {
 		if (adapter == IWorkbenchAdapter.class) {
 			return this;
@@ -94,7 +95,7 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	}
 	/**
 	 * Returns the configuration element
-	 * 
+	 *
 	 * @return the configuration element
 	 */
 	public IConfigurationElement getConfigurationElement() {
@@ -102,19 +103,21 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	}
 	/**
 	 * Returns the image for the given element
-	 * 
+	 *
 	 * @param element  the element to get the image for
 	 * @return the image for the given element
 	 */
+	@Override
 	public ImageDescriptor getImageDescriptor(Object element) {
 		return imageDescriptor;
 	}
 	/**
 	 * Returns the label for the given element
-	 * 
+	 *
 	 * @param element  the element to get the label for
 	 * @return the label for the given element
 	 */
+	@Override
 	public String getLabel(Object element) {
 		return name;
 	}
@@ -128,7 +131,7 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	}
 	/**
 	 * Returns the image for this element.
-	 * 
+	 *
 	 * @return the image for this element
 	 */
 	public ImageDescriptor getImageDescriptor() {
@@ -136,7 +139,7 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	}
 	/**
 	 * Set the configuration element
-	 * 
+	 *
 	 * @param newConfigurationElement  the new configuration element
 	 */
 	public void setConfigurationElement(IConfigurationElement newConfigurationElement) {
@@ -152,7 +155,7 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	}
 	/**
 	 * Sets the id parameter of this element
-	 * 
+	 *
 	 * @param value  the new ID
 	 */
 	public void setID(String value) {
@@ -160,27 +163,29 @@ public class ConfigurationWizardElement extends WorkbenchAdapter implements IAda
 	}
 	/**
 	 * Sets the image for this element.
-	 * 
+	 *
 	 * @param value  the new image
 	 */
 	public void setImageDescriptor(ImageDescriptor value) {
 		imageDescriptor = value;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IPluginContribution#getLocalId()
 	 */
+	@Override
 	public String getLocalId() {
 		return configurationElement.getAttribute(ConfigureProjectWizard.ATT_ID);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IPluginContribution#getPluginId()
 	 */
+	@Override
 	public String getPluginId() {
 		return configurationElement.getNamespaceIdentifier();
 	}
-	
+
 	/**
 	 * Return whether the wizard created for this element has pages.
 	 * Unfortunately, the only way to find this out is to create the wizard.

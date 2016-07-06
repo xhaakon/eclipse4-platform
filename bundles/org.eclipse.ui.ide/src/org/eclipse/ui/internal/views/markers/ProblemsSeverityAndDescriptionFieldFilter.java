@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,9 +27,6 @@ public class ProblemsSeverityAndDescriptionFieldFilter extends
 		SeverityAndDescriptionFieldFilter {
 
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.internal.views.markers.DescriptionFieldFilter#select(org.eclipse.ui.views.markers.MarkerItem)
-	 */
 	@Override
 	public boolean select(MarkerItem item) {
 
@@ -46,9 +43,6 @@ public class ProblemsSeverityAndDescriptionFieldFilter extends
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.internal.views.markers.DescriptionFieldFilter#loadLegacySettings(org.eclipse.ui.IMemento, org.eclipse.ui.internal.views.markers.MarkerContentGenerator)
-	 */
 	@Override
 	void loadLegacySettings(IMemento memento, MarkerContentGenerator generator) {
 
@@ -62,11 +56,6 @@ public class ProblemsSeverityAndDescriptionFieldFilter extends
 
 
 	}
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.internal.views.markers.DescriptionFieldFilter#initialize(org.eclipse.ui.views.markers.internal.ProblemFilter)
-	 */
 	@Override
 	public void initialize(ProblemFilter problemFilter) {
 		super.initialize(problemFilter);

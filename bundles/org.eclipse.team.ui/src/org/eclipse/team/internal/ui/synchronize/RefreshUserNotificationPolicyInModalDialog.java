@@ -34,28 +34,32 @@ public class RefreshUserNotificationPolicyInModalDialog implements IRefreshSubsc
 		this.shell = shell;
 	}
 
+	@Override
 	public void refreshStarted(IRefreshEvent event) {
 	}
 
+	@Override
 	public ActionFactory.IWorkbenchAction refreshDone(final IRefreshEvent event) {
 		//	Ensure that this event was generated for this participant
 		if (event.getParticipant() != participant)
 			return null;
 		//	 If the event is for a cancelled operation, there's nothing to do
 		int severity = event.getStatus().getSeverity();
-		if(severity == IStatus.CANCEL || severity == IStatus.ERROR) 
+		if(severity == IStatus.CANCEL || severity == IStatus.ERROR)
 			return null;
-		
+
 		return new WorkbenchAction() {
-			public void run() {		
+			@Override
+			public void run() {
 					// If there are no changes
 					if (event.getStatus().getCode() == IRefreshEvent.STATUS_NO_CHANGES) {
-						MessageDialog.openInformation(shell, TeamUIMessages.OpenComparedDialog_noChangeTitle, TeamUIMessages.OpenComparedDialog_noChangesMessage); // 
+						MessageDialog.openInformation(shell, TeamUIMessages.OpenComparedDialog_noChangeTitle, TeamUIMessages.OpenComparedDialog_noChangesMessage); //
 						return;
 					}
 					compareAndOpenDialog(event, participant);
 					setEnabled(false);
 			}
+			@Override
 			public void dispose() {
 				if (TeamUI.getSynchronizeManager().get(participant.getId(), participant.getSecondaryId()) == null) {
 					participant.dispose();
@@ -67,6 +71,7 @@ public class RefreshUserNotificationPolicyInModalDialog implements IRefreshSubsc
 	protected void compareAndOpenDialog(final IRefreshEvent event, final SubscriberParticipant participant) {
 		CompareConfiguration cc = new CompareConfiguration();
 		ParticipantPageSaveablePart input = new ParticipantPageSaveablePart(Utils.getShell(null), cc, configuration, participant) {
+			@Override
 			public String getTitle() {
 				return RefreshUserNotificationPolicyInModalDialog.this.title;
 			}

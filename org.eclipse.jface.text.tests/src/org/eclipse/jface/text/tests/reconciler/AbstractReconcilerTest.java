@@ -10,11 +10,18 @@
  *******************************************************************************/
 package org.eclipse.jface.text.tests.reconciler;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -40,7 +47,7 @@ import org.eclipse.jface.text.tests.TestTextViewer;
  *
  * @since 3.1
  */
-public class AbstractReconcilerTest extends TestCase {
+public class AbstractReconcilerTest {
 
 	/**
 	 * Modified barrier: there are two threads: the main (testing) thread
@@ -127,7 +134,7 @@ public class AbstractReconcilerTest extends TestCase {
 
 	private Accessor fAccessor;
 	private Barrier fBarrier;
-	private List fCallLog;
+	private List<String> fCallLog;
 	private ITextViewer fViewer;
 	protected AbstractReconciler fReconciler;
 	private Document fDocument;
@@ -135,27 +142,34 @@ public class AbstractReconcilerTest extends TestCase {
 	private IProgressMonitor fProgressMonitor;
 
 
-	protected void setUp() {
+	@Before
+	public void setUp() {
 		fBarrier= new Barrier();
-		fCallLog= Collections.synchronizedList(new ArrayList());
+		fCallLog= Collections.synchronizedList(new ArrayList<String>());
 		fReconciler= new AbstractReconciler() {
+					@Override
 					protected void initialProcess() {
 						fCallLog.add("initialProcess");
 						fBarrier.await();
 					}
+					@Override
 					protected void process(DirtyRegion dirtyRegion) {
 						fCallLog.add("process");
 						fBarrier.await();
 					}
+					@Override
 					protected void reconcilerDocumentChanged(IDocument newDocument) {
 						fCallLog.add("reconcilerDocumentChanged");
 					}
+					@Override
 					protected void aboutToBeReconciled() {
 						fCallLog.add("aboutToBeReconciled");
 					}
+					@Override
 					protected void reconcilerReset() {
 						fCallLog.add("reconcilerReset");
 					}
+					@Override
 					public IReconcilingStrategy getReconcilingStrategy(String contentType) {
 						return null;
 					}
@@ -174,12 +188,13 @@ public class AbstractReconcilerTest extends TestCase {
 		fAccessor= new Accessor(object, object.getClass());
 	}
 
-
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		fBarrier.shutdown();
 		fReconciler.uninstall();
 	}
 
+	@Test
 	public void testInitialReconcile() throws InterruptedException {
 		// initially the reconciler is neither active nor dirty
 		// XXX shouldn't it be dirty?
@@ -204,7 +219,8 @@ public class AbstractReconcilerTest extends TestCase {
 		assertFalse(isActive());
 		assertFalse(isDirty());
 	}
-
+	
+	@Test
 	public void testDirtyingWhenClean() throws BadLocationException, InterruptedException {
 		installDocument();
 
@@ -229,7 +245,7 @@ public class AbstractReconcilerTest extends TestCase {
 		fDocument.replace(0,0,"bar");
 	}
 
-
+	@Test
 	public void testDirtyingWhenRunning() throws InterruptedException, BadLocationException {
 		installDocument();
 
@@ -258,6 +274,7 @@ public class AbstractReconcilerTest extends TestCase {
 		assertFalse(isDirty());
 	}
 
+	@Test
 	public void testCancellingWhenClean() throws InterruptedException, BadLocationException {
 		installDocument();
 
@@ -276,6 +293,7 @@ public class AbstractReconcilerTest extends TestCase {
 //		assertFalse(isDirty()); // fails
 	}
 
+	@Test
 	public void testCancellingWhenRunning() throws InterruptedException, BadLocationException {
 		installDocument();
 
@@ -292,6 +310,7 @@ public class AbstractReconcilerTest extends TestCase {
 //		assertFalse(isDirty());
 	}
 
+	@Test
 	public void testReplacingDocumentWhenClean() throws InterruptedException {
 		installDocument();
 
@@ -310,6 +329,7 @@ public class AbstractReconcilerTest extends TestCase {
 		assertFalse(isDirty());
 	}
 
+	@Test
 	public void testReplacingDocumentWhenRunning() throws InterruptedException, BadLocationException {
 		installDocument();
 

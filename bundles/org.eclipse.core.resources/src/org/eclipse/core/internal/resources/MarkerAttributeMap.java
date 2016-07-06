@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 473427
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -16,10 +17,10 @@ import org.eclipse.core.internal.utils.IStringPoolParticipant;
 import org.eclipse.core.internal.utils.StringPool;
 
 /**
- * A specialized map implementation that is optimized for a 
+ * A specialized map implementation that is optimized for a
  * small set of interned strings as keys.  The provided keys
  * MUST be instances of java.lang.String.
- * 
+ *
  * Implemented as a single array that alternates keys and values.
  */
 @SuppressWarnings("unchecked")
@@ -57,18 +58,12 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		putAll(map);
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#clear()
-	 */
 	@Override
 	public void clear() {
 		count = 0;
 		elements = EMPTY;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#containsKey(java.lang.Object)
-	 */
 	@Override
 	public boolean containsKey(Object key) {
 		if (count == 0)
@@ -80,9 +75,6 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#containsValue(java.lang.Object)
-	 */
 	@Override
 	public boolean containsValue(Object value) {
 		if (count == 0)
@@ -93,8 +85,7 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#entrySet()
+	/**
 	 * This implementation does not conform properly to the specification
 	 * in the Map interface.  The returned collection will not be bound to
 	 * this map and will not remain in sync with this map.
@@ -104,9 +95,6 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return toHashMap().entrySet();
 	}
 
-	/* (non-Javadoc)
-	 * @see Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof Map))
@@ -131,9 +119,6 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#get(java.lang.Object)
-	 */
 	@Override
 	public V get(Object key) {
 		if (count == 0)
@@ -155,9 +140,6 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		elements = expanded;
 	}
 
-	/* (non-Javadoc)
-	 * @see Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		int hash = 0;
@@ -171,23 +153,19 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return hash;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#isEmpty()
-	 */
 	@Override
 	public boolean isEmpty() {
 		return count == 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#keySet()
+	/**
 	 * This implementation does not conform properly to the specification
 	 * in the Map interface.  The returned collection will not be bound to
 	 * this map and will not remain in sync with this map.
 	 */
 	@Override
 	public Set<String> keySet() {
-		Set<String> result = new HashSet<String>(size());
+		Set<String> result = new HashSet<>(size());
 		if (count == 0)
 			return result;
 		for (int i = 0; i < elements.length; i = i + 2) {
@@ -198,9 +176,6 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#put(java.lang.Object, java.lang.Object)
-	 */
 	@Override
 	public V put(String k, V value) {
 		if (k == null)
@@ -241,18 +216,12 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#putAll(java.util.Map)
-	 */
 	@Override
 	public void putAll(Map<? extends String, ? extends V> map) {
 		for (Map.Entry<? extends String, ? extends V> e : map.entrySet())
 			put(e.getKey(), e.getValue());
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#remove(java.lang.Object)
-	 */
 	@Override
 	public V remove(Object key) {
 		if (count == 0)
@@ -270,17 +239,11 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#size()
-	 */
 	@Override
 	public int size() {
 		return count;
 	}
 
-	/* (non-Javadoc
-	 * Method declared on IStringPoolParticipant
-	 */
 	@Override
 	public void shareStrings(StringPool set) {
 		//copy elements for thread safety
@@ -301,7 +264,7 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 	 * Creates a new hash map with the same contents as this map.
 	 */
 	private HashMap<String, V> toHashMap() {
-		HashMap<String, V> result = new HashMap<String, V>(size());
+		HashMap<String, V> result = new HashMap<>(size());
 		if (count == 0)
 			return result;
 		for (int i = 0; i < elements.length; i = i + 2) {
@@ -312,15 +275,14 @@ public class MarkerAttributeMap<V> implements Map<String, V>, IStringPoolPartici
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see Map#values()
+	/**
 	 * This implementation does not conform properly to the specification
 	 * in the Map interface.  The returned collection will not be bound to
 	 * this map and will not remain in sync with this map.
 	 */
 	@Override
 	public Collection<V> values() {
-		Set<V> result = new HashSet<V>(size());
+		Set<V> result = new HashSet<>(size());
 		if (count == 0)
 			return result;
 		for (int i = 1; i < elements.length; i = i + 2) {

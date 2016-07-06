@@ -25,7 +25,7 @@ import org.eclipse.team.ui.synchronize.ISynchronizeModelElement;
 import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
 
 /**
- * This class is reponsible for creating and maintaining a presentation model of 
+ * This class is reponsible for creating and maintaining a presentation model of
  * {@link SynchronizeModelElement} elements that can be shown in a viewer. The model
  * is based on the synchronization information contained in the provided {@link SyncInfoSet}.
  * <p>
@@ -33,17 +33,17 @@ import org.eclipse.team.ui.synchronize.ISynchronizePageConfiguration;
  * sync change listener (changes, additions, removals, reset)
  * batching busy updates
  * </p>
- * 
+ *
  * @see HierarchicalModelProvider
  * @see CompressedFoldersModelProvider
  * @since 3.0
  */
 public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelProvider implements ISyncInfoSetChangeListener {
-	
+
 	protected final Map resourceMap = Collections.synchronizedMap(new HashMap());
 
     protected static final boolean DEBUG = false;
-	
+
 	public SynchronizeModelProvider(ISynchronizePageConfiguration configuration, SyncInfoSet set) {
 		super(configuration, set);
 	}
@@ -52,15 +52,16 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 		super(parentProvider, modelRoot, configuration, set);
 		associateRoot(modelRoot);
 	}
-	
+
     private void associateRoot(ISynchronizeModelElement modelRoot) {
         // associate the root resource with the provider's root element
 		resourceMap.put(ResourcesPlugin.getWorkspace().getRoot(), modelRoot);
     }
-	
+
 	/**
 	 * Dispose of the builder
 	 */
+	@Override
 	public void dispose() {
 		resourceMap.clear();
 		super.dispose();
@@ -68,9 +69,10 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 
 	/**
 	 * Returns the sorter for this model provider.
-	 * 
-	 * @return the sorter for this model provider. 
+	 *
+	 * @return the sorter for this model provider.
 	 */
+	@Override
 	public abstract ViewerSorter getViewerSorter();
 
 	/**
@@ -83,18 +85,19 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 	protected ISynchronizeModelElement getModelObject(IResource resource) {
 		return (ISynchronizeModelElement) resourceMap.get(resource);
 	}
-	
+
 	/* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizeModelProvider#getModelObjects(org.eclipse.core.resources.IResource)
      */
-    protected ISynchronizeModelElement[] getModelObjects(IResource resource) {
+    @Override
+	protected ISynchronizeModelElement[] getModelObjects(IResource resource) {
         ISynchronizeModelElement element = getModelObject(resource);
         if (element == null) {
             return new ISynchronizeModelElement[0];
         }
         return new ISynchronizeModelElement[] { element };
     }
-    
+
 	protected void associateDiffNode(ISynchronizeModelElement node) {
 		IResource resource = node.getResource();
 		if(resource != null) {
@@ -105,7 +108,7 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 	protected void unassociateDiffNode(IResource resource) {
 		resourceMap.remove(resource);
 	}
-	
+
 	/**
 	 * Helper method to remove a resource from the viewer. If the resource
 	 * is not mapped to a model element, this is a no-op.
@@ -117,7 +120,7 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 			removeFromViewer(new ISynchronizeModelElement[] { element });
 		}
 	}
-	
+
 	/**
 	 * Helper method to remove a set of resources from the viewer. If a resource
 	 * is not mapped to a model element, it is ignored.
@@ -136,10 +139,11 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 		    removeFromViewer((ISynchronizeModelElement[]) elements.toArray(new ISynchronizeModelElement[elements.size()]));
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizeModelProvider#clearModelObjects(org.eclipse.team.ui.synchronize.ISynchronizeModelElement)
 	 */
+	@Override
 	protected void recursiveClearModelObjects(ISynchronizeModelElement node) {
 		super.recursiveClearModelObjects(node);
 		if (node == getModelRoot()) {
@@ -155,10 +159,11 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 			}
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizeModelProvider#addToViewer(org.eclipse.team.ui.synchronize.ISynchronizeModelElement)
 	 */
+	@Override
 	protected void addToViewer(ISynchronizeModelElement node) {
 		associateDiffNode(node);
 		super.addToViewer(node);
@@ -167,10 +172,12 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 	/* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizeModelProvider#hasViewerState()
      */
-    protected boolean hasViewerState() {
+    @Override
+	protected boolean hasViewerState() {
         return ! resourceMap.isEmpty();
     }
 
+	@Override
 	public ISynchronizeModelElement[] getClosestExistingParents(IResource resource) {
 		ISynchronizeModelElement element = getModelObject(resource);
 		if(element == null) {
@@ -184,17 +191,19 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 		}
 		return new ISynchronizeModelElement[] { element };
 	}
-	
+
 	/* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizeModelProvider#handleChanges(org.eclipse.team.core.synchronize.ISyncInfoTreeChangeEvent)
      */
-    protected final void handleChanges(ISyncInfoTreeChangeEvent event, IProgressMonitor monitor) {
+    @Override
+	protected final void handleChanges(ISyncInfoTreeChangeEvent event, IProgressMonitor monitor) {
         super.handleChanges(event, monitor);
     }
-    
+
     /* (non-Javadoc)
      * @see org.eclipse.team.internal.ui.synchronize.AbstractSynchronizeModelProvider#handleResourceChanges(org.eclipse.team.core.synchronize.ISyncInfoTreeChangeEvent)
      */
+	@Override
 	protected void handleResourceChanges(ISyncInfoTreeChangeEvent event) {
 		// Refresh the viewer for each changed resource
 		SyncInfo[] infos = event.getChangedResources();
@@ -205,7 +214,7 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 			if (diffNode != null) {
 				handleChange(diffNode, info);
 			}
-		}	
+		}
 	}
 
     /**
@@ -226,7 +235,7 @@ public abstract class SynchronizeModelProvider extends AbstractSynchronizeModelP
 			addResource(info);
 			ISynchronizeModelElement node = getModelObject(info.getLocal());
 			buildModelObjects(node);
-			
+
 		}
 	}
 

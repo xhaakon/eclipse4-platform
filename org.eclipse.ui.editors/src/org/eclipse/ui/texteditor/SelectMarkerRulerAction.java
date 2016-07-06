@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,20 +101,17 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 	 * @param editor the editor
 	 * @deprecated As of 3.0, replaced by {@link #SelectMarkerRulerAction(ResourceBundle, String, ITextEditor, IVerticalRulerInfo)}
 	 */
+	@Deprecated
 	public SelectMarkerRulerAction(ResourceBundle bundle, String prefix, IVerticalRuler ruler, ITextEditor editor) {
 		this(bundle, prefix, editor, ruler);
 	}
 
-	/*
-	 * @see IUpdate#update()
-	 */
+	@Override
 	public void update() {
 		setEnabled(hasMarkers());
 	}
 
-	/*
-	 * @see Action#run()
-	 */
+	@Override
 	public void run() {
 
 		IMarker marker= chooseMarker(getMarkers());
@@ -130,7 +127,7 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 	private void gotoMarker(IMarker marker) {
 
 		// Use the provided adapter if any
-		IGotoMarker gotoMarkerAdapter= (IGotoMarker)fTextEditor.getAdapter(IGotoMarker.class);
+		IGotoMarker gotoMarkerAdapter= fTextEditor.getAdapter(IGotoMarker.class);
 		if (gotoMarkerAdapter != null) {
 			gotoMarkerAdapter.gotoMarker(marker);
 			return;
@@ -193,7 +190,7 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 	 * @param markers the list of markers to choose from
 	 * @return the chosen marker or <code>null</code> if none of the given markers has a marker annotation in the model
 	 */
-	protected final IMarker chooseMarker(List markers) {
+	protected final IMarker chooseMarker(List<? extends IMarker> markers) {
 
 		AbstractMarkerAnnotationModel model= getAnnotationModel();
 		IAnnotationAccessExtension access= getAnnotationAccessExtension();
@@ -201,9 +198,9 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 		IMarker marker= null;
 		int maxLayer= 0;
 
-		Iterator iter= markers.iterator();
+		Iterator<? extends IMarker> iter= markers.iterator();
 		while (iter.hasNext()) {
-			IMarker m= (IMarker) iter.next();
+			IMarker m= iter.next();
 			Annotation a= model.getMarkerAnnotation(m);
 			if (a != null) {
 				if (access == null) {
@@ -248,10 +245,10 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 	protected final IResource getResource() {
 		IEditorInput input= fTextEditor.getEditorInput();
 
-		IResource resource= (IResource) input.getAdapter(IFile.class);
+		IResource resource= input.getAdapter(IFile.class);
 
 		if (resource == null)
-			resource= (IResource) input.getAdapter(IResource.class);
+			resource= input.getAdapter(IResource.class);
 
 		return resource;
 	}
@@ -366,37 +363,36 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 	 * Returns all markers which include the ruler's line of activity.
 	 *
 	 * @return an unmodifiable list with all markers which include the ruler's line of activity
-	 *         (element type: {@link IMarker})
 	 */
-	protected final List getMarkers() {
+	protected final List<IMarker> getMarkers() {
 		final IResource resource= getResource();
 		if (resource == null || !resource.exists())
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 
 		final IDocument document= getDocument();
 		if (document == null)
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 
 		final AbstractMarkerAnnotationModel model= getAnnotationModel();
 		if (model == null)
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 
 		final IMarker[] allMarkers;
 		try {
 			allMarkers= resource.findMarkers(null, true, IResource.DEPTH_ZERO);
 		} catch (CoreException x) {
 			handleCoreException(x, TextEditorMessages.SelectMarkerRulerAction_getMarker);
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 
 		if (allMarkers.length == 0)
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 
 		final int activeLine= fRuler.getLineOfLastMouseButtonActivity();
 		if (activeLine == -1)
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 
-		Iterator it;
+		Iterator<Annotation> it;
 		try {
 			IRegion line= document.getLineInformation(activeLine);
 			it= model.getAnnotationIterator(line.getOffset(), line.getLength() + 1, true, true);
@@ -407,14 +403,14 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 			it= model.getAnnotationIterator();
 		}
 
-		List markers= null;
+		List<IMarker> markers= null;
 		while (it.hasNext()) {
-			Annotation annotation= (Annotation) it.next();
+			Annotation annotation= it.next();
 			if (annotation instanceof MarkerAnnotation) {
 				Position position= model.getPosition(annotation);
 				if (includesLine(position, document, activeLine)) {
 					if (markers == null)
-						markers= new ArrayList(10);
+						markers= new ArrayList<>(10);
 
 					markers.add(((MarkerAnnotation) annotation).getMarker());
 				}
@@ -422,16 +418,15 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 		}
 
 		if (markers == null)
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 
 		return Collections.unmodifiableList(markers);
 	}
 
 	/**
-	 * Returns all markers which include the ruler's line of activity.
+	 * Returns <code>true</code> iff there are any markers which include the ruler's line of activity.
 	 *
-	 * @return an unmodifiable list with all markers which include the ruler's line of activity
-	 *         (element type: {@link IMarker})
+	 * @return <code>true</code> iff there are any markers which include the ruler's line of activity.
 	 * @since 3.3
 	 */
 	protected final boolean hasMarkers() {
@@ -462,7 +457,7 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 		if (activeLine == -1)
 			return false;
 
-		Iterator it;
+		Iterator<Annotation> it;
 		try {
 			IRegion line= document.getLineInformation(activeLine);
 			it= model.getAnnotationIterator(line.getOffset(), line.getLength() + 1, true, true);
@@ -472,7 +467,7 @@ public class SelectMarkerRulerAction extends ResourceAction implements IUpdate {
 		}
 
 		while (it.hasNext()) {
-			Annotation annotation= (Annotation) it.next();
+			Annotation annotation= it.next();
 			if (annotation instanceof MarkerAnnotation) {
 				Position position= model.getPosition(annotation);
 				if (includesLine(position, document, activeLine)) {

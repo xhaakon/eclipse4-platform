@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,21 +33,11 @@ import org.eclipse.ui.internal.WorkingSetManager;
  */
 public class WorkingSetSettingsTransfer extends WorkbenchSettingsTransfer {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.preferences.SettingsTransfer#getName()
-	 */
 	@Override
 	public String getName() {
 		return WorkbenchMessages.WorkingSets_Name;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.preferences.SettingsTransfer#transferSettings(org.eclipse.core.runtime.IPath)
-	 */
 	@Override
 	public IStatus transferSettings(IPath newWorkspaceRoot) {
 		IPath dataLocation = getNewWorkbenchStateLocation(newWorkspaceRoot);

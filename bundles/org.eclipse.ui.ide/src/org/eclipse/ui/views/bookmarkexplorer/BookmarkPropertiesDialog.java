@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -129,21 +129,11 @@ public class BookmarkPropertiesDialog extends DialogMarkerProperties {
         return super.getInitialAttributes();
     }
 
-	/* (non-Javadoc)
-     * @see org.eclipse.ui.views.markers.internal.DialogMarkerProperties.getModifyOperationTitle()
-     *
-     * @since 3.3
-     */
 	@Override
 	protected String getModifyOperationTitle() {
 		return BookmarkMessages.ModifyBookmark_undoText;
 	}
 
-	/* (non-Javadoc)
-     * @see org.eclipse.ui.views.markers.internal.DialogMarkerProperties.getCreateOperationTitle()
-     *
-     * @since 3.3
-     */
 	@Override
 	protected String getCreateOperationTitle() {
 		return BookmarkMessages.CreateBookmark_undoText;

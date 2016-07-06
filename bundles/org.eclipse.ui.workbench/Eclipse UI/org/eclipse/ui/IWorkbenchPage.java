@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -899,13 +899,15 @@ public interface IWorkbenchPage extends IPartService, ISelectionService {
 	public INavigationHistory getNavigationHistory();
 
 	/**
-	 * Returns an array of IViewParts that are stacked with the given part.
+	 * Returns an array of IViewParts that are stacked with the given part in
+	 * the currently active perspective.
 	 *
 	 * @param part
 	 *            the part to test
 	 * @return the parts that are stacked with this part, including the part in
 	 *         question. <code>null</code> is returned if the part does not
-	 *         belong to this page. The parts are in LRU order.
+	 *         belong to this page or the part is not contained in the active
+	 *         perspective. The parts are in LRU order.
 	 * @since 3.0
 	 */
 	IViewPart[] getViewStack(IViewPart part);

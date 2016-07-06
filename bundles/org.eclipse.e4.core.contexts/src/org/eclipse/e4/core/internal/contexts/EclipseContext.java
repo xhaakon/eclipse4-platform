@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2015 IBM Corporation and others.
+ * Copyright (c) 2009, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Daniel Kruegler <daniel.kruegler@gmail.com> - Bug 487417
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 492963
  *******************************************************************************/
 package org.eclipse.e4.core.internal.contexts;
 
@@ -81,18 +83,18 @@ public class EclipseContext implements IEclipseContext {
 
 	final protected Map<String, Object> localValues = Collections.synchronizedMap(new HashMap<String, Object>());
 
-	private ArrayList<String> modifiable;
+	private Set<String> modifiable;
 
 	private List<Computation> waiting; // list of Computations; null for all non-root entries
 
-	private Set<WeakReference<EclipseContext>> children = new HashSet<WeakReference<EclipseContext>>();
+	private Set<WeakReference<EclipseContext>> children = new HashSet<>();
 
-	private Set<IContextDisposalListener> notifyOnDisposal = new HashSet<IContextDisposalListener>();
+	private Set<IContextDisposalListener> notifyOnDisposal = new HashSet<>();
 
-	static private ThreadLocal<Stack<Computation>> currentComputation = new ThreadLocal<Stack<Computation>>();
+	static private ThreadLocal<Stack<Computation>> currentComputation = new ThreadLocal<>();
 
 	// I don't think we need to sync referenceQueue access
-	private ReferenceQueue<Object> referenceQueue = new ReferenceQueue<Object>();
+	private ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
 
 	private Map<Reference<?>, TrackableComputationExt> activeComputations = Collections.synchronizedMap(new HashMap<Reference<?>, TrackableComputationExt>());
 	private Set<TrackableComputationExt> activeRATs = Collections.synchronizedSet(new HashSet<TrackableComputationExt>());
@@ -115,14 +117,14 @@ public class EclipseContext implements IEclipseContext {
 			debugAddOn.notify(this, IEclipseContextDebugger.EventType.CONSTRUCTED, null);
 	}
 
-	final static private Set<EclipseContext> noChildren = new HashSet<EclipseContext>(0);
+	final static private Set<EclipseContext> noChildren = new HashSet<>(0);
 
 	public Set<EclipseContext> getChildren() {
 		Set<EclipseContext> result;
 		synchronized (children) {
 			if (children.size() == 0)
 				return noChildren;
-			result = new HashSet<EclipseContext>(children.size());
+			result = new HashSet<>(children.size());
 			for (Iterator<WeakReference<EclipseContext>> i = children.iterator(); i.hasNext();) {
 				EclipseContext referredContext = i.next().get();
 				if (referredContext == null) {
@@ -161,13 +163,13 @@ public class EclipseContext implements IEclipseContext {
 
 		ContextChangeEvent event = new ContextChangeEvent(this, ContextChangeEvent.DISPOSE, null, null, null);
 
-		Set<Computation> allComputations = new HashSet<Computation>();
+		Set<Computation> allComputations = new HashSet<>();
 		allComputations.addAll(activeComputations.values());
 		allComputations.addAll(activeRATs);
 		activeComputations.clear();
 		activeRATs.clear();
 
-		Set<Scheduled> scheduled = new LinkedHashSet<Scheduled>();
+		Set<Scheduled> scheduled = new LinkedHashSet<>();
 		allComputations.addAll(getListeners());
 		weakListeners.clear();
 		for (Computation computation : allComputations) {
@@ -309,7 +311,7 @@ public class EclipseContext implements IEclipseContext {
 	public void remove(String name) {
 		if (isSetLocally(name)) {
 			Object oldValue = localValues.remove(name);
-			Set<Scheduled> scheduled = new LinkedHashSet<Scheduled>();
+			Set<Scheduled> scheduled = new LinkedHashSet<>();
 			invalidate(name, ContextChangeEvent.REMOVED, oldValue, IInjector.NOT_A_VALUE, scheduled);
 			processScheduled(scheduled);
 		}
@@ -351,7 +353,7 @@ public class EclipseContext implements IEclipseContext {
 		boolean containsKey = localValues.containsKey(name);
 		Object oldValue = localValues.put(name, value);
 		if (!containsKey || oldValue != value) {
-			Set<Scheduled> scheduled = new LinkedHashSet<Scheduled>();
+			Set<Scheduled> scheduled = new LinkedHashSet<>();
 			invalidate(name, ContextChangeEvent.ADDED, oldValue, value, scheduled);
 			processScheduled(scheduled);
 		}
@@ -371,7 +373,7 @@ public class EclipseContext implements IEclipseContext {
 
 	@Override
 	public void modify(String name, Object value) {
-		Set<Scheduled> scheduled = new LinkedHashSet<Scheduled>();
+		Set<Scheduled> scheduled = new LinkedHashSet<>();
 		if (!internalModify(name, value, scheduled))
 			set(name, value);
 		processScheduled(scheduled);
@@ -408,7 +410,7 @@ public class EclipseContext implements IEclipseContext {
 			return; // no-op
 		if (parentContext != null)
 			parentContext.removeChild(this);
-		Set<Scheduled> scheduled = new LinkedHashSet<Scheduled>();
+		Set<Scheduled> scheduled = new LinkedHashSet<>();
 		handleReparent((EclipseContext) parent, scheduled);
 		localValues.put(PARENT, parent);
 		if (parent != null)
@@ -445,7 +447,7 @@ public class EclipseContext implements IEclipseContext {
 		if (name == null)
 			return;
 		if (modifiable == null)
-			modifiable = new ArrayList<String>(3);
+			modifiable = new HashSet<>(3);
 		modifiable.add(name);
 		if (localValues.containsKey(name))
 			return;
@@ -455,12 +457,7 @@ public class EclipseContext implements IEclipseContext {
 	private boolean checkModifiable(String name) {
 		if (modifiable == null)
 			return false;
-		for (Iterator<String> i = modifiable.iterator(); i.hasNext();) {
-			String candidate = i.next();
-			if (candidate.equals(name))
-				return true;
-		}
-		return false;
+		return modifiable.contains(name);
 	}
 
 	public void removeListenersTo(Object object) {
@@ -483,7 +480,7 @@ public class EclipseContext implements IEclipseContext {
 		// Add "boolean inReparent" on the root context and process right away?
 		processWaiting();
 		// 1) everybody who depends on me: I need to collect combined list of names injected
-		Set<String> usedNames = new HashSet<String>();
+		Set<String> usedNames = new HashSet<>();
 		collectDependentNames(usedNames);
 
 		// 2) for each used name:
@@ -566,7 +563,7 @@ public class EclipseContext implements IEclipseContext {
 
 	public void addChild(EclipseContext childContext) {
 		synchronized (children) {
-			children.add(new WeakReference<EclipseContext>(childContext));
+			children.add(new WeakReference<>(childContext));
 		}
 	}
 
@@ -685,36 +682,35 @@ public class EclipseContext implements IEclipseContext {
 
 	// This method is for debug only, do not use externally
 	public Map<String, Object> localData() {
-		Map<String, Object> result = new HashMap<String, Object>(localValues.size());
-		for (String string : localValues.keySet()) {
-			Object value = localValues.get(string);
-			if (value instanceof IContextFunction)
+		Map<String, Object> result = new HashMap<>(localValues.size());
+		for (Map.Entry<String, Object> entry : localValues.entrySet()) {
+			if (entry.getValue() instanceof IContextFunction) {
 				continue;
-			result.put(string, value);
+			}
+			result.put(entry.getKey(), entry.getValue());
 		}
 		return result;
 	}
 
 	// This method is for debug only, do not use externally
 	public Map<String, Object> localContextFunction() {
-		Map<String, Object> result = new HashMap<String, Object>(localValues.size());
-		for (String string : localValues.keySet()) {
-			Object value = localValues.get(string);
-			if (value instanceof IContextFunction)
-				result.put(string, value);
+		Map<String, Object> result = new HashMap<>(localValues.size());
+		for (Map.Entry<String, Object> entry : localValues.entrySet()) {
+			if (entry.getValue() instanceof IContextFunction) {
+				result.put(entry.getKey(), entry.getValue());
+			}
 		}
 		return result;
 	}
 
 	// This method is for debug only, do not use externally
 	public Map<String, Object> cachedCachedContextFunctions() {
-		Map<String, Object> result = new HashMap<String, Object>(localValueComputations.size());
-		for (String string : localValueComputations.keySet()) {
-			ValueComputation vc = localValueComputations.get(string);
-			if (vc != null) {
-				Object r = vc.get();
+		Map<String, Object> result = new HashMap<>(localValueComputations.size());
+		for (Map.Entry<String, ValueComputation> entry : localValueComputations.entrySet()) {
+			if (entry.getValue() != null) {
+				Object r = entry.getValue();
 				if (r != IInjector.NOT_A_VALUE) {
-					result.put(string, vc.get());
+					result.put(entry.getKey(), entry.getValue());
 				}
 			}
 		}
@@ -734,7 +730,7 @@ public class EclipseContext implements IEclipseContext {
 	static public Stack<Computation> getCalculatedComputations() {
 		Stack<Computation> current = currentComputation.get();
 		if (current == null) {
-			current = new Stack<Computation>();
+			current = new Stack<>();
 			currentComputation.set(current);
 		}
 		return current;
@@ -771,7 +767,7 @@ public class EclipseContext implements IEclipseContext {
 	}
 
 	public WeakReference<Object> trackedWeakReference(Object object) {
-		return new WeakReference<Object>(object, referenceQueue);
+		return new WeakReference<>(object, referenceQueue);
 	}
 
 	public void cleanup() {

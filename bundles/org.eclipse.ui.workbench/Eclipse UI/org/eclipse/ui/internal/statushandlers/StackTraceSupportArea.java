@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2010 IBM Corporation and others.
+ * Copyright (c) 2008, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,12 +55,6 @@ public class StackTraceSupportArea extends AbstractStatusAreaProvider {
 	 */
 	private List list;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.statushandlers.AbstractStatusAreaProvider#createSupportArea(org.eclipse.swt.widgets.Composite,
-	 *      org.eclipse.ui.statushandlers.StatusAdapter)
-	 */
 	@Override
 	public Control createSupportArea(final Composite parent,
 			StatusAdapter statusAdapter) {
@@ -75,11 +69,6 @@ public class StackTraceSupportArea extends AbstractStatusAreaProvider {
 		gd.widthHint = 250;
 		list.setLayoutData(gd);
 		list.addSelectionListener(new SelectionAdapter() {
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-			 */
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				list.selectAll();
@@ -124,13 +113,6 @@ public class StackTraceSupportArea extends AbstractStatusAreaProvider {
 		MenuItem copyAction = new MenuItem(menu, SWT.PUSH);
 		copyAction.setText("&Copy"); //$NON-NLS-1$
 		copyAction.addSelectionListener(new SelectionAdapter() {
-			/*
-			 * (non-Javadoc)
-			 *
-			 * @see
-			 * org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse
-			 * .swt.events.SelectionEvent)
-			 */
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				Clipboard clipboard = null;

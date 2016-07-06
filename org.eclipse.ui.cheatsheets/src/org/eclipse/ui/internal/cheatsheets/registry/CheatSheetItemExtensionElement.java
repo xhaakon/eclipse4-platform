@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2006 IBM Corporation and others.
+ * Copyright (c) 2002, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,11 +11,19 @@
 package org.eclipse.ui.internal.cheatsheets.registry;
 
 import java.lang.reflect.Constructor;
-import org.eclipse.core.runtime.*;
+
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.cheatsheets.AbstractItemExtensionElement;
-import org.eclipse.ui.internal.cheatsheets.*;
-import org.eclipse.ui.model.*;
+import org.eclipse.ui.internal.cheatsheets.CheatSheetPlugin;
+import org.eclipse.ui.internal.cheatsheets.ICheatSheetResource;
+import org.eclipse.ui.internal.cheatsheets.Messages;
+import org.eclipse.ui.model.IWorkbenchAdapter;
+import org.eclipse.ui.model.WorkbenchAdapter;
 import org.osgi.framework.Bundle;
 
 /**
@@ -39,15 +47,17 @@ public class CheatSheetItemExtensionElement extends WorkbenchAdapter implements 
 	 * associated with this object. Returns <code>null</code> if
 	 * no such object can be found.
 	 */
-	public Object getAdapter(Class adapter) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getAdapter(Class<T> adapter) {
 		if (adapter == IWorkbenchAdapter.class) {
-			return this;
+			return (T) this;
 		}
 		return Platform.getAdapterManager().getAdapter(this, adapter);
 	}
 
 	/**
-	 * 
+	 *
 	 * @return IConfigurationElement
 	 */
 	public IConfigurationElement getConfigurationElement() {
@@ -73,7 +83,7 @@ public class CheatSheetItemExtensionElement extends WorkbenchAdapter implements 
 	}
 
 	/**
-	 * 
+	 *
 	 * @param newConfigurationElement IConfigurationElement
 	 */
 	public void setConfigurationElement(IConfigurationElement newConfigurationElement) {
@@ -99,7 +109,7 @@ public class CheatSheetItemExtensionElement extends WorkbenchAdapter implements 
 	}
 
 	public AbstractItemExtensionElement createInstance() {
-		Class extClass = null;
+		Class<?> extClass = null;
 		AbstractItemExtensionElement extElement = null;
 		String pluginId = configurationElement.getContributor().getName();
 
@@ -114,15 +124,14 @@ public class CheatSheetItemExtensionElement extends WorkbenchAdapter implements 
 		try {
 			if (extClass != null) {
 				Constructor c = extClass.getConstructor(stringArray);
-				Object[] parameters = { itemAttribute };
-				extElement = (AbstractItemExtensionElement) c.newInstance(parameters);
+				extElement = (AbstractItemExtensionElement) c.newInstance(itemAttribute);
 			}
 		} catch (Exception e) {
 			String message = NLS.bind(Messages.ERROR_CREATING_CLASS, (new Object[] {className}));
 			IStatus status = new Status(IStatus.ERROR, ICheatSheetResource.CHEAT_SHEET_PLUGIN_ID, IStatus.OK, message, e);
 			CheatSheetPlugin.getPlugin().getLog().log(status);
 		}
-		
+
 		if (extElement != null){
 			return extElement;
 		}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.AnnotationRulerColumn;
 import org.eclipse.jface.text.source.CompositeRuler;
 import org.eclipse.jface.text.source.IAnnotationAccess;
@@ -66,9 +67,7 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 		super(width, annotationAccess);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.AnnotationRulerColumn#mouseClicked(int)
-	 */
+	@Override
 	protected void mouseClicked(int line) {
 		clearCurrentAnnotation();
 		if (fMouseDownLine != line)
@@ -80,18 +79,12 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 		}
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.AnnotationRulerColumn#mouseDown(int)
-	 * @since 3.5
-	 */
+	@Override
 	protected void mouseDown(int rulerLine) {
 		fMouseDownLine= rulerLine;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.AnnotationRulerColumn#mouseDoubleClicked(int)
-	 * @since 3.5
-	 */
+	@Override
 	protected void mouseDoubleClicked(int rulerLine) {
 		if (findAnnotation(rulerLine, true) != null)
 			return;
@@ -121,7 +114,7 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 
 			int previousDistance= Integer.MAX_VALUE;
 
-			Iterator e= model.getAnnotationIterator();
+			Iterator<Annotation> e= model.getAnnotationIterator();
 			while (e.hasNext()) {
 				Object next= e.next();
 				if (next instanceof ProjectionAnnotation) {
@@ -193,9 +186,7 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.IVerticalRulerColumn#createControl(org.eclipse.jface.text.source.CompositeRuler, org.eclipse.swt.widgets.Composite)
-	 */
+	@Override
 	public Control createControl(CompositeRuler parentRuler, Composite parentControl) {
 		Control control= super.createControl(parentRuler, parentControl);
 
@@ -205,6 +196,7 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 
 		// install hover listener
 		control.addMouseTrackListener(new MouseTrackAdapter() {
+			@Override
 			public void mouseExit(MouseEvent e) {
 				if (clearCurrentAnnotation())
 					redraw();
@@ -213,6 +205,7 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 
 		// install mouse move listener
 		control.addMouseMoveListener(new MouseMoveListener() {
+			@Override
 			public void mouseMove(MouseEvent e) {
 				boolean redraw= false;
 				ProjectionAnnotation annotation= findAnnotation(toDocumentLineNumber(e.y), false);
@@ -234,9 +227,7 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 		return control;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.AnnotationRulerColumn#setModel(org.eclipse.jface.text.source.IAnnotationModel)
-	 */
+	@Override
 	public void setModel(IAnnotationModel model) {
 		if (model instanceof IAnnotationModelExtension) {
 			IAnnotationModelExtension extension= (IAnnotationModelExtension) model;
@@ -245,16 +236,12 @@ class ProjectionRulerColumn extends AnnotationRulerColumn {
 		super.setModel(model);
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.AnnotationRulerColumn#isPropagatingMouseListener()
-	 */
+	@Override
 	protected boolean isPropagatingMouseListener() {
 		return false;
 	}
 
-	/*
-	 * @see org.eclipse.jface.text.source.AnnotationRulerColumn#hasAnnotation(int)
-	 */
+	@Override
 	protected boolean hasAnnotation(int lineNumber) {
 		return findAnnotation(lineNumber, true) != null;
 	}

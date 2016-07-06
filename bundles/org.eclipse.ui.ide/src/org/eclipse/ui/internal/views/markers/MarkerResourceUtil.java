@@ -25,6 +25,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.mapping.ResourceMapping;
 import org.eclipse.core.resources.mapping.ResourceMappingContext;
 import org.eclipse.core.resources.mapping.ResourceTraversal;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -346,19 +347,19 @@ class MarkerResourceUtil {
 	static Object adapt2ResourceElement(Object object) {
 		IResource resource = null;
 		if (object instanceof IAdaptable) {
-			ITaskListResourceAdapter adapter = Util.getAdapter(object, ITaskListResourceAdapter.class);
+			ITaskListResourceAdapter adapter = Adapters.adapt(object, ITaskListResourceAdapter.class);
 			if (adapter != null) {
 				resource = adapter.getAffectedResource((IAdaptable) object);
 			}
 		}
 		if (resource == null) {
-			resource = Util.getAdapter(object, IResource.class);
+			resource = Adapters.adapt(object, IResource.class);
 		}
 		if (resource == null) {
-			resource = Util.getAdapter(object, IFile.class);
+			resource = Adapters.adapt(object, IFile.class);
 		}
 		if (resource == null) {
-			ResourceMapping mapping = Util.getAdapter(object, ResourceMapping.class);
+			ResourceMapping mapping = Adapters.adapt(object, ResourceMapping.class);
 			if (mapping != null) {
 				return mapping;
 			}

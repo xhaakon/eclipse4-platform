@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -51,7 +51,7 @@ public class HelpURLConnection extends URLConnection {
 	private final static String PATH_RTOPIC = "/rtopic"; //$NON-NLS-1$
 	private static final String PROTOCOL_HTTP = "http://"; //$NON-NLS-1$
 
-	private static Hashtable<String, String[]> templates = new Hashtable<String, String[]>();
+	private static Hashtable<String, String[]> templates = new Hashtable<>();
 
 	// document caching - disabled if running in dev mode
 	protected static boolean cachingEnabled = true;
@@ -109,6 +109,7 @@ public class HelpURLConnection extends URLConnection {
 	/**
 	 * @see URLConnection#connect()
 	 */
+	@Override
 	public void connect() throws IOException {
 	}
 
@@ -116,6 +117,7 @@ public class HelpURLConnection extends URLConnection {
 	 * see URLConnection#getInputStream(); Note: this method can throw IOException, but should never
 	 * return null
 	 */
+	@Override
 	public InputStream getInputStream() throws IOException {
 		// must override parent implementation, since it does nothing.
 		Bundle plugin = getPlugin();
@@ -169,6 +171,7 @@ public class HelpURLConnection extends URLConnection {
 		return in;
 	}
 
+	@Override
 	public long getExpiration() {
 		return isCacheable() ? new Date().getTime() + 10000 : 0;
 	}
@@ -190,7 +193,7 @@ public class HelpURLConnection extends URLConnection {
 					vector.add(val);
 					arguments.put(arg, existing);
 				} else {
-					Vector<Object> v = new Vector<Object>(2);
+					Vector<Object> v = new Vector<>(2);
 					v.add(existing);
 					v.add(val);
 					arguments.put(arg, v);
@@ -206,12 +209,13 @@ public class HelpURLConnection extends URLConnection {
 	protected void parseQuery() {
 		if (query != null && !"".equals(query)) { //$NON-NLS-1$
 			if (arguments == null) {
-				arguments = new HashMap<String, Object>(5);
+				arguments = new HashMap<>(5);
 			}
 			parseQuery(query, arguments);
 		}
 	}
 
+	@Override
 	public String getContentType() {
 		// Check if the file is hypertext or plain text
 		String file = pluginAndFile.toLowerCase(Locale.US);
@@ -330,6 +334,7 @@ public class HelpURLConnection extends URLConnection {
 		return cachingEnabled;
 	}
 
+	@Override
 	public String toString() {
 		return pluginAndFile;
 	}
@@ -474,20 +479,19 @@ public class HelpURLConnection extends URLConnection {
 		try{
 			if (in!=null)
 			{
-				BufferedReader br = new BufferedReader(new InputStreamReader(in));
-				String line;
-				int count = 0;
+				try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+					String line;
+					int count = 0;
 
-				while ((line = br.readLine())!=null)
-				{
-					if (count>lines.length)
-						return false;
+					while ((line = br.readLine()) != null) {
+						if (count > lines.length)
+							return false;
 
-					if (!lines[count].equals(line))
-						return false;
-					count++;
+						if (!lines[count].equals(line))
+							return false;
+						count++;
+					}
 				}
-				br.close();
 				in.close();
 				return true;
 			}

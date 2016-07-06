@@ -33,10 +33,12 @@ public class ImportProjectSetAction extends ActionDelegate implements IObjectAct
 
 	private IStructuredSelection fSelection;
 
+	@Override
 	public void run(IAction action) {
 		final Shell shell= Display.getDefault().getActiveShell();
 		try {
 			new ProgressMonitorDialog(shell).run(true, true, new WorkspaceModifyOperation(null) {
+				@Override
 				protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException, InterruptedException {
 					Iterator iterator= fSelection.iterator();
 					while (iterator.hasNext()) {
@@ -44,7 +46,7 @@ public class ImportProjectSetAction extends ActionDelegate implements IObjectAct
 						if (isRunInBackgroundPreferenceOn()) {
 							ImportProjectSetOperation op = new ImportProjectSetOperation(null, file.getLocation().toString(), new IWorkingSet[0]);
 							op.run();
-						} else { 
+						} else {
 							ProjectSetImporter.importProjectSet(file.getLocation().toString(), shell, monitor);
 						}
 					}
@@ -61,12 +63,14 @@ public class ImportProjectSetAction extends ActionDelegate implements IObjectAct
 		}
 	}
 
+	@Override
 	public void selectionChanged(IAction action, ISelection sel) {
 		if (sel instanceof IStructuredSelection) {
 			fSelection= (IStructuredSelection) sel;
 		}
 	}
 
+	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
 	}
 
@@ -74,5 +78,5 @@ public class ImportProjectSetAction extends ActionDelegate implements IObjectAct
 		return TeamUIPlugin.getPlugin().getPreferenceStore().getBoolean(
 				IPreferenceIds.RUN_IMPORT_IN_BACKGROUND);
 	}
-	
+
 }

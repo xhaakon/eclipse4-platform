@@ -80,6 +80,7 @@ public class IncrementalFindAction extends ResourceAction implements IUpdate {
 	 * @deprecated use FindReplaceAction(ResourceBundle, String, IWorkbenchPart, boolean) instead
 	 * @since 2.1
 	 */
+	@Deprecated
 	public IncrementalFindAction(ResourceBundle bundle, String prefix, IWorkbenchWindow workbenchWindow, boolean forward) {
 		super(bundle, prefix);
 		fWorkbenchWindow= workbenchWindow;
@@ -87,9 +88,7 @@ public class IncrementalFindAction extends ResourceAction implements IUpdate {
 		update();
 	}
 
-	/*
-	 * @see IAction#run()
-	 */
+	@Override
 	public void run() {
 
 		if (fTarget == null)
@@ -102,16 +101,14 @@ public class IncrementalFindAction extends ResourceAction implements IUpdate {
 			((IFindReplaceTargetExtension) fTarget).beginSession();
 	}
 
-	/*
-	 * @see IUpdate#update()
-	 */
+	@Override
 	public void update() {
 
 		if (fWorkbenchPart == null && fWorkbenchWindow != null)
 			fWorkbenchPart= fWorkbenchWindow.getPartService().getActivePart();
 
 		if (fWorkbenchPart != null)
-			fTarget= (IFindReplaceTarget) fWorkbenchPart.getAdapter(IncrementalFindTarget.class);
+			fTarget= fWorkbenchPart.getAdapter(IncrementalFindTarget.class);
 		else
 			fTarget= null;
 

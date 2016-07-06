@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     James Blackburn (Broadcom Corp.) - ongoing development
+ *     Mickael Istria (Red Hat Inc.) - Bug 488937
  *******************************************************************************/
 package org.eclipse.core.internal.resources;
 
@@ -39,7 +40,7 @@ public class Marker extends PlatformObject implements IMarker {
 	protected IResource resource;
 
 	/**
-	 * Constructs a new marker object. 
+	 * Constructs a new marker object.
 	 */
 	Marker(IResource resource, long id) {
 		Assert.isLegal(resource != null);
@@ -236,7 +237,7 @@ public class Marker extends PlatformObject implements IMarker {
 	 */
 	@Override
 	public void setAttribute(String attributeName, int value) throws CoreException {
-		setAttribute(attributeName, new Integer(value));
+		setAttribute(attributeName, Integer.valueOf(value));
 	}
 
 	/**

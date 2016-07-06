@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,15 +31,15 @@ public class CriteriaProviderRegistry {
 
 	public static final String PROVIDER_XP_NAME = "org.eclipse.help.criteriaProvider"; //$NON-NLS-1$
 
-	private static List providers = null;
-	
+	private static List<AbstractCriteriaProvider> providers = null;
+
 	private static CriteriaProviderRegistry instance;
 
 	private boolean initialized = false;
-	
+
 	private CriteriaProviderRegistry() {
 	}
-	
+
 	public static CriteriaProviderRegistry getInstance() {
 		if (instance == null) {
 			instance = new CriteriaProviderRegistry();
@@ -50,8 +50,8 @@ public class CriteriaProviderRegistry {
 	synchronized private void readProviders() {
 		if (initialized ) {
 			return;
-		}	
-		providers = new ArrayList();
+		}
+		providers = new ArrayList<>();
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IConfigurationElement[] elements = registry
 				.getConfigurationElementsFor(PROVIDER_XP_NAME);
@@ -65,27 +65,27 @@ public class CriteriaProviderRegistry {
 						+ PROVIDER_XP_NAME + "].", e); //$NON-NLS-1$
 			}
 			if (obj instanceof AbstractCriteriaProvider) {
-				providers.add(obj);
+				providers.add((AbstractCriteriaProvider) obj);
 			}
 		}
 		initialized = true;
 	}
-	
+
 	public AbstractCriteriaProvider[] getScopes() {
 		readProviders();
-		return (AbstractCriteriaProvider[]) providers.toArray(new AbstractCriteriaProvider[providers.size()]);
+		return providers.toArray(new AbstractCriteriaProvider[providers.size()]);
 	}
 
 	public ICriteria[] getAllCriteria(ITopic topic) {
 		readProviders();
-		ICriteria[] criteria; 
+		ICriteria[] criteria;
 		if (topic instanceof ITopic2) {
 			criteria = ((ITopic2) topic).getCriteria();
 		} else {
 			criteria = new ICriteria[0];
 		}
-		for (Iterator iter = providers.iterator(); iter.hasNext();) {
-			AbstractCriteriaProvider provider = (AbstractCriteriaProvider) iter.next();
+		for (Iterator<AbstractCriteriaProvider> iter = providers.iterator(); iter.hasNext();) {
+			AbstractCriteriaProvider provider = iter.next();
 			ICriteria[] newCriteria = provider.getCriteria(topic);
 			if (newCriteria.length > 0) {
 				if (criteria.length == 0) {
@@ -100,17 +100,17 @@ public class CriteriaProviderRegistry {
 		}
 		return criteria;
 	}
-	
+
 	public ICriteria[] getAllCriteria(IToc toc) {
 		readProviders();
-		ICriteria[] criteria; 
+		ICriteria[] criteria;
 		if (toc instanceof IToc2) {
 			criteria = ((IToc2) toc).getCriteria();
 		} else {
 			criteria = new ICriteria[0];
 		}
-		for (Iterator iter = providers.iterator(); iter.hasNext();) {
-			AbstractCriteriaProvider provider = (AbstractCriteriaProvider) iter.next();
+		for (Iterator<AbstractCriteriaProvider> iter = providers.iterator(); iter.hasNext();) {
+			AbstractCriteriaProvider provider = iter.next();
 			ICriteria[] newCriteria = provider.getCriteria(toc);
 			if (newCriteria.length > 0) {
 				if (criteria.length == 0) {
@@ -124,6 +124,6 @@ public class CriteriaProviderRegistry {
 			}
 		}
 		return criteria;
-	}	
+	}
 
 }

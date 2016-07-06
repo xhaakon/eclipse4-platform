@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2012 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,11 +10,11 @@
  *******************************************************************************/
 package org.eclipse.jface.text.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.Test;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.source.ICharacterPairMatcher;
+
 
 
 /**
@@ -23,17 +23,13 @@ import org.eclipse.jface.text.source.ICharacterPairMatcher;
  * @since 3.3
  */
 public class DefaultPairMatcherTest extends AbstractPairMatcherTest {
-
+	
 	public DefaultPairMatcherTest() {
 		super(false);
 	}
 
-	public static Test suite() {
-		return new TestSuite(DefaultPairMatcherTest.class);
-	}
-
-
 	/** Tests that the test case reader works */
+	@Test
 	public void testTestCaseReader1() {
 		performReaderTest("#( )%", 3, 0, "( )");
 		performReaderTest("( )%", 3, -1, "( )");
@@ -42,8 +38,9 @@ public class DefaultPairMatcherTest extends AbstractPairMatcherTest {
 	/**
 	 * Close matches.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testCloseMatches1() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "#()%");
@@ -55,8 +52,9 @@ public class DefaultPairMatcherTest extends AbstractPairMatcherTest {
 	/**
 	 * Checks of simple situations where no matches should be found.
 	 * 
-	 * @throws BadLocationException
+	 * @throws BadLocationException test failure
 	 */
+	@Test
 	public void testIncompleteMatch1() throws BadLocationException {
 		final ICharacterPairMatcher matcher= createMatcher("()[]{}");
 		performMatch(matcher, "(  %)");

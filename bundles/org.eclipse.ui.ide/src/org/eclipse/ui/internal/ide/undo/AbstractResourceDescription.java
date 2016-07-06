@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -77,13 +77,6 @@ abstract class AbstractResourceDescription extends ResourceDescription {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.ide.undo.ResourceDescription#createResource(org.eclipse
-	 * .core.runtime.IProgressMonitor)
-	 */
 	@Override
 	public IResource createResource(IProgressMonitor monitor)
 			throws CoreException {
@@ -93,11 +86,6 @@ abstract class AbstractResourceDescription extends ResourceDescription {
 		return resource;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.ide.undo.ResourceDescription#isValid()
-	 */
 	@Override
 	public boolean isValid() {
 		return parent == null || parent.exists();
@@ -138,11 +126,6 @@ abstract class AbstractResourceDescription extends ResourceDescription {
 		return ResourcesPlugin.getWorkspace();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.ide.undo.ResourceDescription#verifyExistence(boolean)
-	 */
 	@Override
 	public boolean verifyExistence(boolean checkMembers) {
 		IContainer p = parent;

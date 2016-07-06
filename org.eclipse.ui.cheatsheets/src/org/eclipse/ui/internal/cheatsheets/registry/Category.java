@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2006 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -64,7 +64,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Creates an instance of <code>Category</code> with an ID and label.
-	 * 
+	 *
 	 * @param id
 	 *            the unique identifier for the category
 	 * @param label
@@ -78,7 +78,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 	/**
 	 * Creates an instance of <code>Category</code> using the information from
 	 * the specified configuration element.
-	 * 
+	 *
 	 * @param configElement
 	 *            the <code>IConfigurationElement<code> containing
 	 * 		the ID, label, and optional parent category path.
@@ -95,7 +95,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Add an element to this category.
-	 * 
+	 *
 	 * @param element
 	 *            the element to add
 	 */
@@ -105,42 +105,35 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 		elements.add(element);
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IAdaptable.
-	 */
-	public Object getAdapter(Class adapter) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getAdapter(Class<T> adapter) {
 		if (adapter == IWorkbenchAdapter.class)
-			return this;
+			return (T) this;
 		else if (adapter == IConfigurationElement.class)
-			return configurationElement;
+			return (T) configurationElement;
 		else
 			return null;
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWorkbenchAdapter.
-	 */
+	@Override
 	public Object[] getChildren(Object o) {
 		return getElements().toArray();
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWorkbenchAdapter.
-	 */
+	@Override
 	public ImageDescriptor getImageDescriptor(Object object) {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWorkbenchAdapter.
-	 */
+	@Override
 	public String getLabel(Object o) {
 		return getLabel();
 	}
 
 	/**
 	 * Return the id for this category.
-	 * 
+	 *
 	 * @return the id
 	 */
 	public String getId() {
@@ -149,7 +142,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return the label for this category.
-	 * 
+	 *
 	 * @return the label
 	 */
 	public String getLabel() {
@@ -159,7 +152,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return the parent path for this category.
-	 * 
+	 *
 	 * @return the parent path
 	 */
 	public String[] getParentPath() {
@@ -180,7 +173,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return the unparsed parent path. May be <code>null</code>.
-	 * 
+	 *
 	 * @return the unparsed parent path or <code>null</code>
 	 */
 	public String getRawParentPath() {
@@ -190,7 +183,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return the root path for this category.
-	 * 
+	 *
 	 * @return the root path
 	 */
 	public String getRootPath() {
@@ -203,7 +196,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return the elements contained in this category.
-	 * 
+	 *
 	 * @return the elements
 	 */
 	public ArrayList getElements() {
@@ -212,7 +205,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return whether a given object exists in this category.
-	 * 
+	 *
 	 * @param o
 	 *            the object to search for
 	 * @return whether the object is in this category
@@ -227,7 +220,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Return whether this category has child elements.
-	 * 
+	 *
 	 * @return whether this category has child elements
 	 */
 	public boolean hasElements() {
@@ -237,29 +230,17 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.model.IWorkbenchAdapter#getParent(java.lang.Object)
-	 */
+	@Override
 	public Object getParent(Object o) {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.activities.support.IPluginContribution#getLocalId()
-	 */
+	@Override
 	public String getLocalId() {
 		return id;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.activities.support.IPluginContribution#getPluginId()
-	 */
+	@Override
 	public String getPluginId() {
 		return configurationElement == null ? pluginId : configurationElement
 				.getContributor().getName();
@@ -267,7 +248,7 @@ public class Category implements IWorkbenchAdapter, IPluginContribution,
 
 	/**
 	 * Clear all elements from this category.
-	 * 
+	 *
 	 * @since 3.1
 	 */
 	public void clear() {

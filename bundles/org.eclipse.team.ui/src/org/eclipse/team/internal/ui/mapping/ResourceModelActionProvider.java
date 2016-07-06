@@ -27,28 +27,29 @@ import org.eclipse.ui.navigator.*;
 public class ResourceModelActionProvider extends SynchronizationActionProvider {
 
 	private RefactorActionGroup refactorActions;
-	
+
 	public ResourceModelActionProvider() {
 	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.SynchronizationActionProvider#initialize()
 	 */
+	@Override
 	protected void initialize() {
 		super.initialize();
 		// Register the merge, overwrite and mark-as-merged handlers
 		ResourceMergeHandler mergeHandler = new ResourceMergeHandler(
-				(ISynchronizePageConfiguration)getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_PAGE_CONFIGURATION), 
+				(ISynchronizePageConfiguration)getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_PAGE_CONFIGURATION),
 				false /* overwrite */);
 		registerHandler(MERGE_ACTION_ID, mergeHandler);
 		ResourceMergeHandler overwriteHandler = new ResourceMergeHandler(
-				(ISynchronizePageConfiguration)getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_PAGE_CONFIGURATION), 
+				(ISynchronizePageConfiguration)getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_PAGE_CONFIGURATION),
 				true /* overwrite */);
 		registerHandler(OVERWRITE_ACTION_ID, overwriteHandler);
 		ResourceMarkAsMergedHandler markAsMergedHandler = new ResourceMarkAsMergedHandler(
 				(ISynchronizePageConfiguration)getExtensionStateModel().getProperty(ITeamContentProviderManager.P_SYNCHRONIZATION_PAGE_CONFIGURATION));
 		registerHandler(MARK_AS_MERGE_ACTION_ID, markAsMergedHandler);
-		
+
 		ICommonViewerSite cvs = getActionSite().getViewSite();
 		ISynchronizePageConfiguration configuration = getSynchronizePageConfiguration();
 		if (cvs instanceof ICommonViewerWorkbenchSite && configuration != null) {
@@ -59,7 +60,7 @@ public class ResourceModelActionProvider extends SynchronizationActionProvider {
 			}
 		}
 	}
-	
+
 	private INavigatorContentService getNavigatorContentService(ISynchronizePageConfiguration configuration) {
 		Viewer v = configuration.getPage().getViewer();
 		if (v instanceof CommonViewer) {
@@ -72,14 +73,16 @@ public class ResourceModelActionProvider extends SynchronizationActionProvider {
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.SynchronizationActionProvider#fillActionBars(org.eclipse.ui.IActionBars)
 	 */
+	@Override
 	public void fillActionBars(IActionBars actionBars) {
 		super.fillActionBars(actionBars);
 		if (refactorActions != null) refactorActions.fillActionBars(actionBars);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.mapping.SynchronizationActionProvider#fillContextMenu(org.eclipse.jface.action.IMenuManager)
 	 */
+	@Override
 	public void fillContextMenu(IMenuManager menu) {
 		super.fillContextMenu(menu);
 		IContributionItem editGroup = menu.find(ISynchronizePageConfiguration.EDIT_GROUP);
@@ -87,27 +90,30 @@ public class ResourceModelActionProvider extends SynchronizationActionProvider {
 			refactorActions.fillContextMenu(menu, editGroup.getId());
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.actions.ActionGroup#updateActionBars()
 	 */
+	@Override
 	public void updateActionBars() {
 		super.updateActionBars();
 		 if (refactorActions != null) refactorActions.updateActionBars();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.team.ui.synchronize.SynchronizePageActionGroup#dispose()
 	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 		if (refactorActions != null) refactorActions.dispose();
 	}
-	
+
 	/* (non-Javadoc)
      * @see org.eclipse.ui.actions.ActionGroup#setContext(org.eclipse.ui.actions.ActionContext)
      */
-    public void setContext(ActionContext context) {
+    @Override
+	public void setContext(ActionContext context) {
         super.setContext(context);
         if (refactorActions != null) refactorActions.setContext(context);
     }

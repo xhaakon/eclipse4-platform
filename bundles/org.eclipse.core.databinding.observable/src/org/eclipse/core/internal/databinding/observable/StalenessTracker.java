@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2009 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ import org.eclipse.core.internal.databinding.identity.IdentityMap;
  */
 public class StalenessTracker {
 
-	private Map staleMap = new IdentityMap();
+	private Map<IObservable, Boolean> staleMap = new IdentityMap<>();
 
 	private int staleCount = 0;
 
@@ -35,12 +35,12 @@ public class StalenessTracker {
 
 	private class ChildListener implements IStaleListener, IChangeListener {
 		@Override
-		public void handleStale(StaleEvent event) {
+		public void handleChange(ChangeEvent event) {
 			processStalenessChange((IObservable) event.getSource(), true);
 		}
 
 		@Override
-		public void handleChange(ChangeEvent event) {
+		public void handleStale(StaleEvent event) {
 			processStalenessChange((IObservable) event.getSource(), true);
 		}
 	}
@@ -87,9 +87,8 @@ public class StalenessTracker {
 	 * @param child
 	 */
 	private boolean getOldChildStale(IObservable child) {
-		Object oldChildValue = staleMap.get(child);
-		boolean oldChildStale = oldChildValue == null ? false
-				: ((Boolean) oldChildValue).booleanValue();
+		Boolean oldChildValue = staleMap.get(child);
+		boolean oldChildStale = oldChildValue != null && oldChildValue;
 		return oldChildStale;
 	}
 

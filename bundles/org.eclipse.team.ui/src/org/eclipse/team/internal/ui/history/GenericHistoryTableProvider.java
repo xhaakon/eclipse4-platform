@@ -45,7 +45,7 @@ public class GenericHistoryTableProvider {
 	private String currentRevision;
 	private TableViewer viewer;
 	private Font currentRevisionFont;
-	
+
 	//column constants
 	private static final int COL_REVISIONID = 0;
 	private static final int COL_DATE= 1;
@@ -57,9 +57,11 @@ public class GenericHistoryTableProvider {
 	 */
 	class HistoryLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider, IFontProvider {
 		private DateFormat dateFormat;
+		@Override
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null;
 		}
+		@Override
 		public String getColumnText(Object element, int columnIndex) {
 			IFileRevision entry = adaptToFileRevision(element);
 			if (entry == null) return ""; //$NON-NLS-1$
@@ -79,27 +81,29 @@ public class GenericHistoryTableProvider {
 			}
 			return ""; //$NON-NLS-1$
 		}
-		
+
 		private synchronized DateFormat getDateFormat() {
 			if (dateFormat == null)
 				dateFormat = DateFormat.getInstance();
 			return dateFormat;
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
 		 */
+		@Override
 		public Color getForeground(Object element) {
 			IFileRevision entry = adaptToFileRevision(element);
 			if (!entry.exists())  {
 				return Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
-			} 
-			
+			}
+
 			return null;
 		}
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
 		 */
+		@Override
 		public Color getBackground(Object element) {
 			return null;
 		}
@@ -107,6 +111,7 @@ public class GenericHistoryTableProvider {
 		 * (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.IFontProvider#getFont(java.lang.Object)
 		 */
+		@Override
 		public Font getFont(Object element) {
 			IFileRevision entry = adaptToFileRevision(element);
 			if (entry == null)
@@ -119,7 +124,7 @@ public class GenericHistoryTableProvider {
 					FontData[] data = defaultFont.getFontData();
 					for (int i = 0; i < data.length; i++) {
 						data[i].setStyle(SWT.BOLD);
-					}				
+					}
 					currentRevisionFont = new Font(viewer.getTable().getDisplay(), data);
 				}
 				return currentRevisionFont;
@@ -127,23 +132,23 @@ public class GenericHistoryTableProvider {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * The history sorter
 	 */
 	class HistoryComparator extends ViewerComparator {
 		private boolean reversed = false;
 		private int columnNumber;
-		
+
 		// column headings:	"Revision" "Tags" "Date" "Author" "Comment"
 		private int[][] SORT_ORDERS_BY_COLUMN = {
-			{COL_REVISIONID, COL_DATE, COL_AUTHOR, COL_COMMENT},	/* revision */ 
+			{COL_REVISIONID, COL_DATE, COL_AUTHOR, COL_COMMENT},	/* revision */
 			{COL_REVISIONID, COL_DATE, COL_AUTHOR, COL_COMMENT},	/* tags */
 			{COL_DATE, COL_REVISIONID, COL_AUTHOR, COL_COMMENT},	/* date */
 			{COL_AUTHOR, COL_REVISIONID, COL_DATE, COL_COMMENT},	/* author */
 			{COL_COMMENT, COL_REVISIONID, COL_DATE, COL_AUTHOR}		/* comment */
 		};
-		
+
 		/**
 		 * The constructor.
 		 */
@@ -154,6 +159,7 @@ public class GenericHistoryTableProvider {
 		 * Compares two log entries, sorting first by the main column of this sorter,
 		 * then by subsequent columns, depending on the column sort order.
 		 */
+		@Override
 		public int compare(Viewer viewer, Object o1, Object o2) {
 			IFileRevision e1 = adaptToFileRevision(o1);
 			IFileRevision e2 = adaptToFileRevision(o2);
@@ -184,9 +190,9 @@ public class GenericHistoryTableProvider {
 					long date2 = e2.getTimestamp();
 					if (date1 == date2)
 						return 0;
-					
+
 					return date1>date2 ? -1 : 1;
-		
+
 				case 2: /* author */
 					return getComparator().compare(e1.getAuthor(), e2.getAuthor());
 				case 3: /* comment */
@@ -225,11 +231,11 @@ public class GenericHistoryTableProvider {
 		}
 		return entry;
 	}
-	
+
 	/**
 	 * Create a TableViewer that can be used to display a list of IFileRevision instances.
 	 * Ths method provides the labels and sorter but does not provide a content provider
-	 * 
+	 *
 	 * @param parent
 	 * @return TableViewer
 	 */
@@ -239,34 +245,35 @@ public class GenericHistoryTableProvider {
 		table.setLinesVisible(true);
 		GridData data = new GridData(GridData.FILL_BOTH);
 		table.setLayoutData(data);
-	
+
 		TableLayout layout = new TableLayout();
 		table.setLayout(layout);
-		
+
 		TableViewer viewer = new TableViewer(table);
-		
+
 		createColumns(table, layout, viewer);
 
 		viewer.setLabelProvider(new HistoryLabelProvider());
-		
+
 		// By default, reverse sort by revision.
 		HistoryComparator sorter = new HistoryComparator(COL_REVISIONID);
 		sorter.setReversed(true);
 		viewer.setComparator(sorter);
-		
+
 		table.addDisposeListener(new DisposeListener() {
+			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				if(currentRevisionFont != null) {
 					currentRevisionFont.dispose();
 				}
 			}
 		});
-		
+
 		this.viewer = viewer;
 		return viewer;
 	}
-	
-	
+
+
 	/**
 	 * Creates the columns for the history table.
 	 */
@@ -275,32 +282,32 @@ public class GenericHistoryTableProvider {
 		// revision
 		TableColumn col = new TableColumn(table, SWT.NONE);
 		col.setResizable(true);
-		col.setText(TeamUIMessages.GenericHistoryTableProvider_Revision); 
+		col.setText(TeamUIMessages.GenericHistoryTableProvider_Revision);
 		col.addSelectionListener(headerListener);
 		layout.addColumnData(new ColumnWeightData(20, true));
-	
+
 		// creation date
 		col = new TableColumn(table, SWT.NONE);
 		col.setResizable(true);
-		col.setText(TeamUIMessages.GenericHistoryTableProvider_RevisionTime); 
+		col.setText(TeamUIMessages.GenericHistoryTableProvider_RevisionTime);
 		col.addSelectionListener(headerListener);
 		layout.addColumnData(new ColumnWeightData(20, true));
-	
+
 		// author
 		col = new TableColumn(table, SWT.NONE);
 		col.setResizable(true);
-		col.setText(TeamUIMessages.GenericHistoryTableProvider_Author); 
+		col.setText(TeamUIMessages.GenericHistoryTableProvider_Author);
 		col.addSelectionListener(headerListener);
 		layout.addColumnData(new ColumnWeightData(20, true));
-	
+
 		//comment
 		col = new TableColumn(table, SWT.NONE);
 		col.setResizable(true);
-		col.setText(TeamUIMessages.GenericHistoryTableProvider_Comment); 
+		col.setText(TeamUIMessages.GenericHistoryTableProvider_Comment);
 		col.addSelectionListener(headerListener);
 		layout.addColumnData(new ColumnWeightData(50, true));
 	}
-	
+
 	/**
 	 * Adds the listener that sets the sorter.
 	 */
@@ -322,6 +329,7 @@ public class GenericHistoryTableProvider {
 			 * presses on the same column header will
 			 * toggle sorting order (ascending/descending).
 			 */
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// column selected - need to sort
 				int column = tableViewer.getTable().indexOf((TableColumn) e.widget);
@@ -335,28 +343,28 @@ public class GenericHistoryTableProvider {
 			}
 		};
 	}
-	
+
 	public void setFile(IFileHistory fileHistory, IFile file)  {
 		this.currentFileHistory = fileHistory;
 		this.currentFile= file;
 		this.currentRevision = findCurrentRevision();
 	}
-	
+
 	private String findCurrentRevision() {
-		
+
 		RepositoryProvider teamProvider = RepositoryProvider.getProvider(currentFile.getProject());
 		IFileRevision fileRevision = teamProvider.getFileHistoryProvider().getWorkspaceFileRevision(currentFile);
-		
+
 		if (fileRevision != null )
 			return fileRevision.getContentIdentifier();
-		
+
 		return null;
 	}
 
 	public IFileHistory getIFileHistory() {
 		return this.currentFileHistory;
 	}
-	
+
 	public String getCurrentRevision() {
 		return currentRevision;
 	}

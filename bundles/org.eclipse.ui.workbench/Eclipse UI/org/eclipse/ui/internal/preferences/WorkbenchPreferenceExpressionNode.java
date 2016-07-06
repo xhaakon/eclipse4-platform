@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008 Bredex GmbH and others.
+ * Copyright (c) 2008, 2015 Bredex GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,21 +36,11 @@ public class WorkbenchPreferenceExpressionNode extends PreferenceNode
 		super(id);
 	}
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.jface.preference.PreferenceNode#findSubNode(java.lang.String)
-     */
     @Override
 	public IPreferenceNode findSubNode(String id) {
         return getNodeExpression(super.findSubNode(id));
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.eclipse.jface.preference.PreferenceNode#getSubNodes()
-     */
     @Override
 	public IPreferenceNode[] getSubNodes() {
     	IPreferenceNode[] prefNodes = super.getSubNodes();
@@ -89,17 +79,11 @@ public class WorkbenchPreferenceExpressionNode extends PreferenceNode
         return prefNode;
     }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPluginContribution#getLocalId()
-	 */
 	@Override
 	public String getLocalId() {
 		return getId();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPluginContribution#getPluginId()
-	 */
 	@Override
 	public String getPluginId() {
 		return ""; //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,16 +34,18 @@ import org.eclipse.search2.internal.ui.InternalSearchUI;
 
 public class MarkerHighlighter extends Highlighter {
 	private IFile fFile;
-	private Map fMatchesToAnnotations;
+	private Map<Match, IMarker> fMatchesToAnnotations;
 
 	public MarkerHighlighter(IFile file) {
 		fFile= file;
-		fMatchesToAnnotations= new HashMap();
+		fMatchesToAnnotations= new HashMap<>();
 	}
 
+	@Override
 	public void addHighlights(final Match[] matches) {
 		try {
 			SearchPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+				@Override
 				public void run(IProgressMonitor monitor) throws CoreException {
 					for (int i = 0; i < matches.length; i++) {
 						IMarker marker;
@@ -72,7 +74,7 @@ public class MarkerHighlighter extends Highlighter {
 		IMarker marker= match.isFiltered()
 			? fFile.createMarker(SearchPlugin.FILTERED_SEARCH_MARKER)
 			: fFile.createMarker(NewSearchUI.SEARCH_MARKER);
-		HashMap attributes= new HashMap(4);
+		HashMap<String, Integer> attributes= new HashMap<>(4);
 		if (match.getBaseUnit() == Match.UNIT_CHARACTER) {
 			attributes.put(IMarker.CHAR_START, new Integer(position.getOffset()));
 			attributes.put(IMarker.CHAR_END, new Integer(position.getOffset()+position.getLength()));
@@ -83,20 +85,22 @@ public class MarkerHighlighter extends Highlighter {
 		return marker;
 	}
 
+	@Override
 	public void removeHighlights(Match[] matches) {
 		for (int i= 0; i < matches.length; i++) {
-			IMarker marker= (IMarker) fMatchesToAnnotations.remove(matches[i]);
+			IMarker marker= fMatchesToAnnotations.remove(matches[i]);
 			if (marker != null) {
 				try {
 					marker.delete();
 				} catch (CoreException e) {
 					// just log the thing. There's nothing we can do anyway.
-					SearchPlugin.log(e.getStatus());
+					SearchPlugin.log(e);
 				}
 			}
 		}
 	}
 
+	@Override
 	public  void removeAll() {
 		try {
 			fFile.deleteMarkers(NewSearchUI.SEARCH_MARKER, true, IResource.DEPTH_INFINITE);
@@ -108,6 +112,7 @@ public class MarkerHighlighter extends Highlighter {
 		}
 	}
 
+	@Override
 	protected void handleContentReplaced(IFileBuffer buffer) {
 		if (!buffer.getLocation().equals(fFile.getFullPath()))
 			return;

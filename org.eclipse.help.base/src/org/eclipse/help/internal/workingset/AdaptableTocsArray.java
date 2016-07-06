@@ -36,6 +36,7 @@ public class AdaptableTocsArray implements IAdaptable {
 	/**
 	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getAdapter(Class<T> adapter) {
 		if (adapter == IToc[].class)
@@ -59,7 +60,7 @@ public class AdaptableTocsArray implements IAdaptable {
 	public AdaptableToc getAdaptableToc(String href) {
 		if (map == null) {
 			getChildren(); // make sure children are initialized
-			map = new HashMap<String, AdaptableToc>(children.length);
+			map = new HashMap<>(children.length);
 			for (int i = 0; i < children.length; i++)
 				map.put(children[i].getHref(), children[i]);
 		}
@@ -78,6 +79,7 @@ public class AdaptableTocsArray implements IAdaptable {
 	 * @return true=the object equals the receiver, the name is the same. false
 	 *         otherwise
 	 */
+	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
 			return true;
@@ -96,6 +98,7 @@ public class AdaptableTocsArray implements IAdaptable {
 	 *
 	 * @return the hash code.
 	 */
+	@Override
 	public int hashCode() {
 		if (element == null)
 			return -1;

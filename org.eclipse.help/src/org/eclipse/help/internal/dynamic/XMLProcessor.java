@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,14 +30,14 @@ public class XMLProcessor {
 	private DocumentProcessor processor;
 	private DocumentReader reader;
 	private DocumentWriter writer;
-	
+
 	/*
 	 * Creates the processor, which will use the given handlers.
 	 */
 	public XMLProcessor(ProcessorHandler[] handlers) {
 		this.processor = new DocumentProcessor(handlers);
 	}
-	
+
 	/*
 	 * Processes the given input stream with the supplied document id,
 	 * and returns a new processed input stream.

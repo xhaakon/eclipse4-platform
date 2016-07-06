@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 BestSolution.at and others.
+ * Copyright (c) 2009, 2015 BestSolution.at and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -201,8 +201,17 @@ public interface IPresentationEngine {
 	public static final String CUSTOM_RENDERER_KEY = "Custom Renderer"; //$NON-NLS-1$
 
 	/**
-	 * This is the tag name that enables the DND support for the element. The element's tags list
-	 * has to be updated with the tag in order to enable the DND processing.
+	 * This key can be used , if the model element does not have a parent and a
+	 * parent needs to be specified for the renderer to create the widget.
+	 *
+	 * @since 1.4
+	 */
+	public static final String RENDERING_PARENT_KEY = "Rendering Parent"; //$NON-NLS-1$
+
+	/**
+	 * This is the tag name that enables the DND support for the element. The
+	 * element's tags list has to be updated with the tag in order to enable the
+	 * DND processing.
 	 *
 	 * @since 1.1
 	 */

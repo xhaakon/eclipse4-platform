@@ -10,14 +10,15 @@
  *******************************************************************************/
 package org.eclipse.ui.editors.tests;
 
+import static org.junit.Assert.*;
+
 import java.io.BufferedInputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.osgi.framework.Bundle;
 
 import org.eclipse.core.runtime.ContributorFactorySimple;
@@ -40,17 +41,14 @@ import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
 
 import org.eclipse.ui.editors.text.EditorsUI;
 
-public class MarkerAnnotationOrderTest extends TestCase {
+public class MarkerAnnotationOrderTest {
 
 	IContributor pointContributor= null;
 
 	Object masterToken= null;
 
-	public static Test suite() {
-		return new TestSuite(MarkerAnnotationOrderTest.class);
-	}
-
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		//add the marker updater extension point
 		IExtensionRegistry registry= Platform.getExtensionRegistry();
 		pointContributor= ContributorFactorySimple.createContributor(this);
@@ -70,7 +68,8 @@ public class MarkerAnnotationOrderTest extends TestCase {
 		}
 	}
 
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		// remove the marker updater extension point
 		IExtensionRegistry registry= Platform.getExtensionRegistry();
 		IExtension[] extensions = registry.getExtensions(pointContributor);
@@ -80,12 +79,14 @@ public class MarkerAnnotationOrderTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testDirectDependency() {
-		final ArrayList list= new ArrayList(2);
+		final ArrayList<IStatus> list= new ArrayList<>(2);
 		Bundle bundle= Platform.getBundle(EditorsUI.PLUGIN_ID);
 		ILog log= Platform.getLog(bundle);
 		log.addLogListener(new ILogListener() {
 
+			@Override
 			public void logging(IStatus status, String plugin) {
 				list.add(status);
 			}
@@ -113,18 +114,22 @@ public class MarkerAnnotationOrderTest extends TestCase {
 				((Status)list.get(1)).getMessage());
 
 	}
-
+	
 	public class TestMarkerAnnotationModel extends AbstractMarkerAnnotationModel {
+		@Override
 		protected IMarker[] retrieveMarkers() throws CoreException {
 			return null;
 		}
 
+		@Override
 		protected void deleteMarkers(IMarker[] markers) throws CoreException {
 		}
 
+		@Override
 		protected void listenToMarkerChanges(boolean listen) {
 		}
 
+		@Override
 		protected boolean isAcceptable(IMarker marker) {
 			return false;
 		}

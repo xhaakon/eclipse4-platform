@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -185,61 +185,48 @@ public class TextViewerDeleteLineTarget implements IDeleteLineTarget {
 			fDeleting= deleting;
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(MouseEvent)
-		 */
+		@Override
 		public void mouseDoubleClick(MouseEvent e) {
 			uninstall();
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.MouseListener#mouseDown(MouseEvent)
-		 */
+		@Override
 		public void mouseDown(MouseEvent e) {
 			uninstall();
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.MouseListener#mouseUp(MouseEvent)
-		 */
+		@Override
 		public void mouseUp(MouseEvent e) {
 			uninstall();
 		}
 
-		/*
-		 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(SelectionChangedEvent)
-		 */
+		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
-			uninstall();
+			if (!fDeleting) {
+				uninstall();
+			}
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.FocusListener#focusGained(FocusEvent)
-		 */
+		@Override
 		public void focusGained(FocusEvent e) {
 			uninstall();
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.FocusListener#focusLost(FocusEvent)
-		 */
+		@Override
 		public void focusLost(FocusEvent e) {
 			uninstall();
 		}
 
-		/*
-		 * @see org.eclipse.jface.text.ITextListener#textChanged(TextEvent)
-		 */
+		@Override
 		public void textChanged(TextEvent event) {
 			uninstall();
 		}
 
-		/*
-		 * @see org.eclipse.swt.events.ModifyListener#modifyText(ModifyEvent)
-		 */
+		@Override
 		public void modifyText(ModifyEvent e) {
-			if (!fDeleting)
+			if (!fDeleting) {
 				uninstall();
+			}
 		}
 	}
 
@@ -332,10 +319,7 @@ public class TextViewerDeleteLineTarget implements IDeleteLineTarget {
 		return new Region(startOffset, endOffset - startOffset);
 	}
 
-	/*
-	 * @see org.eclipse.ui.texteditor.IDeleteLineTarget#deleteLine(org.eclipse.jface.text.IDocument, int, int, int, boolean)
-	 * @since 3.4
-	 */
+	@Override
 	public void deleteLine(IDocument document, int offset, int length, int type, boolean copyToClipboard) throws BadLocationException {
 		deleteLine(document, new TextSelection(offset, length), type, copyToClipboard);
 	}

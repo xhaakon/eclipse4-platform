@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2011 IBM Corporation and others.
+ * Copyright (c) 2007, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,18 +7,20 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Lars Vogel <Lars.Vogel@vogella.com> - Bug 420479
  *******************************************************************************/
 
 package org.eclipse.ui.handlers;
 
 import java.util.Collection;
-
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.State;
 import org.eclipse.core.expressions.IEvaluationContext;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -34,6 +36,8 @@ import org.eclipse.ui.IWorkbenchWindow;
  * </p>
  *
  * @since 3.3
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class HandlerUtil {
 	private static void noVariableFound(ExecutionEvent event, String name)
@@ -64,8 +68,7 @@ public class HandlerUtil {
 	 */
 	public static Object getVariable(ExecutionEvent event, String name) {
 		if (event.getApplicationContext() instanceof IEvaluationContext) {
-			Object var = ((IEvaluationContext) event.getApplicationContext())
-					.getVariable(name);
+			Object var = ((IEvaluationContext) event.getApplicationContext()).getVariable(name);
 			return var == IEvaluationContext.UNDEFINED_VARIABLE ? null : var;
 		}
 		return null;
@@ -176,8 +179,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_SHELL_NAME);
 		if (!(o instanceof Shell)) {
-			incorrectTypeFound(event, ISources.ACTIVE_SHELL_NAME, Shell.class,
-					o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_SHELL_NAME, Shell.class, o.getClass());
 		}
 		return (Shell) o;
 	}
@@ -208,11 +210,9 @@ public class HandlerUtil {
 	 */
 	public static IWorkbenchWindow getActiveWorkbenchWindowChecked(
 			ExecutionEvent event) throws ExecutionException {
-		Object o = getVariableChecked(event,
-				ISources.ACTIVE_WORKBENCH_WINDOW_NAME);
+		Object o = getVariableChecked(event, ISources.ACTIVE_WORKBENCH_WINDOW_NAME);
 		if (!(o instanceof IWorkbenchWindow)) {
-			incorrectTypeFound(event, ISources.ACTIVE_WORKBENCH_WINDOW_NAME,
-					IWorkbenchWindow.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_WORKBENCH_WINDOW_NAME, IWorkbenchWindow.class, o.getClass());
 		}
 		return (IWorkbenchWindow) o;
 	}
@@ -245,8 +245,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_EDITOR_NAME);
 		if (!(o instanceof IEditorPart)) {
-			incorrectTypeFound(event, ISources.ACTIVE_EDITOR_NAME,
-					IEditorPart.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_EDITOR_NAME, IEditorPart.class, o.getClass());
 		}
 		return (IEditorPart) o;
 	}
@@ -280,8 +279,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_EDITOR_ID_NAME);
 		if (!(o instanceof String)) {
-			incorrectTypeFound(event, ISources.ACTIVE_EDITOR_ID_NAME,
-					String.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_EDITOR_ID_NAME, String.class, o.getClass());
 		}
 		return (String) o;
 	}
@@ -317,8 +315,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_EDITOR_INPUT_NAME);
 		if (!(o instanceof IEditorInput)) {
-			incorrectTypeFound(event, ISources.ACTIVE_EDITOR_INPUT_NAME, IEditorInput.class,
-					o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_EDITOR_INPUT_NAME, IEditorInput.class, o.getClass());
 		}
 		return (IEditorInput) o;
 	}
@@ -351,8 +348,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_PART_NAME);
 		if (!(o instanceof IWorkbenchPart)) {
-			incorrectTypeFound(event, ISources.ACTIVE_PART_NAME,
-					IWorkbenchPart.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_PART_NAME, IWorkbenchPart.class, o.getClass());
 		}
 		return (IWorkbenchPart) o;
 	}
@@ -385,8 +381,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_PART_ID_NAME);
 		if (!(o instanceof String)) {
-			incorrectTypeFound(event, ISources.ACTIVE_PART_ID_NAME,
-					String.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_PART_ID_NAME, String.class, o.getClass());
 		}
 		return (String) o;
 	}
@@ -419,8 +414,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_SITE_NAME);
 		if (!(o instanceof IWorkbenchSite)) {
-			incorrectTypeFound(event, ISources.ACTIVE_SITE_NAME,
-					IWorkbenchSite.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_SITE_NAME, IWorkbenchSite.class, o.getClass());
 		}
 		return (IWorkbenchSite) o;
 	}
@@ -441,6 +435,25 @@ public class HandlerUtil {
 	}
 
 	/**
+	 * Return the current structured selection, or <code>StructuredSelection.EMPTY</code>
+	 * if the current selection is not a structured selection or <code>null</code>.
+	 *
+	 * @param event
+	 *            The execution event that contains the application context
+	 * @return the current IStructuredSelection, or
+	 *         <code>StructuredSelection.EMPTY</code>.
+	 * @since 3.108
+	 *
+	 */
+	public static IStructuredSelection getCurrentStructuredSelection(ExecutionEvent event) {
+		ISelection selection = getCurrentSelection(event);
+		if (selection instanceof IStructuredSelection) {
+			return (IStructuredSelection) selection;
+		}
+		return StructuredSelection.EMPTY;
+	}
+
+	/**
 	 * Return the current selection.
 	 *
 	 * @param event
@@ -454,8 +467,7 @@ public class HandlerUtil {
 		Object o = getVariableChecked(event,
 				ISources.ACTIVE_CURRENT_SELECTION_NAME);
 		if (!(o instanceof ISelection)) {
-			incorrectTypeFound(event, ISources.ACTIVE_CURRENT_SELECTION_NAME,
-					ISelection.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_CURRENT_SELECTION_NAME, ISelection.class, o.getClass());
 		}
 		return (ISelection) o;
 	}
@@ -490,8 +502,7 @@ public class HandlerUtil {
 			throws ExecutionException {
 		Object o = getVariableChecked(event, ISources.ACTIVE_MENU_NAME);
 		if (!(o instanceof Collection)) {
-			incorrectTypeFound(event, ISources.ACTIVE_MENU_NAME,
-					Collection.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_MENU_NAME, Collection.class, o.getClass());
 		}
 		return (Collection) o;
 	}
@@ -527,8 +538,7 @@ public class HandlerUtil {
 		Object o = getVariableChecked(event,
 				ISources.ACTIVE_MENU_SELECTION_NAME);
 		if (!(o instanceof ISelection)) {
-			incorrectTypeFound(event, ISources.ACTIVE_MENU_SELECTION_NAME,
-					ISelection.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_MENU_SELECTION_NAME, ISelection.class, o.getClass());
 		}
 		return (ISelection) o;
 	}
@@ -565,8 +575,7 @@ public class HandlerUtil {
 		Object o = getVariableChecked(event,
 				ISources.ACTIVE_MENU_EDITOR_INPUT_NAME);
 		if (!(o instanceof ISelection)) {
-			incorrectTypeFound(event, ISources.ACTIVE_MENU_EDITOR_INPUT_NAME,
-					ISelection.class, o.getClass());
+			incorrectTypeFound(event, ISources.ACTIVE_MENU_EDITOR_INPUT_NAME, ISelection.class, o.getClass());
 		}
 		return (ISelection) o;
 	}
@@ -655,7 +664,7 @@ public class HandlerUtil {
 			throw new ExecutionException("The command's toggle state doesn't contain a boolean value"); //$NON-NLS-1$
 
 		boolean oldValue = ((Boolean) state.getValue()).booleanValue();
-		state.setValue(new Boolean(!oldValue));
+		state.setValue(Boolean.valueOf(!oldValue));
 		return oldValue;
 	}
 
@@ -684,11 +693,9 @@ public class HandlerUtil {
 		Command command = event.getCommand();
 		State state = command.getState(RadioState.STATE_ID);
 		if (state == null)
-			throw new ExecutionException(
-					"The command does not have a radio state"); //$NON-NLS-1$
+			throw new ExecutionException("The command does not have a radio state"); //$NON-NLS-1$
 		if (!(state.getValue() instanceof String))
-			throw new ExecutionException(
-					"The command's radio state doesn't contain a String value"); //$NON-NLS-1$
+			throw new ExecutionException("The command's radio state doesn't contain a String value"); //$NON-NLS-1$
 
 		return parameter.equals(state.getValue());
 	}
@@ -710,8 +717,7 @@ public class HandlerUtil {
 
 		State state = command.getState(RadioState.STATE_ID);
 		if (state == null)
-			throw new ExecutionException(
-					"The command does not have a radio state"); //$NON-NLS-1$
+			throw new ExecutionException("The command does not have a radio state"); //$NON-NLS-1$
 		state.setValue(newState);
 	}
 

@@ -11,7 +11,7 @@ export VERSION=$(shell dpkg-parsechangelog -S Version | cut -d- -f1)
 
 ABOUT_MAPPINGS=platform/org.eclipse.platform/about.mappings
 
-RELEASE_NAME=Mars
+RELEASE_NAME=Neon
 RELEASE_NUMBER_PLATFORM=$(shell dpkg-parsechangelog --show-field Version | cut -f-2 -d.)
 BUILD_ID=Debian $(shell dpkg-parsechangelog --show-field Version)
 
